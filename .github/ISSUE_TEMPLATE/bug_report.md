@@ -1,8 +1,8 @@
-# Comparison
+# Bug_Report
 
 
 ## Context
-This page tracks bootstrap decisions for comparison during steady build work.
+This page tracks bootstrap decisions for bug_report during steady build work.
 
 ## Usage
 - Rewrote the the main flow explanation around the maintained behavior.
