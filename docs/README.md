@@ -2,16 +2,18 @@
 
 
 ## Context
-This page tracks bootstrap decisions for readme during steady build work.
+This page keeps the current readme guidance concise after earlier rough notes.
 
 ## Development
 - Kept the docker verification command reproducible.
 
-## Scratch Notes
+## Notes Folded Into Current Flow
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Usage
-- Rewrote the the main flow explanation around the maintained behavior.
+- Rewrote the python explanation around the maintained behavior.
+
+- Earlier scratch notes were compressed into the current guidance.
 
 ## Caveats
 Some setup details still depend on the current local workflow and may change again.
