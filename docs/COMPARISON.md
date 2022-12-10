@@ -5,7 +5,7 @@
 This page keeps the current comparison guidance concise after earlier rough notes.
 
 ## Usage
-- Rewrote the python explanation around the maintained behavior.
+- Rewrote the graph explanation around the maintained behavior.
 
 - Earlier scratch notes were compressed into the current guidance.
 
