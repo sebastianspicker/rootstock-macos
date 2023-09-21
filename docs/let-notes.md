@@ -2,10 +2,10 @@
 
 
 ## Context
-This page tracks exploration decisions for let notes during steady build work.
+This page tracks core-build-out decisions for let notes during steady build work.
 
 ## Usage
-- Made the let assumptions easier to check later.
+- Rewrote the let explanation around the maintained behavior.
 
 ## Scratch Notes
 Early notes are still uneven and may be folded into clearer sections later.
