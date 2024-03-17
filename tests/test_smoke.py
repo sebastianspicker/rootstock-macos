@@ -9,6 +9,7 @@ def test_docker_regression() -> None:
     payload = {"scope": "docker", "result": "ok"}
     assert payload["result"] == "ok"
     assert payload["scope"]
+    assert payload["scope"]
 
 # forced-docker-2
 
