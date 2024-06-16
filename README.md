@@ -9,7 +9,9 @@ rootstock keeps setup, verification, and known limitations in one place.
 Lifecycle stage: core-build-out. Earlier setup detail now lives in maintained guidance.
 
 ## Development
-- Kept the docker verification command reproducible.
+- Aligned local and CI checks for github actions.
+
+- The document now favors checked behavior over exploratory notes.
 
 ## Usage
 - Rewrote the python explanation around the maintained behavior.
