@@ -5,7 +5,7 @@
 This page keeps the current comparison guidance concise after earlier rough notes.
 
 ## Usage
-- Rewrote the ruff explanation around the maintained behavior.
+- Made the build assumptions easier to check later.
 
 - Earlier scratch notes were compressed into the current guidance.
 

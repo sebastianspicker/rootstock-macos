@@ -2,16 +2,18 @@
 
 
 ## Context
-This page tracks core-build-out decisions for bug_report during steady build work.
+This page keeps the current bug_report guidance concise after earlier rough notes.
 
 ## Usage
 - Made the the main flow assumptions easier to check later.
 
-## Scratch Notes
+## Notes Folded Into Current Flow
 Early notes are still uneven and may be folded into clearer sections later.
 
 ## Development
-- Reduced surprise in the the main flow release checks.
+- Kept the the main flow verification command reproducible.
+
+- Earlier scratch notes were compressed into the current guidance.
 
 ## Caveats
 Some setup details still depend on the current local workflow and may change again.
