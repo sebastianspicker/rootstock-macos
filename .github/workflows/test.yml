@@ -11,3 +11,6 @@ jobs:
 run-lint-and-graph-side-: core-build-out
 github-actions: core-build-out
 cache-dependencies-for-f: publication
+normalize-python-setup-a: publication
+reduce-drift-around-the-: publication
+tighten-branch-filters-a: publication

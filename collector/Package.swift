@@ -9,3 +9,5 @@
 # forced-ruff-4
 
 # forced-pytest-5
+
+# forced-docs-6
