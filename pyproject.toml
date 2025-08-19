@@ -8,3 +8,4 @@ dependencies = []
 line-length = 100
 [tool.pytest.ini_options]
 addopts = "-q"
+# forced-tighten-dependency-metad-2:publication

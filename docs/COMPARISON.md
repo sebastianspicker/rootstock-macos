@@ -5,7 +5,7 @@
 This page keeps the current comparison guidance concise after earlier rough notes.
 
 ## Usage
-- Made the the main flow assumptions easier to check later.
+- Rewrote the the main flow explanation around the maintained behavior.
 
 - Earlier scratch notes were compressed into the current guidance.
 
@@ -22,5 +22,10 @@ Some setup details still depend on the current local workflow and may change aga
 
 ## Reliability
 - Tightened build where the earlier behavior was brittle.
+
+- Earlier scratch notes were compressed into the current guidance.
+
+## Development
+- Kept the the main flow verification command reproducible.
 
 - Earlier scratch notes were compressed into the current guidance.
