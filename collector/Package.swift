@@ -11,3 +11,5 @@
 # forced-pytest-5
 
 # forced-docs-6
+
+# forced-github-actions-7
