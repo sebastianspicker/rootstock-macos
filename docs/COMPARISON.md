@@ -5,7 +5,7 @@
 This page keeps the current comparison guidance concise after earlier rough notes.
 
 ## Usage
-- Rewrote the tcc explanation around the maintained behavior.
+- Rewrote the python explanation around the maintained behavior.
 
 - Earlier scratch notes were compressed into the current guidance.
 
@@ -27,5 +27,10 @@ Some setup details still depend on the current local workflow and may change aga
 
 ## Development
 - Kept the the main flow verification command reproducible.
+
+- Earlier scratch notes were compressed into the current guidance.
+
+## Architecture
+- Moved app behind a narrower boundary.
 
 - Earlier scratch notes were compressed into the current guidance.

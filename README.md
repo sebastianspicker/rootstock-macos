@@ -3,7 +3,7 @@
 A working tree for rootstock with an evolving implementation history.
 
 ## Overview
-rootstock documents maintained build commands, known limits, and remaining work.
+rootstock keeps setup, verification, and known limitations in one place.
 
 ## Status
 Lifecycle stage: maintenance. Earlier setup detail now lives in maintained guidance.
@@ -14,9 +14,9 @@ Lifecycle stage: maintenance. Earlier setup detail now lives in maintained guida
 - The older setup fragments have been reduced to the useful parts.
 
 ## Usage
-- Made the app assumptions easier to check later.
+- Merged scattered app guidance into the docs.
 
-- Earlier scratch detail is now represented in maintained sections.
+- The document now favors checked behavior over exploratory notes.
 
 ## Current Focus
 Use the next review to check behavior before adding surface area.
