@@ -1,0 +1,245 @@
+/*
+  Rootstock GraSS — Graph Style Sheet for Neo4j Browser
+  Load with: :style http://localhost:8001/rootstock-style.grass
+  Or paste the content directly into Neo4j Browser style editor (gear icon → "Edit stylesheet")
+
+  Color legend:
+    Application    → blue   (#4A90D9) — installed macOS apps
+    TCC_Permission → red    (#E74C3C) — TCC access control entries
+    Entitlement    → amber  (#F39C12) — code signing entitlements
+    XPC_Service    → green  (#27AE60) — LaunchDaemons and LaunchAgents
+    LaunchItem     → purple (#8E44AD) — persistence mechanisms
+    Keychain_Item  → teal   (#1ABC9C) — Keychain ACL entries (no secrets)
+    MDM_Profile    → gray   (#95A5A6) — MDM configuration profiles
+    User           → orange (#E67E22) — local user accounts
+
+  Edge severity:
+    Attack edges (CAN_INJECT_INTO, CHILD_INHERITS_TCC) → red, thick
+    TCC grant edges (HAS_TCC_GRANT) → red, medium
+    Automation edges (CAN_SEND_APPLE_EVENT) → orange
+    Persistence edges (PERSISTS_VIA) → purple
+    XPC edges (COMMUNICATES_WITH) → green
+    Data edges (HAS_ENTITLEMENT, HAS_KEYCHAIN, OWNS) → default grey
+*/
+
+/* ── Default node style ──────────────────────────────────────────────────── */
+node {
+  diameter: 50px;
+  color: #A5ABB6;
+  border-color: #9AA1AC;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+  caption: "{name}";
+}
+
+/* ── Application ─────────────────────────────────────────────────────────── */
+node.Application {
+  color: #4A90D9;
+  border-color: #357ABD;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+  diameter: 60px;
+  caption: "{name}";
+}
+
+/* ── TCC_Permission ──────────────────────────────────────────────────────── */
+node.TCC_Permission {
+  color: #E74C3C;
+  border-color: #C0392B;
+  border-width: 3px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+  diameter: 55px;
+  caption: "{display_name}";
+}
+
+/* ── Entitlement ─────────────────────────────────────────────────────────── */
+node.Entitlement {
+  color: #F39C12;
+  border-color: #D68910;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 9px;
+  diameter: 45px;
+  caption: "{name}";
+}
+
+/* ── XPC_Service ─────────────────────────────────────────────────────────── */
+node.XPC_Service {
+  color: #27AE60;
+  border-color: #1E8449;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 9px;
+  diameter: 50px;
+  caption: "{label}";
+}
+
+/* ── LaunchItem ──────────────────────────────────────────────────────────── */
+node.LaunchItem {
+  color: #8E44AD;
+  border-color: #76359D;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 9px;
+  diameter: 50px;
+  caption: "{label}";
+}
+
+/* ── Keychain_Item ───────────────────────────────────────────────────────── */
+node.Keychain_Item {
+  color: #1ABC9C;
+  border-color: #17A589;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 9px;
+  diameter: 45px;
+  caption: "{label}";
+}
+
+/* ── MDM_Profile ─────────────────────────────────────────────────────────── */
+node.MDM_Profile {
+  color: #95A5A6;
+  border-color: #7F8C8D;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 9px;
+  diameter: 45px;
+  caption: "{display_name}";
+}
+
+/* ── User ────────────────────────────────────────────────────────────────── */
+node.User {
+  color: #E67E22;
+  border-color: #CA6F1E;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+  diameter: 50px;
+  caption: "{name}";
+}
+
+/* ── Default relationship style ──────────────────────────────────────────── */
+relationship {
+  color: #A5ABB6;
+  shaft-width: 1px;
+  font-size: 8px;
+  padding: 3px;
+  text-color-external: #000000;
+  text-color-internal: #FFFFFF;
+  caption: type;
+}
+
+/* ── HAS_TCC_GRANT — TCC permission grant (red, medium) ──────────────────── */
+relationship.HAS_TCC_GRANT {
+  color: #E74C3C;
+  shaft-width: 3px;
+  font-size: 8px;
+  text-color-external: #C0392B;
+  caption: type;
+}
+
+/* ── CAN_INJECT_INTO — code injection attack path (red, thick) ───────────── */
+relationship.CAN_INJECT_INTO {
+  color: #C0392B;
+  shaft-width: 5px;
+  font-size: 8px;
+  text-color-external: #922B21;
+  caption: type;
+}
+
+/* ── CHILD_INHERITS_TCC — Electron TCC inheritance (red, thick) ─────────── */
+relationship.CHILD_INHERITS_TCC {
+  color: #C0392B;
+  shaft-width: 4px;
+  font-size: 8px;
+  text-color-external: #922B21;
+  caption: type;
+}
+
+/* ── CAN_SEND_APPLE_EVENT — automation attack (orange, medium) ───────────── */
+relationship.CAN_SEND_APPLE_EVENT {
+  color: #E67E22;
+  shaft-width: 3px;
+  font-size: 8px;
+  text-color-external: #CA6F1E;
+  caption: type;
+}
+
+/* ── HAS_ENTITLEMENT — entitlement ownership (amber, thin) ──────────────── */
+relationship.HAS_ENTITLEMENT {
+  color: #F39C12;
+  shaft-width: 1px;
+  font-size: 7px;
+  text-color-external: #D68910;
+  caption: type;
+}
+
+/* ── PERSISTS_VIA — persistence mechanism (purple) ──────────────────────── */
+relationship.PERSISTS_VIA {
+  color: #8E44AD;
+  shaft-width: 2px;
+  font-size: 8px;
+  text-color-external: #76359D;
+  caption: type;
+}
+
+/* ── RUNS_AS — service/daemon running as user (purple, thin) ────────────── */
+relationship.RUNS_AS {
+  color: #9B59B6;
+  shaft-width: 1px;
+  font-size: 7px;
+  caption: type;
+}
+
+/* ── COMMUNICATES_WITH — XPC communication (green) ──────────────────────── */
+relationship.COMMUNICATES_WITH {
+  color: #27AE60;
+  shaft-width: 2px;
+  font-size: 7px;
+  text-color-external: #1E8449;
+  caption: type;
+}
+
+/* ── CAN_READ_KEYCHAIN — keychain access (teal) ──────────────────────────── */
+relationship.CAN_READ_KEYCHAIN {
+  color: #1ABC9C;
+  shaft-width: 2px;
+  font-size: 7px;
+  text-color-external: #17A589;
+  caption: type;
+}
+
+/* ── CONFIGURES — MDM configures TCC (gray) ──────────────────────────────── */
+relationship.CONFIGURES {
+  color: #95A5A6;
+  shaft-width: 2px;
+  font-size: 7px;
+  caption: type;
+}
+
+/* ── OWNS — user owns app (orange, thin) ─────────────────────────────────── */
+relationship.OWNS {
+  color: #E67E22;
+  shaft-width: 1px;
+  font-size: 7px;
+  caption: type;
+}
+
+/* ── SIGNED_BY — code signing relationship (blue, thin) ─────────────────── */
+relationship.SIGNED_BY {
+  color: #5D6D7E;
+  shaft-width: 1px;
+  font-size: 7px;
+  caption: type;
+}
+
+/* ── HAS_KEYCHAIN — user has keychain (teal, thin) ──────────────────────── */
+relationship.HAS_KEYCHAIN {
+  color: #1ABC9C;
+  shaft-width: 1px;
+  font-size: 7px;
+  caption: type;
+}

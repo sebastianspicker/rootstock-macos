@@ -1,24 +1,30 @@
-# Bug_Report
+---
+name: Bug Report
+about: Report a bug in Rootstock
+title: "[bug] "
+labels: bug
+---
 
+## Environment
+- macOS version:
+- Rootstock version:
+- Elevation level: (user / root / FDA)
 
-## Context
-This page keeps the current bug_report guidance concise after earlier rough notes.
+## Description
+A clear description of the bug.
 
-## Usage
-- Rewrote the the main flow explanation around the maintained behavior.
+## Steps to Reproduce
+1.
+2.
+3.
 
-- Earlier scratch notes were compressed into the current guidance.
+## Expected Behavior
 
-## Notes Folded Into Current Flow
-Early notes are still uneven and may be folded into clearer sections later.
+## Actual Behavior
 
-## Development
-- Kept the the main flow verification command reproducible.
+## Collector Output
+```
+Paste relevant JSON output or error messages here
+```
 
-- Earlier scratch notes were compressed into the current guidance.
-
-## Caveats
-Some setup details still depend on the current local workflow and may change again.
-
-## Revision Notes
-Latest pass: tighten-branch-filters-a during steady build work (forced-tighten-branch-filters-a-8).
+## Additional Context

@@ -1,0 +1,188 @@
+% Rootstock — Bibliography
+% Key references for the paper skeleton.
+
+% ── Attack Path Analysis & Graph Theory ──────────────────────────────
+
+@inproceedings{bloodhound2016,
+  author    = {Andy Robbins and Rohan Vazarkar and Will Schroeder},
+  title     = {{BloodHound}: Six Degrees of Domain Admin},
+  booktitle = {DEF CON 24},
+  year      = {2016},
+  note      = {First presentation of graph-based Active Directory attack path analysis},
+  url       = {https://github.com/BloodHoundAD/BloodHound}
+}
+
+@inproceedings{dunagan2009heat,
+  author    = {John Dunagan and Alice X. Zheng and Daniel R. Simon},
+  title     = {Heat-Ray: Combating Identity Snowball Attacks Using Machine Learning, Combinatorial Optimization and Attack Graphs},
+  booktitle = {Proceedings of the 2009 ACM Symposium on Operating Systems Principles (SOSP)},
+  year      = {2009},
+  publisher = {ACM}
+}
+
+@inproceedings{ou2006scalable,
+  author    = {Xinming Ou and Wayne F. Boyer and Miles A. McQueen},
+  title     = {A Scalable Approach to Attack Graph Generation},
+  booktitle = {Proceedings of the 13th ACM Conference on Computer and Communications Security (CCS)},
+  year      = {2006},
+  publisher = {ACM}
+}
+
+@misc{bloodhound_ce2023,
+  author    = {{SpecterOps}},
+  title     = {{BloodHound Community Edition}},
+  year      = {2023},
+  url       = {https://github.com/SpecterOps/BloodHound},
+  note      = {Open-source rewrite of BloodHound with new data model and API}
+}
+
+% ── macOS Security Architecture ──────────────────────────────────────
+
+@misc{apple_platform_security2024,
+  author    = {{Apple Inc.}},
+  title     = {Apple Platform Security Guide},
+  year      = {2024},
+  url       = {https://support.apple.com/guide/security/welcome/web},
+  note      = {Official documentation of macOS/iOS security architecture}
+}
+
+@misc{mitre_attack_macos,
+  author    = {{The MITRE Corporation}},
+  title     = {{MITRE ATT\&CK} for macOS},
+  year      = {2024},
+  url       = {https://attack.mitre.org/matrices/enterprise/macos/},
+  note      = {Adversary tactics and techniques specific to macOS}
+}
+
+@inproceedings{wardle2015methods,
+  author    = {Patrick Wardle},
+  title     = {Methods of Malware Persistence on Mac {OS X}},
+  booktitle = {Virus Bulletin Conference},
+  year      = {2015},
+  note      = {Comprehensive survey of macOS persistence mechanisms}
+}
+
+@misc{wardle_objective_see,
+  author    = {Patrick Wardle},
+  title     = {{Objective-See}: macOS Security Tools and Research},
+  year      = {2024},
+  url       = {https://objective-see.org},
+  note      = {Open-source macOS security tools: KnockKnock, BlockBlock, LuLu, OverSight}
+}
+
+% ── TCC Research ─────────────────────────────────────────────────────
+
+@inproceedings{regula2020tcc,
+  author    = {Wojciech Regu{\l}a},
+  title     = {20+ Ways to Bypass Your macOS Privacy Mechanisms},
+  booktitle = {Objective by the Sea v3.0},
+  year      = {2020},
+  note      = {Systematic analysis of TCC bypass techniques on macOS}
+}
+
+@inproceedings{fitzl2020tcc,
+  author    = {Csaba Fitzl},
+  title     = {{TCC} — The Transparency, Consent, and Control Framework on macOS},
+  booktitle = {Objective by the Sea v4.0},
+  year      = {2020},
+  note      = {Deep dive into TCC internals, database schema, and bypass methods}
+}
+
+@misc{fitzl2022tcc_bypass,
+  author    = {Csaba Fitzl},
+  title     = {macOS {TCC} Bypass Techniques and Mitigations},
+  year      = {2022},
+  url       = {https://theevilbit.github.io/},
+  note      = {Ongoing research on TCC bypasses via injection, mount tricks, and automation abuse}
+}
+
+% ── macOS Offensive Tools ────────────────────────────────────────────
+
+@misc{bifrost2020,
+  author    = {Cody Thomas},
+  title     = {{Bifrost}: A Kerberos Interaction Tool for macOS},
+  year      = {2020},
+  url       = {https://github.com/its-a-feature/bifrost},
+  note      = {Native macOS Kerberos interaction without Heimdal/MIT Kerberos}
+}
+
+@misc{chainbreaker2014,
+  author    = {n0fate},
+  title     = {{Chainbreaker}: macOS Keychain Database Extractor},
+  year      = {2014},
+  url       = {https://github.com/n0fate/chainbreaker},
+  note      = {Extracts credentials from macOS Keychain databases}
+}
+
+@misc{swiftbelt2019,
+  author    = {Cedric Owens},
+  title     = {{SwiftBelt}: macOS Enumeration Tool Written in Swift},
+  year      = {2019},
+  url       = {https://github.com/cedowens/SwiftBelt},
+  note      = {macOS red team enumeration: installed apps, credentials, browser data}
+}
+
+@misc{mythic2020,
+  author    = {Cody Thomas},
+  title     = {{Mythic}: A Collaborative, Multi-Platform Red Team Framework},
+  year      = {2020},
+  url       = {https://github.com/its-a-feature/Mythic},
+  note      = {Cross-platform C2 framework with macOS-native agents (Apfell/Poseidon)}
+}
+
+% ── Code Signing & Entitlements ──────────────────────────────────────
+
+@inproceedings{thomas2020obts,
+  author    = {Cody Thomas},
+  title     = {macOS Post-Exploitation with {Mythic} and {JXA}},
+  booktitle = {Objective by the Sea v3.0},
+  year      = {2020},
+  note      = {Covers entitlement abuse, JXA scripting, and macOS post-exploitation}
+}
+
+@misc{apple_code_signing,
+  author    = {{Apple Inc.}},
+  title     = {Code Signing Guide},
+  year      = {2024},
+  url       = {https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/},
+  note      = {Official documentation on code signing, hardened runtime, library validation}
+}
+
+% ── Enterprise macOS Security ────────────────────────────────────────
+
+@misc{jamf2024,
+  author    = {{Jamf}},
+  title     = {Security 360: Annual Trends Report},
+  year      = {2024},
+  url       = {https://www.jamf.com/resources/white-papers/security-360/},
+  note      = {Enterprise macOS threat landscape and management trends}
+}
+
+@misc{kandji2024,
+  author    = {{Kandji}},
+  title     = {macOS Security Compliance for Enterprise},
+  year      = {2024},
+  url       = {https://www.kandji.io/platform/compliance/},
+  note      = {Enterprise macOS compliance and security baseline enforcement}
+}
+
+% ── Graph Databases in Security ──────────────────────────────────────
+
+@book{robinson2015graph,
+  author    = {Ian Robinson and Jim Webber and Emil Eifrem},
+  title     = {Graph Databases: New Opportunities for Connected Data},
+  publisher = {O'Reilly Media},
+  year      = {2015},
+  edition   = {2nd},
+  note      = {Foundational text on property graph model and Neo4j}
+}
+
+@inproceedings{noel2010measuring,
+  author    = {Steven Noel and Sushil Jajodia},
+  title     = {Measuring Security Risk of Networks Using Attack Graphs},
+  journal   = {International Journal of Next-Generation Computing},
+  year      = {2010},
+  volume    = {1},
+  number    = {1},
+  note      = {Quantitative risk analysis using attack graph metrics}
+}

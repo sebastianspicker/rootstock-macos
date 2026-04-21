@@ -1,0 +1,1647 @@
+{
+  "scan_id": "demo-0001-acme-macbook-pro",
+  "timestamp": "2026-03-20T10:00:00Z",
+  "hostname": "acme-macbook-pro",
+  "macos_version": "macOS 15.3 (Build 24D60)",
+  "collector_version": "0.1.0",
+  "elevation": {
+    "is_root": true,
+    "has_fda": true
+  },
+  "applications": [
+    {
+      "name": "iTerm2",
+      "bundle_id": "com.googlecode.iterm2",
+      "path": "/Applications/iTerm.app",
+      "version": "3.5.2",
+      "team_id": "H7V7XYVQ7D",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: George Nachman (H7V7XYVQ7D)",
+      "signing_certificate_sha256": "a1b2c3d4e5f60000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: George Nachman (H7V7XYVQ7D)",
+          "organization": "George Nachman",
+          "sha256": "a1b2c3d4e5f60000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.device.audio-input",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "dyld_insert_via_entitlement",
+        "missing_library_validation"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Slack",
+      "bundle_id": "com.tinyspeck.slackmacgap",
+      "path": "/Applications/Slack.app",
+      "version": "4.39.96",
+      "team_id": "BQR82RBBHL",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": true,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Slack Technologies, Inc. (BQR82RBBHL)",
+      "signing_certificate_sha256": "b2c3d4e5f6a10000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Slack Technologies, Inc. (BQR82RBBHL)",
+          "organization": "Slack Technologies, Inc.",
+          "sha256": "b2c3d4e5f6a10000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.device.audio-input",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.device.camera",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.developer.icloud-container-identifiers",
+          "is_private": false,
+          "category": "icloud",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "dyld_insert_via_entitlement",
+        "missing_library_validation",
+        "electron_env_var"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Visual Studio Code",
+      "bundle_id": "com.microsoft.VSCode",
+      "path": "/Applications/Visual Studio Code.app",
+      "version": "1.96.2",
+      "team_id": "UBF8T346G9",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": true,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Microsoft Corporation (UBF8T346G9)",
+      "signing_certificate_sha256": "c3d4e5f6a1b20000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Microsoft Corporation (UBF8T346G9)",
+          "organization": "Microsoft Corporation",
+          "sha256": "c3d4e5f6a1b20000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "dyld_insert_via_entitlement",
+        "missing_library_validation",
+        "electron_env_var"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "zoom.us",
+      "bundle_id": "us.zoom.xos",
+      "path": "/Applications/zoom.us.app",
+      "version": "6.3.5",
+      "team_id": "BJ4HAAB9B3",
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Zoom Video Communications, Inc. (BJ4HAAB9B3)",
+      "signing_certificate_sha256": "d4e5f6a1b2c30000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Zoom Video Communications, Inc. (BJ4HAAB9B3)",
+          "organization": "Zoom Video Communications, Inc.",
+          "sha256": "d4e5f6a1b2c30000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.device.camera",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.device.audio-input",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "OmniGraffle",
+      "bundle_id": "com.omnigroup.OmniGraffle7",
+      "path": "/Applications/OmniGraffle.app",
+      "version": "7.23.2",
+      "team_id": "34YW5R9HE4",
+      "hardened_runtime": true,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: The Omni Group (34YW5R9HE4)",
+      "signing_certificate_sha256": "e5f6a1b2c3d40000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: The Omni Group (34YW5R9HE4)",
+          "organization": "The Omni Group",
+          "sha256": "e5f6a1b2c3d40000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.automation.apple-events",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "missing_library_validation"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Firefox",
+      "bundle_id": "org.mozilla.firefox",
+      "path": "/Applications/Firefox.app",
+      "version": "134.0",
+      "team_id": "43AQ936H96",
+      "hardened_runtime": true,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Mozilla Corporation (43AQ936H96)",
+      "signing_certificate_sha256": "f6a1b2c3d4e50000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Mozilla Corporation (43AQ936H96)",
+          "organization": "Mozilla Corporation",
+          "sha256": "f6a1b2c3d4e50000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": [
+        "missing_library_validation"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Acme Backup",
+      "bundle_id": "com.acmecorp.backup",
+      "path": "/Applications/Acme Backup.app",
+      "version": "2.1.0",
+      "team_id": "ACME123456",
+      "hardened_runtime": true,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Acme Corp (ACME123456)",
+      "signing_certificate_sha256": "01020304050600000000000000000000000000000000000000000000000000ab",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Acme Corp (ACME123456)",
+          "organization": "Acme Corp",
+          "sha256": "0102030405060000ab0000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "missing_library_validation"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Acme VPN",
+      "bundle_id": "com.acmecorp.vpn",
+      "path": "/Applications/Acme VPN.app",
+      "version": "3.4.1",
+      "team_id": "ACME123456",
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Acme Corp (ACME123456)",
+      "signing_certificate_sha256": "02030405060100000000000000000000000000000000000000000000000000ab",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Acme Corp (ACME123456)",
+          "organization": "Acme Corp",
+          "sha256": "0203040506010000ab0000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.developer.networking.networkextension",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Acme Launcher",
+      "bundle_id": "com.acmecorp.launcher",
+      "path": "/Applications/Acme Launcher.app",
+      "version": "1.0.3",
+      "team_id": "ACME123456",
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Acme Corp (ACME123456)",
+      "signing_certificate_sha256": "03040506010200000000000000000000000000000000000000000000000000ab",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Acme Corp (ACME123456)",
+          "organization": "Acme Corp",
+          "sha256": "0304050601020000ab0000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Acme Analytics",
+      "bundle_id": "com.acmecorp.analytics",
+      "path": "/Applications/Acme Analytics.app",
+      "version": "0.9.1",
+      "team_id": null,
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": false,
+      "is_adhoc_signed": true,
+      "signing_certificate_cn": null,
+      "signing_certificate_sha256": null,
+      "certificate_expires": null,
+      "is_certificate_expired": false,
+      "certificate_chain_length": 0,
+      "certificate_trust_valid": null,
+      "certificate_chain": [],
+      "entitlements": [
+        {
+          "name": "com.apple.security.device.camera",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "missing_library_validation"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Finder",
+      "bundle_id": "com.apple.finder",
+      "path": "/System/Library/CoreServices/Finder.app",
+      "version": "15.3",
+      "team_id": null,
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": true,
+      "signed": true,
+      "is_sip_protected": true,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": null,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": null,
+      "signing_certificate_sha256": null,
+      "certificate_expires": null,
+      "is_certificate_expired": false,
+      "certificate_chain_length": null,
+      "certificate_trust_valid": null,
+      "certificate_chain": [],
+      "entitlements": [
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.rootless.storage.Finder",
+          "is_private": true,
+          "category": "privilege",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": [],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Terminal",
+      "bundle_id": "com.apple.Terminal",
+      "path": "/System/Applications/Utilities/Terminal.app",
+      "version": "2.14",
+      "team_id": null,
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": true,
+      "signed": true,
+      "is_sip_protected": true,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": null,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": null,
+      "signing_certificate_sha256": null,
+      "certificate_expires": null,
+      "is_certificate_expired": false,
+      "certificate_chain_length": null,
+      "certificate_trust_valid": null,
+      "certificate_chain": [],
+      "entitlements": [
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.rootless.storage.Terminal",
+          "is_private": true,
+          "category": "privilege",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": [],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "System Settings",
+      "bundle_id": "com.apple.systempreferences",
+      "path": "/System/Applications/System Settings.app",
+      "version": "15.3",
+      "team_id": null,
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": true,
+      "signed": true,
+      "is_sip_protected": true,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": null,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": null,
+      "signing_certificate_sha256": null,
+      "certificate_expires": null,
+      "is_certificate_expired": false,
+      "certificate_chain_length": null,
+      "certificate_trust_valid": null,
+      "certificate_chain": [],
+      "entitlements": [
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.rootless.storage.SystemSettings",
+          "is_private": true,
+          "category": "privilege",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": [],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "1Password",
+      "bundle_id": "com.1password.1password",
+      "path": "/Applications/1Password.app",
+      "version": "8.10.58",
+      "team_id": "2BUA8C4S2C",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": true,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: AgileBits Inc. (2BUA8C4S2C)",
+      "signing_certificate_sha256": "a1a2a3a4a5a60000000000000000000000000000000000000000000000000000",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: AgileBits Inc. (2BUA8C4S2C)",
+          "organization": "AgileBits Inc.",
+          "sha256": "a1a2a3a4a5a60000000000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.keychain-access-groups",
+          "is_private": false,
+          "category": "keychain",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": [
+        "dyld_insert_via_entitlement",
+        "missing_library_validation",
+        "electron_env_var"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    },
+    {
+      "name": "Acme Shell Helper",
+      "bundle_id": "com.acmecorp.shellhelper",
+      "path": "/Applications/Acme Shell Helper.app",
+      "version": "1.2.0",
+      "team_id": "ACME123456",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "is_sip_protected": false,
+      "is_sandboxed": false,
+      "sandbox_exceptions": [],
+      "is_notarized": true,
+      "is_adhoc_signed": false,
+      "signing_certificate_cn": "Developer ID Application: Acme Corp (ACME123456)",
+      "signing_certificate_sha256": "04050601020300000000000000000000000000000000000000000000000000ab",
+      "certificate_expires": "2028-06-15T00:00:00Z",
+      "is_certificate_expired": false,
+      "certificate_chain_length": 3,
+      "certificate_trust_valid": null,
+      "certificate_chain": [
+        {
+          "common_name": "Developer ID Application: Acme Corp (ACME123456)",
+          "organization": "Acme Corp",
+          "sha256": "0405060102030000ab0000000000000000000000000000000000000000000000",
+          "valid_from": "2023-06-15T00:00:00Z",
+          "valid_to": "2028-06-15T00:00:00Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Developer ID Certification Authority",
+          "organization": "Apple Inc.",
+          "sha256": "aa11bb22cc33dd44ee55ff6600112233aa11bb22cc33dd44ee55ff6600112233",
+          "valid_from": "2012-02-01T22:12:15Z",
+          "valid_to": "2027-02-01T22:12:15Z",
+          "is_root": false
+        },
+        {
+          "common_name": "Apple Root CA",
+          "organization": "Apple Inc.",
+          "sha256": "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+          "valid_from": "2006-04-25T21:40:36Z",
+          "valid_to": "2035-02-09T21:40:36Z",
+          "is_root": true
+        }
+      ],
+      "entitlements": [
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": [
+        "dyld_insert_via_entitlement",
+        "missing_library_validation"
+      ],
+      "launch_constraint_category": null,
+      "sandbox_profile": null,
+      "quarantine_info": null
+    }
+  ],
+  "tcc_grants": [
+    {
+      "service": "kTCCServiceSystemPolicyAllFiles",
+      "display_name": "Full Disk Access",
+      "client": "com.googlecode.iterm2",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 2,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceAccessibility",
+      "display_name": "Accessibility",
+      "client": "com.googlecode.iterm2",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 2,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceCamera",
+      "display_name": "Camera",
+      "client": "com.tinyspeck.slackmacgap",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceMicrophone",
+      "display_name": "Microphone",
+      "client": "com.tinyspeck.slackmacgap",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceScreenCapture",
+      "display_name": "Screen Recording",
+      "client": "com.tinyspeck.slackmacgap",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceAccessibility",
+      "display_name": "Accessibility",
+      "client": "com.microsoft.VSCode",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceCamera",
+      "display_name": "Camera",
+      "client": "us.zoom.xos",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceMicrophone",
+      "display_name": "Microphone",
+      "client": "us.zoom.xos",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceAppleEvents",
+      "display_name": "Automation",
+      "client": "com.omnigroup.OmniGraffle7",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceSystemPolicyAllFiles",
+      "display_name": "Full Disk Access",
+      "client": "com.acmecorp.backup",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 4,
+      "scope": "system",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceCamera",
+      "display_name": "Camera",
+      "client": "com.acmecorp.analytics",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceSystemPolicyAllFiles",
+      "display_name": "Full Disk Access",
+      "client": "com.apple.systempreferences",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 5,
+      "scope": "system",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceSystemPolicyAllFiles",
+      "display_name": "Full Disk Access",
+      "client": "com.apple.finder",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 5,
+      "scope": "system",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceAppleEvents",
+      "display_name": "Automation",
+      "client": "com.apple.finder",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 5,
+      "scope": "system",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceAccessibility",
+      "display_name": "Accessibility",
+      "client": "com.1password.1password",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748800
+    }
+  ],
+  "xpc_services": [
+    {
+      "label": "com.acmecorp.vpn.tunnel",
+      "path": "/Library/LaunchDaemons/com.acmecorp.vpn.tunnel.plist",
+      "program": "/Library/Application Support/Acme VPN/acme-vpn-tunnel",
+      "type": "daemon",
+      "user": "root",
+      "run_at_load": true,
+      "keep_alive": true,
+      "mach_services": [
+        "com.acmecorp.vpn.tunnel.xpc"
+      ],
+      "entitlements": [
+        "com.apple.developer.networking.networkextension"
+      ],
+      "has_client_verification": false
+    },
+    {
+      "label": "com.acmecorp.backup.helper",
+      "path": "/Library/LaunchDaemons/com.acmecorp.backup.helper.plist",
+      "program": "/Library/PrivilegedHelperTools/com.acmecorp.backup.helper",
+      "type": "daemon",
+      "user": "root",
+      "run_at_load": true,
+      "keep_alive": true,
+      "mach_services": [
+        "com.acmecorp.backup.helper.xpc"
+      ],
+      "entitlements": [
+        "com.apple.private.tcc.allow"
+      ],
+      "has_client_verification": true
+    },
+    {
+      "label": "com.apple.security.authtrampoline",
+      "path": "/System/Library/LaunchDaemons/com.apple.security.authtrampoline.plist",
+      "program": "/usr/libexec/security_authtrampoline",
+      "type": "daemon",
+      "user": "root",
+      "run_at_load": false,
+      "keep_alive": false,
+      "mach_services": [
+        "com.apple.security.authtrampoline"
+      ],
+      "entitlements": [],
+      "has_client_verification": true
+    },
+    {
+      "label": "com.acmecorp.shellhelper.xpc",
+      "path": "/Library/LaunchAgents/com.acmecorp.shellhelper.xpc.plist",
+      "program": "/Applications/Acme Shell Helper.app/Contents/XPCServices/shellhelper",
+      "type": "agent",
+      "user": null,
+      "run_at_load": true,
+      "keep_alive": false,
+      "mach_services": [
+        "com.acmecorp.shellhelper.xpc"
+      ],
+      "entitlements": [],
+      "has_client_verification": false
+    },
+    {
+      "label": "com.acmecorp.launcher.agent",
+      "path": "/Library/LaunchAgents/com.acmecorp.launcher.agent.plist",
+      "program": "/Applications/Acme Launcher.app/Contents/MacOS/launcher-agent",
+      "type": "agent",
+      "user": null,
+      "run_at_load": true,
+      "keep_alive": false,
+      "mach_services": [
+        "com.acmecorp.launcher.agent.xpc"
+      ],
+      "entitlements": [],
+      "has_client_verification": true
+    }
+  ],
+  "keychain_acls": [
+    {
+      "label": "1Password Vault Key",
+      "kind": "generic_password",
+      "service": "com.1password.1password.vault",
+      "access_group": "2BUA8C4S2C.com.1password.1password",
+      "trusted_apps": [
+        "com.1password.1password"
+      ],
+      "sensitivity": "critical"
+    },
+    {
+      "label": "Slack API Token",
+      "kind": "internet_password",
+      "service": "slack.com",
+      "access_group": null,
+      "trusted_apps": [
+        "com.tinyspeck.slackmacgap",
+        "com.apple.Safari"
+      ],
+      "sensitivity": "high"
+    },
+    {
+      "label": "Acme VPN Certificate",
+      "kind": "certificate",
+      "service": "com.acmecorp.vpn",
+      "access_group": "ACME123456.com.acmecorp.vpn",
+      "trusted_apps": [
+        "com.acmecorp.vpn"
+      ],
+      "sensitivity": "high"
+    },
+    {
+      "label": "Developer ID Certificate",
+      "kind": "certificate",
+      "service": null,
+      "access_group": "com.apple.security",
+      "trusted_apps": [],
+      "sensitivity": "medium"
+    }
+  ],
+  "mdm_profiles": [
+    {
+      "identifier": "com.acmecorp.mdm.privacy-prefs",
+      "display_name": "Acme Corp Privacy Preferences",
+      "organization": "Acme Corp IT",
+      "install_date": "2026-01-15 09:00:00 +0000",
+      "tcc_policies": [
+        {
+          "service": "SystemPolicyAllFiles",
+          "client_bundle_id": "com.acmecorp.backup",
+          "allowed": true
+        },
+        {
+          "service": "SystemPolicyAllFiles",
+          "client_bundle_id": "com.acmecorp.analytics",
+          "allowed": true
+        }
+      ]
+    }
+  ],
+  "launch_items": [
+    {
+      "label": "com.acmecorp.vpn.tunnel",
+      "path": "/Library/LaunchDaemons/com.acmecorp.vpn.tunnel.plist",
+      "type": "daemon",
+      "program": "/Library/Application Support/Acme VPN/acme-vpn-tunnel",
+      "run_at_load": true,
+      "user": "root",
+      "plist_owner": "root",
+      "program_owner": "root",
+      "plist_writable_by_non_root": false,
+      "program_writable_by_non_root": false
+    },
+    {
+      "label": "com.acmecorp.backup.helper",
+      "path": "/Library/LaunchDaemons/com.acmecorp.backup.helper.plist",
+      "type": "daemon",
+      "program": "/Library/PrivilegedHelperTools/com.acmecorp.backup.helper",
+      "run_at_load": true,
+      "user": "root",
+      "plist_owner": "root",
+      "program_owner": "root",
+      "plist_writable_by_non_root": false,
+      "program_writable_by_non_root": false
+    },
+    {
+      "label": "com.acmecorp.launcher.agent",
+      "path": "/Library/LaunchAgents/com.acmecorp.launcher.agent.plist",
+      "type": "agent",
+      "program": "/Applications/Acme Launcher.app/Contents/MacOS/launcher-agent",
+      "run_at_load": true,
+      "user": null,
+      "plist_owner": "demouser",
+      "program_owner": "root",
+      "plist_writable_by_non_root": true,
+      "program_writable_by_non_root": false
+    },
+    {
+      "label": "com.acmecorp.shellhelper",
+      "path": "/Library/LaunchAgents/com.acmecorp.shellhelper.plist",
+      "type": "agent",
+      "program": "/Applications/Acme Shell Helper.app/Contents/MacOS/shellhelper",
+      "run_at_load": true,
+      "user": null,
+      "plist_owner": "root",
+      "program_owner": "root",
+      "plist_writable_by_non_root": false,
+      "program_writable_by_non_root": false
+    },
+    {
+      "label": "com.apple.security.authtrampoline",
+      "path": "/System/Library/LaunchDaemons/com.apple.security.authtrampoline.plist",
+      "type": "daemon",
+      "program": "/usr/libexec/security_authtrampoline",
+      "run_at_load": false,
+      "user": "root",
+      "plist_owner": "root",
+      "program_owner": "root",
+      "plist_writable_by_non_root": false,
+      "program_writable_by_non_root": false
+    },
+    {
+      "label": "com.acmecorp.analytics.reporter",
+      "path": "/Library/LaunchAgents/com.acmecorp.analytics.reporter.plist",
+      "type": "agent",
+      "program": "/Applications/Acme Analytics.app/Contents/MacOS/reporter",
+      "run_at_load": true,
+      "user": null,
+      "plist_owner": "root",
+      "program_owner": "root",
+      "plist_writable_by_non_root": false,
+      "program_writable_by_non_root": false
+    }
+  ],
+  "local_groups": [
+    {
+      "name": "admin",
+      "gid": 80,
+      "members": [
+        "demouser"
+      ]
+    },
+    {
+      "name": "_developer",
+      "gid": 204,
+      "members": [
+        "demouser"
+      ]
+    },
+    {
+      "name": "com.apple.access_ssh",
+      "gid": 399,
+      "members": [
+        "demouser"
+      ]
+    },
+    {
+      "name": "wheel",
+      "gid": 0,
+      "members": [
+        "demouser"
+      ]
+    }
+  ],
+  "remote_access_services": [
+    {
+      "service": "ssh",
+      "enabled": true,
+      "port": 22,
+      "config": {
+        "PermitRootLogin": "no"
+      }
+    }
+  ],
+  "firewall_status": [
+    {
+      "enabled": true,
+      "stealth_mode": false,
+      "allow_signed": true,
+      "allow_built_in": true,
+      "app_rules": [
+        {
+          "bundle_id": "com.acmecorp.vpn",
+          "allow_incoming": true
+        },
+        {
+          "bundle_id": "com.tinyspeck.slackmacgap",
+          "allow_incoming": false
+        }
+      ]
+    }
+  ],
+  "login_sessions": [
+    {
+      "username": "demouser",
+      "terminal": "console",
+      "login_time": "Mar 20 09:15",
+      "session_type": "console"
+    },
+    {
+      "username": "demouser",
+      "terminal": "ttys000",
+      "login_time": "Mar 20 09:30",
+      "session_type": "ssh"
+    }
+  ],
+  "authorization_rights": [
+    {
+      "name": "system.privilege.admin",
+      "rule": "authenticate-admin-nonshared",
+      "allow_root": true,
+      "require_authentication": true
+    },
+    {
+      "name": "system.preferences",
+      "rule": "authenticate-session-owner",
+      "allow_root": false,
+      "require_authentication": true
+    },
+    {
+      "name": "com.acmecorp.vpn.install-helper",
+      "rule": "allow",
+      "allow_root": true,
+      "require_authentication": false
+    }
+  ],
+  "authorization_plugins": [
+    {
+      "name": "AcmeAuthPlugin",
+      "path": "/Library/Security/SecurityAgentPlugins/AcmeAuthPlugin.bundle",
+      "team_id": "ACME123456"
+    }
+  ],
+  "system_extensions": [
+    {
+      "identifier": "com.acmecorp.vpn.tunnel",
+      "team_id": "ACME123456",
+      "extension_type": "network",
+      "enabled": true,
+      "subscribed_events": []
+    }
+  ],
+  "sudoers_rules": [
+    {
+      "user": "demouser",
+      "host": "ALL",
+      "command": "ALL",
+      "nopasswd": true
+    }
+  ],
+  "running_processes": [
+    {
+      "pid": 501,
+      "user": "demouser",
+      "command": "/Applications/iTerm.app/Contents/MacOS/iTerm2",
+      "bundle_id": "com.googlecode.iterm2"
+    },
+    {
+      "pid": 612,
+      "user": "demouser",
+      "command": "/Applications/Slack.app/Contents/MacOS/Slack",
+      "bundle_id": "com.tinyspeck.slackmacgap"
+    },
+    {
+      "pid": 723,
+      "user": "demouser",
+      "command": "/Applications/Visual Studio Code.app/Contents/MacOS/Electron",
+      "bundle_id": "com.microsoft.VSCode"
+    },
+    {
+      "pid": 834,
+      "user": "demouser",
+      "command": "/Applications/1Password.app/Contents/MacOS/1Password",
+      "bundle_id": "com.1password.1password"
+    },
+    {
+      "pid": 945,
+      "user": "demouser",
+      "command": "/Applications/Acme Shell Helper.app/Contents/MacOS/shellhelper",
+      "bundle_id": "com.acmecorp.shellhelper"
+    },
+    {
+      "pid": 1056,
+      "user": "root",
+      "command": "/Library/Application Support/Acme VPN/acme-vpn-tunnel",
+      "bundle_id": "com.acmecorp.vpn"
+    }
+  ],
+  "user_details": [
+    {
+      "name": "demouser",
+      "shell": "/bin/zsh",
+      "home_dir": "/Users/demouser",
+      "is_hidden": false,
+      "is_ad_user": false
+    },
+    {
+      "name": "_acmebackup",
+      "shell": "/usr/bin/false",
+      "home_dir": "/var/empty",
+      "is_hidden": true,
+      "is_ad_user": false
+    }
+  ],
+  "file_acls": [
+    {
+      "path": "/Library/Application Support/com.apple.TCC/TCC.db",
+      "owner": "root",
+      "group": "admin",
+      "mode": "644",
+      "acl_entries": [],
+      "is_sip_protected": false,
+      "is_writable_by_non_root": false,
+      "category": "tcc_database"
+    },
+    {
+      "path": "/Users/demouser/Library/Application Support/com.apple.TCC/TCC.db",
+      "owner": "demouser",
+      "group": "staff",
+      "mode": "644",
+      "acl_entries": [],
+      "is_sip_protected": false,
+      "is_writable_by_non_root": false,
+      "category": "tcc_database"
+    },
+    {
+      "path": "/etc/sudoers",
+      "owner": "root",
+      "group": "wheel",
+      "mode": "440",
+      "acl_entries": [],
+      "is_sip_protected": false,
+      "is_writable_by_non_root": false,
+      "category": "sudoers"
+    },
+    {
+      "path": "/Library/LaunchAgents",
+      "owner": "root",
+      "group": "wheel",
+      "mode": "775",
+      "acl_entries": [],
+      "is_sip_protected": false,
+      "is_writable_by_non_root": true,
+      "category": "launch_agent_dir"
+    },
+    {
+      "path": "/Users/demouser/.zshrc",
+      "owner": "demouser",
+      "group": "staff",
+      "mode": "644",
+      "acl_entries": [],
+      "is_sip_protected": false,
+      "is_writable_by_non_root": true,
+      "category": "shell_hook"
+    }
+  ],
+  "bluetooth_devices": [
+    {
+      "name": "Magic Keyboard",
+      "address": "AA:BB:CC:DD:EE:01",
+      "device_type": "Keyboard",
+      "connected": true
+    },
+    {
+      "name": "AirPods Pro",
+      "address": "AA:BB:CC:DD:EE:02",
+      "device_type": "Headphones",
+      "connected": false
+    },
+    {
+      "name": "Magic Mouse",
+      "address": "AA:BB:CC:DD:EE:03",
+      "device_type": "Mouse",
+      "connected": true
+    }
+  ],
+  "ad_binding": {
+    "is_bound": false,
+    "realm": null,
+    "forest": null,
+    "computer_account": null,
+    "organizational_unit": null,
+    "preferred_dc": null,
+    "group_mappings": []
+  },
+  "kerberos_artifacts": [
+    {
+      "path": "/etc/krb5.conf",
+      "artifact_type": "config",
+      "owner": "root",
+      "group": "wheel",
+      "mode": "644",
+      "modification_time": "2026-01-15T12:00:00Z",
+      "principal_hint": null,
+      "is_readable": true,
+      "is_world_readable": true,
+      "is_group_readable": true,
+      "default_realm": "ACMECORP.LOCAL",
+      "permitted_enc_types": [
+        "aes256-cts-hmac-sha1-96",
+        "aes128-cts-hmac-sha1-96",
+        "rc4-hmac"
+      ],
+      "realm_names": [
+        "ACMECORP.LOCAL"
+      ],
+      "is_forwardable": true
+    }
+  ],
+  "sandbox_profiles": [],
+  "gatekeeper_enabled": true,
+  "sip_enabled": true,
+  "filevault_enabled": false,
+  "lockdown_mode_enabled": false,
+  "bluetooth_enabled": true,
+  "bluetooth_discoverable": true,
+  "screen_lock_enabled": true,
+  "screen_lock_delay": 300,
+  "display_sleep_timeout": 15,
+  "thunderbolt_security_level": "user_authorization",
+  "secure_boot_level": "full",
+  "external_boot_allowed": false,
+  "icloud_signed_in": true,
+  "icloud_drive_enabled": true,
+  "icloud_keychain_enabled": true,
+  "errors": [
+    {
+      "source": "Keychain",
+      "message": "Some keychain items require unlock",
+      "recoverable": true
+    }
+  ]
+}

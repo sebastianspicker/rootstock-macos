@@ -1,0 +1,348 @@
+{
+  "scan_id": "fixture-00000000-0000-0000-0000-000000000001",
+  "timestamp": "2026-03-18T10:00:00Z",
+  "hostname": "fixture-mac",
+  "macos_version": "macOS 14.5",
+  "collector_version": "0.1.0",
+  "elevation": {
+    "is_root": false,
+    "has_fda": false
+  },
+  "applications": [
+    {
+      "name": "iTerm2",
+      "bundle_id": "com.googlecode.iterm2",
+      "path": "/Applications/iTerm.app",
+      "version": "3.5.0",
+      "team_id": "H7V7XYVQ7D",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": false,
+      "is_system": false,
+      "signed": true,
+      "entitlements": [
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.app-sandbox",
+          "is_private": false,
+          "category": "sandbox",
+          "is_security_critical": false
+        }
+      ],
+      "injection_methods": ["dyld_insert_via_entitlement", "missing_library_validation"]
+    },
+    {
+      "name": "Slack",
+      "bundle_id": "com.tinyspeck.slackmacgap",
+      "path": "/Applications/Slack.app",
+      "version": "4.38.125",
+      "team_id": "BQR82RBBHL",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": true,
+      "is_system": false,
+      "signed": true,
+      "entitlements": [
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.device.audio-input",
+          "is_private": false,
+          "category": "tcc",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": ["dyld_insert_via_entitlement", "missing_library_validation", "electron_env_var"]
+    },
+    {
+      "name": "Terminal",
+      "bundle_id": "com.apple.Terminal",
+      "path": "/System/Applications/Utilities/Terminal.app",
+      "version": "2.14",
+      "team_id": null,
+      "hardened_runtime": false,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": true,
+      "signed": true,
+      "entitlements": [
+        {
+          "name": "com.apple.security.app-sandbox",
+          "is_private": false,
+          "category": "sandbox",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.rootless.storage.Terminal",
+          "is_private": true,
+          "category": "privilege",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": []
+    },
+    {
+      "name": "Finder",
+      "bundle_id": "com.apple.finder",
+      "path": "/System/Library/CoreServices/Finder.app",
+      "version": "14.0",
+      "team_id": null,
+      "hardened_runtime": true,
+      "library_validation": true,
+      "is_electron": false,
+      "is_system": true,
+      "signed": true,
+      "entitlements": [
+        {
+          "name": "com.apple.security.app-sandbox",
+          "is_private": false,
+          "category": "sandbox",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.private.tcc.allow",
+          "is_private": true,
+          "category": "tcc",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.rootless.storage.Finder",
+          "is_private": true,
+          "category": "privilege",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": []
+    },
+    {
+      "name": "TestElectronApp",
+      "bundle_id": "com.example.electron.test",
+      "path": "/Applications/TestElectronApp.app",
+      "version": "2.0.0",
+      "team_id": "ABCD1234EF",
+      "hardened_runtime": false,
+      "library_validation": false,
+      "is_electron": true,
+      "is_system": false,
+      "signed": true,
+      "entitlements": [
+        {
+          "name": "com.apple.security.network.client",
+          "is_private": false,
+          "category": "network",
+          "is_security_critical": false
+        },
+        {
+          "name": "com.apple.security.cs.allow-dyld-environment-variables",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        },
+        {
+          "name": "com.apple.security.cs.disable-library-validation",
+          "is_private": false,
+          "category": "injection",
+          "is_security_critical": true
+        }
+      ],
+      "injection_methods": ["missing_library_validation", "electron_env_var"]
+    }
+  ],
+  "tcc_grants": [
+    {
+      "service": "kTCCServiceSystemPolicyAllFiles",
+      "display_name": "Full Disk Access",
+      "client": "com.googlecode.iterm2",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 2,
+      "scope": "user",
+      "last_modified": 1710748800
+    },
+    {
+      "service": "kTCCServiceAccessibility",
+      "display_name": "Accessibility",
+      "client": "com.googlecode.iterm2",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 2,
+      "scope": "user",
+      "last_modified": 1710748801
+    },
+    {
+      "service": "kTCCServiceMicrophone",
+      "display_name": "Microphone",
+      "client": "com.tinyspeck.slackmacgap",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748802
+    },
+    {
+      "service": "kTCCServiceCamera",
+      "display_name": "Camera",
+      "client": "com.tinyspeck.slackmacgap",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748803
+    },
+    {
+      "service": "kTCCServiceScreenCapture",
+      "display_name": "Screen Recording",
+      "client": "com.tinyspeck.slackmacgap",
+      "client_type": 0,
+      "auth_value": 0,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748804
+    },
+    {
+      "service": "kTCCServiceMicrophone",
+      "display_name": "Microphone",
+      "client": "com.example.electron.test",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748805
+    },
+    {
+      "service": "kTCCServiceCamera",
+      "display_name": "Camera",
+      "client": "com.example.electron.test",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 1,
+      "scope": "user",
+      "last_modified": 1710748806
+    },
+    {
+      "service": "kTCCServiceSystemPolicyAllFiles",
+      "display_name": "Full Disk Access",
+      "client": "com.apple.Terminal",
+      "client_type": 0,
+      "auth_value": 2,
+      "auth_reason": 5,
+      "scope": "system",
+      "last_modified": 1710748807
+    }
+  ],
+  "mdm_profiles": [
+    {
+      "identifier": "com.example.tcc.profile",
+      "display_name": "Privacy Policy Profile",
+      "organization": "Example Corp",
+      "install_date": "2026-03-01 00:00:00 +0000",
+      "tcc_policies": [
+        {
+          "service": "SystemPolicyAllFiles",
+          "client_bundle_id": "com.googlecode.iterm2",
+          "allowed": true
+        },
+        {
+          "service": "Microphone",
+          "client_bundle_id": "com.tinyspeck.slackmacgap",
+          "allowed": true
+        }
+      ]
+    },
+    {
+      "identifier": "com.example.basic.profile",
+      "display_name": "Basic MDM Profile",
+      "organization": null,
+      "install_date": null,
+      "tcc_policies": []
+    }
+  ],
+  "keychain_acls": [
+    {
+      "label": "iTerm2 Credential",
+      "kind": "generic_password",
+      "service": "com.googlecode.iterm2.SecureInput",
+      "access_group": "H7V7XYVQ7D.com.googlecode.iterm2",
+      "trusted_apps": ["com.googlecode.iterm2"]
+    },
+    {
+      "label": "Slack Token",
+      "kind": "internet_password",
+      "service": "slack.com",
+      "access_group": null,
+      "trusted_apps": ["com.tinyspeck.slackmacgap", "com.apple.Terminal"]
+    },
+    {
+      "label": "Developer Certificate",
+      "kind": "certificate",
+      "service": null,
+      "access_group": "com.apple.security",
+      "trusted_apps": []
+    }
+  ],
+  "launch_items": [
+    {
+      "label": "com.example.daemon",
+      "path": "/Library/LaunchDaemons/com.example.daemon.plist",
+      "type": "daemon",
+      "program": "/usr/libexec/exampled",
+      "run_at_load": true,
+      "user": "root"
+    },
+    {
+      "label": "com.example.agent",
+      "path": "/Library/LaunchAgents/com.example.agent.plist",
+      "type": "agent",
+      "program": "/usr/bin/exampleagent",
+      "run_at_load": false,
+      "user": null
+    }
+  ],
+  "xpc_services": [
+    {
+      "label": "com.example.testdaemon",
+      "path": "/Library/LaunchDaemons/com.example.testdaemon.plist",
+      "program": "/usr/libexec/testdaemond",
+      "type": "daemon",
+      "user": "_testdaemon",
+      "run_at_load": true,
+      "keep_alive": true,
+      "mach_services": ["com.example.testdaemon.xpc"],
+      "entitlements": ["com.apple.private.tcc.allow"]
+    }
+  ],
+  "errors": []
+}
