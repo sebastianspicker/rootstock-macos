@@ -13,7 +13,7 @@
 // with CAN_READ_KEYCHAIN gains silent access to those stored credentials.
 //
 // Usage:
-//   cypher-shell -u neo4j -p rootstock < graph/queries/09-keychain-acl-audit.cypher
+//   cypher-shell -u neo4j -p "$NEO4J_PASSWORD" < graph/queries/09-keychain-acl-audit.cypher
 //   Or paste into Neo4j Browser.
 
 MATCH (a:Application)-[:CAN_READ_KEYCHAIN]->(k:Keychain_Item)

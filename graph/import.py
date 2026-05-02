@@ -3,7 +3,10 @@
 import.py — Import a Rootstock collector scan JSON into Neo4j.
 
 Usage:
-    python3 graph/import.py --input scan.json [--neo4j bolt://localhost:7687] [--user neo4j] [--password rootstock]
+    python3 graph/import.py --input scan.json
+        [--neo4j bolt://localhost:7687]
+        [--neo4j-user neo4j]
+        [--neo4j-password <password>]  # or NEO4J_PASSWORD
 
 Exit code 0 on success, 1 on failure.
 """

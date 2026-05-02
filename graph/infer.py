@@ -3,7 +3,10 @@
 infer.py — Run all Rootstock inference modules to derive attack-path relationships.
 
 Usage:
-    python3 graph/infer.py [--neo4j bolt://localhost:7687] [--user neo4j] [--password rootstock]
+    python3 graph/infer.py
+        [--neo4j bolt://localhost:7687]
+        [--neo4j-user neo4j]
+        [--neo4j-password <password>]  # or NEO4J_PASSWORD
 
 All inferred edges carry {inferred: true} to distinguish them from explicit collector data.
 Idempotent: safe to re-run on the same graph.

@@ -33,23 +33,15 @@ struct MDMProfileScanner {
             return ([], ["profiles command not available at \(profilesPath)"])
         }
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: profilesPath)
-        process.arguments = args
-
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return ([], ["profiles \(args.joined(separator: " ")) failed: \(error)"])
+        guard let result = Shell.runProcess(profilesPath, args, timeoutSeconds: 15) else {
+            return ([], ["profiles \(args.joined(separator: " ")) failed to start"])
+        }
+        guard result.terminationStatus == 0, !result.timedOut else {
+            let detail = result.timedOut ? "timed out" : result.stderr
+            return ([], ["profiles \(args.joined(separator: " ")) failed: \(detail)"])
         }
 
-        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let data = Data(result.stdout.utf8)
 
         // Empty output = no profiles installed for this scope
         guard !data.isEmpty else { return ([], []) }

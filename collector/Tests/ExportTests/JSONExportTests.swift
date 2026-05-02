@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import Darwin
 @testable import Export
 @testable import Models
 
@@ -182,5 +183,63 @@ final class JSONExportTests: XCTestCase {
         let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
         XCTAssertNotNil(json)
         XCTAssertEqual(json?["scan_id"] as? String, "test-scan-001")
+    }
+
+    func testWriteRefusesExistingFileWithoutForce() throws {
+        let exporter = JSONExporter()
+        let tmpPath = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        defer { try? FileManager.default.removeItem(atPath: tmpPath) }
+        try "existing".write(toFile: tmpPath, atomically: false, encoding: .utf8)
+
+        XCTAssertThrowsError(try exporter.write(makeSampleScanResult(), to: tmpPath)) { error in
+            XCTAssertTrue(String(describing: error).contains("outputExists"))
+        }
+    }
+
+    func testForceReplacesRegularFileWithOwnerOnlyMode() throws {
+        let exporter = JSONExporter()
+        let tmpPath = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        defer { try? FileManager.default.removeItem(atPath: tmpPath) }
+        try "existing".write(toFile: tmpPath, atomically: false, encoding: .utf8)
+        chmod(tmpPath, 0o644)
+
+        try exporter.write(makeSampleScanResult(), to: tmpPath, force: true)
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: tmpPath))
+        XCTAssertNotNil(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        var info = stat()
+        XCTAssertEqual(stat(tmpPath, &info), 0)
+        XCTAssertEqual(info.st_mode & 0o777, 0o600)
+    }
+
+    func testWriteCreatesNewFileWithOwnerOnlyMode() throws {
+        let exporter = JSONExporter()
+        let tmpPath = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        defer { try? FileManager.default.removeItem(atPath: tmpPath) }
+
+        try exporter.write(makeSampleScanResult(), to: tmpPath)
+
+        var info = stat()
+        XCTAssertEqual(stat(tmpPath, &info), 0)
+        XCTAssertEqual(info.st_mode & 0o777, 0o600)
+    }
+
+    func testWriteRefusesSymlinkEvenWithForce() throws {
+        let exporter = JSONExporter()
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("rootstock-export-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let target = dir.appendingPathComponent("target.json")
+        let link = dir.appendingPathComponent("link.json")
+        try "existing".write(to: target, atomically: false, encoding: .utf8)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+
+        XCTAssertThrowsError(try exporter.write(makeSampleScanResult(), to: link.path, force: true)) { error in
+            XCTAssertTrue(String(describing: error).contains("outputIsSymlink"))
+        }
+        XCTAssertEqual(try String(contentsOf: target), "existing")
     }
 }

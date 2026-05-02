@@ -1,5 +1,5 @@
 // Rootstock Neo4j Schema Initialization
-// Run via: python3 graph/setup.py
+// Legacy Cypher reference. Active setup command: python3 graph/setup_schema.py
 // Safe to run multiple times (all statements are idempotent).
 
 // ── Unique Constraints ─────────────────────────────────────────────────────

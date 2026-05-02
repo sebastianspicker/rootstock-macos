@@ -20,16 +20,40 @@ Rootstock is a graph-based attack path discovery tool for macOS security boundar
 - **Enterprise integration** — Active Directory binding, Kerberos artifacts, BloodHound interop
 - **ESF monitoring** — Endpoint Security Framework event coverage gap analysis
 
+## Project Map
+
+Rootstock has two deliberate halves:
+
+1. `collector/` is the endpoint-side Swift package. It reads local macOS
+   security metadata and emits one portable scan JSON. It should stay passive:
+   no network calls, no secrets, and recoverable per-module errors instead of
+   aborting the whole scan.
+2. `graph/` is the workstation-side Python package. `graph/pipeline.sh` is the
+   normal orchestration path: apply Neo4j schema, optionally refresh cached CVE
+   data, import the scan, run inference, classify tiers, and write a report or
+   start the API server.
+3. `examples/demo-scan.json` is the demo fixture source of truth.
+   `examples/regenerate.sh` rebuilds local generated report/viewer artifacts
+   from that fixture; it does not modify the fixture.
+
+The contract between the halves is the scan JSON. When changing collector
+output, keep `collector/schema/scan-result.schema.json`, `graph/models.py`, and
+the importer code in sync, then validate with:
+
+```bash
+python3 scripts/validate-scan.py <scan.json>
+```
+
 ## Screenshots
 
-All screenshots below are generated from the [demo scan](examples/demo-scan.json) — synthetic data — 15 apps, 15 TCC grants, 5 XPC services.
+The static screenshots below use synthetic demo data from [demo-scan.json](examples/demo-scan.json).
 
 ### Interactive Graph Viewer
 
 | | |
 |---|---|
 | ![Full Graph](docs/screenshots/01-full-graph.png) | ![Attack Path](docs/screenshots/02-attack-path.png) |
-| *Full attack graph — 15 node types, color-coded by kind* | *Shortest path from attacker to Full Disk Access (2 hops)* |
+| *Full attack graph — node types color-coded by kind* | *Shortest path from attacker to Full Disk Access (2 hops)* |
 | ![Node Inspector](docs/screenshots/03-node-inspector.png) | ![Electron TCC](docs/screenshots/04-electron-inheritance.png) |
 | *iTerm2 property inspector with risk score, tier, and entitlements* | *Slack's inherited TCC permissions via focus mode* |
 
@@ -46,15 +70,13 @@ All screenshots below are generated from the [demo scan](examples/demo-scan.json
 
 ![CLI Output](docs/screenshots/09-cli-output.png)
 
-*23 modules, 5.49 seconds*
-
-> Regenerate screenshots: `python3 docs/screenshots/generate_screenshots.py`
+*Collector module timing output*
 
 ### Demo Outputs
 
 | Output | Description |
 |--------|-------------|
-| [`demo-scan.json`](examples/demo-scan.json) | Synthetic scan data (15 apps, 15 TCC grants, 5 XPC services) |
+| [`demo-scan.json`](examples/demo-scan.json) | Synthetic scan data used by the docs and demo pipeline |
 
 > To generate report and viewer outputs (requires Neo4j): `bash examples/regenerate.sh`
 > This produces `examples/generated/demo-report.md` and `examples/generated/demo-viewer.html` locally.
@@ -211,27 +233,53 @@ python3 scripts/validate-scan.py scan.json
 # Install Python dependencies
 pip3 install -r graph/requirements.txt
 
-# Run the full pipeline (schema → import → infer → classify → report)
-bash graph/pipeline.sh scan.json
+# Start Neo4j with the bundled local compose file
+cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d && cd ..
+
+# Run the full pipeline (schema -> import -> infer -> classify -> report)
+NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json
 
 # Or start the API server with interactive viewer
-bash graph/pipeline.sh scan.json --serve 8000
+ROOTSTOCK_API_TOKEN=CHANGE_ME_API_TOKEN NEO4J_PASSWORD=CHANGE_ME \
+  bash graph/pipeline.sh scan.json --serve 8000
 # Open http://localhost:8000 for the interactive graph viewer
 ```
 
 Environment variables for Neo4j connection: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`.
+The live API additionally requires `ROOTSTOCK_API_TOKEN`. CVE network refresh is
+opt-in with `--refresh-cve`; the default pipeline uses cached/static enrichment.
+
+## Local Verification
+
+```bash
+# Swift collector
+(cd collector && swift test --parallel)
+
+# Python graph pipeline
+ruff check graph/ scripts/ examples/ docs/
+(cd graph && pytest tests)
+
+# Shell entry points
+shellcheck examples/regenerate.sh graph/pipeline.sh scripts/*.sh tests/integration/*.sh
+
+# Cross-language scan contract
+python3 scripts/validate-scan.py examples/demo-scan.json
+```
+
+Runtime smoke tests need Neo4j. With `graph/docker-compose.yml`, set
+`NEO4J_AUTH=neo4j/CHANGE_ME` and use the matching `NEO4J_PASSWORD`.
 
 ## Feature Matrix
 
-| Category | Count | Details |
+| Category | Scope | Details |
 |----------|-------|---------|
-| Collector modules | 23 data sources | TCC, entitlements, code signing, XPC, persistence, keychain, MDM, groups, remote access, firewall, login sessions, authorization DB/plugins, system extensions, sudoers, processes, file ACLs, shell hooks, physical security, AD, Kerberos, sandbox, quarantine |
-| Graph node types | 31 | Application, TCC_Permission, Entitlement, User, XPC_Service, LaunchItem, Keychain_Item, MDM_Profile, Computer, Vulnerability, CWE, AttackTechnique, ThreatGroup, ADUser, Recommendation, and more |
-| Inference engines | 17 | Injection assessment, TCC inheritance, Apple Events, accessibility, Kerberos, automation, Finder FDA, ESF monitoring, risk scoring, recommendations, and more |
-| Cypher queries | 101 | 10 categories: Red Team, Blue Team, Forensic |
-| Python tests | 506 | Unit tests, integration tests, edge case coverage |
-| API endpoints | 15 | REST API with OpenAPI docs, interactive viewer, Cypher console |
-| CVE registry | 30+ | Curated macOS CVEs with EPSS/KEV/NVD live enrichment |
+| Collector modules | Swift data-source modules | TCC, entitlements, code signing, XPC, persistence, keychain, MDM, groups, remote access, firewall, login sessions, authorization DB/plugins, system extensions, sudoers, processes, file ACLs, shell hooks, physical security, AD, Kerberos, sandbox, quarantine |
+| Graph node types | Typed graph model | Application, TCC_Permission, Entitlement, User, XPC_Service, LaunchItem, Keychain_Item, MDM_Profile, Computer, Vulnerability, CWE, AttackTechnique, ThreatGroup, ADUser, Recommendation, and more |
+| Inference engines | Inference pipeline | Injection assessment, TCC inheritance, Apple Events, accessibility, Kerberos, automation, Finder FDA, ESF monitoring, risk scoring, recommendations, and more |
+| Cypher queries | Query library | Red Team, Blue Team, and forensic workflows |
+| Python tests | pytest suite | Unit tests, integration tests, edge case coverage |
+| API surface | REST API | OpenAPI docs, interactive viewer, Cypher console |
+| CVE registry | Curated static registry | macOS-focused CVEs with EPSS/KEV/NVD live enrichment |
 
 ## Performance
 
@@ -274,15 +322,15 @@ macOS 15+ requires Full Disk Access to read TCC databases. Without FDA:
 - User TCC.db: blocked at kernel level (`SQLITE_AUTH`)
 - System TCC.db: blocked at kernel level
 
-Run with `sudo` or grant FDA to the binary to collect TCC grants. See `docs/research/tcc-version-diffs.md` for full details and `docs/exec-plans/tech-debt-tracker.md` TD-004 for the tech-debt entry.
+Run with `sudo` or grant FDA to the binary to collect TCC grants. See `docs/research/tcc-version-diffs.md` for full details; the historical tech-debt note is archived at `docs/archive/exec-plans/tech-debt-tracker.md` as TD-004.
 
 ## Project Structure
 
 ```
-collector/                 Swift CLI collector (23 data source modules, 26 Swift targets)
+collector/                 Swift CLI collector
 ├── Sources/
 │   ├── Models/            Shared data models + MacOSVersion detection
-│   ├── TCC/               TCC database parser (version-aware schema adapters)
+│   ├── TCC/               TCC database parser with PRAGMA schema validation
 │   ├── Entitlements/      App discovery + entitlement extraction (parallelized)
 │   ├── CodeSigning/       Code signing analysis + injection assessment
 │   ├── XPCServices/       XPC service enumeration
@@ -318,7 +366,7 @@ graph/                     Neo4j import, inference, query engine & API
 ├── import_nodes_security_enterprise.py  Enterprise (AD, Kerberos, process, file ACL)
 ├── import_nodes_enrichment.py Enrichment (physical, iCloud, bluetooth)
 ├── import_vulnerabilities.py  CVE/ATT&CK/ThreatGroup import + version matching
-├── infer.py               Inference engine orchestrator (18 modules)
+├── infer.py               Inference engine orchestrator
 ├── infer_esf.py           ESF event enrichment + monitoring gap analysis
 ├── infer_risk_score.py    Composite risk scoring engine (0-100 scale)
 ├── infer_recommendations.py  Automated remediation recommendations
@@ -337,8 +385,8 @@ graph/                     Neo4j import, inference, query engine & API
 ├── report_formatters.py   Report output formatters (MD, HTML, JSON)
 ├── viewer_template.html   Interactive Canvas-based graph viewer
 ├── pipeline.sh            One-command pipeline (schema → import → infer → classify → report)
-├── queries/               101 pre-built Cypher queries (10 categories)
-└── tests/                 506 Python tests
+├── queries/               Pre-built Cypher queries
+└── tests/                 Python tests
 
 scripts/
 ├── validate-scan.py       Output validation script
@@ -350,7 +398,10 @@ docs/
 ├── references/            Entitlement categories, macOS security reference
 ├── benchmarks/            Performance measurements
 ├── research/              macOS security research notes
-└── paper/                 Academic paper skeleton + references
+├── screenshots/           README and report screenshots
+└── archive/               Historical planning, announcement, paper, and product-spec material
+
+deprecated/                Historical scripts kept out of the active workflow
 ```
 
 ## Threat Model

@@ -68,23 +68,15 @@ public struct XPCDataSource: DataSource {
     /// Extract entitlement keys from a signed binary via `codesign -d --entitlements`.
     /// Returns an empty array if the binary is unsigned, inaccessible, or has no entitlements.
     private func extractEntitlementKeys(from path: String) -> [String] {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
-        // `:- ` directs plist output to stdout
-        process.arguments = ["-d", "--entitlements", ":-", path]
-
-        let outPipe = Pipe()
-        process.standardOutput = outPipe
-        process.standardError = Pipe()  // discard stderr
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
+        guard let result = Shell.runProcess(
+            "/usr/bin/codesign",
+            ["-d", "--entitlements", ":-", path],
+            timeoutSeconds: 10
+        ), result.terminationStatus == 0, !result.timedOut else {
             return []
         }
 
-        let data = outPipe.fileHandleForReading.readDataToEndOfFile()
+        let data = Data(result.stdout.utf8)
         guard !data.isEmpty else { return [] }
 
         var format = PropertyListSerialization.PropertyListFormat.xml

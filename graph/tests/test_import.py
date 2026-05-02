@@ -6,7 +6,7 @@ Requires a running Neo4j instance. Tests are skipped if Neo4j is unavailable.
 Usage:
     pytest graph/tests/test_import.py -v
     # With custom connection:
-    NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=rootstock pytest graph/tests/test_import.py -v
+    NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=CHANGE_ME pytest graph/tests/test_import.py -v
 """
 
 from __future__ import annotations

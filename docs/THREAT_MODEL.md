@@ -15,6 +15,7 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 3. **Point-in-time snapshot.** Each scan captures the state at one moment. TCC grants, installed apps, and entitlements can change at any time after the scan.
 4. **Cooperative target.** The endpoint is not actively resisting analysis (no anti-forensics). Rootstock does not bypass SIP, Gatekeeper, or other macOS protections.
 5. **Trusted graph database.** The Neo4j instance used for analysis is assumed to be under the analyst's control and not exposed to untrusted users.
+6. **Loopback by default.** The bundled Neo4j and API server are intended for local analysis. Remote exposure requires an explicit operator decision and a named access-control layer.
 
 ## What Rootstock Does NOT Do
 
@@ -25,8 +26,22 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 | Active exploitation | No | Analysis only; does not execute attacks or modify system state |
 | Real-time monitoring | No | Point-in-time snapshot; no persistent agent or daemon |
 | SIP bypass | No | Respects System Integrity Protection; system TCC.db requires FDA |
-| Network calls | No | The collector is strictly local; no telemetry, no uploads |
+| Network calls | Collector: No; graph CVE refresh: opt-in | The collector is strictly local; CVE enrichment fetches only when `--refresh-cve` or `--fetch` is explicit |
 | Anti-forensics evasion | No | Does not attempt to hide its execution or artifacts |
+
+## Exposure Boundaries
+
+- **Collector output.** Real scan JSON, reports, graph exports, generated viewer
+  HTML, screenshots, and Neo4j data volumes contain sensitive local security
+  metadata. Keep them local and out of commits.
+- **Neo4j.** The bundled Compose file binds Browser and Bolt to `127.0.0.1` and
+  requires `NEO4J_AUTH`. Do not bind Neo4j to a network interface for real data
+  without an explicit authentication and network-access plan.
+- **FastAPI.** Every `/api/*` route requires `Authorization: Bearer
+  $ROOTSTOCK_API_TOKEN`. The server refuses non-loopback `--host` values unless
+  `--allow-remote` is also present.
+- **Viewer.** The live viewer serves `/` without embedding graph data. Browser
+  code fetches graph/query data through the authenticated API.
 
 ## Limitations
 

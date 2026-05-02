@@ -148,7 +148,8 @@ struct ScanOrchestrator {
         async let kerberosTask2 = config.kerberos
             ? timed { await KerberosArtifactDataSource().collect() }
             : nil
-        // System posture checks run concurrently with other modules
+        // Lightweight host posture checks are ScanResult metadata, not module
+        // outputs, so they run regardless of the selected module subset.
         async let gatekeeperTask: Bool? = { Self.detectGatekeeper() }()
         async let sipTask: Bool? = { Self.detectSIP() }()
         async let filevaultTask: Bool? = { Self.detectFileVault() }()
@@ -315,6 +316,8 @@ struct ScanOrchestrator {
         }
 
         if let (result, elapsed) = await shellHooksTask {
+            // Shell hooks are represented as FileACL-style findings because the
+            // graph cares about writable startup files as injection points.
             let hooks = result.nodes.compactMap { $0 as? FileACL }
             fileAcls.append(contentsOf: hooks)
             allErrors.append(contentsOf: result.errors)
@@ -473,8 +476,7 @@ struct ScanOrchestrator {
 
     /// Detects Full Disk Access by attempting to read the system TCC database.
     private func detectFDA() -> Bool {
-        let systemTCC = "/Library/Application Support/com.apple.TCC/TCC.db"
-        return FileManager.default.isReadableFile(atPath: systemTCC)
+        TCCAccessProbe.hasFullDiskAccess()
     }
 
     /// Runs `block`, returning the result and wall-clock elapsed time in seconds.

@@ -5,7 +5,10 @@ setup_schema.py — Create Neo4j indexes and constraints for the Rootstock graph
 Run once before the first import, or re-run safely (all statements use IF NOT EXISTS).
 
 Usage:
-    python3 graph/setup_schema.py [--neo4j bolt://localhost:7687] [--username neo4j] [--password rootstock]
+    python3 graph/setup_schema.py
+        [--neo4j bolt://localhost:7687]
+        [--neo4j-user neo4j]
+        [--neo4j-password <password>]  # or NEO4J_PASSWORD
 """
 
 from __future__ import annotations

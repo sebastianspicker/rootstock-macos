@@ -13,7 +13,7 @@
 // the silent MDM-granted access without any user prompt.
 //
 // Usage:
-//   cypher-shell -u neo4j -p rootstock < graph/queries/10-mdm-managed-tcc.cypher
+//   cypher-shell -u neo4j -p "$NEO4J_PASSWORD" < graph/queries/10-mdm-managed-tcc.cypher
 //   Or paste into Neo4j Browser.
 // ATT&CK: T1548.004
 

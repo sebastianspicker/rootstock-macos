@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-setup.py — Initialize the Rootstock Neo4j schema.
+setup.py — Deprecated legacy Rootstock Neo4j schema helper.
+
+Archived from graph/setup.py. Active workflows should use graph/setup_schema.py
+or graph/pipeline.sh instead.
 
 Usage:
-    python3 graph/setup.py [--uri bolt://localhost:7687] [--user neo4j] [--password PASS]
+    python3 deprecated/graph/setup.py [--uri bolt://localhost:7687] [--user neo4j] [--password PASS]
 
 Idempotent: safe to run multiple times.
 """
@@ -13,7 +16,11 @@ import os
 import sys
 from pathlib import Path
 
-from constants import NODE_KEY_PROPERTY
+ROOT = Path(__file__).resolve().parents[2]
+GRAPH_DIR = ROOT / "graph"
+sys.path.insert(0, str(GRAPH_DIR))
+
+from constants import NODE_KEY_PROPERTY  # noqa: E402 - legacy script imports from active graph package.
 
 try:
     from neo4j import GraphDatabase
@@ -22,7 +29,7 @@ except ImportError:
     print("ERROR: neo4j driver not installed. Run: pip3 install -r graph/requirements.txt", file=sys.stderr)
     sys.exit(1)
 
-SCHEMA_DIR = Path(__file__).parent / "schema"
+SCHEMA_DIR = GRAPH_DIR / "schema"
 INIT_CYPHER = SCHEMA_DIR / "init-schema.cypher"
 SEED_CYPHER = SCHEMA_DIR / "seed-tcc-services.cypher"
 

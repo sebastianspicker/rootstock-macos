@@ -14,7 +14,7 @@
 // gains persistent code execution as root.
 //
 // Usage:
-//   cypher-shell -u neo4j -p rootstock < graph/queries/08-persistence-audit.cypher
+//   cypher-shell -u neo4j -p "$NEO4J_PASSWORD" < graph/queries/08-persistence-audit.cypher
 //   Or paste into Neo4j Browser.
 
 MATCH (l:LaunchItem)

@@ -5,7 +5,12 @@ set -euo pipefail
 
 NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 NEO4J_USER="${NEO4J_USER:-neo4j}"
-NEO4J_PASSWORD="${NEO4J_PASSWORD:-rootstock}"
+NEO4J_PASSWORD="${NEO4J_PASSWORD:-}"
+
+if [[ -z "$NEO4J_PASSWORD" ]]; then
+	echo "ERROR: Set NEO4J_PASSWORD before running the integration test" >&2
+	exit 1
+fi
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GRAPH_DIR="$REPO_ROOT/graph"

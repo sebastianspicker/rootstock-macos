@@ -56,13 +56,11 @@ cd collector && swift build -c release
 .build/release/rootstock-collector --output scan.json
 
 # Start Neo4j and import
-cd graph && docker compose up -d
-python3 setup.py && python3 import.py --input ../scan.json
-python3 infer.py
+cd graph && docker compose up -d && cd ..
+NEO4J_PASSWORD=rootstock bash graph/pipeline.sh scan.json --report report.md
 
 # Find attack paths
-python3 query_runner.py --run 03  # Electron TCC inheritance
-python3 report.py --output report.md  # Full security report
+python3 graph/query_runner.py --run 03 --neo4j-password rootstock
 ```
 
 ## Beyond Discovery: Vulnerability Enrichment & Enterprise Integration

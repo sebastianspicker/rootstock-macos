@@ -348,7 +348,7 @@ canvas.grabbing{cursor:grabbing}
 
 <script>
 // ── Data (with pre-computed x,y positions) ──────────────────────────────────
-const DATA = {{VIEWER_DATA}};
+let DATA = {{VIEWER_DATA}};
 const nodes = DATA.graph.nodes;
 const edges = DATA.graph.edges;
 
@@ -444,7 +444,7 @@ links.forEach(l => {
 
 // ── Progressive disclosure: default visibility ──────────────────────────────
 // Only Applications visible on first load; others can be toggled on
-const DEFAULT_VISIBLE_KINDS = new Set(['Application']);
+const DEFAULT_VISIBLE_KINDS = new Set(['Application', 'rs_Application']);
 
 // ── State ───────────────────────────────────────────────────────────────────
 let showLabels = true;
@@ -465,6 +465,82 @@ let dragNode = null;
 let dirty = true;
 let didDrag = false;  // Suppress click after pan/drag
 let mouseDownPos = {x: 0, y: 0};
+
+function rebuildDerivedData(resetFilters = false) {
+  nodeById.clear();
+  nodes.forEach((n, i) => nodeById.set(n.id, n));
+
+  links.splice(0, links.length, ...edges.filter(e => nodeById.has(e.source) && nodeById.has(e.target)));
+
+  degreeMap.clear();
+  links.forEach(l => {
+    degreeMap.set(l.source, (degreeMap.get(l.source) || 0) + 1);
+    degreeMap.set(l.target, (degreeMap.get(l.target) || 0) + 1);
+  });
+
+  kindMeta.clear();
+  nodes.forEach(n => {
+    if (!kindMeta.has(n.kind)) {
+      kindMeta.set(n.kind, {
+        color: n.properties?._color || '#888',
+        count: 0,
+        label: n.kind.replace('rs_', '').replace(/([A-Z])/g, ' $1').trim()
+      });
+    }
+    kindMeta.get(n.kind).count++;
+  });
+
+  edgeKinds.clear();
+  links.forEach(l => {
+    if (!edgeKinds.has(l.kind)) {
+      edgeKinds.set(l.kind, {
+        label: l.kind.replace('rs_', '').replace(/([A-Z])/g, ' $1').trim(),
+        traversable: l.properties?._traversable ?? false,
+        count: 0
+      });
+    }
+    edgeKinds.get(l.kind).count++;
+  });
+
+  adjOut.clear();
+  adjIn.clear();
+  links.forEach(l => {
+    if (!adjOut.has(l.source)) adjOut.set(l.source, []);
+    adjOut.get(l.source).push({target: l.target, link: l});
+    if (!adjIn.has(l.target)) adjIn.set(l.target, []);
+    adjIn.get(l.target).push({source: l.source, link: l});
+  });
+
+  if (resetFilters) {
+    activeEdgeKinds.clear();
+    edgeKinds.forEach((_info, kind) => activeEdgeKinds.add(kind));
+    if (![...activeNodeKinds].some(kind => kindMeta.has(kind))) {
+      activeNodeKinds.clear();
+      DEFAULT_VISIBLE_KINDS.forEach(kind => {
+        if (kindMeta.has(kind)) activeNodeKinds.add(kind);
+      });
+    }
+    buildFilters();
+  }
+
+  document.getElementById('node-count').textContent = nodes.length;
+  document.getElementById('edge-count').textContent = links.length;
+  const currentMeta = DATA.metadata || {};
+  document.getElementById('meta-info').textContent =
+    [currentMeta.hostname, currentMeta.generated_at?.split('T')[0]].filter(Boolean).join(' \u2014 ');
+  computeVisibility();
+  if (typeof updateStats === 'function') updateStats();
+  if (typeof updateRiskSummary === 'function') updateRiskSummary();
+  if (typeof quadtree !== 'undefined') quadtree = new SimpleQuadtree(nodes, 0, 0, 2000, 2000);
+  markDirty();
+}
+
+function replaceGraphData(data) {
+  DATA = data;
+  nodes.splice(0, nodes.length, ...(data.graph?.nodes || []));
+  edges.splice(0, edges.length, ...(data.graph?.edges || []));
+  rebuildDerivedData(true);
+}
 
 // Transform state (pan/zoom)
 let transform = {x: 0, y: 0, k: 1};
@@ -533,6 +609,7 @@ document.getElementById('edge-count').textContent = links.length;
 // ── Filters ─────────────────────────────────────────────────────────────────
 function buildFilters() {
   const nf = document.getElementById('node-filters');
+  nf.textContent = '';
   [...kindMeta.entries()].sort((a,b) => b[1].count - a[1].count).forEach(([kind, info]) => {
     const cb = el('input', {type: 'checkbox', 'data-kind': kind});
     cb.checked = activeNodeKinds.has(kind);
@@ -551,6 +628,7 @@ function buildFilters() {
   });
 
   const ef = document.getElementById('edge-filters');
+  ef.textContent = '';
   const travCount = [...edgeKinds.values()].filter(e => e.traversable).reduce((s,e) => s + e.count, 0);
   const nonTravCount = [...edgeKinds.values()].filter(e => !e.traversable).reduce((s,e) => s + e.count, 0);
 
@@ -1876,10 +1954,7 @@ computeVisibility();
 setTimeout(resetZoom, 50);
 
 // Stats - build a rich stats bar
-const attackEdgeCount = [...edgeKinds.values()].filter(e => e.traversable).reduce((s,e) => s + e.count, 0);
-const ownedCount = nodes.filter(n => n.properties?.owned).length;
 const statsEl = document.getElementById('stats');
-statsEl.textContent = '';
 
 function addStatItem(color, text) {
   const item = el('span', {className: 'stat-item'});
@@ -1891,19 +1966,26 @@ function addStatItem(color, text) {
   item.appendChild(el('span', {textContent: text}));
   statsEl.appendChild(item);
 }
-const criticalNodes = nodes.filter(n => n.properties?.risk_level === 'critical').length;
-const highRiskNodes = nodes.filter(n => n.properties?.risk_level === 'high').length;
-const tier0Count = nodes.filter(n => n.properties?.tier === 0).length;
-const injectableCount = nodes.filter(n => n.properties?.injectable).length;
 
-addStatItem('#8b949e', nodes.length + ' nodes');
-addStatItem('#30363d', links.length + ' edges');
-addStatItem('#58a6ff', attackEdgeCount + ' attack');
-if (criticalNodes > 0) addStatItem('#f85149', criticalNodes + ' critical');
-if (highRiskNodes > 0) addStatItem('#d29922', highRiskNodes + ' high');
-if (tier0Count > 0) addStatItem('#f85149', tier0Count + ' T0');
-if (injectableCount > 0) addStatItem('#ff7b72', injectableCount + ' injectable');
-if (ownedCount > 0) addStatItem('#ffd700', ownedCount + ' owned');
+function updateStats() {
+  const attackEdgeCount = [...edgeKinds.values()].filter(e => e.traversable).reduce((s,e) => s + e.count, 0);
+  const ownedCount = nodes.filter(n => n.properties?.owned).length;
+  const criticalNodes = nodes.filter(n => n.properties?.risk_level === 'critical').length;
+  const highRiskNodes = nodes.filter(n => n.properties?.risk_level === 'high').length;
+  const tier0Count = nodes.filter(n => n.properties?.tier === 0).length;
+  const injectableCount = nodes.filter(n => n.properties?.injectable).length;
+
+  statsEl.textContent = '';
+  addStatItem('#8b949e', nodes.length + ' nodes');
+  addStatItem('#30363d', links.length + ' edges');
+  addStatItem('#58a6ff', attackEdgeCount + ' attack');
+  if (criticalNodes > 0) addStatItem('#f85149', criticalNodes + ' critical');
+  if (highRiskNodes > 0) addStatItem('#d29922', highRiskNodes + ' high');
+  if (tier0Count > 0) addStatItem('#f85149', tier0Count + ' T0');
+  if (injectableCount > 0) addStatItem('#ff7b72', injectableCount + ' injectable');
+  if (ownedCount > 0) addStatItem('#ffd700', ownedCount + ' owned');
+}
+updateStats();
 
 // ── Risk posture summary chips ────────────────────────────────────────────
 const riskSummaryEl = document.getElementById('risk-summary');
@@ -1914,20 +1996,50 @@ function addRiskChip(level, count) {
   chip.appendChild(el('span', {textContent: level.charAt(0).toUpperCase() + level.slice(1)}));
   riskSummaryEl.appendChild(chip);
 }
-addRiskChip('critical', criticalNodes);
-addRiskChip('high', highRiskNodes);
-const mediumNodes = nodes.filter(n => n.properties?.risk_level === 'medium').length;
-const lowNodes = nodes.filter(n => n.properties?.risk_level === 'low').length;
-addRiskChip('medium', mediumNodes);
-addRiskChip('low', lowNodes);
-// If no risk data, show a placeholder
-if (criticalNodes + highRiskNodes + mediumNodes + lowNodes === 0) {
-  riskSummaryEl.appendChild(el('span', {textContent: 'No risk scores computed',
-    className: 'risk-chip', style: 'color:#8b949e'}));
+
+function updateRiskSummary() {
+  const criticalNodes = nodes.filter(n => n.properties?.risk_level === 'critical').length;
+  const highRiskNodes = nodes.filter(n => n.properties?.risk_level === 'high').length;
+  const mediumNodes = nodes.filter(n => n.properties?.risk_level === 'medium').length;
+  const lowNodes = nodes.filter(n => n.properties?.risk_level === 'low').length;
+  riskSummaryEl.textContent = '';
+  addRiskChip('critical', criticalNodes);
+  addRiskChip('high', highRiskNodes);
+  addRiskChip('medium', mediumNodes);
+  addRiskChip('low', lowNodes);
+  // If no risk data, show a placeholder
+  if (criticalNodes + highRiskNodes + mediumNodes + lowNodes === 0) {
+    riskSummaryEl.appendChild(el('span', {textContent: 'No risk scores computed',
+      className: 'risk-chip', style: 'color:#8b949e'}));
+  }
 }
+updateRiskSummary();
 
 // ── Live API integration ─────────────────────────────────────────────────
 const isLive = typeof __ROOTSTOCK_LIVE__ !== 'undefined';
+const API_TOKEN_KEY = '__rootstock_api_token__';
+
+function getApiToken() {
+  let token = sessionStorage.getItem(API_TOKEN_KEY);
+  if (!token) {
+    token = window.prompt('Rootstock API token') || '';
+    if (token) sessionStorage.setItem(API_TOKEN_KEY, token);
+  }
+  return token;
+}
+
+function apiFetch(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  const token = getApiToken();
+  if (token) headers.set('Authorization', 'Bearer ' + token);
+  return fetch(API_BASE + path, {...options, headers}).then(response => {
+    if (response.status === 401) {
+      sessionStorage.removeItem(API_TOKEN_KEY);
+      throw new Error('Unauthorized');
+    }
+    return response;
+  });
+}
 
 if (isLive) {
   // Enable live UI elements
@@ -1936,7 +2048,9 @@ if (isLive) {
   document.getElementById('custom-query-section').style.display = 'block';
 
   // Fetch and populate query browser
-  fetch(API_BASE + '/api/queries')
+  liveRefresh();
+
+  apiFetch('/api/queries')
     .then(r => r.json())
     .then(queries => {
       const list = document.getElementById('query-list');
@@ -1973,7 +2087,7 @@ function runLiveQuery(q) {
   body.textContent = '';
   panel.classList.add('open');
 
-  fetch(API_BASE + '/api/queries/' + q.id + '/run', {
+  apiFetch('/api/queries/' + q.id + '/run', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({params: {}})
@@ -2056,30 +2170,18 @@ function closeResults() {
 
 function liveRefresh() {
   if (!isLive) return;
-  fetch(API_BASE + '/api/graph')
+  apiFetch('/api/graph')
     .then(r => r.json())
     .then(data => {
-      const newNodes = data.graph?.nodes || [];
-      const newEdges = data.graph?.edges || [];
-      // Update node positions and properties in place
-      const newById = new Map(newNodes.map(n => [n.id, n]));
-      nodes.forEach(n => {
-        const updated = newById.get(n.id);
-        if (updated) Object.assign(n.properties, updated.properties);
-      });
-      computeVisibility(); markDirty();
-      // Update stats bar after refresh
-      const sEl = document.getElementById('stats');
-      sEl.textContent = '';
-      addStatItem('#3fb950', nodes.length + ' nodes (refreshed)');
-      addStatItem('#30363d', links.length + ' edges');
+      replaceGraphData(data);
+      resetZoom();
     })
     .catch(err => console.warn('Refresh failed:', err));
 }
 
 function liveTierClassify() {
   if (!isLive) return;
-  fetch(API_BASE + '/api/tier-classify', {method: 'POST'})
+  apiFetch('/api/tier-classify', {method: 'POST'})
     .then(r => r.json())
     .then(data => {
       alert('Tier classification complete: T0=' + data.tier0 + ' T1=' + data.tier1 + ' T2=' + data.tier2);
@@ -2090,7 +2192,7 @@ function liveTierClassify() {
 
 function liveShowOwned() {
   if (!isLive) return;
-  fetch(API_BASE + '/api/owned')
+  apiFetch('/api/owned')
     .then(r => r.json())
     .then(data => {
       if (data.count === 0) { alert('No owned nodes.'); return; }
@@ -2133,7 +2235,7 @@ function runCustomCypher() {
   body.textContent = '';
   panel.classList.add('open');
 
-  fetch(API_BASE + '/api/cypher', {
+  apiFetch('/api/cypher', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({cypher: cypher, params: {}})
@@ -2213,7 +2315,7 @@ if (isLive) {
       if (d.properties?.bundle_id) body.bundle_ids = [d.properties.bundle_id];
       else if (d.properties?.name && d.kind === 'rs_User') body.usernames = [d.properties.name];
       else { return; }
-      fetch(API_BASE + '/api/clear-owned', {
+      apiFetch('/api/clear-owned', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body)
@@ -2224,7 +2326,7 @@ if (isLive) {
       if (d.properties?.bundle_id) body.bundle_ids = [d.properties.bundle_id];
       else if (d.properties?.name && d.kind === 'rs_User') body.usernames = [d.properties.name];
       else { return; }
-      fetch(API_BASE + '/api/mark-owned', {
+      apiFetch('/api/mark-owned', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body)

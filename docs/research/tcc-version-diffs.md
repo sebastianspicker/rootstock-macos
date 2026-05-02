@@ -3,7 +3,7 @@
 > Documents known differences in TCC database schema, access restrictions, and
 > service identifiers across macOS versions tested with Rootstock.
 >
-> Last updated: 2026-03-18 (tested on macOS 26.3, Build 25D125)
+> Last updated: 2026-04-23 (tested on macOS 26.3, Build 25D125)
 
 ## Quick Summary
 
@@ -70,7 +70,7 @@ Apple tightened TCC.db access at the kernel level in Sequoia:
   3. Sign the binary with `com.apple.private.tcc.allow` (requires Apple developer account with private entitlement approval).
 - **Rootstock behavior**: The collector logs a recoverable error and continues with zero TCC grants. The error message on Sequoia/Tahoe includes specific guidance: *"On macOS 15 Sequoia, TCC.db requires Full Disk Access."*
 
-See also: [TD-004 in tech-debt-tracker.md](../exec-plans/tech-debt-tracker.md).
+See also: [TD-004 in the archived tech-debt tracker](../archive/exec-plans/tech-debt-tracker.md).
 
 ### New TCC services (macOS 15)
 
@@ -106,16 +106,33 @@ Inherits all services from Sequoia. Tahoe-specific additions have not been publi
 
 ## Rootstock's Compatibility Strategy
 
-### PRAGMA-based schema detection
+### Single stable schema reader
 
-`TCCSchemaAdapterFactory.make(for:db:)` calls `PRAGMA table_info(access)` before running any query. This approach:
+`TCCDataSource` uses one stable reader for supported macOS versions. Before
+running the grant query, it calls `PRAGMA table_info(access)` and validates that
+the six required columns are present:
+
+`service`, `client`, `client_type`, `auth_value`, `auth_reason`, `last_modified`
+
+This approach:
 1. Detects malformed databases (no `access` table → graceful error)
 2. Validates that required columns are present
 3. Is forward-compatible with future schema additions (new columns are ignored)
 
-### Protocol/strategy pattern
+The query projects only the required columns and keeps denied and limited grants
+visible for audit review:
 
-`TCCSchemaAdapter` protocol with concrete implementations (`SonomaTCCSchemaAdapter`, `SequoiaTCCSchemaAdapter`, `TahoeTCCSchemaAdapter`) allows version-specific behavior to be added without if-chains in the reader. Currently all adapters query the same 6 stable columns; future versions can extend their adapter to use new columns.
+```sql
+SELECT service, client, client_type, auth_value, auth_reason, last_modified
+FROM access
+WHERE auth_value != 1;
+```
+
+There is no version-specific adapter/factory layer because Sonoma, Sequoia, and
+Tahoe currently expose the same schema for the columns Rootstock reads. If Apple
+changes the required columns in a future macOS release, update the private
+reader helpers in `TCCDataSource` and add a fixture-backed behavior test for the
+new schema.
 
 ### Version-aware error messages
 

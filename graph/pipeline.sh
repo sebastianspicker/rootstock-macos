@@ -29,10 +29,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
 usage() {
-    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--password PASS] [--report FILE] [--skip-report] [--serve [PORT]]"
+    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--password PASS] [--report FILE] [--skip-report] [--refresh-cve] [--serve [PORT]]"
     echo ""
     echo "Runs the full Rootstock pipeline: schema → import → infer → classify → report"
     echo ""
+    echo "  --refresh-cve   Fetch public CVE enrichment before import (default: cached/static only)"
     echo "  --serve [PORT]  Start API server after pipeline (default port: 8000)"
     echo ""
     echo "Environment variables: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD"
@@ -54,9 +55,10 @@ fi
 # Neo4j connection — CLI args override env vars, env vars override defaults
 NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 NEO4J_USER="${NEO4J_USER:-neo4j}"
-NEO4J_PASS="${NEO4J_PASSWORD:?Set NEO4J_PASSWORD or use --password}"
+NEO4J_PASS="${NEO4J_PASSWORD:-}"
 REPORT_FILE=""
 SKIP_REPORT=false
+REFRESH_CVE=false
 SERVE=false
 SERVE_PORT=8000
 
@@ -67,6 +69,7 @@ while [[ $# -gt 0 ]]; do
         --password)  NEO4J_PASS="$2"; shift 2 ;;
         --report)    REPORT_FILE="$2"; shift 2 ;;
         --skip-report) SKIP_REPORT=true; shift ;;
+        --refresh-cve) REFRESH_CVE=true; shift ;;
         --serve)     SERVE=true;
                      if [[ $# -gt 1 && "$2" =~ ^[0-9]+$ ]]; then SERVE_PORT="$2"; shift; fi
                      shift ;;
@@ -75,7 +78,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER" --neo4j-password "$NEO4J_PASS")
+if [[ -z "$NEO4J_PASS" ]]; then
+    echo "ERROR: Set NEO4J_PASSWORD or use --password" >&2
+    exit 1
+fi
+
+export NEO4J_PASSWORD="$NEO4J_PASS"
+NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")
 
 echo "╔══════════════════════════════════════════════════╗"
 echo "║         Rootstock Analysis Pipeline              ║"
@@ -94,7 +103,11 @@ echo ""
 # ── Step 2/7: CVE Enrichment (offline-safe) ──────────────────────────────────
 
 echo "── Step 2/7: Enriching CVE data ──"
-python3 "$SCRIPT_DIR/cve_enrichment.py" --fetch || echo "  ⚠ CVE enrichment skipped (offline?)"
+if [[ "$REFRESH_CVE" = true ]]; then
+    python3 "$SCRIPT_DIR/cve_enrichment.py" --fetch || echo "  ⚠ CVE enrichment skipped (offline?)"
+else
+    echo "  Using cached CVE enrichment and static registry (--refresh-cve to fetch)"
+fi
 echo ""
 
 # ── Step 3/7: Import ─────────────────────────────────────────────────────────
@@ -150,5 +163,5 @@ echo "╚═══════════════════════�
 if [[ "$SERVE" = true ]]; then
     echo ""
     echo "── Starting API server on port $SERVE_PORT ──"
-    python3 "$SCRIPT_DIR/server.py" --port "$SERVE_PORT" --neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER" --neo4j-password "$NEO4J_PASS"
+    python3 "$SCRIPT_DIR/server.py" --port "$SERVE_PORT" --neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER"
 fi

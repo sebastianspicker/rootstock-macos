@@ -18,6 +18,21 @@ for security reports:
 - Supply chain risks (compromised dependencies, Actions, build artifacts)
 - Issues that could allow the tool to be weaponized beyond its intended purpose
 
+## Operational Boundaries
+
+- The Swift collector is passive and local-only. It must not upload scans,
+  collect telemetry, or perform active exploitation.
+- Treat real `scan.json`, graph exports, generated viewers, reports, Neo4j
+  volumes, and screenshots as confidential local data.
+- The bundled Neo4j Compose file binds Browser and Bolt to `127.0.0.1` and
+  requires `NEO4J_AUTH`; do not expose it remotely without an explicit access
+  control layer.
+- The FastAPI viewer API requires `ROOTSTOCK_API_TOKEN` for every `/api/*`
+  route. Bind it to loopback unless remote exposure is explicitly intended and
+  started with `--allow-remote`.
+- CVE enrichment uses cached/static data by default. Outbound CVE refreshes are
+  opt-in via `graph/pipeline.sh --refresh-cve` or `graph/cve_enrichment.py --fetch`.
+
 The following are **out of scope**:
 
 - Security findings *discovered by* Rootstock (these are expected output)

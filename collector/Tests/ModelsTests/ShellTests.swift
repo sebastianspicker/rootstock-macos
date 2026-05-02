@@ -34,4 +34,16 @@ final class ShellTests: XCTestCase {
 
         XCTAssertNil(output)
     }
+
+    func testRunProcessDrainsStdoutAndStderrConcurrently() {
+        let result = Shell.runProcess(
+            python3Path,
+            ["-c", "import sys; sys.stdout.write('A' * 100000); sys.stderr.write('B' * 100000)"],
+            timeoutSeconds: 2
+        )
+
+        XCTAssertEqual(result?.terminationStatus, 0)
+        XCTAssertEqual(result?.stdout.count, 100000)
+        XCTAssertEqual(result?.stderr.count, 100000)
+    }
 }

@@ -61,7 +61,7 @@
 
 ### 3.2 Data Collection
 
-- Collector architecture: Swift CLI, DataSource protocol, 8 modules
+- Collector architecture: Swift CLI, DataSource protocol, 23 modules
 - Data source details: TCC (SQLite, PRAGMA-based schema detection), Entitlements (Security.framework + codesign CLI), CodeSigning (SecStaticCode API), XPC (launchd plist parsing), Keychain (SecItemCopyMatching), Persistence (LaunchDaemons/Agents/crontab), MDM (profiles CLI)
 - macOS version compatibility: PRAGMA table_info for forward-compatible TCC schema detection
 - Parallelization: TaskGroup with bounded concurrency (8 concurrent app scans)
@@ -71,7 +71,7 @@
 
 - Neo4j graph database with UNWIND-batched import (idempotent MERGE semantics)
 - Relationship inference engine (Python): CAN_INJECT_INTO, CHILD_INHERITS_TCC, CAN_SEND_APPLE_EVENT
-- Query library: 23 pre-built Cypher queries across 4 severity levels (critical, high, medium, info)
+- Query library: 101 pre-built Cypher queries across 4 severity levels (critical, high, medium, info)
 - Query categories: injectable FDA apps, Electron TCC inheritance, private entitlement analysis, XPC service trust, Keychain ACL exposure
 
 ## 4. Evaluation

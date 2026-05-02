@@ -7,11 +7,9 @@ These queries surface attack paths in the Rootstock Neo4j graph. Run them with t
 
 Before running queries:
 ```bash
-cd graph
-docker compose up -d          # start Neo4j
-python3 setup.py              # initialize schema + seed TCC nodes
-python3 import.py --input scan.json  # import collector data
-python3 infer.py              # compute inferred relationships
+# From the repository root:
+cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d && cd ..
+NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json --skip-report
 ```
 
 ---
@@ -528,7 +526,7 @@ python3 query_runner.py --neo4j bolt://host:7687 --neo4j-user neo4j --neo4j-pass
 ### Neo4j Browser (recommended for visualization)
 
 1. Open `http://localhost:7474`
-2. Log in with `neo4j` / `rootstock`
+2. Log in with `neo4j` / the password from `NEO4J_AUTH`
 3. Load the Browser Guide: `:play http://localhost:8001/rootstock-guide.html`
 4. Apply the GraSS stylesheet from `browser/rootstock-style.grass`
 5. Paste a query into the editor (⌘K to clear, ⌘Enter to run)
@@ -538,11 +536,11 @@ python3 query_runner.py --neo4j bolt://host:7687 --neo4j-user neo4j --neo4j-pass
 ```bash
 # Run a single query file
 cat graph/queries/01-injectable-fda-apps.cypher | \
-  cypher-shell -u neo4j -p rootstock --format plain
+  cypher-shell -u neo4j -p "$NEO4J_PASSWORD" --format plain
 
 # Or pipe via docker
 cat graph/queries/01-injectable-fda-apps.cypher | \
-  docker exec -i rootstock-neo4j cypher-shell -u neo4j -p rootstock
+  docker exec -i rootstock-neo4j cypher-shell -u neo4j -p "$NEO4J_PASSWORD"
 ```
 
 ---

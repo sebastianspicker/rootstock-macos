@@ -20,7 +20,8 @@ interactive attack-path queries in Neo4j Browser with the Rootstock style sheet.
 
 ```bash
 cd graph
-docker compose up -d
+NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d
+export NEO4J_PASSWORD=CHANGE_ME
 ```
 
 Wait for Neo4j to be ready (about 30 seconds):
@@ -31,13 +32,13 @@ docker compose logs -f neo4j | grep "Started"
 ```
 
 **What this looks like:** Docker pulls the `neo4j:5.26` image (first run only),
-creates a container named `rootstock-neo4j`, and maps ports 7474 (HTTP) and 7687 (Bolt).
+creates a container named `rootstock-neo4j`, and maps ports 7474 (HTTP) and 7687 (Bolt) on `127.0.0.1`.
 
 ### Option B: Neo4j Desktop
 
 1. Download from https://neo4j.com/download/
 2. Create a new project, add a local database
-3. Set the password to `rootstock` (or configure `NEO4J_AUTH` in your environment)
+3. Set a local password and export the same value as `NEO4J_PASSWORD`
 4. Start the database
 
 ---
@@ -86,7 +87,7 @@ Navigate to: **http://localhost:7474**
 
 Log in with:
 - **Username:** `neo4j`
-- **Password:** `rootstock` (or whatever you set in `NEO4J_AUTH`)
+- **Password:** the password from `NEO4J_AUTH`
 
 **What this looks like:** The Neo4j Browser home screen shows a query editor at the
 top, a sidebar with Favorites and Database info on the left, and a graph canvas

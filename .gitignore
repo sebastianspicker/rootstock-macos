@@ -6,6 +6,8 @@ xcuserdata/
 DerivedData/
 .claude/
 .env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
 *.pyo
@@ -29,9 +31,15 @@ AGENTS.md
 .kilo/
 docs/superpowers/
 docs/deprecated/audits/
+docs/generated/
+screenshots/
+examples/generated/
+*.log
 
 # Real scan data (machine-specific, never commit)
 scan.json
 graph.json
 rootstock-viewer.html
+rootstock-viewer-*.html
 rootstock-report.md
+rootstock-report-*.md

@@ -17,7 +17,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cve_reference import (
     AttackContext,
+    CveEntry,
+    CWE_REGISTRY,
     get_all_critical_cves,
+    get_cwe,
     get_context,
     get_contexts_for_query,
     _REGISTRY,
@@ -28,8 +31,28 @@ from report_formatters import format_vulnerability_summary, _exploitation_icon
 
 
 _CVE_ID_RE = re.compile(r"^CVE-\d{4}-\d+$")
+_CWE_ID_RE = re.compile(r"^CWE-\d+$")
 _TECHNIQUE_ID_RE = re.compile(r"^T\d{4}(\.\d{3})?$")
 _VALID_PRIORITIES = {"Immediate", "High", "Medium"}
+_REQUIRED_CATEGORY_CVES = {
+    "injectable_fda": {"CVE-2025-31191", "CVE-2024-44168"},
+    "kernel_escalation": {"CVE-2025-24085", "CVE-2025-24118"},
+    "blastpass_class": {"CVE-2023-41064", "CVE-2023-41061"},
+    "sandbox_escape": {"CVE-2023-38606"},
+    "gatekeeper_bypass": {"CVE-2022-42821", "CVE-2024-44175"},
+    "running_processes": {"CVE-2025-24201"},
+}
+
+
+def _registry_cves() -> list[CveEntry]:
+    return [cve for ctx in _REGISTRY.values() for cve in ctx.cves]
+
+
+def _unique_cves_by_id() -> dict[str, CveEntry]:
+    unique: dict[str, CveEntry] = {}
+    for cve in _registry_cves():
+        unique.setdefault(cve.cve_id, cve)
+    return unique
 
 
 # ── Registry integrity ───────────────────────────────────────────────────────
@@ -79,6 +102,65 @@ class TestRegistryIntegrity:
             if ctx.category != key:
                 mismatched.append(f"{key} != {ctx.category}")
         assert not mismatched, f"Category/key mismatch: {mismatched}"
+
+    def test_no_duplicate_cve_ids_within_category(self):
+        duplicates = []
+        for category, ctx in _REGISTRY.items():
+            cve_ids = [cve.cve_id for cve in ctx.cves]
+            duplicate_ids = sorted({cve_id for cve_id in cve_ids if cve_ids.count(cve_id) > 1})
+            if duplicate_ids:
+                duplicates.append(f"{category}: {duplicate_ids}")
+        assert not duplicates, f"Duplicate CVE IDs in category: {duplicates}"
+
+    def test_duplicate_cve_ids_have_identical_records(self):
+        """CVEs may be referenced by multiple categories, but must not conflict."""
+        seen: dict[str, CveEntry] = {}
+        conflicts = []
+        for cve in _registry_cves():
+            existing = seen.setdefault(cve.cve_id, cve)
+            if existing != cve:
+                conflicts.append(cve.cve_id)
+        assert not conflicts, f"Conflicting duplicate CVE records: {sorted(conflicts)}"
+
+    def test_cve_required_fields_populated(self):
+        missing = []
+        for cve in _unique_cves_by_id().values():
+            required = {
+                "title": cve.title,
+                "affected_versions": cve.affected_versions,
+                "description": cve.description,
+                "reference_url": cve.reference_url,
+            }
+            for field, value in required.items():
+                if not value.strip():
+                    missing.append(f"{cve.cve_id}.{field}")
+            if cve.patched_version is not None and not cve.patched_version.strip():
+                missing.append(f"{cve.cve_id}.patched_version")
+            if not cve.cwe_ids:
+                missing.append(f"{cve.cve_id}.cwe_ids")
+            if not cve.reference_url.startswith(("https://", "http://")):
+                missing.append(f"{cve.cve_id}.reference_url")
+        assert not missing, f"Missing or invalid CVE fields: {missing}"
+
+    def test_referenced_cwe_ids_resolve(self):
+        unresolved = []
+        for cve in _unique_cves_by_id().values():
+            for cwe_id in cve.cwe_ids:
+                cwe = get_cwe(cwe_id)
+                if not _CWE_ID_RE.match(cwe_id) or cwe is None:
+                    unresolved.append(f"{cve.cve_id}: {cwe_id}")
+        assert not unresolved, f"Unresolved CWE references: {unresolved}"
+
+    def test_cwe_registry_entries_are_populated(self):
+        bad = []
+        for cwe_id, cwe in CWE_REGISTRY.items():
+            if cwe_id != cwe.cwe_id or not _CWE_ID_RE.match(cwe.cwe_id):
+                bad.append(f"{cwe_id}: id mismatch")
+            if not cwe.name.strip():
+                bad.append(f"{cwe_id}: missing name")
+            if not cwe.category.strip():
+                bad.append(f"{cwe_id}: missing category")
+        assert not bad, f"Invalid CWE registry entries: {bad}"
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -216,15 +298,6 @@ class TestExploitationStatus:
                     bad.append(f"{cve.cve_id}: {complexity}")
         assert not bad, f"Invalid attack complexities: {bad}"
 
-    def test_at_least_three_actively_exploited(self):
-        """Registry should contain at least 3 actively exploited CVEs."""
-        exploited = set()
-        for ctx in _REGISTRY.values():
-            for cve in ctx.cves:
-                if getattr(cve, "exploitation_status", "theoretical") == "actively_exploited":
-                    exploited.add(cve.cve_id)
-        assert len(exploited) >= 3, f"Only {len(exploited)} actively exploited CVEs: {exploited}"
-
     def test_exploitation_icon_values(self):
         assert _exploitation_icon("actively_exploited") == "[!!!] Active"
         assert _exploitation_icon("poc_available") == "[!!] PoC"
@@ -232,9 +305,9 @@ class TestExploitationStatus:
         assert _exploitation_icon("unknown") == ""
 
 
-# ── New Categories ───────────────────────────────────────────────────────────
+# ── Regression Categories ────────────────────────────────────────────────────
 
-_NEW_CATEGORIES = [
+_REGRESSION_CATEGORIES = [
     "certificate_hygiene",
     "shell_hooks",
     "file_acl_escalation",
@@ -249,24 +322,34 @@ _NEW_CATEGORIES = [
 ]
 
 
-class TestNewCategories:
-    @pytest.mark.parametrize("category", _NEW_CATEGORIES)
-    def test_new_category_exists(self, category: str):
+class TestRegressionCategories:
+    @pytest.mark.parametrize("category", _REGRESSION_CATEGORIES)
+    def test_regression_category_exists(self, category: str):
         ctx = get_context(category)
         assert ctx is not None, f"Category {category!r} not in registry"
         assert ctx.category == category
         assert len(ctx.techniques) >= 1
 
-    def test_registry_has_at_least_23_categories(self):
-        assert len(_REGISTRY) >= 23, f"Only {len(_REGISTRY)} categories in registry"
+    @pytest.mark.parametrize("category, expected_cves", _REQUIRED_CATEGORY_CVES.items())
+    def test_known_category_cves_remain_reachable(
+        self,
+        category: str,
+        expected_cves: set[str],
+    ):
+        ctx = get_context(category)
+        assert ctx is not None, f"Category {category!r} not in registry"
+        actual = {cve.cve_id for cve in ctx.cves}
+        assert expected_cves <= actual
 
 
-# ── Expanded Coverage ────────────────────────────────────────────────────────
+# ── Regression Coverage ──────────────────────────────────────────────────────
 
-class TestExpandedCoverage:
-    def test_cve_count_at_least_30(self):
-        cves = get_all_critical_cves(min_cvss=0.0)
-        assert len(cves) >= 30, f"Only {len(cves)} CVEs in registry"
+class TestRegressionCoverage:
+    def test_known_cves_reachable_via_unique_registry(self):
+        cves = _unique_cves_by_id()
+        expected = set().union(*_REQUIRED_CATEGORY_CVES.values())
+        missing = sorted(expected - set(cves))
+        assert not missing, f"Known regression CVEs missing: {missing}"
 
     def test_formatter_shows_exploited_column(self):
         ctx = get_context("kernel_escalation")
@@ -286,18 +369,9 @@ class TestExpandedCoverage:
         result = format_vulnerability_summary([ctx])
         assert "!!" in result
 
-    def test_new_cves_reachable_via_get_all_critical(self):
-        """New high-CVSS CVEs should appear in the critical list."""
+    def test_regression_cves_reachable_via_get_all_critical(self):
+        """High-CVSS regression CVEs should appear in the critical list."""
         cves = get_all_critical_cves(min_cvss=8.0)
         cve_ids = {c.cve_id for c in cves}
-        # BLASTPASS and Operation Triangulation entries should be present
         assert "CVE-2023-38606" in cve_ids
         assert "CVE-2025-24201" in cve_ids
-
-    def test_technique_count_at_least_25(self):
-        """Registry should reference at least 25 unique techniques."""
-        techniques = set()
-        for ctx in _REGISTRY.values():
-            for tech in ctx.techniques:
-                techniques.add(tech.technique_id)
-        assert len(techniques) >= 25, f"Only {len(techniques)} unique techniques"

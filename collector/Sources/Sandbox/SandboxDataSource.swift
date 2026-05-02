@@ -164,12 +164,38 @@ public struct SandboxDataSource {
     /// Attempt to load a system sandbox profile matching the given bundle ID.
     /// Looks for `<bundleId>.sb` in the system profiles directory.
     func loadSystemProfile(for bundleId: String) -> String? {
-        let profilePath = "\(systemProfilesPath)/\(bundleId).sb"
-        guard FileManager.default.isReadableFile(atPath: profilePath),
-              let data = FileManager.default.contents(atPath: profilePath),
+        guard let profileURL = profileURL(for: bundleId) else { return nil }
+        guard FileManager.default.isReadableFile(atPath: profileURL.path),
+              let data = FileManager.default.contents(atPath: profileURL.path),
               let text = String(data: data, encoding: .utf8) else {
             return nil
         }
         return text
+    }
+
+    func profileURL(for bundleId: String) -> URL? {
+        guard Self.isSafeBundleIdentifier(bundleId) else { return nil }
+
+        let baseURL = URL(fileURLWithPath: systemProfilesPath, isDirectory: true)
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+        let profileURL = baseURL
+            .appendingPathComponent("\(bundleId).sb", isDirectory: false)
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+
+        let basePath = baseURL.path.hasSuffix("/") ? baseURL.path : baseURL.path + "/"
+        guard profileURL.path.hasPrefix(basePath) else { return nil }
+        return profileURL
+    }
+
+    static func isSafeBundleIdentifier(_ bundleId: String) -> Bool {
+        guard !bundleId.isEmpty,
+              !bundleId.contains("/"),
+              !bundleId.contains("\\"),
+              !bundleId.contains("..") else {
+            return false
+        }
+        return true
     }
 }

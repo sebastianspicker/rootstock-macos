@@ -22,6 +22,9 @@ struct RootstockCommand: AsyncParsableCommand {
     @Flag(name: .shortAndLong, help: "Enable verbose logging to stderr.")
     var verbose: Bool = false
 
+    @Flag(help: "Replace an existing regular output file. Symlinks are always refused.")
+    var force: Bool = false
+
     @Option(name: .shortAndLong, help: "Comma-separated modules to run: tcc, entitlements, codesigning, all.")
     var modules: String = "all"
 
@@ -34,7 +37,7 @@ struct RootstockCommand: AsyncParsableCommand {
         let result = await orchestrator.run(config: config)
 
         let exporter = JSONExporter()
-        try exporter.write(result, to: output)
+        try exporter.write(result, to: output, force: force)
 
         let entitlementCount = result.applications.flatMap(\.entitlements).count
         print("Scan complete. Found \(result.applications.count) app(s), \(result.tccGrants.count) TCC grant(s), \(entitlementCount) entitlement(s). Output: \(output)")

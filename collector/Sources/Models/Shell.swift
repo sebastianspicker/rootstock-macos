@@ -1,5 +1,12 @@
 import Foundation
 
+public struct ShellResult: Sendable {
+    public let stdout: String
+    public let stderr: String
+    public let terminationStatus: Int32
+    public let timedOut: Bool
+}
+
 /// Shared helper for running subprocesses. Used by data sources that invoke
 /// system commands (dscl, launchctl, codesign, profiles, etc.).
 public enum Shell {
@@ -10,13 +17,48 @@ public enum Shell {
 
     /// Run a command with an optional timeout and return stdout as a trimmed String.
     public static func run(_ path: String, _ arguments: [String], timeoutSeconds: TimeInterval?) -> String? {
+        guard let result = runProcess(path, arguments, timeoutSeconds: timeoutSeconds),
+              result.terminationStatus == 0,
+              !result.timedOut else {
+            return nil
+        }
+        return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Run a command, draining stdout and stderr concurrently to avoid pipe deadlocks.
+    public static func runProcess(
+        _ path: String,
+        _ arguments: [String],
+        timeoutSeconds: TimeInterval? = nil
+    ) -> ShellResult? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
         process.arguments = arguments
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+
+        let outputGroup = DispatchGroup()
+        let outputQueue = DispatchQueue(label: "rootstock.shell.output", attributes: .concurrent)
+        var stdoutData = Data()
+        var stderrData = Data()
+
+        outputGroup.enter()
+        outputQueue.async {
+            stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+            outputGroup.leave()
+        }
+
+        outputGroup.enter()
+        outputQueue.async {
+            stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+            outputGroup.leave()
+        }
+
+        let completed = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in completed.signal() }
 
         do {
             try process.run()
@@ -24,46 +66,37 @@ public enum Shell {
             return nil
         }
 
+        var timedOut = false
         if let timeoutSeconds {
-            let completed = DispatchSemaphore(value: 0)
-            process.terminationHandler = { _ in completed.signal() }
             let deadline = DispatchTime.now() + timeoutSeconds
             if completed.wait(timeout: deadline) == .timedOut {
+                timedOut = true
                 process.terminate()
-                process.waitUntilExit()
-                return nil
             }
-        }
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        if timeoutSeconds == nil {
+        } else {
             process.waitUntilExit()
         }
-        guard process.terminationStatus == 0 else { return nil }
-        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        process.waitUntilExit()
+        outputGroup.wait()
+
+        return ShellResult(
+            stdout: String(data: stdoutData, encoding: .utf8) ?? "",
+            stderr: String(data: stderrData, encoding: .utf8) ?? "",
+            terminationStatus: process.terminationStatus,
+            timedOut: timedOut
+        )
     }
 
     /// Run a command and return stderr as a trimmed String, or nil on failure / non-zero exit.
     /// Useful for tools like `codesign -d` that write informational output to stderr.
     public static func runStderr(_ path: String, _ arguments: [String]) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-
-        let pipe = Pipe()
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = pipe
-
-        do {
-            try process.run()
-        } catch {
+        guard let result = runProcess(path, arguments),
+              result.terminationStatus == 0,
+              !result.timedOut else {
             return nil
         }
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Parse Data as a plist dictionary. Returns nil if parsing fails.

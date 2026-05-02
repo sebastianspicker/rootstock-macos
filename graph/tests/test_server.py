@@ -20,9 +20,24 @@ import pytest
 # Ensure graph/ is on the import path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+AUTH_HEADERS = {"Authorization": "Bearer test-token"}
+
+
+class AuthenticatedClient:
+    def __init__(self, client):
+        self.raw = client
+
+    def get(self, url, **kwargs):
+        kwargs.setdefault("headers", AUTH_HEADERS)
+        return self.raw.get(url, **kwargs)
+
+    def post(self, url, **kwargs):
+        kwargs.setdefault("headers", AUTH_HEADERS)
+        return self.raw.post(url, **kwargs)
+
 
 @pytest.fixture(scope="module")
-def client():
+def raw_client():
     """Create a FastAPI TestClient with a mocked Neo4j driver."""
     from server import app
 
@@ -41,6 +56,7 @@ def client():
     app.state.neo4j_uri = "bolt://localhost:7687"
     app.state.neo4j_user = "neo4j"
     app.state.neo4j_password = "test"
+    app.state.api_token = "test-token"
 
     from fastapi.testclient import TestClient
 
@@ -50,6 +66,65 @@ def client():
         mock_gdb.driver.return_value = mock_driver
         with TestClient(app, raise_server_exceptions=False) as tc:
             yield tc
+
+
+@pytest.fixture
+def client(raw_client):
+    return AuthenticatedClient(raw_client)
+
+
+class TestRouteSurface:
+    def test_public_viewer_api_routes_are_locked(self):
+        """Only the viewer API routes should be exposed as FastAPI app routes."""
+        from fastapi.routing import APIRoute
+        from server import app
+
+        expected_routes = {
+            ("GET", "/"),
+            ("GET", "/api/queries"),
+            ("POST", "/api/queries/{query_id}/run"),
+            ("GET", "/api/graph"),
+            ("POST", "/api/mark-owned"),
+            ("POST", "/api/clear-owned"),
+            ("GET", "/api/owned"),
+            ("POST", "/api/tier-classify"),
+            ("POST", "/api/cypher"),
+        }
+        actual_routes = {
+            (method, route.path)
+            for route in app.routes
+            if isinstance(route, APIRoute)
+            for method in route.methods
+            if method in {"GET", "POST"}
+        }
+
+        assert actual_routes == expected_routes
+
+
+class TestAuthAndBindGuards:
+    def test_api_requires_bearer_token(self, raw_client):
+        response = raw_client.get("/api/queries")
+        assert response.status_code == 401
+        assert response.headers["www-authenticate"] == "Bearer"
+
+    def test_api_accepts_valid_bearer_token(self, raw_client):
+        response = raw_client.get("/api/queries", headers=AUTH_HEADERS)
+        assert response.status_code == 200
+
+    def test_viewer_route_does_not_embed_live_graph(self, raw_client):
+        response = raw_client.get("/")
+        assert response.status_code == 200
+        assert '"nodes": []' in response.text
+        assert '"edges": []' in response.text
+
+    def test_non_loopback_bind_requires_explicit_remote_flag(self):
+        from server import _validate_bind_host
+
+        _validate_bind_host("127.0.0.1", allow_remote=False)
+        _validate_bind_host("::1", allow_remote=False)
+        _validate_bind_host("0.0.0.0", allow_remote=True)
+        with pytest.raises(ValueError):
+            _validate_bind_host("0.0.0.0", allow_remote=False)
 
 
 class TestQueryEndpoints:
@@ -88,12 +163,7 @@ class TestStaticEndpoints:
             expected_keys = {"id", "filename", "name", "purpose", "category", "severity", "parameters"}
             assert expected_keys.issubset(set(q.keys()))
 
-    def test_graph_layout_is_cached_for_identical_payloads(self, client):
-        from server import _LAYOUT_CACHE, _LAYOUT_CACHE_ORDER
-
-        _LAYOUT_CACHE.clear()
-        _LAYOUT_CACHE_ORDER.clear()
-
+    def test_graph_gets_deterministic_positions(self, client):
         graph_payload = {
             "graph": {
                 "nodes": [
@@ -106,21 +176,18 @@ class TestStaticEndpoints:
             }
         }
 
-        def fake_layout(nodes, _edges, iterations):
-            for index, node in enumerate(nodes):
-                node["x"] = float(index)
-                node["y"] = float(iterations + index)
-
         with patch("server._get_hostname", return_value="cached-host"), patch(
             "server.build_opengraph",
             side_effect=lambda *_args, **_kwargs: copy.deepcopy(graph_payload),
-        ), patch("server.compute_layout", side_effect=fake_layout) as mock_layout:
+        ):
             first = client.get("/api/graph")
             second = client.get("/api/graph")
 
         assert first.status_code == 200
         assert second.status_code == 200
-        assert mock_layout.call_count == 1
+        for node in first.json()["graph"]["nodes"]:
+            assert isinstance(node["x"], int | float)
+            assert isinstance(node["y"], int | float)
         assert first.json()["graph"]["nodes"] == second.json()["graph"]["nodes"]
 
 
@@ -159,6 +226,43 @@ class TestCypherEndpoint:
         assert "columns" in data
         assert "rows" in data
         assert "count" in data
+        assert data["truncated"] is False
+
+    def test_dbms_procedure_rejected(self, client):
+        response = client.post("/api/cypher", json={
+            "cypher": "CALL dbms.listConfig()"
+        })
+        assert response.status_code == 403
+
+    def test_oversized_query_rejected(self, client):
+        response = client.post("/api/cypher", json={
+            "cypher": "MATCH (n) RETURN n // " + ("x" * 10000)
+        })
+        assert response.status_code == 413
+
+    def test_rows_are_limited_and_truncated_flag_is_returned(self, raw_client):
+        from server import app, get_read_session
+
+        session = MagicMock()
+        session.run.return_value = [{"n": i} for i in range(1005)]
+
+        def override_session():
+            yield session
+
+        app.dependency_overrides[get_read_session] = override_session
+        try:
+            response = raw_client.post(
+                "/api/cypher",
+                headers=AUTH_HEADERS,
+                json={"cypher": "MATCH (n) RETURN n"},
+            )
+        finally:
+            app.dependency_overrides.clear()
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count"] == 1000
+        assert data["truncated"] is True
 
     def test_write_query_rejected_create(self, client):
         """POST /api/cypher with CREATE should return 403."""

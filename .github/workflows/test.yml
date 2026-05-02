@@ -59,6 +59,9 @@ jobs:
         working-directory: graph
         run: pip install -r requirements.txt pytest
 
+      - name: Validate demo scan contract
+        run: python3 scripts/validate-scan.py examples/demo-scan.json
+
       - name: pytest (no Neo4j)
         working-directory: graph
         env:
@@ -85,3 +88,17 @@ jobs:
 
       - name: ruff check
         run: ruff check graph/ scripts/ examples/ docs/
+
+  # ── Shell entrypoint linting ────────────────────────────────────────────
+  shell-lint:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: shellcheck
+        run: shellcheck examples/regenerate.sh graph/pipeline.sh scripts/*.sh tests/integration/*.sh

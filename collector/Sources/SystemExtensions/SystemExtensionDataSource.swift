@@ -21,147 +21,111 @@ public struct SystemExtensionDataSource: DataSource {
     }
 
     /// Parse `systemextensionsctl list` output.
-    /// Lines look like: `---  com.crowdstrike.falcon.Agent (1.0/1.0)  TeamID  [activated enabled]`
-    ///
-    /// Uses a regex-based parser as the primary method for robustness, with
-    /// the original heuristic parser as a fallback for unexpected formats.
+    /// Apple has changed this command's row format across releases, so parsing
+    /// stays tolerant but still requires a bundle identifier plus lifecycle
+    /// state, team ID, or ESF event list to avoid treating headers as data.
     internal static func parseSystemExtensionsOutput(_ output: String) -> [SystemExtension] {
-        let regexResult = parseWithRegex(output)
-        if !regexResult.isEmpty {
-            return regexResult
+        output.split(whereSeparator: \.isNewline).compactMap { line in
+            parseSystemExtensionLine(String(line))
         }
-        // Fallback to heuristic parser for unexpected output formats
-        return parseWithHeuristic(output)
     }
 
-    // MARK: - Regex-based parser (primary)
+    private static func parseSystemExtensionLine(_ line: String) -> SystemExtension? {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
 
-    /// Regex-based parser that handles known `systemextensionsctl list` output formats.
-    ///
-    /// Supported formats:
-    ///   - `--- com.example.ext (1.0/1.0)  TEAMID1234  [activated enabled]`
-    ///   - `*   com.example.ext (1.0/1.0)  TEAMID1234  [activated enabled]`
-    ///   - Lines without version parenthetical
-    ///   - State strings like `[activated enabled]`, `[activated waiting for user]`, etc.
-    private static func parseWithRegex(_ output: String) -> [SystemExtension] {
-        // Match: optional prefix (--- or *), bundle identifier (reverse-DNS with dots),
-        //        optional (version), optional TeamID (10 alphanum chars), optional [state]
-        let pattern = #"^[\s]*(?:---|\*)\s+([\w.-]+(?:\.[\w.-]+)+)\s*(?:\([^)]*\))?\s*([A-Z0-9]{10})?\s*(?:\[([^\]]*)\])?"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .anchorsMatchLines) else {
-            return []
+        let tokens = trimmed.split(whereSeparator: \.isWhitespace).map(String.init)
+        guard let firstToken = tokens.first,
+              firstToken == "---" || firstToken == "*" || firstToken == "-"
+        else { return nil }
+
+        guard let identifier = tokens.first(where: isBundleIdentifier) else {
+            return nil
         }
 
-        var extensions: [SystemExtension] = []
-        let nsOutput = output as NSString
-        let matches = regex.matches(in: output, range: NSRange(location: 0, length: nsOutput.length))
-
-        for match in matches {
-            // Group 1: identifier (always present if matched)
-            guard match.numberOfRanges >= 2,
-                  match.range(at: 1).location != NSNotFound else { continue }
-            let identifier = nsOutput.substring(with: match.range(at: 1))
-
-            // Group 2: teamId (optional)
-            var teamId: String? = nil
-            if match.numberOfRanges >= 3, match.range(at: 2).location != NSNotFound {
-                teamId = nsOutput.substring(with: match.range(at: 2))
-            }
-
-            // Group 3: state string inside brackets (optional)
-            var enabled = false
-            if match.numberOfRanges >= 4, match.range(at: 3).location != NSNotFound {
-                let state = nsOutput.substring(with: match.range(at: 3))
-                enabled = state.contains("enabled")
-            }
-
-            let extType = classifyExtensionType(identifier)
-            let fullLine = nsOutput.substring(with: match.range(at: 0))
-            let subscribedEvents = parseSubscribedEvents(fullLine)
-
-            extensions.append(SystemExtension(
-                identifier: identifier,
-                teamId: teamId,
-                extensionType: extType,
-                enabled: enabled,
-                subscribedEvents: subscribedEvents
-            ))
+        let teamId = tokens.first { token in
+            token != identifier && isTeamIdentifier(token)
+        }
+        let subscribedEvents = parseSubscribedEvents(trimmed)
+        guard teamId != nil || hasLifecycleState(in: trimmed) || !subscribedEvents.isEmpty else {
+            return nil
         }
 
-        return extensions
+        return SystemExtension(
+            identifier: identifier,
+            teamId: teamId,
+            extensionType: classifyExtensionType(identifier),
+            enabled: isEnabled(tokens: tokens, line: trimmed),
+            subscribedEvents: subscribedEvents
+        )
     }
 
-    // MARK: - Heuristic parser (fallback)
+    private static func isBundleIdentifier(_ token: String) -> Bool {
+        guard token.contains("."),
+              !token.hasPrefix("("),
+              !token.hasPrefix("["),
+              !token.hasSuffix(":")
+        else { return false }
 
-    /// Original heuristic-based parser kept as a fallback for output formats
-    /// not matched by the regex parser.
-    private static func parseWithHeuristic(_ output: String) -> [SystemExtension] {
-        var extensions: [SystemExtension] = []
-
-        for line in output.split(separator: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            // Skip header lines and pure separator lines (but not data lines prefixed with ---)
-            guard !trimmed.isEmpty,
-                  !trimmed.allSatisfy({ $0 == "-" || $0 == "=" }),
-                  !trimmed.hasPrefix("System Extension"),
-                  !trimmed.hasPrefix("enabled")
-            else { continue }
-            // Strip leading "--- " or "*   " prefix used by systemextensionsctl
-            let stripped: String
-            if trimmed.hasPrefix("---") || trimmed.hasPrefix("*") {
-                let afterPrefix = trimmed.drop(while: { $0 == "-" || $0 == "*" || $0 == " " })
-                stripped = String(afterPrefix)
-            } else {
-                stripped = trimmed
-            }
-
-            // Parse: `identifier (version)  teamID  [state]`
-            let parts = stripped.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-            guard parts.count >= 2 else { continue }
-
-            // Find the identifier (contains a dot like com.xxx.yyy)
-            var identifier: String?
-            var teamId: String?
-            // Check the full line for "enabled" — the bracketed state like
-            // "[activated enabled]" splits across multiple tokens
-            let enabled = stripped.contains("enabled")
-
-            for part in parts {
-                if part.contains(".") && !part.hasPrefix("[") && !part.hasPrefix("(") {
-                    if identifier == nil {
-                        identifier = part
-                    }
-                }
-            }
-
-            // TeamID is typically a 10-char alphanumeric string
-            for part in parts {
-                if part.count == 10 && part.allSatisfy({ $0.isLetter || $0.isNumber }) && part != identifier {
-                    teamId = part
-                    break
-                }
-            }
-
-            guard let id = identifier else { continue }
-
-            let extType = classifyExtensionType(id)
-            let subscribedEvents = Self.parseSubscribedEvents(stripped)
-
-            extensions.append(SystemExtension(
-                identifier: id,
-                teamId: teamId,
-                extensionType: extType,
-                enabled: enabled,
-                subscribedEvents: subscribedEvents
-            ))
+        let segments = token.split(separator: ".", omittingEmptySubsequences: false)
+        guard segments.count >= 2, segments.allSatisfy({ !$0.isEmpty }) else {
+            return false
         }
-
-        return extensions
+        return token.allSatisfy { character in
+            character.isLetter || character.isNumber || character == "." || character == "-" || character == "_"
+        }
     }
 
-    // MARK: - Shared helpers
+    private static func isTeamIdentifier(_ token: String) -> Bool {
+        token.count == 10 && token.allSatisfy { $0.isLetter || $0.isNumber }
+    }
+
+    private static func isEnabled(tokens: [String], line: String) -> Bool {
+        if bracketedSegments(in: line).contains(where: { segment in
+            segment.lowercased().split(whereSeparator: { !$0.isLetter }).contains("enabled")
+        }) {
+            return true
+        }
+
+        return isStatusTableRow(tokens) && tokens[0] == "*"
+    }
+
+    private static func isStatusTableRow(_ tokens: [String]) -> Bool {
+        guard tokens.count >= 4 else { return false }
+        return (tokens[0] == "*" || tokens[0] == "-") &&
+            (tokens[1] == "*" || tokens[1] == "-") &&
+            isTeamIdentifier(tokens[2]) &&
+            isBundleIdentifier(tokens[3])
+    }
+
+    private static func hasLifecycleState(in line: String) -> Bool {
+        bracketedSegments(in: line).contains { segment in
+            let state = segment.lowercased()
+            return state.contains("activated") ||
+                state.contains("enabled") ||
+                state.contains("disabled") ||
+                state.contains("waiting")
+        }
+    }
+
+    private static func bracketedSegments(in line: String) -> [String] {
+        var segments: [String] = []
+        var searchStart = line.startIndex
+
+        while let open = line[searchStart...].firstIndex(of: "[") {
+            let afterOpen = line.index(after: open)
+            guard let close = line[afterOpen...].firstIndex(of: "]") else {
+                break
+            }
+            segments.append(String(line[afterOpen..<close]))
+            searchStart = line.index(after: close)
+        }
+        return segments
+    }
 
     /// Determine extension type from identifier patterns.
     private static func classifyExtensionType(_ identifier: String) -> SystemExtension.ExtensionType {
+        let identifier = identifier.lowercased()
         if identifier.contains("network") || identifier.contains("dns") || identifier.contains("vpn") || identifier.contains("firewall") {
             return .network
         } else if identifier.contains("endpoint") || identifier.contains("security") || identifier.contains("falcon") || identifier.contains("sentinel") {
@@ -174,17 +138,27 @@ public struct SystemExtensionDataSource: DataSource {
     /// Parse ESF event subscriptions from systemextensionsctl output.
     /// Looks for patterns like "events=[AUTH_EXEC,NOTIFY_FORK]" or "events: AUTH_EXEC, NOTIFY_FORK".
     internal static func parseSubscribedEvents(_ line: String) -> [String] {
-        // Pattern 1: events=[EVENT1,EVENT2]
-        if let range = line.range(of: "events=\\[[^\\]]*\\]", options: .regularExpression) {
-            let eventsStr = line[range]
-            let inner = eventsStr.dropFirst("events=[".count).dropLast(1)
-            return inner.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        if let marker = line.range(of: "events=[", options: .caseInsensitive),
+           let close = line[marker.upperBound...].firstIndex(of: "]") {
+            return splitEvents(String(line[marker.upperBound..<close]))
         }
-        // Pattern 2: events: EVENT1, EVENT2
-        if let range = line.range(of: "events:\\s*[A-Z_,\\s]+", options: .regularExpression) {
-            let eventsStr = String(line[range]).replacingOccurrences(of: "events:", with: "").trimmingCharacters(in: .whitespaces)
-            return eventsStr.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+
+        if let marker = line.range(of: "events:", options: .caseInsensitive) {
+            let suffix = line[marker.upperBound...]
+            let eventText: String
+            if let stateStart = suffix.firstIndex(of: "[") {
+                eventText = String(suffix[..<stateStart])
+            } else {
+                eventText = String(suffix)
+            }
+            return splitEvents(eventText)
         }
         return []
+    }
+
+    private static func splitEvents(_ value: String) -> [String] {
+        value.split(separator: ",").map { event in
+            event.trimmingCharacters(in: .whitespaces)
+        }.filter { !$0.isEmpty }
     }
 }

@@ -1,7 +1,6 @@
-# macOS Security Model — LLM Reference
+# macOS Security Model Quick Reference
 
-> Condensed reference material optimized for LLM context windows.
-> Use this when Claude needs quick orientation on macOS security concepts.
+> Condensed reference material for quick orientation on macOS security concepts.
 
 ## Security Layers (outer to inner)
 

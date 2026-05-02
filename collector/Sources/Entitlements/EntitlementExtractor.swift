@@ -1,6 +1,7 @@
 import Foundation
 import Security
 import os.log
+import Models
 
 /// Extracts the entitlements dictionary from a signed executable.
 ///
@@ -49,23 +50,15 @@ public struct EntitlementExtractor {
     // MARK: - codesign CLI (fallback)
 
     private func extractWithCodesignCLI(path: String) -> [String: Any]? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
-        // `:- ` = write to stdout in plist/XML format
-        process.arguments = ["-d", "--entitlements", ":-", path]
-
-        let stdoutPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = Pipe()  // discard stderr
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
+        guard let result = Shell.runProcess(
+            "/usr/bin/codesign",
+            ["-d", "--entitlements", ":-", path],
+            timeoutSeconds: 10
+        ), result.terminationStatus == 0, !result.timedOut else {
             return nil
         }
 
-        let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let data = Data(result.stdout.utf8)
         guard !data.isEmpty else { return nil }
 
         var format = PropertyListSerialization.PropertyListFormat.xml

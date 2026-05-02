@@ -17,36 +17,32 @@ Exit code 0 on success, 1 on failure.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import html as html_mod
+import ipaddress
 import json
 import logging
+import math
 import os
+import re
 import sys
-import tempfile
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
-from neo4j import GraphDatabase, READ_ACCESS
+from neo4j import GraphDatabase, Query, READ_ACCESS
 from neo4j.exceptions import ServiceUnavailable, AuthError
 
 # ── Imports from existing Rootstock modules ─────────────────────────────────
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-import importlib
-
 from query_runner import discover_queries, find_query, load_cypher
 from utils import first_cypher_statement, run_query, validate_read_only_cypher
-
-_import_mod = importlib.import_module("import")
-query_stats = _import_mod.query_stats
 
 from opengraph_export import build_opengraph  # noqa: E402
 from mark_owned import (  # noqa: E402
@@ -57,9 +53,6 @@ from mark_owned import (  # noqa: E402
 )
 from clear_owned import clear_all, clear_by_bundle_id, clear_by_username  # noqa: E402
 from tier_classification import classify  # noqa: E402
-from viewer_layout import compute_layout  # noqa: E402
-from cve_enrichment import fetch_and_cache, get_enrichment_status  # noqa: E402
-from bloodhound_import import import_all as bloodhound_import_all  # noqa: E402
 
 
 # ── Request/Response models ─────────────────────────────────────────────────
@@ -133,9 +126,10 @@ app.add_middleware(
 # ── Dependencies ────────────────────────────────────────────────────────────
 
 logger = logging.getLogger("rootstock.api")
-_LAYOUT_CACHE_LIMIT = 8
-_LAYOUT_CACHE: dict[str, dict[str, tuple[float, float]]] = {}
-_LAYOUT_CACHE_ORDER: list[str] = []
+MAX_ADHOC_CYPHER_LENGTH = 10_000
+MAX_ADHOC_CYPHER_ROWS = 1_000
+ADHOC_CYPHER_TIMEOUT_SECONDS = 5.0
+_DBMS_CALL_RE = re.compile(r"\bCALL\s+dbms\.", re.IGNORECASE)
 
 
 def get_session(request: Request):
@@ -150,27 +144,40 @@ def get_read_session(request: Request):
         yield session
 
 
+@app.middleware("http")
+async def require_api_token(request: Request, call_next):
+    """Protect all /api routes with a bearer token."""
+    if request.url.path.startswith("/api/"):
+        token = getattr(request.app.state, "api_token", None)
+        auth_header = request.headers.get("Authorization", "")
+        if not token or auth_header != f"Bearer {token}":
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Missing or invalid bearer token"},
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    return await call_next(request)
+
+
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 
 @app.get("/", response_class=HTMLResponse)
 def serve_viewer(request: Request):
-    """Serve the live interactive viewer with real-time graph data."""
-    with request.app.state.driver.session() as session:
-        hostname, data = _build_live_graph(session)
-
+    """Serve the live interactive viewer without embedding graph data."""
     template_path = Path(__file__).parent / "viewer_template.html"
     template = template_path.read_text()
 
+    data = _empty_graph_payload()
     safe_json = json.dumps(data, ensure_ascii=True).replace("</", "<\\/")
-    title = f"{hostname} Attack Graph"
+    title = "Live Attack Graph"
 
     # Inject live mode flag and replace template placeholders
     live_inject = "const __ROOTSTOCK_LIVE__ = true;\nconst API_BASE = '';\n"
     html = template.replace("{{VIEWER_TITLE}}", html_mod.escape(title))
     html = html.replace(
-        "const DATA = {{VIEWER_DATA}};",
-        live_inject + "const DATA = " + safe_json + ";",
+        "let DATA = {{VIEWER_DATA}};",
+        live_inject + "let DATA = " + safe_json + ";",
     )
 
     return HTMLResponse(content=html)
@@ -223,18 +230,6 @@ def run_query_endpoint(
         },
         "rows": rows,
         "count": len(rows),
-    }
-
-
-@app.get("/api/stats")
-def get_stats(session=Depends(get_session)):
-    """Return node and relationship counts."""
-    node_counts, rel_counts = query_stats(session)
-    return {
-        "nodes": node_counts,
-        "relationships": rel_counts,
-        "total_nodes": sum(node_counts.values()),
-        "total_relationships": sum(rel_counts.values()),
     }
 
 
@@ -316,123 +311,6 @@ def tier_classify_endpoint(session=Depends(get_session)):
     }
 
 
-# ── Vulnerability endpoints ──────────────────────────────────────────────
-
-
-@app.get("/api/vulnerabilities")
-def list_vulnerabilities(session=Depends(get_session)):
-    """List all Vulnerability nodes with EPSS/KEV data."""
-    result = session.run(
-        """
-        MATCH (v:Vulnerability)
-        OPTIONAL MATCH (app:Application)-[:AFFECTED_BY]->(v)
-        RETURN v.cve_id AS cve_id,
-               v.title AS title,
-               v.cvss_score AS cvss_score,
-               v.epss_score AS epss_score,
-               v.epss_percentile AS epss_percentile,
-               v.in_kev AS in_kev,
-               v.kev_date_added AS kev_date_added,
-               v.exploitation_status AS exploitation_status,
-               v.cwe_ids AS cwe_ids,
-               collect(DISTINCT app.name) AS affected_apps
-        ORDER BY v.epss_score DESC NULLS LAST, v.cvss_score DESC
-        """
-    )
-    return [dict(record) for record in result]
-
-
-@app.get("/api/vulnerabilities/{cve_id}")
-def get_vulnerability(cve_id: str, session=Depends(get_session)):
-    """Single CVE lookup with affected apps."""
-    result = session.run(
-        """
-        MATCH (v:Vulnerability {cve_id: $cve_id})
-        OPTIONAL MATCH (app:Application)-[:AFFECTED_BY]->(v)
-        OPTIONAL MATCH (v)-[:MAPS_TO_TECHNIQUE]->(t:AttackTechnique)
-        RETURN v,
-               collect(DISTINCT {name: app.name, bundle_id: app.bundle_id, tier: app.tier}) AS affected_apps,
-               collect(DISTINCT {id: t.technique_id, name: t.name, tactic: t.tactic}) AS techniques
-        """,
-        cve_id=cve_id,
-    )
-    row = result.single()
-    if not row or not row["v"]:
-        raise HTTPException(status_code=404, detail=f"CVE '{cve_id}' not found")
-
-    vuln_props = dict(row["v"])
-    return {
-        "vulnerability": vuln_props,
-        "affected_apps": [a for a in row["affected_apps"] if a.get("name")],
-        "techniques": [t for t in row["techniques"] if t.get("id")],
-    }
-
-
-@app.post("/api/enrichment/refresh")
-def refresh_enrichment():
-    """Trigger EPSS/KEV re-fetch."""
-    try:
-        fetch_and_cache(force=True)
-        status = get_enrichment_status()
-        return {"status": "ok", "enrichment": status}
-    except Exception as e:
-        logger.warning("Enrichment refresh failed: %s", e)
-        raise HTTPException(status_code=500, detail="Enrichment refresh failed")
-
-
-# ── Threat Group endpoints ────────────────────────────────────────────
-
-
-@app.get("/api/threat-groups")
-def get_threat_groups(session=Depends(get_session)):
-    """List all ThreatGroup nodes with technique counts."""
-    result = session.run(
-        """
-        MATCH (g:ThreatGroup)
-        OPTIONAL MATCH (g)-[:USES_TECHNIQUE]->(t:AttackTechnique)
-        RETURN g.group_id AS group_id, g.name AS name, g.aliases AS aliases,
-               count(t) AS technique_count
-        ORDER BY technique_count DESC
-        """
-    )
-    return [dict(r) for r in result]
-
-
-# ── BloodHound import endpoint ──────────────────────────────────────────
-
-
-@app.post("/api/import-bloodhound")
-async def import_bloodhound(file: UploadFile, session=Depends(get_session)):
-    """Import a SharpHound ZIP archive into the Rootstock graph.
-
-    Creates ADUser nodes and links them to existing Rootstock User nodes
-    via SAME_IDENTITY edges, enabling cross-domain attack path analysis.
-    """
-    if not file.filename or not file.filename.lower().endswith(".zip"):
-        raise HTTPException(status_code=400, detail="File must be a .zip archive")
-
-    MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
-    content = await file.read(MAX_UPLOAD_BYTES + 1)
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="Upload exceeds 50 MB limit")
-
-    with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
-        tmp.write(content)
-        tmp_path = tmp.name
-
-    try:
-        counts = bloodhound_import_all(session, tmp_path)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.warning("BloodHound import failed: %s", e)
-        raise HTTPException(status_code=500, detail="Import failed — check ZIP format")
-    finally:
-        Path(tmp_path).unlink(missing_ok=True)
-
-    return counts
-
-
 # ── Ad-hoc Cypher endpoint ─────────────────────────────────────────────────
 
 
@@ -444,13 +322,24 @@ def run_cypher_endpoint(body: CypherRequest, session=Depends(get_read_session)):
     Returns {"columns": [...], "rows": [...], "count": N}.
     Rejects write operations (CREATE, MERGE, SET, DELETE, etc.) with 403.
     """
-    error = validate_read_only_cypher(body.cypher)
+    if len(body.cypher) > MAX_ADHOC_CYPHER_LENGTH:
+        raise HTTPException(status_code=413, detail="Cypher query exceeds 10000 characters")
+    error = _validate_adhoc_cypher(body.cypher)
     if error:
         raise HTTPException(status_code=403, detail=error)
 
     try:
-        result = session.run(body.cypher, body.params or {})
-        records = list(result)
+        result = session.run(
+            Query(body.cypher, timeout=ADHOC_CYPHER_TIMEOUT_SECONDS),
+            body.params or {},
+        )
+        records = []
+        truncated = False
+        for index, record in enumerate(result):
+            if index >= MAX_ADHOC_CYPHER_ROWS:
+                truncated = True
+                break
+            records.append(record)
         columns = list(records[0].keys()) if records else []
         rows = [dict(r) for r in records]
     except Exception as e:
@@ -461,6 +350,7 @@ def run_cypher_endpoint(body: CypherRequest, session=Depends(get_read_session)):
         "columns": columns,
         "rows": rows,
         "count": len(rows),
+        "truncated": truncated,
     }
 
 
@@ -485,83 +375,62 @@ def _get_hostname(session) -> str:
 
 
 def _build_live_graph(session) -> tuple[str, dict[str, Any]]:
-    """Build the live graph payload and reuse cached layout positions when possible."""
+    """Build the live graph payload without request-time force layout.
+
+    The static viewer can spend time on force-directed coordinates. The API path
+    must stay bounded for large graphs, so missing positions use deterministic
+    spiral coordinates that are stable enough for refreshes and tests.
+    """
     hostname = _get_hostname(session)
     data = build_opengraph(session, hostname)
-    _apply_cached_layout(hostname, data)
+    graph = data.get("graph", {})
+    for index, node in enumerate(graph.get("nodes", [])):
+        if isinstance(node.get("x"), int | float) and isinstance(
+            node.get("y"), int | float
+        ):
+            continue
+        angle = index * 2.399963229728653
+        radius = 40 + math.sqrt(index + 1) * 35
+        node["x"] = round(1000 + math.cos(angle) * radius, 1)
+        node["y"] = round(1000 + math.sin(angle) * radius, 1)
     return hostname, data
 
 
-def _apply_cached_layout(hostname: str, data: dict[str, Any]) -> None:
-    graph = data.get("graph", {})
-    node_list = graph.get("nodes", [])
-    edge_list = graph.get("edges", [])
-    if not node_list:
-        return
-
-    cache_key = _layout_cache_key(hostname, node_list, edge_list)
-    cached_positions = _LAYOUT_CACHE.get(cache_key)
-    if cached_positions is None:
-        n_nodes = len(node_list)
-        iters = min(300, max(100, 500 - n_nodes // 10))
-        compute_layout(node_list, edge_list, iterations=iters)
-        _store_layout_cache(
-            cache_key,
-            {
-                node["id"]: (node["x"], node["y"])
-                for node in node_list
-                if "id" in node and "x" in node and "y" in node
-            },
-        )
-        return
-
-    for node in node_list:
-        position = cached_positions.get(node.get("id"))
-        if position is None:
-            n_nodes = len(node_list)
-            iters = min(300, max(100, 500 - n_nodes // 10))
-            compute_layout(node_list, edge_list, iterations=iters)
-            _store_layout_cache(
-                cache_key,
-                {
-                    current["id"]: (current["x"], current["y"])
-                    for current in node_list
-                    if "id" in current and "x" in current and "y" in current
-                },
-            )
-            return
-        node["x"], node["y"] = position
-
-
-def _layout_cache_key(
-    hostname: str, node_list: list[dict[str, Any]], edge_list: list[dict[str, Any]]
-) -> str:
-    payload = {
-        "hostname": hostname,
-        "nodes": sorted(
-            (str(node.get("id", "")), str(node.get("kind", "")), str(node.get("label", "")))
-            for node in node_list
-        ),
-        "edges": sorted(
-            (
-                str(edge.get("source", "")),
-                str(edge.get("target", "")),
-                str(edge.get("kind", "")),
-            )
-            for edge in edge_list
-        ),
+def _empty_graph_payload() -> dict[str, Any]:
+    return {
+        "metadata": {
+            "hostname": "rootstock",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        },
+        "graph": {"nodes": [], "edges": []},
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
 
 
-def _store_layout_cache(cache_key: str, positions: dict[str, tuple[float, float]]) -> None:
-    if cache_key not in _LAYOUT_CACHE:
-        _LAYOUT_CACHE_ORDER.append(cache_key)
-    _LAYOUT_CACHE[cache_key] = positions
-    while len(_LAYOUT_CACHE_ORDER) > _LAYOUT_CACHE_LIMIT:
-        oldest = _LAYOUT_CACHE_ORDER.pop(0)
-        _LAYOUT_CACHE.pop(oldest, None)
+def _validate_adhoc_cypher(cypher: str) -> str | None:
+    cleaned = re.sub(r"/\*.*?\*/", " ", cypher, flags=re.DOTALL)
+    cleaned = "\n".join(
+        line for line in cleaned.splitlines() if not line.strip().startswith("//")
+    )
+    cleaned = re.sub(r"'(?:[^'\\]|\\.)*'", "''", cleaned)
+    cleaned = re.sub(r'"(?:[^"\\]|\\.)*"', '""', cleaned)
+    if _DBMS_CALL_RE.search(cleaned):
+        return "dbms procedures are not allowed in ad-hoc Cypher"
+    return validate_read_only_cypher(cypher)
+
+
+def _is_loopback_host(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def _validate_bind_host(host: str, allow_remote: bool) -> None:
+    if allow_remote or _is_loopback_host(host):
+        return
+    raise ValueError("Refusing non-loopback bind without --allow-remote")
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
@@ -576,6 +445,11 @@ def main() -> int:
         "--host", default="127.0.0.1", help="Host to bind to (default: 127.0.0.1)"
     )
     parser.add_argument(
+        "--allow-remote",
+        action="store_true",
+        help="Allow binding to a non-loopback host",
+    )
+    parser.add_argument(
         "--neo4j", default="bolt://localhost:7687", help="Neo4j bolt URI"
     )
     parser.add_argument("--neo4j-user", default="neo4j", help="Neo4j username")
@@ -583,6 +457,12 @@ def main() -> int:
         "--neo4j-password", default=None, help="Neo4j password (or set NEO4J_PASSWORD)"
     )
     args = parser.parse_args()
+
+    try:
+        _validate_bind_host(args.host, args.allow_remote)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)
 
     password = args.neo4j_password or os.environ.get("NEO4J_PASSWORD")
     if not password:
@@ -592,9 +472,15 @@ def main() -> int:
         )
         sys.exit(1)
 
+    api_token = os.environ.get("ROOTSTOCK_API_TOKEN")
+    if not api_token:
+        print("ERROR: ROOTSTOCK_API_TOKEN is required for /api/* routes", file=sys.stderr)
+        sys.exit(1)
+
     app.state.neo4j_uri = args.neo4j
     app.state.neo4j_user = args.neo4j_user
     app.state.neo4j_password = password
+    app.state.api_token = api_token
 
     import uvicorn
 

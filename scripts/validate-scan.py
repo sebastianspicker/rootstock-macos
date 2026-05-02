@@ -37,6 +37,8 @@ if model_spec is None or model_spec.loader is None:
 
 graph_models = importlib.util.module_from_spec(model_spec)
 model_spec.loader.exec_module(graph_models)
+# Load the graph contract directly from the repo so collector/schema and
+# Pydantic validation can be checked without installing graph as a package.
 graph_models.ScanResult.model_rebuild(_types_namespace=vars(graph_models))
 ScanResult = graph_models.ScanResult
 

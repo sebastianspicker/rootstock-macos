@@ -68,6 +68,27 @@ final class TCCTests: XCTestCase {
         }
     }
 
+    private func makeMinimalDB(at path: String, insertStatements: [String]) {
+        var db: OpaquePointer?
+        sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
+        defer { sqlite3_close(db) }
+
+        runSQL("""
+            CREATE TABLE access (
+                service        TEXT,
+                client         TEXT,
+                client_type    INTEGER,
+                auth_value     INTEGER,
+                auth_reason    INTEGER,
+                last_modified  INTEGER
+            )
+            """, on: db)
+
+        for sql in insertStatements {
+            runSQL(sql, on: db)
+        }
+    }
+
     // MARK: - SQLiteDatabase tests
 
     func testSQLiteDatabaseReadsRows() throws {
@@ -125,11 +146,16 @@ final class TCCTests: XCTestCase {
         let fda = grants.first { $0.service == "kTCCServiceSystemPolicyAllFiles" }
         XCTAssertNotNil(fda)
         XCTAssertEqual(fda?.displayName, "Full Disk Access")
+        XCTAssertEqual(fda?.authValue, 2)
 
         // Unknown service falls back to raw identifier
         let future = grants.first { $0.service == "kTCCServiceFuture" }
         XCTAssertNotNil(future)
         XCTAssertEqual(future?.displayName, "kTCCServiceFuture")
+
+        XCTAssertNil(grants.first { $0.client == "com.example.skip" })
+        XCTAssertEqual(grants.first { $0.client == "/usr/bin/screenrecorder" }?.authValue, 0)
+        XCTAssertEqual(grants.first { $0.client == "com.example.app5" }?.authValue, 3)
 
         // lastModified is populated
         XCTAssertGreaterThan(fda?.lastModified ?? 0, 0)
@@ -159,30 +185,37 @@ final class TCCTests: XCTestCase {
         XCTAssertEqual(result.errors.first?.recoverable, true)
     }
 
-    // MARK: - TCCSchemaAdapter / MacOSVersion tests
+    func testTCCDataSourceReadsUserBeforeSystemDB() async throws {
+        let userPath = NSTemporaryDirectory() + "tcc-user-\(UUID().uuidString).db"
+        let systemPath = NSTemporaryDirectory() + "tcc-system-\(UUID().uuidString).db"
+        defer {
+            try? FileManager.default.removeItem(atPath: userPath)
+            try? FileManager.default.removeItem(atPath: systemPath)
+        }
 
-    func testSchemaAdapterFactoryReturnsAdapterForValidDB() throws {
-        let path = NSTemporaryDirectory() + "tcc-schema-\(UUID().uuidString).db"
-        defer { try? FileManager.default.removeItem(atPath: path) }
-        makeFixtureDB(at: path)
+        makeMinimalDB(
+            at: userPath,
+            insertStatements: [
+                "INSERT INTO access (service,client,client_type,auth_value,auth_reason,last_modified) VALUES ('kTCCServiceCamera','com.example.user',0,2,1,1700000010)",
+            ]
+        )
+        makeMinimalDB(
+            at: systemPath,
+            insertStatements: [
+                "INSERT INTO access (service,client,client_type,auth_value,auth_reason,last_modified) VALUES ('kTCCServiceMicrophone','com.example.system',0,2,1,1700000011)",
+            ]
+        )
 
-        let db = try SQLiteDatabase(path: path)
-        let result = TCCSchemaAdapterFactory.make(for: .sonoma, db: db)
-        XCTAssertNotNil(result, "Expected adapter for valid Sonoma-schema DB")
+        let source = TCCDataSource(userDBPath: userPath, systemDBPath: systemPath)
+        let result = await source.collect()
+        let grants = result.nodes.compactMap { $0 as? TCCGrant }
+
+        XCTAssertTrue(result.errors.isEmpty)
+        XCTAssertEqual(grants.map(\.scope), ["user", "system"])
+        XCTAssertEqual(grants.map(\.client), ["com.example.user", "com.example.system"])
     }
 
-    func testSchemaAdapterFactoryReturnsNilForMalformedDB() throws {
-        let path = NSTemporaryDirectory() + "tcc-malformed-\(UUID().uuidString).db"
-        defer { try? FileManager.default.removeItem(atPath: path) }
-        var raw: OpaquePointer?
-        sqlite3_open_v2(path, &raw, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
-        runSQL("CREATE TABLE access (service TEXT, client TEXT)", on: raw)
-        sqlite3_close(raw)
-
-        let db = try SQLiteDatabase(path: path)
-        let result = TCCSchemaAdapterFactory.make(for: .sonoma, db: db)
-        XCTAssertNil(result, "Expected nil for DB missing required columns")
-    }
+    // MARK: - TCC schema / MacOSVersion tests
 
     func testColumnNamesDetectionViaPRAGMA() throws {
         let path = NSTemporaryDirectory() + "tcc-pragma-\(UUID().uuidString).db"
@@ -210,6 +243,45 @@ final class TCCTests: XCTestCase {
         XCTAssertTrue(result.nodes.isEmpty)
         XCTAssertFalse(result.errors.isEmpty)
         XCTAssertEqual(result.errors.first?.recoverable, true)
+    }
+
+    func testMalformedRowsAreSkippedViaDataSource() async throws {
+        let path = NSTemporaryDirectory() + "tcc-malformed-row-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        makeMinimalDB(
+            at: path,
+            insertStatements: [
+                "INSERT INTO access (service,client,client_type,auth_value,auth_reason,last_modified) VALUES ('kTCCServiceCamera','com.example.valid',0,2,1,1700000020)",
+                "INSERT INTO access (service,client,client_type,auth_value,auth_reason,last_modified) VALUES ('kTCCServiceMicrophone',NULL,0,2,1,1700000021)",
+            ]
+        )
+
+        let source = TCCDataSource(userDBPath: path, systemDBPath: nil)
+        let result = await source.collect()
+        let grants = result.nodes.compactMap { $0 as? TCCGrant }
+
+        XCTAssertTrue(result.errors.isEmpty)
+        XCTAssertEqual(grants.map(\.client), ["com.example.valid"])
+    }
+
+    func testTCCAccessProbeRequiresSuccessfulQuery() throws {
+        let path = NSTemporaryDirectory() + "tcc-probe-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        makeMinimalDB(at: path, insertStatements: [])
+
+        XCTAssertTrue(TCCAccessProbe.canQueryDatabase(at: path))
+        XCTAssertFalse(TCCAccessProbe.canQueryDatabase(at: "/nonexistent/path/TCC.db"))
+    }
+
+    func testTCCAccessProbeRejectsUnreadableSchema() throws {
+        let path = NSTemporaryDirectory() + "tcc-probe-bad-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        var raw: OpaquePointer?
+        sqlite3_open_v2(path, &raw, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil)
+        runSQL("CREATE TABLE not_access (service TEXT)", on: raw)
+        sqlite3_close(raw)
+
+        XCTAssertFalse(TCCAccessProbe.canQueryDatabase(at: path))
     }
 
     func testMacOSVersionFromMajorVersion() {

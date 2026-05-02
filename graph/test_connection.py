@@ -56,7 +56,11 @@ def main() -> int:
     driver.close()
 
     if n_tcc == 0:
-        print("WARN: Connected to Neo4j but no TCC_Permission nodes found. Run: python3 graph/setup.py")
+        print(
+            "WARN: Connected to Neo4j but no TCC_Permission nodes found. "
+            "Run the pipeline with a scan file, for example: "
+            "bash graph/pipeline.sh examples/demo-scan.json"
+        )
         return 1
 
     print(f"Connected to Neo4j. Schema OK. Found {n_tcc} TCC_Permission nodes.")

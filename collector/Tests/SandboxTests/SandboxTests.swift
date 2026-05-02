@@ -272,6 +272,42 @@ final class SandboxTests: XCTestCase {
         XCTAssertNil(profile)
     }
 
+    func testLoadSystemProfileRejectsUnsafeBundleIdentifiers() throws {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("rootstock-sandbox-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let source = SandboxDataSource(systemProfilesPath: dir.path)
+
+        XCTAssertNil(source.profileURL(for: "../escape"))
+        XCTAssertNil(source.profileURL(for: "com.example/escape"))
+        XCTAssertNil(source.profileURL(for: "com.example\\escape"))
+        XCTAssertNil(source.profileURL(for: "com..example"))
+    }
+
+    func testLoadSystemProfileKeepsResolvedPathUnderProfileDirectory() throws {
+        let base = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("rootstock-sandbox-\(UUID().uuidString)")
+        let profiles = base.appendingPathComponent("profiles")
+        let outside = base.appendingPathComponent("outside")
+        try FileManager.default.createDirectory(at: profiles, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+
+        let safeProfile = profiles.appendingPathComponent("com.example.safe.sb")
+        try "(version 1)".write(to: safeProfile, atomically: false, encoding: .utf8)
+
+        let outsideProfile = outside.appendingPathComponent("com.example.linked.sb")
+        try "(version 1)".write(to: outsideProfile, atomically: false, encoding: .utf8)
+        let linkedProfile = profiles.appendingPathComponent("com.example.linked.sb")
+        try FileManager.default.createSymbolicLink(at: linkedProfile, withDestinationURL: outsideProfile)
+
+        let source = SandboxDataSource(systemProfilesPath: profiles.path)
+        XCTAssertNotNil(source.loadSystemProfile(for: "com.example.safe"))
+        XCTAssertNil(source.loadSystemProfile(for: "com.example.linked"))
+    }
+
     // MARK: - Application model integration
 
     func testApplicationWithSandboxProfileEncoding() throws {

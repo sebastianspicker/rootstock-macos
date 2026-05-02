@@ -65,6 +65,22 @@ This separation is intentional:
 - **Multi-host:** Multiple scans from different endpoints can be ingested into the same
   graph to discover cross-host attack paths (future work).
 
+Operationally, the main flow is:
+
+1. `collector/Sources/RootstockCLI/RootstockCommand.swift` parses CLI options
+   and writes the final JSON artifact.
+2. `collector/Sources/RootstockCLI/ScanOrchestrator.swift` runs independent
+   data sources concurrently, then performs enrichment steps that depend on
+   discovered applications.
+3. `scripts/validate-scan.py` checks the Swift JSON output against both the
+   JSON Schema and the Python Pydantic contract.
+4. `graph/pipeline.sh` applies schema, imports the scan into Neo4j, runs
+   inference, imports vulnerability intelligence, classifies tiers, and
+   generates the report.
+5. `graph/server.py` exposes the REST API and live viewer. Live API responses
+   use cheap deterministic node positions; expensive force-directed layout
+   belongs to offline viewer generation.
+
 ---
 
 ## Component: Collector
@@ -76,7 +92,7 @@ Extract security-relevant metadata from the local macOS system and serialize it 
 - **Language:** Swift 5.9+
 - **Build system:** Swift Package Manager
 - **Target:** Single static binary, no runtime dependencies beyond macOS system frameworks
-- **Entry point:** `collector/Sources/RootstockCLI/main.swift`
+- **Entry point:** `collector/Sources/RootstockCLI/RootstockCommand.swift`
 
 ### Module Boundaries
 
@@ -90,8 +106,9 @@ protocol DataSource {
     /// Whether this source requires elevated privileges
     var requiresElevation: Bool { get }
 
-    /// Collect data. Returns partial results on failure (graceful degradation).
-    func collect() async throws -> [GraphNode]
+    /// Collect data. Returns partial results on failure; never throws to abort
+    /// the whole scan.
+    func collect() async -> DataSourceResult
 }
 ```
 
@@ -139,7 +156,7 @@ Parse collector JSON, validate it, and create/update nodes and relationships in 
 
 ### Language & Dependencies
 - **Language:** Python 3.10+
-- **Dependencies:** `neo4j` (official driver), `pydantic` (validation), `fastapi` + `uvicorn` (API server), `tabulate` (report formatting), `requests` (CVE enrichment), `python-multipart` (file uploads)
+- **Dependencies:** `neo4j` (official driver), `pydantic` (validation), `fastapi` + `uvicorn` (API server), `tabulate` (report formatting), `requests` (CVE enrichment)
 
 ### Import Behavior
 - **Idempotent:** Re-importing the same scan updates existing nodes (MERGE, not CREATE).

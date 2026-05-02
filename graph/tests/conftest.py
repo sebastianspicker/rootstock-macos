@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.environ.get("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "rootstock")
+NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD")
 
 
 # ── Neo4j driver fixture (session-scoped) ────────────────────────────────────
@@ -38,6 +38,8 @@ def neo4j_driver():
         from neo4j.exceptions import ServiceUnavailable, AuthError
     except ImportError:
         pytest.skip("neo4j driver not installed")
+    if not NEO4J_PASSWORD:
+        pytest.skip("NEO4J_PASSWORD is required for Neo4j integration tests")
 
     try:
         driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
