@@ -10,7 +10,7 @@ that are invisible when examining individual components in isolation.**
 | | Rootstock | BloodHound |
 |---|---|---|
 | **Target** | macOS security boundaries | Active Directory / Azure AD |
-| **Data Sources** | TCC, entitlements, code signing, XPC, Keychain, persistence | AD objects, ACLs, sessions, GPOs |
+| **Data Sources** | TCC, entitlements, code signing, XPC, Keychain, persistence, optional cve-scan evidence | AD objects, ACLs, sessions, GPOs |
 | **Graph DB** | Neo4j | Neo4j (CE), custom (BHE) |
 | **Query Language** | Cypher | Cypher |
 | **Collector** | Swift CLI (local only) | SharpHound (C#), AzureHound (Go) |
@@ -95,8 +95,10 @@ a planned future feature.
 **BloodHound (SharpHound)** makes LDAP queries over the network to domain
 controllers. It requires domain credentials and network access.
 
-**Rootstock** is strictly local. It reads files and APIs on the machine where
-it runs. No network calls, no remote authentication, no domain membership.
+**Rootstock's collector** is strictly local. It reads files and APIs on the
+machine where it runs. No network calls, no remote authentication, no domain
+membership. The separate `modules/cve-scan/` evidence module can probe declared
+scope and refresh vulnerability feeds only when the operator explicitly runs it.
 
 ### 4. Stealth Considerations
 
@@ -142,10 +144,10 @@ for organizations that manage both macOS and Windows/AD environments.
 
 | Feature | Status |
 |---------|--------|
-| Shared Neo4j database with BloodHound data | Planned (Phase 6) |
+| Shared Neo4j database with BloodHound/OpenGraph export data | Partially supported |
 | Cross-platform edge inference | Research phase |
 | Unified query library | Not started |
-| Shared visualization | Not started |
+| Shared visualization | OpenGraph export available; deeper UX not started |
 
 ## Technical Comparison
 

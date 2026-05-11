@@ -4,7 +4,7 @@
 
 ## What Rootstock Is
 
-Rootstock is a **passive, read-only analysis tool** that maps macOS security boundaries as a directed property graph. It discovers potential privilege escalation paths by correlating metadata from TCC grants, code signing, entitlements, XPC services, Keychain ACLs, and persistence mechanisms.
+Rootstock is a **passive, read-only analysis tool** that maps macOS security boundaries as a directed property graph. It discovers potential privilege escalation paths by correlating metadata from TCC grants, code signing, entitlements, XPC services, Keychain ACLs, and persistence mechanisms. The optional `modules/cve-scan/` module adds scoped CVE evidence through local artifacts, not through collector-side network collection.
 
 It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/BloodHound) does for Active Directory — graph-based attack path discovery.
 
@@ -26,7 +26,7 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 | Active exploitation | No | Analysis only; does not execute attacks or modify system state |
 | Real-time monitoring | No | Point-in-time snapshot; no persistent agent or daemon |
 | SIP bypass | No | Respects System Integrity Protection; system TCC.db requires FDA |
-| Network calls | Collector: No; graph CVE refresh: opt-in | The collector is strictly local; CVE enrichment fetches only when `--refresh-cve` or `--fetch` is explicit |
+| Network calls | Collector: No; graph CVE refresh and cve-scan probes: opt-in | The collector is strictly local; CVE enrichment fetches only when `--refresh-cve` or `--fetch` is explicit; cve-scan touches only declared scope |
 | Anti-forensics evasion | No | Does not attempt to hide its execution or artifacts |
 
 ## Exposure Boundaries
@@ -34,6 +34,10 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 - **Collector output.** Real scan JSON, reports, graph exports, generated viewer
   HTML, screenshots, and Neo4j data volumes contain sensitive local security
   metadata. Keep them local and out of commits.
+- **cve-scan output.** Real `modules/cve-scan` runs can expose package names,
+  service banners, URLs, ownership context, TLS metadata, and remediation
+  priorities. Keep real `scan.json`, `rootstock-export.json`, reports, caches,
+  and screenshots local.
 - **Neo4j.** The bundled Compose file binds Browser and Bolt to `127.0.0.1` and
   requires `NEO4J_AUTH`. Do not bind Neo4j to a network interface for real data
   without an explicit authentication and network-access plan.
@@ -59,7 +63,9 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 - **macOS only.** Rootstock does not model iOS, iPadOS, or cross-platform trust boundaries.
 - **Single-host.** Each scan covers one endpoint. Multi-host correlation (e.g., shared team IDs across a fleet) requires importing multiple scans into the same Neo4j instance — supported but not automated.
 - **No user behavior.** The graph models static configuration, not runtime behavior. It cannot detect whether an attack path has been or is being exploited.
-- **No network trust.** Network-level trust relationships (firewall rules, VPN configurations, mDNS services) are not modeled.
+- **Bounded network evidence.** cve-scan can collect declared service, TLS, and
+  web evidence, but it is not a full network scanner or vulnerability
+  management platform.
 
 ## Comparison with BloodHound
 

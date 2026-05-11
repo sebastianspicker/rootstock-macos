@@ -29,6 +29,23 @@ will also show no entitlements. These are logged as recoverable errors.
 Not directly. Run the collector on the target Mac, transfer the JSON file, then import it
 into Neo4j on your analysis workstation.
 
+## cve-scan Module
+
+### What is `modules/cve-scan/`?
+It is Rootstock's scoped CVE evidence module. It collects package, service,
+TLS, web, container, and configuration evidence from an explicit scope file and
+writes local reports plus `rootstock-export.json` for graph import.
+
+### Does Rootstock run cve-scan automatically?
+No. cve-scan is an artifact bridge. Run it separately, then import the prebuilt
+artifact with `graph/import_cve_scan.py --input <rootstock-export.json>` or
+`graph/pipeline.sh <scan.json> --cve-scan-export <rootstock-export.json>`.
+
+### Can I commit cve-scan outputs?
+No. Real `scan.json`, `rootstock-export.json`, reports, caches, generated
+viewers, and screenshots may contain infrastructure data. Keep them local. The
+checked-in `examples/cve-scan-export.json` file is synthetic.
+
 ## Graph Pipeline
 
 ### Do I need Neo4j Enterprise?

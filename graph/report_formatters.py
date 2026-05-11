@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import html as html_mod
 
 from tabulate import tabulate
 
@@ -19,6 +20,11 @@ ColumnSpec = list[tuple[str, str, str | None]]
 """List of (header_label, dict_key, default_value) tuples for _format_table."""
 
 
+def escape_report_value(value: object) -> str:
+    """Escape untrusted graph values before they enter Markdown/HTML reports."""
+    return html_mod.escape(list_or_str(value), quote=True)
+
+
 def _format_table(rows: list[dict], columns: ColumnSpec) -> str:
     """Generic table builder: maps row dicts to a Markdown table via a column spec.
 
@@ -29,7 +35,7 @@ def _format_table(rows: list[dict], columns: ColumnSpec) -> str:
     if not rows:
         return format_no_findings()
     table_rows = [
-        [list_or_str(row.get(key, default)) for _, key, default in columns]
+        [escape_report_value(row.get(key, default)) for _, key, default in columns]
         for row in rows
     ]
     headers = [h for h, _, _ in columns]
@@ -48,7 +54,7 @@ def format_generic_table(rows: list[dict]) -> str:
             if k not in seen_keys:
                 all_keys.append(k)
                 seen_keys.add(k)
-    table_rows = [[list_or_str(row.get(h)) for h in all_keys] for row in rows]
+    table_rows = [[escape_report_value(row.get(h)) for h in all_keys] for row in rows]
     return tabulate(table_rows, headers=all_keys, tablefmt="github")
 
 
@@ -59,12 +65,12 @@ def format_injectable_fda_table(rows: list[dict]) -> str:
 
     table_rows = []
     for r in rows:
-        methods = list_or_str(r.get("injection_methods", []))
+        methods = escape_report_value(r.get("injection_methods", []))
         table_rows.append([
-            r.get("app_name", "?"),
-            r.get("team_id") or "—",
+            escape_report_value(r.get("app_name", "?")),
+            escape_report_value(r.get("team_id") or "—"),
             methods,
-            r.get("bundle_id", "?"),
+            escape_report_value(r.get("bundle_id", "?")),
         ])
 
     headers = ["App Name", "Team ID", "Injection Method(s)", "Bundle ID"]
@@ -72,8 +78,8 @@ def format_injectable_fda_table(rows: list[dict]) -> str:
 
     risk_lines = []
     for r in rows:
-        app = r.get("app_name", "?")
-        methods = list_or_str(r.get("injection_methods", []))
+        app = escape_report_value(r.get("app_name", "?"))
+        methods = escape_report_value(r.get("injection_methods", []))
         risk_lines.append(
             f"- **{app}**: Attacker can inject via `{methods}` to inherit Full Disk Access."
         )
@@ -118,10 +124,10 @@ def format_private_entitlement_table(rows: list[dict]) -> str:
 
     table_rows = []
     for r in rows:
-        ents = list_or_str(r.get("private_entitlements", []))
+        ents = escape_report_value(r.get("private_entitlements", []))
         injectable = "Yes" if r.get("is_injectable") else "No"
         table_rows.append([
-            r.get("app_name", "?"),
+            escape_report_value(r.get("app_name", "?")),
             ents,
             injectable,
         ])

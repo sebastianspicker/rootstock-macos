@@ -15,6 +15,12 @@
 - Docstrings on all public functions
 - `ruff check` passes with zero violations
 
+### Python (cve-scan Module)
+- Runtime dependency list stays intentionally small
+- `rootstock-export.json` schema changes keep `modules/cve-scan/src/cve_scan/rootstock.py`, `graph/import_cve_scan.py`, and importer tests in sync
+- Real scan outputs and caches remain ignored; only synthetic fixtures are committed
+- `ruff check .`, `pytest`, and `shellcheck scripts/perf-smoke.sh` pass from `modules/cve-scan/`
+
 ### Cypher (Queries)
 - Each `.cypher` file starts with a comment block:
   ```cypher
@@ -31,6 +37,7 @@
 - Research docs cite sources with links and specify macOS version tested
 - Exec-plans have concrete acceptance criteria with checkboxes
 - README stays in sync with actual project state
+- Superseded plans move under `docs/archive/exec-plans/` instead of remaining in active docs
 
 ## Security Quality
 

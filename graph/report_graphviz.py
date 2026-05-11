@@ -99,6 +99,17 @@ INFERRED_RELS = {
 MAX_LABEL_LEN = 35
 
 
+def escape_dot_string(value: object) -> str:
+    """Escape a value for a quoted DOT string attribute."""
+    text = str(value)
+    return (
+        text.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+    )
+
+
 # ── Neo4j Fetch ───────────────────────────────────────────────────────────────
 
 DEFAULT_NODE_LIMIT = 500
@@ -198,7 +209,7 @@ def generate_dot(nodes: list[dict], edges: list[dict]) -> str:
         id_map[raw_id] = dot_id
 
         color = NODE_COLORS.get(node_type, "#444c56")
-        label = truncate(display, MAX_LABEL_LEN).replace('"', '\\"')
+        label = escape_dot_string(truncate(display, MAX_LABEL_LEN))
         shape = NODE_SHAPES.get(node_type, "ellipse")
         lines.append(
             f'  {dot_id} [label="{label}" fillcolor="{color}" shape={shape}]'
@@ -222,7 +233,7 @@ def generate_dot(nodes: list[dict], edges: list[dict]) -> str:
                                            "CAN_ESCAPE_SANDBOX"} else (
             "#d29922" if is_inferred else "#58a6ff"
         )
-        safe_rel = rel.replace('"', '\\"')
+        safe_rel = escape_dot_string(rel)
         lines.append(
             f'  {src_dot} -> {dst_dot} [label="{safe_rel}" style={style}'
             f' color="{edge_color}" fontcolor="{edge_color}"]'

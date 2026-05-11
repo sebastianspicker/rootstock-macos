@@ -26,18 +26,25 @@ htmlcov/
 .agents/
 ralph-prompts/
 AUDIT.md
+ANALYSIS.md
 CLAUDE.md
 AGENTS.md
+REVIEW.md
+SECURITY_REVIEW.md
 .kilo/
+docs/agent/
 docs/superpowers/
+docs/archive/private/
 docs/deprecated/audits/
 docs/generated/
 screenshots/
+reports/
 examples/generated/
 *.log
 
 # Real scan data (machine-specific, never commit)
 scan.json
+rootstock-export.json
 graph.json
 rootstock-viewer.html
 rootstock-viewer-*.html

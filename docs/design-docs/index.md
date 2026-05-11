@@ -17,6 +17,7 @@
 | DD-006 | Entitlement Extraction API | Proposed | Security.framework primary, `codesign` CLI fallback. See open questions below |
 | DD-007 | Inferred Relationships | Proposed | Which relationships to compute at import time vs. query time |
 | DD-008 | Multi-host Graph Merging | Future | How to combine scans from multiple endpoints |
+| DD-009 | cve-scan Artifact Bridge | Accepted | cve-scan stays separately buildable and Rootstock imports only `rootstock-export.json` |
 
 ### DD-001: Collector Language Choice
 **Status:** Accepted

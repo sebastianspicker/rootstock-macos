@@ -18,6 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HTTP_PORT="${ROOTSTOCK_HTTP_PORT:-8001}"
+HTTP_HOST="${ROOTSTOCK_HTTP_HOST:-127.0.0.1}"
 NEO4J_BOLT="${NEO4J_BOLT:-bolt://localhost:7687}"
 
 # ── Colour helpers ────────────────────────────────────────────────────────────
@@ -72,7 +73,7 @@ if command -v docker &>/dev/null && docker inspect "$DOCKER_CONTAINER" &>/dev/nu
 fi
 
 # ── Start HTTP server ─────────────────────────────────────────────────────────
-step "Starting HTTP server on port $HTTP_PORT…"
+step "Starting HTTP server on $HTTP_HOST:$HTTP_PORT…"
 info "Serving: $SCRIPT_DIR"
 info "Press Ctrl+C to stop the server."
 echo ""
@@ -106,4 +107,4 @@ lsof -ti tcp:"$HTTP_PORT" 2>/dev/null | while read -r pid; do
 done
 
 cd "$SCRIPT_DIR"
-exec python3 -m http.server "$HTTP_PORT"
+exec python3 -m http.server "$HTTP_PORT" --bind "$HTTP_HOST"

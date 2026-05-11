@@ -19,6 +19,8 @@ from report import (
     get_scan_metadata_from_neo4j,
     main,
 )
+from report_assembly import markdown_to_html
+from report_formatters import format_generic_table
 from unittest.mock import MagicMock, patch
 
 
@@ -27,6 +29,15 @@ class TestFormatNoFindings:
         result = format_no_findings()
         assert isinstance(result, str)
         assert "No findings" in result
+
+
+class TestHtmlReportEscaping:
+    def test_query_values_are_escaped_before_html_conversion(self):
+        table = format_generic_table([{"app": '<script>alert("x")</script>'}])
+        html = markdown_to_html(table)
+
+        assert "<script>" not in html
+        assert "&lt;script&gt;" in html or "&amp;lt;script&amp;gt;" in html
 
 
 class TestFormatInjectableFdaTable:

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rootstock is a three-stage pipeline:
+Rootstock is an artifact-driven analysis system with three active components:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -30,9 +30,17 @@ Rootstock is a three-stage pipeline:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        Analysis Workstation                              │
 │                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ cve-scan Module (optional, dependency-light Python CLI)           │   │
+│  │ Scoped service/package/web/TLS/IaC evidence                       │   │
+│  │ scan.json + rootstock-export.json artifact bridge                 │   │
+│  └────────────────────────────┬─────────────────────────────────────┘   │
+│                               │ rootstock-export.json                    │
+│                               ▼                                          │
 │  ┌──────────────────┐   ┌──────────────┐   ┌───────────────────────┐   │
 │  │ Graph Import     │──▶│   Neo4j      │◀──│ CVE/ATT&CK Enrichment  │   │
-│  │ (6 import mods)  │   │   Database   │   │ (EPSS/KEV/NVD)        │   │
+│  │ collector +      │   │   Database   │   │ (EPSS/KEV/NVD)        │   │
+│  │ cve-scan bridge  │   │              │   │                       │   │
 │  └──────────────────┘   └──────┬───────┘   └───────────────────────┘   │
 │                                │                                         │
 │  ┌──────────────────────────── │ ───────────────────────────────────┐   │
@@ -45,7 +53,7 @@ Rootstock is a three-stage pipeline:
 │            ┌───────────────────┼───────────────────┐                    │
 │            ▼                   ▼                   ▼                    │
 │  ┌──────────────────┐ ┌───────────────┐ ┌──────────────────┐            │
-│  │ 101 Cypher       │ │ REST API      │ │ Markdown / HTML  │            │
+│  │ 103 Cypher       │ │ REST API      │ │ Markdown / HTML  │            │
 │  │ Queries          │ │ (FastAPI)     │ │ Report           │            │
 │  │ (Red/Blue/       │ │ + Interactive │ │ + BloodHound     │            │
 │  │  Forensic)       │ │ Graph Viewer  │ │   OpenGraph      │            │
@@ -55,15 +63,17 @@ Rootstock is a three-stage pipeline:
 
 ## Design Principle: Separation of Collection and Analysis
 
-The collector runs on the target macOS endpoint. The analysis runs elsewhere.
-This separation is intentional:
+The collector runs on the target macOS endpoint. The cve-scan module runs only
+against explicitly declared scope. Graph analysis runs elsewhere. This
+separation is intentional:
 
 - **Security:** The collector has minimal footprint and no network dependencies.
+  cve-scan scanning is opt-in per scope file and writes local artifacts.
 - **Portability:** The JSON output can be analyzed on any machine with Neo4j.
 - **Reproducibility:** Scan results are static artifacts that can be shared, compared,
   and version-controlled.
-- **Multi-host:** Multiple scans from different endpoints can be ingested into the same
-  graph to discover cross-host attack paths (future work).
+- **Multi-host and multi-surface:** Multiple collector scans and cve-scan
+  exports can be ingested into the same graph.
 
 Operationally, the main flow is:
 
@@ -77,11 +87,47 @@ Operationally, the main flow is:
 4. `graph/pipeline.sh` applies schema, imports the scan into Neo4j, runs
    inference, imports vulnerability intelligence, classifies tiers, and
    generates the report.
-5. `graph/server.py` exposes the REST API and live viewer. Live API responses
+5. `modules/cve-scan/` can independently write `rootstock-export.json`.
+   `graph/import_cve_scan.py` validates schema version 7 export metadata,
+   allowlisted labels, relationship types, node IDs, and edge endpoints before
+   importing that artifact. `graph/pipeline.sh --cve-scan-export <file>`
+   imports the prebuilt artifact only; it does not run cve-scan.
+6. `graph/server.py` exposes the REST API and live viewer. Live API responses
    use cheap deterministic node positions; expensive force-directed layout
    belongs to offline viewer generation.
 
 ---
+
+## Component: cve-scan Module
+
+### Responsibility
+Collect bounded CVE evidence for declared infrastructure, repositories, web
+targets, TLS endpoints, containers, and configuration files, then write local
+reports plus a Rootstock graph artifact.
+
+### Boundaries
+- The module lives under `modules/cve-scan/` and remains separately buildable
+  as a small Python package.
+- Runtime dependencies are intentionally empty; tests use `pytest`, `ruff`, and
+  `shellcheck`.
+- `update-feeds` is the cache-writing boundary. Scans use explicit scope files.
+- Real `scan.json`, `rootstock-export.json`, reports, caches, and generated
+  viewers are local data and must not be committed.
+- Rootstock imports `rootstock-export.json` through `graph/import_cve_scan.py`.
+  It does not call cve-scan internals.
+
+### Export Contract
+The current Rootstock module export is schema version 7. The importer reads
+`schema_version`, `nodes`, `edges`, `node_types`, `edge_vocabulary`,
+`scope_name`, `generated_at`, and `scan_profile`, then MERGEs cve-scan nodes by
+exported `id` while marking them with `source: "cve-scan"`.
+
+`Vulnerability -[:AFFECTS]-> Package|Service|WebApp|Host` edges also create
+Rootstock-compatible `asset -[:AFFECTED_BY]-> Vulnerability` aliases so imported
+CVE evidence participates in existing vulnerability views without folding
+packages or services into collector `Application` nodes.
+
+See `docs/guides/cve-scan-module.md` for operator commands.
 
 ## Component: Collector
 

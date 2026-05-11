@@ -122,6 +122,45 @@ NODE_TYPE_MAP: dict[str, dict] = {
         "icon": "fa-lightbulb",
         "color": "#3fb950",
     },
+    "Host": {"kind": "rs_CveHost", "icon": "fa-server", "color": "#39c5cf"},
+    "Service": {"kind": "rs_CveService", "icon": "fa-network-wired", "color": "#f2cc60"},
+    "WebApp": {"kind": "rs_CveWebApp", "icon": "fa-globe", "color": "#3fb950"},
+    "Package": {"kind": "rs_CvePackage", "icon": "fa-box-open", "color": "#d2a8ff"},
+    "Repository": {"kind": "rs_CveRepository", "icon": "fa-code-branch", "color": "#a371f7"},
+    "Manifest": {"kind": "rs_CveManifest", "icon": "fa-file-code", "color": "#bc8cff"},
+    "Finding": {
+        "kind": "rs_CveFinding",
+        "icon": "fa-magnifying-glass-chart",
+        "color": "#ff7b72",
+    },
+    "Certificate": {
+        "kind": "rs_CveCertificate",
+        "icon": "fa-certificate",
+        "color": "#76e3ea",
+    },
+    "Remediation": {"kind": "rs_CveRemediation", "icon": "fa-screwdriver-wrench", "color": "#56d364"},
+    "CoverageGap": {
+        "kind": "rs_CveCoverageGap",
+        "icon": "fa-circle-question",
+        "color": "#ffa657",
+    },
+    "Asset": {"kind": "rs_CveAsset", "icon": "fa-diamond", "color": "#8b949e"},
+    "AssetContext": {
+        "kind": "rs_CveAssetContext",
+        "icon": "fa-tags",
+        "color": "#79c0ff",
+    },
+    "Owner": {"kind": "rs_CveOwner", "icon": "fa-user-tie", "color": "#c9d1d9"},
+    "IdentityContext": {
+        "kind": "rs_CveIdentityContext",
+        "icon": "fa-id-card",
+        "color": "#ffab70",
+    },
+    "DataContext": {
+        "kind": "rs_CveDataContext",
+        "icon": "fa-database",
+        "color": "#f778ba",
+    },
 }
 
 # ── Edge type mapping ───────────────────────────────────────────────────────
@@ -178,6 +217,26 @@ EDGE_TYPE_MAP: dict[str, dict] = {
     "HAS_CWE": {"kind": "rs_HasCWE", "traversable": False},
     "HAS_RECOMMENDATION": {"kind": "rs_HasRecommendation", "traversable": False},
     "MITIGATES": {"kind": "rs_Mitigates", "traversable": False},
+    "AFFECTS": {"kind": "rs_CveAffects", "traversable": True},
+    "CONTAINS_MANIFEST": {"kind": "rs_CveContainsManifest", "traversable": False},
+    "DECLARES_PACKAGE": {"kind": "rs_CveDeclaresPackage", "traversable": False},
+    "DEPENDS_ON": {"kind": "rs_CveDependsOn", "traversable": True},
+    "EXPOSES": {"kind": "rs_CveExposes", "traversable": True},
+    "HAS_CERT": {"kind": "rs_CveHasCert", "traversable": False},
+    "HAS_COVERAGE_GAP": {"kind": "rs_CveHasCoverageGap", "traversable": False},
+    "HAS_CONTEXT": {"kind": "rs_CveHasContext", "traversable": False},
+    "HAS_DATA_CONTEXT": {"kind": "rs_CveHasDataContext", "traversable": False},
+    "HAS_FINDING": {"kind": "rs_CveHasFinding", "traversable": False},
+    "HAS_IDENTITY_CONTEXT": {
+        "kind": "rs_CveHasIdentityContext",
+        "traversable": False,
+    },
+    "HAS_REMEDIATION": {"kind": "rs_CveHasRemediation", "traversable": False},
+    "HOSTS": {"kind": "rs_CveHosts", "traversable": True},
+    "MATCHED_BY": {"kind": "rs_CveMatchedBy", "traversable": False},
+    "OWNED_BY": {"kind": "rs_CveOwnedBy", "traversable": False},
+    "RUN": {"kind": "rs_CveRun", "traversable": True},
+    "SERVES": {"kind": "rs_CveServes", "traversable": True},
 }
 
 

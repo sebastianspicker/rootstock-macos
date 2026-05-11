@@ -16,9 +16,9 @@ from report_diagrams import (
     mermaid_posture_summary,
     mermaid_icloud_risk_flow,
 )
-from utils import list_or_str
 from cve_reference import get_context
 from report_formatters import (
+    escape_report_value,
     format_no_findings,
     format_generic_table,
     format_injectable_fda_table,
@@ -215,14 +215,14 @@ def assemble_report(
     # Build top 3 attack path descriptions for the executive summary
     top_paths: list[str] = []
     for row in injectable_rows[:2]:
-        app = row.get("app_name", "?")
-        methods = list_or_str(row.get("injection_methods", []))
+        app = escape_report_value(row.get("app_name", "?"))
+        methods = escape_report_value(row.get("injection_methods", []))
         top_paths.append(
             f"{app} has Full Disk Access and is injectable via `{methods}`."
         )
     for row in electron_rows[:1]:
-        app = row.get("app_name", "?")
-        perms = list_or_str(row.get("inherited_permissions", []))
+        app = escape_report_value(row.get("app_name", "?"))
+        perms = escape_report_value(row.get("inherited_permissions", []))
         top_paths.append(
             f"{app} (Electron) inherits TCC permissions ({perms}) via ELECTRON_RUN_AS_NODE abuse."
         )
@@ -259,7 +259,12 @@ def assemble_report(
         meta_table.append(["iCloud Drive", "Yes" if metadata.get("icloud_drive_enabled") else "No"])
         meta_table.append(["iCloud Keychain", "Yes" if metadata.get("icloud_keychain_enabled") else "No"])
 
-    sections.append(tabulate(meta_table, tablefmt="github"))
+    sections.append(
+        tabulate(
+            [[escape_report_value(cell) for cell in row] for row in meta_table],
+            tablefmt="github",
+        )
+    )
     sections.append("")
 
     # ── Executive Summary ─────────────────────────────────────────────────────

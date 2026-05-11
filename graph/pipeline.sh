@@ -7,6 +7,7 @@
 # Usage:
 #     ./graph/pipeline.sh scan.json
 #     ./graph/pipeline.sh scan.json --neo4j bolt://localhost:7687 --report output.md
+#     ./graph/pipeline.sh scan.json --cve-scan-export rootstock-export.json
 #     ./graph/pipeline.sh scan.json --skip-report
 #
 # Environment variables (override defaults):
@@ -29,11 +30,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
 usage() {
-    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--password PASS] [--report FILE] [--skip-report] [--refresh-cve] [--serve [PORT]]"
+    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--password PASS] [--report FILE] [--skip-report] [--refresh-cve] [--cve-scan-export FILE] [--serve [PORT]]"
     echo ""
     echo "Runs the full Rootstock pipeline: schema → import → infer → classify → report"
     echo ""
     echo "  --refresh-cve   Fetch public CVE enrichment before import (default: cached/static only)"
+    echo "  --cve-scan-export FILE"
+    echo "                  Import a prebuilt cve-scan rootstock-export.json artifact"
     echo "  --serve [PORT]  Start API server after pipeline (default port: 8000)"
     echo ""
     echo "Environment variables: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD"
@@ -59,6 +62,7 @@ NEO4J_PASS="${NEO4J_PASSWORD:-}"
 REPORT_FILE=""
 SKIP_REPORT=false
 REFRESH_CVE=false
+CVE_SCAN_EXPORT=""
 SERVE=false
 SERVE_PORT=8000
 
@@ -70,6 +74,7 @@ while [[ $# -gt 0 ]]; do
         --report)    REPORT_FILE="$2"; shift 2 ;;
         --skip-report) SKIP_REPORT=true; shift ;;
         --refresh-cve) REFRESH_CVE=true; shift ;;
+        --cve-scan-export) CVE_SCAN_EXPORT="$2"; shift 2 ;;
         --serve)     SERVE=true;
                      if [[ $# -gt 1 && "$2" =~ ^[0-9]+$ ]]; then SERVE_PORT="$2"; shift; fi
                      shift ;;
@@ -83,6 +88,11 @@ if [[ -z "$NEO4J_PASS" ]]; then
     exit 1
 fi
 
+if [[ -n "$CVE_SCAN_EXPORT" && ! -f "$CVE_SCAN_EXPORT" ]]; then
+    echo "ERROR: cve-scan export not found: $CVE_SCAN_EXPORT" >&2
+    exit 1
+fi
+
 export NEO4J_PASSWORD="$NEO4J_PASS"
 NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")
 
@@ -92,6 +102,9 @@ echo "╚═══════════════════════�
 echo ""
 echo "Scan:     $SCAN_FILE"
 echo "Neo4j:    $NEO4J_URI"
+if [[ -n "$CVE_SCAN_EXPORT" ]]; then
+    echo "cve-scan: $CVE_SCAN_EXPORT"
+fi
 echo ""
 
 # ── Step 1/7: Schema ─────────────────────────────────────────────────────────
@@ -115,6 +128,14 @@ echo ""
 echo "── Step 3/7: Importing scan data ──"
 python3 "$SCRIPT_DIR/import.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"
 echo ""
+
+# ── Optional: cve-scan artifact import ───────────────────────────────────────
+
+if [[ -n "$CVE_SCAN_EXPORT" ]]; then
+    echo "── Optional: Importing cve-scan artifact ──"
+    python3 "$SCRIPT_DIR/import_cve_scan.py" --input "$CVE_SCAN_EXPORT" "${NEO4J_ARGS[@]}"
+    echo ""
+fi
 
 # ── Step 4/7: Inference ──────────────────────────────────────────────────────
 # Note: infer.py runs all inference modules including risk scoring and recommendations

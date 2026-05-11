@@ -22,7 +22,7 @@ import pytest
 from conftest import cleanup_test_nodes
 
 QUERIES_DIR = Path(__file__).parent.parent / "queries"
-EXPECTED_QUERY_COUNT = 101
+EXPECTED_QUERY_COUNT = 103
 _REACHABILITY_QUERY_FILES = [
     "41-owned-to-fda.cypher",
     "42-owned-reachable.cypher",

@@ -22,17 +22,22 @@ Rootstock is a graph-based attack path discovery tool for macOS security boundar
 
 ## Project Map
 
-Rootstock has two deliberate halves:
+Rootstock has three deliberate parts plus one checked-in demo fixture:
 
 1. `collector/` is the endpoint-side Swift package. It reads local macOS
    security metadata and emits one portable scan JSON. It should stay passive:
    no network calls, no secrets, and recoverable per-module errors instead of
    aborting the whole scan.
-2. `graph/` is the workstation-side Python package. `graph/pipeline.sh` is the
+2. `modules/cve-scan/` is the Rootstock CVE evidence module. It is a
+   dependency-light Python CLI for scoped infrastructure/package/web evidence
+   and writes `scan.json` plus `rootstock-export.json` artifacts for graph
+   import. It is not a competing vulnerability-management platform.
+3. `graph/` is the workstation-side Python package. `graph/pipeline.sh` is the
    normal orchestration path: apply Neo4j schema, optionally refresh cached CVE
    data, import the scan, run inference, classify tiers, and write a report or
-   start the API server.
-3. `examples/demo-scan.json` is the demo fixture source of truth.
+   start the API server. It can also import a prebuilt cve-scan artifact with
+   `--cve-scan-export`.
+4. `examples/demo-scan.json` is the demo fixture source of truth.
    `examples/regenerate.sh` rebuilds local generated report/viewer artifacts
    from that fixture; it does not modify the fixture.
 
@@ -80,6 +85,11 @@ The static screenshots below use synthetic demo data from [demo-scan.json](examp
 
 > To generate report and viewer outputs (requires Neo4j): `bash examples/regenerate.sh`
 > This produces `examples/generated/demo-report.md` and `examples/generated/demo-viewer.html` locally.
+
+The synthetic cve-scan graph fixture is [examples/cve-scan-export.json](examples/cve-scan-export.json).
+See [the cve-scan module guide](docs/guides/cve-scan-module.md) and the module
+[example outcome](modules/cve-scan/docs/example-outcome.md) for the artifact
+shape without publishing real infrastructure data.
 
 <details>
 <summary>Mermaid diagrams (GitHub-rendered fallback)</summary>
@@ -239,6 +249,10 @@ cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d && cd ..
 # Run the full pipeline (schema -> import -> infer -> classify -> report)
 NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json
 
+# Import a prebuilt cve-scan Rootstock artifact during the same pipeline run
+NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json \
+  --cve-scan-export modules/cve-scan/runs/local/rootstock-export.json
+
 # Or start the API server with interactive viewer
 ROOTSTOCK_API_TOKEN=CHANGE_ME_API_TOKEN NEO4J_PASSWORD=CHANGE_ME \
   bash graph/pipeline.sh scan.json --serve 8000
@@ -258,6 +272,10 @@ opt-in with `--refresh-cve`; the default pipeline uses cached/static enrichment.
 # Python graph pipeline
 ruff check graph/ scripts/ examples/ docs/
 (cd graph && pytest tests)
+
+# cve-scan module
+(cd modules/cve-scan && ruff check . && pytest)
+shellcheck modules/cve-scan/scripts/perf-smoke.sh
 
 # Shell entry points
 shellcheck examples/regenerate.sh graph/pipeline.sh scripts/*.sh tests/integration/*.sh
@@ -360,6 +378,7 @@ collector/                 Swift CLI collector
 
 graph/                     Neo4j import, inference, query engine & API
 ├── import.py              Scan JSON → Neo4j importer (orchestrator)
+├── import_cve_scan.py     cve-scan rootstock-export.json → Neo4j importer
 ├── import_nodes_core.py   Core node imports (apps, TCC, entitlements, certs)
 ├── import_nodes_services.py   Services (XPC, persistence, keychain)
 ├── import_nodes_security.py   Security nodes (groups, firewall, auth, sudoers)
@@ -391,6 +410,9 @@ graph/                     Neo4j import, inference, query engine & API
 scripts/
 ├── validate-scan.py       Output validation script
 └── benchmark.sh           Performance benchmark runner
+
+modules/
+└── cve-scan/              Scoped CVE evidence CLI and Rootstock export bridge
 
 docs/
 ├── THREAT_MODEL.md        Assumptions, limitations, ethical framework

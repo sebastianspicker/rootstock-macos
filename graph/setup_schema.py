@@ -49,6 +49,22 @@ CONSTRAINTS = [
     ("threat_group_id_unique", "ThreatGroup", "g.group_id"),
     ("cwe_id_unique", "CWE", "c.cwe_id"),
     ("recommendation_key_unique", "Recommendation", "r.key"),
+    ("cve_scan_asset_id_unique", "Asset", "a.id"),
+    ("cve_scan_asset_context_id_unique", "AssetContext", "ac.id"),
+    ("cve_scan_certificate_id_unique", "Certificate", "cert.id"),
+    ("cve_scan_coverage_gap_id_unique", "CoverageGap", "cg.id"),
+    ("cve_scan_data_context_id_unique", "DataContext", "dc.id"),
+    ("cve_scan_finding_id_unique", "Finding", "f.id"),
+    ("cve_scan_host_id_unique", "Host", "h.id"),
+    ("cve_scan_identity_context_id_unique", "IdentityContext", "ic.id"),
+    ("cve_scan_manifest_id_unique", "Manifest", "man.id"),
+    ("cve_scan_owner_id_unique", "Owner", "o.id"),
+    ("cve_scan_package_id_unique", "Package", "pkg.id"),
+    ("cve_scan_remediation_id_unique", "Remediation", "rem.id"),
+    ("cve_scan_repository_id_unique", "Repository", "repo.id"),
+    ("cve_scan_service_id_unique", "Service", "svc.id"),
+    ("cve_scan_vulnerability_id_unique", "Vulnerability", "v.id"),
+    ("cve_scan_webapp_id_unique", "WebApp", "web.id"),
 ]
 
 # Composite uniqueness constraint (Keychain items keyed by label + kind)

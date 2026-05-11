@@ -17,7 +17,7 @@ NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json --skip-report
 ## Quick Start (CLI)
 
 ```bash
-# List all 101 queries with category and severity
+# List all 103 queries with category and severity
 python3 query_runner.py --list
 
 # Run a single query
@@ -137,6 +137,8 @@ python3 query_runner.py --run all --format csv > results.csv
 | 99 | ESF Monitoring Gaps | **High** | Critical ESF event types with no active SystemExtension monitoring |
 | 100 | Top Recommendations by Affected App Count | **High** | Recommendations ranked by number of applicable applications |
 | 101 | Application Remediation Plan | **Informational** | All recommendations for a specific application by bundle_id |
+| 102 | cve-scan Vulnerable Exposed Services | **High** | Imported cve-scan service and web evidence affected by vulnerabilities |
+| 103 | cve-scan Remediation Queue | **High** | Imported cve-scan findings prioritized by remediation context |
 
 ### Blue Team — Enterprise (AD/Kerberos)
 
@@ -182,7 +184,7 @@ python3 query_runner.py --run all --format csv > results.csv
 | 47 | Shortest Paths from Owned Nodes to Tier 0 Assets | **Critical** | Shortest escalation paths from owned to crown jewels |
 | 57 | Tier 0 Inbound Control Audit | **Critical** | All inbound attack paths to Tier 0 assets |
 
-Queries 24--101 are documented in their `.cypher` file headers. Run `python3 query_runner.py --describe <number>` for details.
+Queries 24--103 are documented in their `.cypher` file headers. Run `python3 query_runner.py --describe <number>` for details.
 
 ---
 
