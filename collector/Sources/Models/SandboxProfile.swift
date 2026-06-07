@@ -17,28 +17,60 @@ public struct SandboxProfile: Codable, Sendable, GraphNode {
 
     public var nodeType: String { "SandboxProfile" }
 
+    public struct Rules: Codable, Sendable {
+        public let fileReadRules: [String]
+        public let fileWriteRules: [String]
+        public let machLookupRules: [String]
+        public let networkRules: [String]
+        public let iokitRules: [String]
+
+        public init(
+            fileReadRules: [String] = [],
+            fileWriteRules: [String] = [],
+            machLookupRules: [String] = [],
+            networkRules: [String] = [],
+            iokitRules: [String] = []
+        ) {
+            self.fileReadRules = fileReadRules
+            self.fileWriteRules = fileWriteRules
+            self.machLookupRules = machLookupRules
+            self.networkRules = networkRules
+            self.iokitRules = iokitRules
+        }
+    }
+
+    public struct Exposure: Codable, Sendable {
+        public let exceptionCount: Int
+        public let hasUnconstrainedNetwork: Bool
+        public let hasUnconstrainedFileRead: Bool
+
+        public init(
+            exceptionCount: Int = 0,
+            hasUnconstrainedNetwork: Bool = false,
+            hasUnconstrainedFileRead: Bool = false
+        ) {
+            self.exceptionCount = exceptionCount
+            self.hasUnconstrainedNetwork = hasUnconstrainedNetwork
+            self.hasUnconstrainedFileRead = hasUnconstrainedFileRead
+        }
+    }
+
     public init(
         bundleId: String,
         profileSource: String = "none",
-        fileReadRules: [String] = [],
-        fileWriteRules: [String] = [],
-        machLookupRules: [String] = [],
-        networkRules: [String] = [],
-        iokitRules: [String] = [],
-        exceptionCount: Int = 0,
-        hasUnconstrainedNetwork: Bool = false,
-        hasUnconstrainedFileRead: Bool = false
+        rules: Rules = Rules(),
+        exposure: Exposure = Exposure()
     ) {
         self.bundleId = bundleId
         self.profileSource = profileSource
-        self.fileReadRules = fileReadRules
-        self.fileWriteRules = fileWriteRules
-        self.machLookupRules = machLookupRules
-        self.networkRules = networkRules
-        self.iokitRules = iokitRules
-        self.exceptionCount = exceptionCount
-        self.hasUnconstrainedNetwork = hasUnconstrainedNetwork
-        self.hasUnconstrainedFileRead = hasUnconstrainedFileRead
+        self.fileReadRules = rules.fileReadRules
+        self.fileWriteRules = rules.fileWriteRules
+        self.machLookupRules = rules.machLookupRules
+        self.networkRules = rules.networkRules
+        self.iokitRules = rules.iokitRules
+        self.exceptionCount = exposure.exceptionCount
+        self.hasUnconstrainedNetwork = exposure.hasUnconstrainedNetwork
+        self.hasUnconstrainedFileRead = exposure.hasUnconstrainedFileRead
     }
 
     enum CodingKeys: String, CodingKey {

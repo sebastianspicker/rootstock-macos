@@ -27,6 +27,9 @@ from pathlib import Path
 
 from neo4j_connection import add_neo4j_args, connect_from_args
 
+EXPECTED_SHARPHOUND_FILES = ("users.json", "groups.json")
+MAX_SHARPHOUND_JSON_SIZE = 100 * 1024 * 1024  # 100 MB per JSON file
+
 
 # ── ZIP parsing ──────────────────────────────────────────────────────────────
 
@@ -47,7 +50,7 @@ def parse_sharphound_zip(zip_path: str) -> dict:
         zip_path: Path to the SharpHound ZIP file.
 
     Returns:
-        Dict with 'users' and 'groups' keys containing parsed JSON data lists.
+        Dict with parsed user/group lists and import diagnostics.
 
     Raises:
         FileNotFoundError: If the ZIP file does not exist.
@@ -58,39 +61,62 @@ def parse_sharphound_zip(zip_path: str) -> dict:
     if not zip_path_obj.exists():
         raise FileNotFoundError(f"ZIP file not found: {zip_path}")
 
-    result: dict[str, list] = {"users": [], "groups": []}
-
-    MAX_DECOMPRESSED = 100 * 1024 * 1024  # 100 MB per JSON file
-
     with zipfile.ZipFile(zip_path, "r") as zf:
-        # Check decompressed sizes and reject path traversal attempts
-        for info in zf.infolist():
-            if info.file_size > MAX_DECOMPRESSED:
-                raise ValueError(
-                    f"Entry {info.filename} decompressed size "
-                    f"({info.file_size} bytes) exceeds limit"
-                )
-            if os.path.isabs(info.filename) or ".." in info.filename.split("/"):
-                raise ValueError(f"Unsafe path in ZIP: {info.filename}")
+        return _parse_sharphound_archive(zf, zip_path)
 
-        users_file = _find_json_in_zip(zf, "users.json")
-        groups_file = _find_json_in_zip(zf, "groups.json")
 
-        if not users_file and not groups_file:
-            raise ValueError(
-                f"No users.json or groups.json found in {zip_path}. "
-                f"Contents: {zf.namelist()}"
-            )
+def _parse_sharphound_archive(zf: zipfile.ZipFile, zip_path: str) -> dict:
+    users: list[dict] = []
+    groups: list[dict] = []
+    files_present: list[str] = []
 
-        if users_file:
-            raw = json.loads(zf.read(users_file))
-            result["users"] = raw.get("data", [])
+    for info in zf.infolist():
+        _validate_zip_entry(info)
 
-        if groups_file:
-            raw = json.loads(zf.read(groups_file))
-            result["groups"] = raw.get("data", [])
+    users_file = _find_json_in_zip(zf, "users.json")
+    groups_file = _find_json_in_zip(zf, "groups.json")
 
-    return result
+    if not users_file and not groups_file:
+        raise ValueError(
+            f"No users.json or groups.json found in {zip_path}. "
+            f"Contents: {zf.namelist()}"
+        )
+
+    if users_file:
+        users = _read_sharphound_data(zf, users_file)
+        files_present.append("users.json")
+
+    if groups_file:
+        groups = _read_sharphound_data(zf, groups_file)
+        files_present.append("groups.json")
+
+    files_missing = [
+        expected for expected in EXPECTED_SHARPHOUND_FILES if expected not in files_present
+    ]
+    return {
+        "users": users,
+        "groups": groups,
+        "diagnostics": {
+            "files_present": files_present,
+            "files_missing": files_missing,
+            "parsed": {"users": len(users), "groups": len(groups)},
+        },
+    }
+
+
+def _validate_zip_entry(info: zipfile.ZipInfo) -> None:
+    if info.file_size > MAX_SHARPHOUND_JSON_SIZE:
+        raise ValueError(
+            f"Entry {info.filename} decompressed size "
+            f"({info.file_size} bytes) exceeds limit"
+        )
+    if os.path.isabs(info.filename) or ".." in info.filename.split("/"):
+        raise ValueError(f"Unsafe path in ZIP: {info.filename}")
+
+
+def _read_sharphound_data(zf: zipfile.ZipFile, name: str) -> list[dict]:
+    raw = json.loads(zf.read(name))
+    return raw.get("data", [])
 
 
 # ── ADUser node import ───────────────────────────────────────────────────────
@@ -126,29 +152,7 @@ def import_ad_users(session, users_data: list[dict]) -> int:
     Returns:
         Number of ADUser nodes created/updated.
     """
-    batch = []
-    for user in users_data:
-        props = user.get("Properties", {})
-        object_id = props.get("objectid", "")
-        name = props.get("name", "")
-        domain = props.get("domain", "")
-        enabled = props.get("enabled", False)
-        admin_count = props.get("admincount", False)
-
-        if not object_id:
-            continue
-
-        batch.append(
-            {
-                "object_id": object_id,
-                "name": name,
-                "domain": domain,
-                "enabled": enabled,
-                "admin_count": admin_count,
-                "username": _extract_username(name),
-            }
-        )
-
+    batch = _ad_user_batch(users_data)
     if not batch:
         return 0
 
@@ -166,6 +170,31 @@ def import_ad_users(session, users_data: list[dict]) -> int:
         batch=batch,
     )
     return result.single()["n"]
+
+
+def _ad_user_batch(users_data: list[dict]) -> list[dict]:
+    batch = []
+    for user in users_data:
+        row = _ad_user_row(user)
+        if row is not None:
+            batch.append(row)
+    return batch
+
+
+def _ad_user_row(user: dict) -> dict | None:
+    props = user.get("Properties", {})
+    object_id = props.get("objectid", "")
+    if not object_id:
+        return None
+    name = props.get("name", "")
+    return {
+        "object_id": object_id,
+        "name": name,
+        "domain": props.get("domain", ""),
+        "enabled": props.get("enabled", False),
+        "admin_count": props.get("admincount", False),
+        "username": _extract_username(name),
+    }
 
 
 # ── SAME_IDENTITY edge creation ──────────────────────────────────────────────
@@ -294,7 +323,7 @@ def import_ad_member_of_edges(session, groups_data: list[dict]) -> int:
 # ── Orchestrator ─────────────────────────────────────────────────────────────
 
 
-def import_all(session, zip_path: str) -> dict[str, int]:
+def import_all(session, zip_path: str) -> dict:
     """Orchestrate the full BloodHound import pipeline.
 
     Steps:
@@ -309,7 +338,7 @@ def import_all(session, zip_path: str) -> dict[str, int]:
         zip_path: Path to the SharpHound ZIP file.
 
     Returns:
-        Dict with counts for each import step.
+        Dict with counts for each import step and import diagnostics.
     """
     data = parse_sharphound_zip(zip_path)
 
@@ -317,13 +346,82 @@ def import_all(session, zip_path: str) -> dict[str, int]:
     ad_groups = import_ad_groups(session, data["groups"])
     same_identity = import_same_identity_edges(session)
     member_of = import_ad_member_of_edges(session, data["groups"])
+    diagnostics = _import_diagnostics(
+        data,
+        imported={
+            "ad_users": ad_users,
+            "ad_groups": ad_groups,
+            "same_identity_edges": same_identity,
+            "ad_member_of_edges": member_of,
+        },
+    )
 
     return {
         "ad_users": ad_users,
         "ad_groups": ad_groups,
         "same_identity_edges": same_identity,
         "ad_member_of_edges": member_of,
+        "diagnostics": diagnostics,
     }
+
+
+def _import_diagnostics(data: dict, *, imported: dict[str, int]) -> dict:
+    diagnostics = dict(data.get("diagnostics", {}))
+    skipped = _skipped_record_counts(data["users"], data["groups"])
+    diagnostics["imported"] = imported
+    diagnostics["skipped"] = skipped
+    diagnostics["status"] = (
+        "partial"
+        if diagnostics.get("files_missing") or any(skipped.values())
+        else "complete"
+    )
+    return diagnostics
+
+
+def _skipped_record_counts(
+    users_data: list[dict],
+    groups_data: list[dict],
+) -> dict[str, int]:
+    skipped = _empty_skipped_record_counts()
+    skipped["users.missing_objectid"] = _count_users_missing_objectid(users_data)
+    skipped["groups.missing_objectid"] = _count_groups_missing_property(
+        groups_data, "objectid"
+    )
+    skipped["groups.missing_name"] = _count_groups_missing_property(groups_data, "name")
+    skipped["members.user_missing_objectid"] = _count_user_members_missing_objectid(
+        groups_data
+    )
+    return skipped
+
+
+def _empty_skipped_record_counts() -> dict[str, int]:
+    return {
+        "users.missing_objectid": 0,
+        "groups.missing_objectid": 0,
+        "groups.missing_name": 0,
+        "members.user_missing_objectid": 0,
+    }
+
+
+def _count_users_missing_objectid(users_data: list[dict]) -> int:
+    return sum(
+        1 for user in users_data if not user.get("Properties", {}).get("objectid")
+    )
+
+
+def _count_groups_missing_property(groups_data: list[dict], property_name: str) -> int:
+    return sum(
+        1 for group in groups_data if not group.get("Properties", {}).get(property_name)
+    )
+
+
+def _count_user_members_missing_objectid(groups_data: list[dict]) -> int:
+    return sum(
+        1
+        for group in groups_data
+        for member in group.get("Members", [])
+        if member.get("ObjectType") == "User" and not member.get("ObjectIdentifier")
+    )
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -351,7 +449,23 @@ def main() -> int:
     print(f"  ADGroup nodes: {counts['ad_groups']}")
     print(f"  SAME_IDENTITY edges: {counts['same_identity_edges']}")
     print(f"  AD_MEMBER_OF edges: {counts['ad_member_of_edges']}")
+    _print_diagnostics(counts["diagnostics"])
     return 0
+
+
+def _print_diagnostics(diagnostics: dict) -> None:
+    print(f"  Import status: {diagnostics['status']}")
+    parsed = diagnostics["parsed"]
+    print(f"  Parsed records: users={parsed['users']}, groups={parsed['groups']}")
+    missing = diagnostics["files_missing"]
+    if missing:
+        print(f"  Missing files: {', '.join(missing)}")
+    skipped = {
+        reason: count for reason, count in diagnostics["skipped"].items() if count
+    }
+    if skipped:
+        formatted = ", ".join(f"{reason}={count}" for reason, count in sorted(skipped.items()))
+        print(f"  Skipped records: {formatted}")
 
 
 if __name__ == "__main__":

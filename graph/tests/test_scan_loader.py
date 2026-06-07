@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest import TestCase
+
 import json
 import logging
 from pathlib import Path
@@ -13,6 +15,9 @@ from models import ScanResult
 FIXTURE = Path(__file__).parent / "fixture_minimal.json"
 
 
+checks = TestCase()
+
+
 def test_valid_json_loads(tmp_path):
     """Valid fixture JSON loads into a ScanResult."""
     content = FIXTURE.read_text()
@@ -20,8 +25,8 @@ def test_valid_json_loads(tmp_path):
     target.write_text(content)
 
     result = load_scan(target)
-    assert isinstance(result, ScanResult)
-    assert result.hostname == "test-mac"
+    checks.assertTrue(isinstance(result, ScanResult))
+    checks.assertEqual(result.hostname, "test-mac")
 
 
 def test_invalid_json_returns_none(tmp_path, capsys):
@@ -30,8 +35,8 @@ def test_invalid_json_returns_none(tmp_path, capsys):
     target.write_text("not json at all {{{")
 
     result = load_scan(target)
-    assert result is None
-    assert "Cannot read" in capsys.readouterr().err
+    checks.assertIsNone(result)
+    checks.assertIn("Cannot read", capsys.readouterr().err)
 
 
 def test_schema_validation_failure(tmp_path, capsys):
@@ -40,18 +45,42 @@ def test_schema_validation_failure(tmp_path, capsys):
     target.write_text(json.dumps({"scan_id": "abc"}))
 
     result = load_scan(target)
-    assert result is None
-    assert "schema validation" in capsys.readouterr().err.lower()
+    checks.assertIsNone(result)
+    checks.assertIn("schema validation", capsys.readouterr().err.lower())
 
 
-def test_duplicate_bundle_ids_logs_warning(caplog):
-    """Duplicate bundle_ids in applications triggers a logging.warning."""
+def test_exact_duplicate_application_logs_warning_and_is_deduped(caplog):
+    """Exact duplicate applications are deduped without dropping path-distinct apps."""
     data = json.loads(FIXTURE.read_text())
-    # Duplicate the first application
+    original_count = len(data["applications"])
     data["applications"].append(data["applications"][0])
 
     with caplog.at_level(logging.WARNING, logger="models"):
         result = ScanResult.model_validate(data)
 
-    assert result is not None
-    assert any("Duplicate bundle_id" in msg for msg in caplog.messages)
+    checks.assertIsNotNone(result)
+    checks.assertEqual(len(result.applications), original_count)
+    checks.assertTrue(any("Duplicate bundle_id/path" in msg for msg in caplog.messages))
+
+
+def test_same_bundle_id_with_different_path_is_preserved(caplog):
+    """A moved or duplicated bundle at a different path remains distinct."""
+    data = json.loads(FIXTURE.read_text())
+    duplicate_path = "/Applications/Alternate/iTerm.app"
+    duplicate = dict(data["applications"][0])
+    duplicate["path"] = duplicate_path
+    data["applications"].append(duplicate)
+
+    with caplog.at_level(logging.WARNING, logger="models"):
+        result = ScanResult.model_validate(data)
+
+    matching = [
+        app
+        for app in result.applications
+        if app.bundle_id == data["applications"][0]["bundle_id"]
+    ]
+    checks.assertGreaterEqual(
+        {app.path for app in matching},
+        {data["applications"][0]["path"], duplicate_path},
+    )
+    checks.assertFalse(caplog.messages)

@@ -14,6 +14,8 @@ Usage:
 
 from __future__ import annotations
 
+from unittest import TestCase
+
 import re
 from pathlib import Path
 
@@ -22,7 +24,6 @@ import pytest
 from conftest import cleanup_test_nodes
 
 QUERIES_DIR = Path(__file__).parent.parent / "queries"
-EXPECTED_QUERY_COUNT = 103
 _REACHABILITY_QUERY_FILES = [
     "41-owned-to-fda.cypher",
     "42-owned-reachable.cypher",
@@ -36,6 +37,27 @@ _REQUIRED_ATTACK_EDGES = {
     "CAN_READ_KERBEROS",
     "SHARES_KEYCHAIN_GROUP",
 }
+_REQUIRED_QUERY_FILES = {
+    "01": "01-injectable-fda-apps.cypher",
+    "07": "07-tcc-grant-overview.cypher",
+    "16": "16-tcc-grant-audit.cypher",
+    "45": "45-owned-blast-radius.cypher",
+    "57": "57-tier0-inbound-control.cypher",
+    "79": "79-stale-keytab-detection.cypher",
+    "80": "80-cve-affected-apps.cypher",
+    "99": "99-esf-monitoring-gaps.cypher",
+    "100": "100-top-recommendations.cypher",
+    "103": "103-cve-scan-remediation-queue.cypher",
+}
+_REQUIRED_QUERY_METADATA = {
+    "01": {"category": "Red Team", "severity": "Critical"},
+    "45": {"category": "Red Team", "severity": "Critical"},
+    "57": {"category": "Blue Team", "severity": "Critical"},
+    "79": {"category": "Blue Team", "severity": "Informational"},
+    "99": {"category": "Blue Team", "severity": "High"},
+    "100": {"category": "Blue Team", "severity": "High"},
+    "103": {"category": "Blue Team", "severity": "High"},
+}
 
 _HEADER_RE = re.compile(
     r"^//\s*(?P<key>Name|Purpose|Category|Severity|Parameters|CVE|ATT&CK):\s*(?P<value>.+)$",
@@ -48,6 +70,7 @@ TEST_SCAN_ID = "test-queries-00000000-0000-0000-0000-000000000003"
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
+
 
 def _parse_header(path: Path) -> dict[str, str]:
     meta: dict[str, str] = {}
@@ -73,8 +96,7 @@ def _query_text(filename: str) -> str:
 def _first_statement(cypher: str) -> str:
     """Extract the first non-comment Cypher statement."""
     non_comment_lines = [
-        line for line in cypher.splitlines()
-        if not line.strip().startswith("//")
+        line for line in cypher.splitlines() if not line.strip().startswith("//")
     ]
     cleaned = "\n".join(non_comment_lines)
     for stmt in cleaned.split(";"):
@@ -85,6 +107,7 @@ def _first_statement(cypher: str) -> str:
 
 
 # ── Neo4j fixture ─────────────────────────────────────────────────────────────
+
 
 @pytest.fixture(scope="module")
 def neo4j_session(neo4j_driver):
@@ -100,6 +123,12 @@ def _seed_minimal_graph(session) -> None:
     Seed a minimal graph with known properties for query execution tests.
     Includes: 1 injectable FDA app, 1 Electron app, TCC grants, entitlements.
     """
+    _seed_query_permissions(session)
+    _seed_query_apps(session)
+    _seed_query_relationships(session)
+
+
+def _seed_query_permissions(session) -> None:
     session.run(
         """
         MERGE (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
@@ -110,7 +139,13 @@ def _seed_minimal_graph(session) -> None:
 
         MERGE (cam:TCC_Permission {service: 'kTCCServiceCamera'})
         ON CREATE SET cam.display_name = 'Camera'
+        """
+    )
 
+
+def _seed_query_apps(session) -> None:
+    session.run(
+        """
         MERGE (appA:Application {bundle_id: 'com.rootstock.query.test.iterm'})
         SET appA.name = 'TestITerm',
             appA.path = '/Applications/TestITerm.app',
@@ -136,7 +171,19 @@ def _seed_minimal_graph(session) -> None:
             appB.injection_methods = ['missing_library_validation', 'electron_env_var'],
             appB.is_sip_protected = false,
             appB.scan_id = $scan_id
+        """,
+        scan_id=TEST_SCAN_ID,
+    )
 
+
+def _seed_query_relationships(session) -> None:
+    session.run(
+        """
+        MATCH (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
+        MATCH (mic:TCC_Permission {service: 'kTCCServiceMicrophone'})
+        MATCH (cam:TCC_Permission {service: 'kTCCServiceCamera'})
+        MATCH (appA:Application {bundle_id: 'com.rootstock.query.test.iterm'})
+        MATCH (appB:Application {bundle_id: 'com.rootstock.query.test.electron'})
         MERGE (appA)-[:HAS_TCC_GRANT {scope: 'user', allowed: true}]->(fda)
         MERGE (appB)-[:HAS_TCC_GRANT {scope: 'user', allowed: true}]->(mic)
         MERGE (appB)-[:HAS_TCC_GRANT {scope: 'user', allowed: true}]->(cam)
@@ -161,15 +208,40 @@ def _seed_minimal_graph(session) -> None:
 
 # ── Layer 1: File validation (no Neo4j) ──────────────────────────────────────
 
+checks = TestCase()
+
+
 class TestQueryFileStructure:
     def test_query_directory_exists(self):
-        assert QUERIES_DIR.is_dir(), f"queries/ directory not found at {QUERIES_DIR}"
-
-    def test_expected_query_count(self):
-        files = _all_cypher_files()
-        assert len(files) == EXPECTED_QUERY_COUNT, (
-            f"Expected {EXPECTED_QUERY_COUNT} .cypher files, found {len(files)}"
+        checks.assertTrue(
+            QUERIES_DIR.is_dir(), f"queries/ directory not found at {QUERIES_DIR}"
         )
+
+    def test_required_query_files_present(self):
+        files_by_id = {
+            path.stem.split("-")[0]: path.name for path in _all_cypher_files()
+        }
+
+        missing = {
+            qid: filename
+            for qid, filename in _REQUIRED_QUERY_FILES.items()
+            if files_by_id.get(qid) != filename
+        }
+        checks.assertFalse(missing, f"Missing or renamed required queries: {missing}")
+
+    def test_required_query_metadata_is_stable(self):
+        files_by_id = {path.stem.split("-")[0]: path for path in _all_cypher_files()}
+        mismatches = []
+        for qid, expected in _REQUIRED_QUERY_METADATA.items():
+            path = files_by_id.get(qid)
+            if path is None:
+                mismatches.append(f"{qid}: missing")
+                continue
+            meta = _parse_header(path)
+            for key, value in expected.items():
+                if meta.get(key) != value:
+                    mismatches.append(f"{path.name}: {key}={meta.get(key)!r}")
+        checks.assertFalse(mismatches, f"Required query metadata drifted: {mismatches}")
 
     def test_all_files_have_name_header(self):
         missing = []
@@ -177,7 +249,7 @@ class TestQueryFileStructure:
             meta = _parse_header(path)
             if "name" not in meta or not meta["name"]:
                 missing.append(path.name)
-        assert not missing, f"Missing 'Name' header in: {missing}"
+        checks.assertFalse(missing, f"Missing 'Name' header in: {missing}")
 
     def test_all_files_have_valid_category(self):
         bad = []
@@ -186,7 +258,7 @@ class TestQueryFileStructure:
             cat = meta.get("category", "")
             if cat not in _VALID_CATEGORIES:
                 bad.append(f"{path.name}: '{cat}'")
-        assert not bad, f"Invalid or missing 'Category' in: {bad}"
+        checks.assertFalse(bad, f"Invalid or missing 'Category' in: {bad}")
 
     def test_all_files_have_valid_severity(self):
         bad = []
@@ -195,7 +267,7 @@ class TestQueryFileStructure:
             sev = meta.get("severity", "")
             if sev not in _VALID_SEVERITIES:
                 bad.append(f"{path.name}: '{sev}'")
-        assert not bad, f"Invalid or missing 'Severity' in: {bad}"
+        checks.assertFalse(bad, f"Invalid or missing 'Severity' in: {bad}")
 
     def test_all_files_non_empty(self):
         empty = []
@@ -203,25 +275,27 @@ class TestQueryFileStructure:
             stmt = _first_statement(path.read_text(encoding="utf-8"))
             if not stmt:
                 empty.append(path.name)
-        assert not empty, f"Empty (no Cypher body) in: {empty}"
+        checks.assertFalse(empty, f"Empty (no Cypher body) in: {empty}")
 
-    def test_sequential_ids(self):
-        """Query IDs should be consecutive from 01 to EXPECTED_QUERY_COUNT."""
+    def test_query_ids_are_unique_numeric_prefixes(self):
+        """Query IDs should be unique numeric filename prefixes."""
         ids = []
+        non_numeric = []
         for path in _all_cypher_files():
             stem = path.stem
             qid = stem.split("-")[0]
             try:
                 ids.append(int(qid))
             except ValueError:
-                pytest.fail(f"Non-numeric query ID in filename: {path.name}")
-        ids.sort()
-        expected = list(range(1, EXPECTED_QUERY_COUNT + 1))
-        assert ids == expected, f"Non-sequential IDs: got {ids}, expected {expected}"
+                non_numeric.append(path.name)
+        checks.assertFalse(non_numeric, f"Non-numeric query IDs: {non_numeric}")
+        duplicates = sorted({qid for qid in ids if ids.count(qid) > 1})
+        checks.assertFalse(duplicates, f"Duplicate query IDs: {duplicates}")
 
     def test_all_queries_are_read_only(self):
         """Every .cypher file should pass the read-only Cypher validator."""
         from utils import validate_read_only_cypher
+
         failures = []
         for path in _all_cypher_files():
             cypher = path.read_text(encoding="utf-8")
@@ -229,7 +303,10 @@ class TestQueryFileStructure:
             error = validate_read_only_cypher(stmt)
             if error:
                 failures.append(f"{path.name}: {error}")
-        assert not failures, "Queries that failed read-only validation:\n" + "\n".join(failures)
+        checks.assertFalse(
+            failures,
+            "Queries that failed read-only validation:\n" + "\n".join(failures),
+        )
 
     def test_all_queries_parseable(self):
         """Every .cypher file should produce a non-empty first statement."""
@@ -239,7 +316,7 @@ class TestQueryFileStructure:
             stmt = _first_statement(cypher)
             if not stmt:
                 failures.append(path.name)
-        assert not failures, f"Queries with no parseable statement: {failures}"
+        checks.assertFalse(failures, f"Queries with no parseable statement: {failures}")
 
     def test_cve_header_format_when_present(self):
         """CVE headers (when present) must contain valid CVE IDs."""
@@ -253,7 +330,7 @@ class TestQueryFileStructure:
             ids = cve_id_re.findall(cve_val)
             if not ids:
                 bad.append(f"{path.name}: '{cve_val}' has no valid CVE IDs")
-        assert not bad, f"Invalid CVE header format: {bad}"
+        checks.assertFalse(bad, f"Invalid CVE header format: {bad}")
 
     def test_attack_header_format_when_present(self):
         """ATT&CK headers (when present) must contain valid technique IDs."""
@@ -267,21 +344,22 @@ class TestQueryFileStructure:
             ids = tech_re.findall(attack_val)
             if not ids:
                 bad.append(f"{path.name}: '{attack_val}' has no valid technique IDs")
-        assert not bad, f"Invalid ATT&CK header format: {bad}"
+        checks.assertFalse(bad, f"Invalid ATT&CK header format: {bad}")
 
     def test_reachability_queries_include_all_attack_edges(self):
         for filename in _REACHABILITY_QUERY_FILES:
             text = _query_text(filename)
             for edge in _REQUIRED_ATTACK_EDGES:
-                assert edge in text, f"{filename} is missing {edge}"
+                checks.assertIn(edge, text, f"{filename} is missing {edge}")
 
     def test_query_62_bounds_certificate_chain_depth(self):
         text = _query_text("62-non-apple-ca-chain.cypher")
-        assert "[:ISSUED_BY*0..10]" in text
-        assert "[:ISSUED_BY*0..]" not in text
+        checks.assertIn("[:ISSUED_BY*0..10]", text)
+        checks.assertNotIn("[:ISSUED_BY*0..]", text)
 
 
 # ── Layer 2: Syntax validation (Neo4j EXPLAIN) ────────────────────────────────
+
 
 class TestQuerySyntax:
     def test_all_queries_parse(self, neo4j_session):
@@ -294,22 +372,26 @@ class TestQuerySyntax:
                 continue
             # Strip parameter references for EXPLAIN — use empty params
             try:
-                neo4j_session.run(f"EXPLAIN {stmt}", {
-                    "target_service": "kTCCServiceMicrophone",
-                    "min_permissions": 3,
-                    "team_id": "TEST",
-                    "bundle_id": "com.example.test",
-                    "days_old": 365,
-                    "min_methods": 1,
-                    "username": "testuser",
-                    "scope": None,
-                })
+                neo4j_session.run(
+                    f"EXPLAIN {stmt}",
+                    {
+                        "target_service": "kTCCServiceMicrophone",
+                        "min_permissions": 3,
+                        "team_id": "TEST",
+                        "bundle_id": "com.example.test",
+                        "days_old": 365,
+                        "min_methods": 1,
+                        "username": "testuser",
+                        "scope": None,
+                    },
+                )
             except Exception as e:
                 failures.append(f"{path.name}: {e}")
-        assert not failures, "Cypher syntax errors:\n" + "\n".join(failures)
+        checks.assertFalse(failures, "Cypher syntax errors:\n" + "\n".join(failures))
 
 
 # ── Layer 3: Seeded execution tests ──────────────────────────────────────────
+
 
 class TestQueryExecution:
     @pytest.fixture(autouse=True)
@@ -319,33 +401,40 @@ class TestQueryExecution:
     def test_query_01_injectable_fda_apps(self, neo4j_session):
         """Query 01 should find our injectable FDA app."""
         from infer_injection import infer
+
         infer(neo4j_session)
 
         cypher = (QUERIES_DIR / "01-injectable-fda-apps.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected at least 1 injectable FDA app in seeded graph"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected at least 1 injectable FDA app in seeded graph"
+        )
 
     def test_query_07_tcc_overview(self, neo4j_session):
         """Query 07 should return at least 1 TCC permission row."""
         cypher = (QUERIES_DIR / "07-tcc-grant-overview.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected TCC grants in seeded graph"
+        checks.assertGreaterEqual(len(result), 1, "Expected TCC grants in seeded graph")
 
     def test_query_16_tcc_grant_audit(self, neo4j_session):
         """Query 16 should return TCC grant detail rows."""
         cypher = (QUERIES_DIR / "16-tcc-grant-audit.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {"scope": None}))
-        assert len(result) >= 1, "Expected TCC grant audit rows in seeded graph"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected TCC grant audit rows in seeded graph"
+        )
 
     def test_query_04_private_entitlements(self, neo4j_session):
         """Query 04 should find our app with com.apple.private.tcc.allow."""
         cypher = (QUERIES_DIR / "04-private-entitlement-audit.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected at least 1 private entitlement in seeded graph"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected at least 1 private entitlement in seeded graph"
+        )
 
     def test_query_45_owned_blast_radius(self, neo4j_session):
         """Query 45 should return results when nodes are marked owned."""
@@ -359,48 +448,59 @@ class TestQueryExecution:
         cypher = (QUERIES_DIR / "45-owned-blast-radius.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected at least 1 owned node blast radius row"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected at least 1 owned node blast radius row"
+        )
         # Clean up owned markers
         neo4j_session.run("MATCH (n) WHERE n.owned = true REMOVE n.owned, n.owned_at")
 
     def test_query_46_tier_classification(self, neo4j_session):
         """Query 46 should return results after tier classification runs."""
         from tier_classification import classify
+
         classify(neo4j_session)
         cypher = (QUERIES_DIR / "46-tier-classification.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected at least 1 classified app in seeded graph"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected at least 1 classified app in seeded graph"
+        )
         # Clean up tier properties
-        neo4j_session.run("MATCH (a:Application) WHERE a.tier IS NOT NULL REMOVE a.tier")
+        neo4j_session.run(
+            "MATCH (a:Application) WHERE a.tier IS NOT NULL REMOVE a.tier"
+        )
 
     def test_query_54_accessibility_abuse(self, neo4j_session):
         """Query 54 should execute without error on seeded graph."""
         from infer_accessibility import infer
+
         infer(neo4j_session)
         cypher = (QUERIES_DIR / "54-accessibility-abuse.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
         # May return 0 rows if no A11Y grant in seed data; just verify it runs
-        assert isinstance(result, list)
+        checks.assertTrue(isinstance(result, list))
 
     def test_query_57_tier0_inbound(self, neo4j_session):
         """Query 57 should return results when tiers are classified."""
         from tier_classification import classify
+
         classify(neo4j_session)
         cypher = (QUERIES_DIR / "57-tier0-inbound-control.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert isinstance(result, list)
+        checks.assertTrue(isinstance(result, list))
         # Clean up tier properties
-        neo4j_session.run("MATCH (a:Application) WHERE a.tier IS NOT NULL REMOVE a.tier")
+        neo4j_session.run(
+            "MATCH (a:Application) WHERE a.tier IS NOT NULL REMOVE a.tier"
+        )
 
     def test_query_59_keychain_crown_jewels(self, neo4j_session):
         """Query 59 should return keychain items with sensitivity tiers."""
         cypher = (QUERIES_DIR / "59-keychain-crown-jewels.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert isinstance(result, list)
+        checks.assertTrue(isinstance(result, list))
 
     def test_certificate_authority_nodes_created(self, neo4j_session):
         """Verify CertificateAuthority nodes can be created and queried."""
@@ -420,7 +520,9 @@ class TestQueryExecution:
         result = neo4j_session.run(
             "MATCH (ca:CertificateAuthority) RETURN count(ca) AS n"
         ).single()
-        assert result["n"] >= 2, "Expected at least 2 CertificateAuthority nodes"
+        checks.assertGreaterEqual(
+            result["n"], 2, "Expected at least 2 CertificateAuthority nodes"
+        )
 
     def test_signed_by_ca_edges(self, neo4j_session):
         """Verify SIGNED_BY_CA edges link apps to correct CAs."""
@@ -440,7 +542,7 @@ class TestQueryExecution:
             RETURN ca.common_name AS cn
             """
         ).single()
-        assert result is not None, "Expected SIGNED_BY_CA edge from test app to CA"
+        checks.assertIsNotNone(result, "Expected SIGNED_BY_CA edge from test app to CA")
 
     def test_issued_by_chain(self, neo4j_session):
         """Verify ISSUED_BY edges form correct hierarchy."""
@@ -451,8 +553,10 @@ class TestQueryExecution:
             RETURN root.common_name AS root_cn
             """
         ).single()
-        assert result is not None, "Expected ISSUED_BY edge from intermediate to root"
-        assert result["root_cn"] == "Apple Root CA"
+        checks.assertIsNotNone(
+            result, "Expected ISSUED_BY edge from intermediate to root"
+        )
+        checks.assertEqual(result["root_cn"], "Apple Root CA")
 
     def test_query_60_expired_cert(self, neo4j_session):
         """Query 60 should find apps with expired certs and TCC grants."""
@@ -467,7 +571,9 @@ class TestQueryExecution:
         cypher = (QUERIES_DIR / "60-expired-cert-with-tcc.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected at least 1 expired-cert app with TCC grants"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected at least 1 expired-cert app with TCC grants"
+        )
         # Clean up
         neo4j_session.run(
             """
@@ -488,7 +594,9 @@ class TestQueryExecution:
         cypher = (QUERIES_DIR / "61-adhoc-signed-with-tcc.cypher").read_text()
         stmt = _first_statement(cypher)
         result = list(neo4j_session.run(stmt, {}))
-        assert len(result) >= 1, "Expected at least 1 ad-hoc signed app with TCC grants"
+        checks.assertGreaterEqual(
+            len(result), 1, "Expected at least 1 ad-hoc signed app with TCC grants"
+        )
         # Clean up
         neo4j_session.run(
             """

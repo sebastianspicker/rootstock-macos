@@ -90,12 +90,20 @@ public struct TCCDataSource: DataSource {
             )])
         }
         var grants: [TCCGrant] = []
-        for row in rows {
+        var errors: [CollectionError] = []
+        for (index, row) in rows.enumerated() {
             if let grant = Self.parseGrant(row, scope: scope) {
                 grants.append(grant)
+            } else {
+                errors.append(CollectionError(
+                    source: name,
+                    message: "Skipped malformed TCC row \(index + 1) in \(path) " +
+                             "(\(scope) scope): missing or invalid required fields.",
+                    recoverable: true
+                ))
             }
         }
-        return (grants, [])
+        return (grants, errors)
     }
 
     private static func hasRequiredColumns(in db: SQLiteDatabase) -> Bool {
@@ -152,7 +160,4 @@ public enum TCCAccessProbe {
         }
     }
 
-    public static func hasFullDiskAccess() -> Bool {
-        canQueryDatabase(at: systemDatabasePath)
-    }
 }

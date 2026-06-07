@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest import TestCase
+
 import json
 import sys
 from pathlib import Path
@@ -19,6 +21,9 @@ from import_cve_scan import (
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_PATH = ROOT / "examples" / "cve-scan-export.json"
+
+
+checks = TestCase()
 
 
 class _Result:
@@ -46,10 +51,10 @@ def _fixture_data() -> dict[str, object]:
 def test_fixture_export_validates() -> None:
     export = validate_export(_fixture_data())
 
-    assert export.schema_version == 7
-    assert export.scope_name == "rootstock-cve-scan-demo"
-    assert len(export.nodes) == 11
-    assert len(export.edges) == 13
+    checks.assertEqual(export.schema_version, 7)
+    checks.assertEqual(export.scope_name, "rootstock-cve-scan-demo")
+    checks.assertEqual(len(export.nodes), 11)
+    checks.assertEqual(len(export.edges), 13)
 
 
 def test_validation_rejects_unsupported_node_label() -> None:
@@ -91,27 +96,30 @@ def test_node_records_preserve_package_source_and_add_provenance() -> None:
     package = records["Package"][0]["props"]
     vulnerability = records["Vulnerability"][0]
 
-    assert isinstance(package, dict)
-    assert package["source"] == "cve-scan"
-    assert package["cve_scan_original_source"] == "repo/requirements.txt"
-    assert package["cve_scan_scope_name"] == "rootstock-cve-scan-demo"
-    assert vulnerability["cve_id"] == "CVE-2026-9701"
+    checks.assertTrue(isinstance(package, dict))
+    checks.assertEqual(package["source"], "cve-scan")
+    checks.assertEqual(package["cve_scan_original_source"], "repo/requirements.txt")
+    checks.assertEqual(package["cve_scan_scope_name"], "rootstock-cve-scan-demo")
+    checks.assertEqual(vulnerability["cve_id"], "CVE-2026-9701")
 
 
 def test_affected_by_alias_records_follow_vulnerability_affects_asset_edges() -> None:
     export = validate_export(_fixture_data())
     aliases = build_affected_by_alias_records(export)
 
-    assert aliases == [
-        {
-            "source_id": "Package:pypi_fastapi_0.115.0_repo_requirements.txt",
-            "target_id": "Vulnerability:CVE-2026-9701",
-        },
-        {
-            "source_id": "Service:app.example.test_443_https",
-            "target_id": "Vulnerability:CVE-2026-9701",
-        },
-    ]
+    checks.assertEqual(
+        aliases,
+        [
+            {
+                "source_id": "Package:pypi_fastapi_0.115.0_repo_requirements.txt",
+                "target_id": "Vulnerability:CVE-2026-9701",
+            },
+            {
+                "source_id": "Service:app.example.test_443_https",
+                "target_id": "Vulnerability:CVE-2026-9701",
+            },
+        ],
+    )
 
 
 def test_import_uses_batched_merges_and_alias_edges() -> None:
@@ -120,7 +128,19 @@ def test_import_uses_batched_merges_and_alias_edges() -> None:
 
     counts = import_cve_scan_export(session, export)
 
-    assert counts == {"nodes": 11, "edges": 13, "affected_by_aliases": 2}
-    assert any("MERGE (n:Package {id: row.id})" in query for query, _ in session.calls)
-    assert any("MERGE (n:Vulnerability {cve_id: row.cve_id})" in query for query, _ in session.calls)
-    assert any("MERGE (asset)-[r:AFFECTED_BY]->(vulnerability)" in query for query, _ in session.calls)
+    checks.assertEqual(counts, {"nodes": 11, "edges": 13, "affected_by_aliases": 2})
+    checks.assertTrue(
+        any("MERGE (n:Package {id: row.id})" in query for query, _ in session.calls)
+    )
+    checks.assertTrue(
+        any(
+            "MERGE (n:Vulnerability {cve_id: row.cve_id})" in query
+            for query, _ in session.calls
+        )
+    )
+    checks.assertTrue(
+        any(
+            "MERGE (asset)-[r:AFFECTED_BY]->(vulnerability)" in query
+            for query, _ in session.calls
+        )
+    )

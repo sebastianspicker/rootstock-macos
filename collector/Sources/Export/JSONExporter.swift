@@ -40,21 +40,22 @@ public struct JSONExporter {
     }
 
     /// Write a ScanResult as JSON to the given file path.
-    ///
-    /// After writing, the output is re-parsed as a sanity check to confirm it is valid JSON.
     public func write(_ result: ScanResult, to path: String, force: Bool = false) throws {
         let data = try encode(result)
         try writeSecurely(data, to: path, force: force)
-
-        // Sanity check: re-parse to confirm the written file is valid JSON.
-        guard (try? JSONSerialization.jsonObject(with: data, options: [])) != nil else {
-            throw CocoaError(.fileWriteUnknown, userInfo: [
-                NSLocalizedDescriptionKey: "Encoded JSON failed to re-parse — output may be corrupt: \(path)"
-            ])
-        }
     }
 
     private func writeSecurely(_ data: Data, to path: String, force: Bool) throws {
+        try validateOutputPath(path, force: force)
+
+        let fd = try openOutputFile(path, force: force)
+        defer { close(fd) }
+
+        try enforceOwnerOnlyPermissions(fd, path: path)
+        try writeAll(data, to: fd, path: path)
+    }
+
+    private func validateOutputPath(_ path: String, force: Bool) throws {
         var statInfo = stat()
         if lstat(path, &statInfo) == 0 {
             let fileType = statInfo.st_mode & S_IFMT
@@ -70,7 +71,9 @@ public struct JSONExporter {
         } else if errno != ENOENT {
             throw JSONExporterError.cannotOpen(path, String(cString: strerror(errno)))
         }
+    }
 
+    private func openOutputFile(_ path: String, force: Bool) throws -> Int32 {
         let flags = O_WRONLY | O_CREAT | O_NOFOLLOW | (force ? O_TRUNC : O_EXCL)
         let fd = open(path, flags, mode_t(S_IRUSR | S_IWUSR))
         guard fd >= 0 else {
@@ -79,12 +82,16 @@ public struct JSONExporter {
             }
             throw JSONExporterError.cannotOpen(path, String(cString: strerror(errno)))
         }
-        defer { close(fd) }
+        return fd
+    }
 
+    private func enforceOwnerOnlyPermissions(_ fd: Int32, path: String) throws {
         guard fchmod(fd, mode_t(S_IRUSR | S_IWUSR)) == 0 else {
             throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
         }
+    }
 
+    private func writeAll(_ data: Data, to fd: Int32, path: String) throws {
         try data.withUnsafeBytes { buffer in
             guard var pointer = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return

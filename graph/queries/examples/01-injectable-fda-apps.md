@@ -20,8 +20,9 @@
 - **iTerm2** is injectable via 2 methods AND has Full Disk Access — critical finding.
   An attacker with code execution in iTerm2's process can read `/Library/Application Support/com.apple.TCC/TCC.db`
   and any other file on the system.
-- **Finder** appears (null team_id = platform binary). In practice, SIP prevents injection
-  into platform binaries — this is documented as a known false positive (TD-006).
+- **Finder** appears (null team_id = platform binary). In practice, SIP prevents
+  injection into platform binaries, so platform-binary results require
+  SIP-aware validation before treating them as exploitable.
 
 ## Remediation
 

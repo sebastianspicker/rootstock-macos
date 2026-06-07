@@ -54,7 +54,7 @@ CREATE TABLE access (
 
 ## macOS 15 Sequoia — Access Restrictions Tightened
 
-### Schema changes
+### Sequoia schema changes
 
 No column additions or removals from macOS 14. The `access` table schema is identical.
 
@@ -68,9 +68,9 @@ Apple tightened TCC.db access at the kernel level in Sequoia:
   1. Grant FDA to the collector binary via System Settings → Privacy & Security → Full Disk Access.
   2. Run with `sudo` (root process bypasses the restriction).
   3. Sign the binary with `com.apple.private.tcc.allow` (requires Apple developer account with private entitlement approval).
-- **Rootstock behavior**: The collector logs a recoverable error and continues with zero TCC grants. The error message on Sequoia/Tahoe includes specific guidance: *"On macOS 15 Sequoia, TCC.db requires Full Disk Access."*
-
-See also: [TD-004 in the archived tech-debt tracker](../archive/exec-plans/tech-debt-tracker.md).
+- **Rootstock behavior**: The collector logs a recoverable error and continues
+  with zero TCC grants. The error message on Sequoia/Tahoe includes specific
+  guidance: *"On macOS 15 Sequoia, TCC.db requires Full Disk Access."*
 
 ### New TCC services (macOS 15)
 
@@ -90,7 +90,7 @@ See also: [TD-004 in the archived tech-debt tracker](../archive/exec-plans/tech-
 
 ### Verified on: macOS 26.3 (Build 25D125, arm64)
 
-### Schema changes
+### Tahoe schema changes
 
 No schema changes from Sequoia observed. The `access` table has the same 17-column structure as macOS 14/15. `PRAGMA table_info(access)` returns identical column names.
 

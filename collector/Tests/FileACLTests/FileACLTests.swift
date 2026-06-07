@@ -30,7 +30,7 @@ final class FileACLTests: XCTestCase {
             category: "tcc_database"
         )
         let data = try JSONEncoder().encode(acl)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertEqual(json["path"] as? String, "/Library/Application Support/com.apple.TCC/TCC.db")
         XCTAssertEqual(json["owner"] as? String, "root")

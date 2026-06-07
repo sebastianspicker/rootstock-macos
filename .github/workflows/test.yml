@@ -3,8 +3,16 @@ name: Tests
 on:
   push:
     branches: [main, dev]
+    paths-ignore:
+      - "deprecated/**"
+      - "docs/archive/**"
+      - "docs/deprecated/**"
   pull_request:
     branches: [main, dev]
+    paths-ignore:
+      - "deprecated/**"
+      - "docs/archive/**"
+      - "docs/deprecated/**"
 
 permissions:
   contents: read
@@ -38,11 +46,11 @@ jobs:
       neo4j:
         image: neo4j:5.26-community
         env:
-          NEO4J_AUTH: neo4j/rootstock
+          NEO4J_AUTH: none
         ports:
           - 7687:7687
         options: >-
-          --health-cmd "cypher-shell -a bolt://localhost:7687 -u neo4j -p rootstock 'RETURN 1' || exit 1"
+          --health-cmd "cypher-shell -a bolt://localhost:7687 'RETURN 1' || exit 1"
           --health-interval 10s
           --health-timeout 10s
           --health-retries 12
@@ -62,13 +70,21 @@ jobs:
       - name: Validate demo scan contract
         run: python3 scripts/validate-scan.py examples/demo-scan.json
 
-      - name: pytest (no Neo4j)
+      - name: pytest graph with required Neo4j lane
         working-directory: graph
         env:
           NEO4J_URI: bolt://localhost:7687
           NEO4J_USER: neo4j
-          NEO4J_PASSWORD: rootstock
+          NEO4J_AUTH: none
+          ROOTSTOCK_REQUIRE_NEO4J: "1"
         run: pytest tests/ -v --tb=short
+
+      - name: graph pipeline smoke with Neo4j
+        env:
+          NEO4J_URI: bolt://localhost:7687
+          NEO4J_USER: neo4j
+          NEO4J_AUTH: none
+        run: bash tests/integration/test_full_pipeline.sh
 
   # ── Python linting ──────────────────────────────────────────────────────
   python-lint:
@@ -87,7 +103,7 @@ jobs:
         run: pip install ruff
 
       - name: ruff check
-        run: ruff check graph/ scripts/ examples/ docs/
+        run: ruff check graph/ scripts/ examples/ docs/ --exclude deprecated --exclude docs/archive --exclude docs/deprecated
 
   # ── cve-scan module checks ──────────────────────────────────────────────
   cve-scan-tests:

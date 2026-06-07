@@ -13,7 +13,7 @@ final class AuthorizationPluginTests: XCTestCase {
     func testAuthorizationPluginJSONEncoding() throws {
         let plugin = AuthorizationPlugin(name: "TestPlugin", path: "/test/path.bundle", teamId: "TEAM123456")
         let data = try JSONEncoder().encode(plugin)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertEqual(json["name"] as? String, "TestPlugin")
         XCTAssertEqual(json["team_id"] as? String, "TEAM123456")
     }

@@ -64,6 +64,10 @@ final class SQLiteDatabase {
         }
         defer { sqlite3_finalize(stmt) }
 
+        return try readRows(from: stmt, db: db)
+    }
+
+    private func readRows(from stmt: OpaquePointer?, db: OpaquePointer) throws -> [[String: Any]] {
         var rows: [[String: Any]] = []
         while true {
             let stepRC = sqlite3_step(stmt)
@@ -74,31 +78,40 @@ final class SQLiteDatabase {
                 let msg = String(validatingUTF8: sqlite3_errmsg(db)) ?? "unknown error"
                 throw SQLiteError.queryFailed(code: stepRC, message: msg)
             }
-            var row: [String: Any] = [:]
-            let columnCount = sqlite3_column_count(stmt)
-            for i in 0..<columnCount {
-                guard let rawName = sqlite3_column_name(stmt, i) else { continue }
-                let name = String(cString: rawName)
-                switch sqlite3_column_type(stmt, i) {
-                case SQLITE_INTEGER:
-                    row[name] = Int(sqlite3_column_int64(stmt, i))
-                case SQLITE_FLOAT:
-                    row[name] = sqlite3_column_double(stmt, i)
-                case SQLITE_TEXT:
-                    if let ptr = sqlite3_column_text(stmt, i) {
-                        row[name] = String(cString: ptr)
-                    }
-                case SQLITE_BLOB:
-                    let count = Int(sqlite3_column_bytes(stmt, i))
-                    if count > 0, let ptr = sqlite3_column_blob(stmt, i) {
-                        row[name] = Data(bytes: ptr, count: count)
-                    }
-                default:
-                    break
-                }
-            }
-            rows.append(row)
+            rows.append(readRow(from: stmt))
         }
         return rows
+    }
+
+    private func readRow(from stmt: OpaquePointer?) -> [String: Any] {
+        var row: [String: Any] = [:]
+        let columnCount = sqlite3_column_count(stmt)
+        for i in 0..<columnCount {
+            guard let rawName = sqlite3_column_name(stmt, i),
+                  let value = columnValue(from: stmt, index: i) else {
+                continue
+            }
+            row[String(cString: rawName)] = value
+        }
+        return row
+    }
+
+    private func columnValue(from stmt: OpaquePointer?, index: Int32) -> Any? {
+        switch sqlite3_column_type(stmt, index) {
+        case SQLITE_INTEGER:
+            return Int(sqlite3_column_int64(stmt, index))
+        case SQLITE_FLOAT:
+            return sqlite3_column_double(stmt, index)
+        case SQLITE_TEXT:
+            return sqlite3_column_text(stmt, index).map { String(cString: $0) }
+        case SQLITE_BLOB:
+            let count = Int(sqlite3_column_bytes(stmt, index))
+            guard count > 0, let ptr = sqlite3_column_blob(stmt, index) else {
+                return nil
+            }
+            return Data(bytes: ptr, count: count)
+        default:
+            return nil
+        }
     }
 }

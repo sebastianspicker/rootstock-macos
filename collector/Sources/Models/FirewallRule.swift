@@ -36,9 +36,9 @@ public struct FirewallStatus: Codable, Sendable, GraphNode {
 /// A per-application firewall rule.
 public struct FirewallAppRule: Codable, Sendable {
     public let bundleId: String
-    public let allowIncoming: Bool
+    public let allowIncoming: Bool?
 
-    public init(bundleId: String, allowIncoming: Bool) {
+    public init(bundleId: String, allowIncoming: Bool?) {
         self.bundleId = bundleId
         self.allowIncoming = allowIncoming
     }

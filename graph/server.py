@@ -41,7 +41,7 @@ from neo4j.exceptions import ServiceUnavailable, AuthError
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from query_runner import discover_queries, find_query, load_cypher
+from query_runner import discover_queries, find_query
 from utils import first_cypher_statement, run_query, validate_read_only_cypher
 
 from opengraph_export import build_opengraph  # noqa: E402
@@ -144,6 +144,10 @@ def get_read_session(request: Request):
         yield session
 
 
+SESSION_DEPENDENCY = Depends(get_session)
+READ_SESSION_DEPENDENCY = Depends(get_read_session)
+
+
 @app.middleware("http")
 async def require_api_token(request: Request, call_next):
     """Protect all /api routes with a bearer token."""
@@ -205,7 +209,7 @@ def list_queries():
 def run_query_endpoint(
     query_id: str,
     body: QueryRunRequest | None = None,
-    session=Depends(get_read_session),
+    session=READ_SESSION_DEPENDENCY,
 ):
     """Execute a query by ID and return results as JSON."""
     queries = discover_queries()
@@ -213,13 +217,15 @@ def run_query_endpoint(
     if not q:
         raise HTTPException(status_code=404, detail=f"Query '{query_id}' not found")
 
-    cypher = first_cypher_statement(load_cypher(q))
+    cypher = first_cypher_statement(q["cypher"])
     params = body.params if body else {}
     try:
         rows = run_query(session, cypher, params or {})
-    except Exception as e:
-        logger.warning("Query %s failed: %s", query_id, e)
-        raise HTTPException(status_code=400, detail="Query execution failed")
+    except Exception as err:
+        logger.warning("Query %s failed: %s", query_id, err)
+        raise HTTPException(
+            status_code=400, detail="Query execution failed"
+        ) from err
 
     return {
         "query": {
@@ -234,14 +240,14 @@ def run_query_endpoint(
 
 
 @app.get("/api/graph")
-def get_graph(session=Depends(get_session)):
+def get_graph(session=SESSION_DEPENDENCY):
     """Return the full OpenGraph JSON for viewer refresh."""
     _hostname, data = _build_live_graph(session)
     return data
 
 
 @app.post("/api/mark-owned")
-def mark_owned_endpoint(body: MarkOwnedRequest, session=Depends(get_session)):
+def mark_owned_endpoint(body: MarkOwnedRequest, session=SESSION_DEPENDENCY):
     """Mark nodes as owned (compromised)."""
     timestamp = datetime.now(timezone.utc).isoformat()
     count = 0
@@ -260,7 +266,7 @@ def mark_owned_endpoint(body: MarkOwnedRequest, session=Depends(get_session)):
 
 
 @app.post("/api/clear-owned")
-def clear_owned_endpoint(body: ClearOwnedRequest, session=Depends(get_session)):
+def clear_owned_endpoint(body: ClearOwnedRequest, session=SESSION_DEPENDENCY):
     """Clear owned markers from nodes."""
     count = 0
 
@@ -279,7 +285,7 @@ def clear_owned_endpoint(body: ClearOwnedRequest, session=Depends(get_session)):
 
 
 @app.get("/api/owned")
-def get_owned(session=Depends(get_session)):
+def get_owned(session=SESSION_DEPENDENCY):
     """List all currently owned nodes."""
     owned = list_owned(session)
     results = []
@@ -299,7 +305,7 @@ def get_owned(session=Depends(get_session)):
 
 
 @app.post("/api/tier-classify")
-def tier_classify_endpoint(session=Depends(get_session)):
+def tier_classify_endpoint(session=SESSION_DEPENDENCY):
     """Run tier classification on all Application nodes."""
     t0, t1, t2 = classify(session)
 
@@ -311,11 +317,22 @@ def tier_classify_endpoint(session=Depends(get_session)):
     }
 
 
+def _limited_records(result) -> tuple[list[Any], bool]:
+    records = []
+    truncated = False
+    for index, record in enumerate(result):
+        if index >= MAX_ADHOC_CYPHER_ROWS:
+            truncated = True
+            break
+        records.append(record)
+    return records, truncated
+
+
 # ── Ad-hoc Cypher endpoint ─────────────────────────────────────────────────
 
 
 @app.post("/api/cypher")
-def run_cypher_endpoint(body: CypherRequest, session=Depends(get_read_session)):
+def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
     """Execute an ad-hoc Cypher query (read-only).
 
     Accepts {"cypher": "MATCH ...", "params": {}}.
@@ -333,18 +350,14 @@ def run_cypher_endpoint(body: CypherRequest, session=Depends(get_read_session)):
             Query(body.cypher, timeout=ADHOC_CYPHER_TIMEOUT_SECONDS),
             body.params or {},
         )
-        records = []
-        truncated = False
-        for index, record in enumerate(result):
-            if index >= MAX_ADHOC_CYPHER_ROWS:
-                truncated = True
-                break
-            records.append(record)
+        records, truncated = _limited_records(result)
         columns = list(records[0].keys()) if records else []
         rows = [dict(r) for r in records]
-    except Exception as e:
-        logger.warning("Ad-hoc Cypher failed: %s", e)
-        raise HTTPException(status_code=400, detail="Query execution failed")
+    except Exception as err:
+        logger.warning("Ad-hoc Cypher failed: %s", err)
+        raise HTTPException(
+            status_code=400, detail="Query execution failed"
+        ) from err
 
     return {
         "columns": columns,
@@ -436,7 +449,7 @@ def _validate_bind_host(host: str, allow_remote: bool) -> None:
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
 
-def main() -> int:
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Rootstock REST API server")
     parser.add_argument(
         "--port", type=int, default=8000, help="Port to listen on (default: 8000)"
@@ -456,13 +469,15 @@ def main() -> int:
     parser.add_argument(
         "--neo4j-password", default=None, help="Neo4j password (or set NEO4J_PASSWORD)"
     )
-    args = parser.parse_args()
+    return parser
 
+
+def _configure_app_state(args: argparse.Namespace) -> bool:
     try:
         _validate_bind_host(args.host, args.allow_remote)
     except ValueError as e:
         print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
+        return False
 
     password = args.neo4j_password or os.environ.get("NEO4J_PASSWORD")
     if not password:
@@ -470,24 +485,35 @@ def main() -> int:
             "ERROR: Neo4j password required via --neo4j-password or NEO4J_PASSWORD env var",
             file=sys.stderr,
         )
-        sys.exit(1)
+        return False
 
     api_token = os.environ.get("ROOTSTOCK_API_TOKEN")
     if not api_token:
         print("ERROR: ROOTSTOCK_API_TOKEN is required for /api/* routes", file=sys.stderr)
-        sys.exit(1)
+        return False
 
     app.state.neo4j_uri = args.neo4j
     app.state.neo4j_user = args.neo4j_user
     app.state.neo4j_password = password
     app.state.api_token = api_token
+    return True
 
+
+def _run_server(args: argparse.Namespace) -> None:
     import uvicorn
 
     print(f"Starting Rootstock API server on {args.host}:{args.port}")
     print(f"  Viewer:  http://{args.host}:{args.port}/")
     print(f"  OpenAPI: http://{args.host}:{args.port}/docs")
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+
+
+def main() -> int:
+    parser = _build_parser()
+    args = parser.parse_args()
+    if not _configure_app_state(args):
+        return 1
+    _run_server(args)
     return 0
 
 

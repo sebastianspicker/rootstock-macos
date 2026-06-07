@@ -28,11 +28,11 @@ struct CodeSigningAnalyzer {
 
     /// Returns true if the app resides in a SIP-protected location.
     func isSIPProtected(appPath: String) -> Bool {
-        for exception in Self.sipExceptions {
-            if appPath.hasPrefix(exception) { return false }
+        for exception in Self.sipExceptions where appPath.hasPrefix(exception) {
+            return false
         }
-        for prefix in Self.sipPrefixes {
-            if appPath.hasPrefix(prefix) { return true }
+        for prefix in Self.sipPrefixes where appPath.hasPrefix(prefix) {
+            return true
         }
         return false
     }
@@ -67,6 +67,10 @@ struct CodeSigningAnalyzer {
             )
         }
 
+        return codeSigningInfo(from: info)
+    }
+
+    func codeSigningInfo(from info: [String: Any]) -> CodeSigningInfo {
         let teamId = info[kSecCodeInfoTeamIdentifier as String] as? String
         let signingIdentifier = info[kSecCodeInfoIdentifier as String] as? String
 
@@ -105,59 +109,81 @@ struct CodeSigningAnalyzer {
         }
 
         let dateFormatter = ISO8601DateFormatter()
-
         return certs.enumerated().compactMap { index, cert in
-            let commonName = SecCertificateCopySubjectSummary(cert) as String?
-
-            let derData = SecCertificateCopyData(cert) as Data
-            let digest = SHA256.hash(data: derData)
-            let sha256 = digest.map { String(format: "%02x", $0) }.joined()
-
-            let isRoot = index == certs.count - 1
-
-            var validFrom: String?
-            var validTo: String?
-            var organization: String?
-
-            if let values = SecCertificateCopyValues(cert, nil, nil) as? [String: Any] {
-                // Validity period
-                if let notBefore = values["2.5.4.47"] as? [String: Any] ?? values[kSecOIDX509V1ValidityNotBefore as String] as? [String: Any],
-                   let val = notBefore[kSecPropertyKeyValue as String] {
-                    if let num = val as? NSNumber {
-                        let date = Date(timeIntervalSinceReferenceDate: num.doubleValue)
-                        validFrom = dateFormatter.string(from: date)
-                    }
-                }
-                if let notAfter = values["2.5.4.48"] as? [String: Any] ?? values[kSecOIDX509V1ValidityNotAfter as String] as? [String: Any],
-                   let val = notAfter[kSecPropertyKeyValue as String] {
-                    if let num = val as? NSNumber {
-                        let date = Date(timeIntervalSinceReferenceDate: num.doubleValue)
-                        validTo = dateFormatter.string(from: date)
-                    }
-                }
-
-                // Organization from subject name
-                if let subject = values[kSecOIDX509V1SubjectName as String] as? [String: Any],
-                   let sectionItems = subject[kSecPropertyKeyValue as String] as? [[String: Any]] {
-                    for item in sectionItems {
-                        if let label = item[kSecPropertyKeyLabel as String] as? String,
-                           label == "2.5.4.10",
-                           let orgValue = item[kSecPropertyKeyValue as String] as? String {
-                            organization = orgValue
-                            break
-                        }
-                    }
-                }
-            }
-
-            return CertificateDetail(
-                commonName: commonName,
-                organization: organization,
-                sha256: sha256,
-                validFrom: validFrom,
-                validTo: validTo,
-                isRoot: isRoot
+            certificateDetail(
+                for: cert,
+                index: index,
+                chainCount: certs.count,
+                dateFormatter: dateFormatter
             )
         }
+    }
+
+    private func certificateDetail(
+        for cert: SecCertificate,
+        index: Int,
+        chainCount: Int,
+        dateFormatter: ISO8601DateFormatter
+    ) -> CertificateDetail {
+        let values = SecCertificateCopyValues(cert, nil, nil) as? [String: Any]
+
+        return CertificateDetail(
+            commonName: SecCertificateCopySubjectSummary(cert) as String?,
+            organization: certificateOrganization(from: values),
+            sha256: certificateFingerprint(cert),
+            validFrom: certificateDate(
+                from: values,
+                oid: kSecOIDX509V1ValidityNotBefore as String,
+                legacyOID: "2.5.4.47",
+                dateFormatter: dateFormatter
+            ),
+            validTo: certificateDate(
+                from: values,
+                oid: kSecOIDX509V1ValidityNotAfter as String,
+                legacyOID: "2.5.4.48",
+                dateFormatter: dateFormatter
+            ),
+            isRoot: index == chainCount - 1
+        )
+    }
+
+    private func certificateFingerprint(_ cert: SecCertificate) -> String {
+        let derData = SecCertificateCopyData(cert) as Data
+        let digest = SHA256.hash(data: derData)
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func certificateDate(
+        from values: [String: Any]?,
+        oid: String,
+        legacyOID: String,
+        dateFormatter: ISO8601DateFormatter
+    ) -> String? {
+        guard let dateValue = certificateValue(from: values, oid: oid, legacyOID: legacyOID) as? NSNumber else {
+            return nil
+        }
+        let date = Date(timeIntervalSinceReferenceDate: dateValue.doubleValue)
+        return dateFormatter.string(from: date)
+    }
+
+    private func certificateValue(from values: [String: Any]?, oid: String, legacyOID: String) -> Any? {
+        let property = values?[legacyOID] as? [String: Any] ?? values?[oid] as? [String: Any]
+        return property?[kSecPropertyKeyValue as String]
+    }
+
+    private func certificateOrganization(from values: [String: Any]?) -> String? {
+        guard let subject = values?[kSecOIDX509V1SubjectName as String] as? [String: Any],
+              let sectionItems = subject[kSecPropertyKeyValue as String] as? [[String: Any]] else {
+            return nil
+        }
+        return sectionItems.compactMap(certificateOrganizationValue).first
+    }
+
+    private func certificateOrganizationValue(from item: [String: Any]) -> String? {
+        guard let label = item[kSecPropertyKeyLabel as String] as? String,
+              label == "2.5.4.10" else {
+            return nil
+        }
+        return item[kSecPropertyKeyValue as String] as? String
     }
 }

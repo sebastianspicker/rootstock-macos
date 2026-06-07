@@ -155,17 +155,34 @@ def import_bluetooth_devices(
     if not devices:
         return 0, 0
 
-    records = [
+    records = _bluetooth_device_records(devices)
+    _merge_bluetooth_device_nodes(session, records)
+    edges = _link_bluetooth_paired_with_edges(
+        session,
+        records,
+        _computer_key(hostname, scan_id),
+    )
+    return len(devices), edges
+
+
+def _bluetooth_device_records(
+    devices: list[BluetoothDeviceData],
+) -> list[dict[str, object]]:
+    return [
         {
-            "address": d.address,
-            "name": d.name,
-            "device_type": d.device_type,
-            "connected": d.connected,
+            "address": device.address,
+            "name": device.name,
+            "device_type": device.device_type,
+            "connected": device.connected,
         }
-        for d in devices
+        for device in devices
     ]
 
-    # MERGE BluetoothDevice nodes
+
+def _merge_bluetooth_device_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -177,7 +194,16 @@ def import_bluetooth_devices(
         records=records,
     )
 
-    # PAIRED_WITH: BluetoothDevice → Computer
+
+def _computer_key(hostname: str, scan_id: str | None) -> str | None:
+    return f"{scan_id}:{hostname}" if scan_id is not None else None
+
+
+def _link_bluetooth_paired_with_edges(
+    session: Session,
+    records: list[dict[str, object]],
+    computer_key: str | None,
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -187,8 +213,6 @@ def import_bluetooth_devices(
         RETURN count(rel) AS n
         """,
         records=records,
-        computer_key=f"{scan_id}:{hostname}" if scan_id is not None else None,
+        computer_key=computer_key,
     )
-    edges = result.single()["n"]
-
-    return len(devices), edges
+    return result.single()["n"]

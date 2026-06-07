@@ -29,7 +29,7 @@ from viewer_layout import compute_layout
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
-def main() -> int:
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate an interactive HTML viewer from Rootstock OpenGraph JSON"
     )
@@ -37,25 +37,29 @@ def main() -> int:
                         help="OpenGraph JSON file (output of opengraph_export.py)")
     parser.add_argument("--output", "-o", default=None,
                         help="Output HTML file (default: <input-stem>-viewer.html)")
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    input_path = Path(args.input)
+
+def _load_opengraph_json(input_path: Path) -> dict | None:
     if not input_path.exists():
         print(f"ERROR: File not found: {input_path}", file=sys.stderr)
-        return 1
-
+        return None
     try:
-        data = json.loads(input_path.read_text())
+        return json.loads(input_path.read_text())
     except json.JSONDecodeError as e:
         print(f"ERROR: Invalid JSON in {input_path}: {e}", file=sys.stderr)
-        return 1
+        return None
 
+
+def _validated_graph(data: dict) -> dict | None:
     graph = data.get("graph", {})
     if "nodes" not in graph or "edges" not in graph:
         print("ERROR: Input does not look like OpenGraph JSON (missing graph.nodes or graph.edges)", file=sys.stderr)
-        return 1
+        return None
+    return graph
 
-    # Pre-compute layout positions
+
+def _compute_viewer_layout(graph: dict) -> tuple[int, int]:
     node_list = graph["nodes"]
     edge_list = graph["edges"]
     n_nodes = len(node_list)
@@ -65,25 +69,38 @@ def main() -> int:
     iters = min(300, max(100, 500 - n_nodes // 10))
     compute_layout(node_list, edge_list, iterations=iters)
     print("done.")
+    return n_nodes, n_edges
 
-    # Determine output path
-    if args.output:
-        output_path = Path(args.output)
-    else:
-        output_path = input_path.with_name(input_path.stem + "-viewer.html")
 
-    # Build title
+def _viewer_output_path(input_path: Path, output: str | None) -> Path:
+    if output:
+        return Path(output)
+    return input_path.with_name(input_path.stem + "-viewer.html")
+
+
+def _viewer_html(data: dict) -> str:
     hostname = data.get("metadata", {}).get("hostname", "Graph")
     title = f"{hostname} Attack Graph"
-
-    # Generate HTML
     safe_title = html_mod.escape(title)
     safe_json = json.dumps(data).replace("</", "<\\/")
     template = (Path(__file__).parent / "viewer_template.html").read_text()
-    html_out = template.replace("{{VIEWER_TITLE}}", safe_title).replace(
+    return template.replace("{{VIEWER_TITLE}}", safe_title).replace(
         "{{VIEWER_DATA}}", safe_json
     )
 
+
+def main() -> int:
+    args = _parse_args()
+    input_path = Path(args.input)
+    data = _load_opengraph_json(input_path)
+    if data is None:
+        return 1
+    graph = _validated_graph(data)
+    if graph is None:
+        return 1
+    n_nodes, n_edges = _compute_viewer_layout(graph)
+    output_path = _viewer_output_path(input_path, args.output)
+    html_out = _viewer_html(data)
     output_path.write_text(html_out)
     print(f"Generated {output_path} ({n_nodes} nodes, {n_edges} edges)")
     return 0

@@ -245,7 +245,7 @@ final class TCCTests: XCTestCase {
         XCTAssertEqual(result.errors.first?.recoverable, true)
     }
 
-    func testMalformedRowsAreSkippedViaDataSource() async throws {
+    func testMalformedRowsProduceRecoverableErrorViaDataSource() async throws {
         let path = NSTemporaryDirectory() + "tcc-malformed-row-\(UUID().uuidString).db"
         defer { try? FileManager.default.removeItem(atPath: path) }
         makeMinimalDB(
@@ -260,7 +260,9 @@ final class TCCTests: XCTestCase {
         let result = await source.collect()
         let grants = result.nodes.compactMap { $0 as? TCCGrant }
 
-        XCTAssertTrue(result.errors.isEmpty)
+        XCTAssertEqual(result.errors.count, 1)
+        XCTAssertEqual(result.errors.first?.recoverable, true)
+        XCTAssertTrue(result.errors.first?.message.contains("Skipped malformed TCC row") ?? false)
         XCTAssertEqual(grants.map(\.client), ["com.example.valid"])
     }
 

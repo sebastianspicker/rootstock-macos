@@ -19,14 +19,19 @@ import re
 # ── Version parsing ──────────────────────────────────────────────────────────
 
 _PRE_RELEASE_RE = re.compile(r"(\d+)\s*(alpha|beta|rc|dev|a|b)(\d*)", re.IGNORECASE)
+_SEMVER_PRE_RELEASE_RE = re.compile(
+    r"^(dev|alpha|a|beta|b|rc)(?:[.\s-]?(\d+))?$",
+    re.IGNORECASE,
+)
+_PRE_RANK = {"dev": -4, "alpha": -3, "a": -3, "beta": -2, "b": -2, "rc": -1}
 
 
 def parse_version_tuple(version_str: str) -> tuple[int, ...]:
     """Parse a dotted version string into a comparable int tuple.
 
     Pre-release suffixes (alpha, beta, rc, dev) sort before the corresponding
-    release: ``"15beta3"`` → ``(15, -3, 3)`` which is less than ``(15,)`` because
-    the pre-release sentinel (-3..-1) is negative.
+    release: ``"15beta3"`` → ``(15, -2, 3)`` which is less than ``(15,)`` because
+    the pre-release sentinel (-4..-1) is negative.
 
     Pre-release ordering: dev (-4) < alpha (-3) < beta (-2) < rc (-1) < release (0).
 
@@ -36,23 +41,51 @@ def parse_version_tuple(version_str: str) -> tuple[int, ...]:
         "15"          → (15,)
         "15beta3"     → (15, -2, 3)
         "15.0alpha1"  → (15, 0, -3, 1)
+        "1.0.0-rc.1"  → (1, 0, 0, -1, 1)
     """
-    _PRE_RANK = {"dev": -4, "alpha": -3, "a": -3, "beta": -2, "b": -2, "rc": -1}
-    parts: list[int] = []
-    for segment in version_str.strip().split("."):
-        pre = _PRE_RELEASE_RE.match(segment)
-        if pre:
-            parts.append(int(pre.group(1)))
-            parts.append(_PRE_RANK.get(pre.group(2).lower(), -1))
-            if pre.group(3):
-                parts.append(int(pre.group(3)))
-        else:
-            m = re.match(r"(\d+)", segment)
-            if m:
-                parts.append(int(m.group(1)))
+    version = version_str.strip().split("+", 1)[0].strip()
+    base_version, has_semver_suffix, semver_suffix = version.partition("-")
+
+    parts = _parse_base_version_parts(base_version)
     if not parts:
         raise ValueError(f"Cannot parse version: {version_str!r}")
+
+    if has_semver_suffix:
+        parts.extend(_parse_semver_suffix(semver_suffix, version_str))
+
     return tuple(parts)
+
+
+def _parse_base_version_parts(base_version: str) -> list[int]:
+    parts: list[int] = []
+    for segment in base_version.split("."):
+        parts.extend(_parse_base_version_segment(segment))
+    return parts
+
+
+def _parse_base_version_segment(segment: str) -> list[int]:
+    pre = _PRE_RELEASE_RE.match(segment)
+    if pre:
+        parts = [int(pre.group(1)), _PRE_RANK[pre.group(2).lower()]]
+        if pre.group(3):
+            parts.append(int(pre.group(3)))
+        return parts
+
+    m = re.match(r"(\d+)", segment)
+    if m:
+        return [int(m.group(1))]
+    return []
+
+
+def _parse_semver_suffix(semver_suffix: str, version_str: str) -> list[int]:
+    pre = _SEMVER_PRE_RELEASE_RE.match(semver_suffix.strip())
+    if pre is None:
+        raise ValueError(f"Cannot parse pre-release version: {version_str!r}")
+
+    parts = [_PRE_RANK[pre.group(1).lower()]]
+    if pre.group(2):
+        parts.append(int(pre.group(2)))
+    return parts
 
 
 def _compare_versions(a: tuple[int, ...], b: tuple[int, ...]) -> int:
@@ -189,51 +222,50 @@ def is_affected(
     """
     # macOS-level CVE: check the host OS version, not the app version
     if is_macos_cve:
-        if macos_version is None:
-            return True  # conservative
-        max_ver = extract_macos_max_version(affected_versions)
-        if max_ver is not None:
-            try:
-                return version_lte(macos_version, max_ver)
-            except ValueError:
-                return True  # unparseable → conservative
-        # Try patched_version as an alternative: if host is < patched, it's affected
-        patched_ver = extract_patched_macos_version(patched_version)
-        if patched_ver is not None:
-            try:
-                return version_lt(macos_version, patched_ver)
-            except ValueError:
-                return True
-        return True  # can't determine → conservative
+        return _is_macos_affected(macos_version, affected_versions, patched_version)
 
     # App-level CVE with no app version → assume affected
     if app_version is None:
         return True
 
-    # Check for "< X.Y.Z" pattern (e.g. Electron)
-    app_ceiling = extract_app_max_version(affected_versions)
-    if app_ceiling is not None:
-        try:
-            return version_lt(app_version, app_ceiling)
-        except ValueError:
-            return True
+    return _is_app_affected(app_version, affected_versions, patched_version)
 
-    # Check for "macOS X.Y and earlier" — this is an OS-level CVE being checked
-    # against an app version; compare app_version to max_affected
+
+def _is_macos_affected(
+    macos_version: str | None,
+    affected_versions: str,
+    patched_version: str | None,
+) -> bool:
+    if macos_version is None:
+        return True
     max_ver = extract_macos_max_version(affected_versions)
     if max_ver is not None:
-        try:
-            return version_lte(app_version, max_ver)
-        except ValueError:
-            return True
-
-    # Fallback: try using patched_version
+        return _conservative_compare(version_lte, macos_version, max_ver)
     patched_ver = extract_patched_macos_version(patched_version)
     if patched_ver is not None:
-        try:
-            return version_lt(app_version, patched_ver)
-        except ValueError:
-            return True
-
-    # No version info parseable → assume affected (conservative)
+        return _conservative_compare(version_lt, macos_version, patched_ver)
     return True
+
+
+def _is_app_affected(
+    app_version: str,
+    affected_versions: str,
+    patched_version: str | None,
+) -> bool:
+    app_ceiling = extract_app_max_version(affected_versions)
+    if app_ceiling is not None:
+        return _conservative_compare(version_lt, app_version, app_ceiling)
+    max_ver = extract_macos_max_version(affected_versions)
+    if max_ver is not None:
+        return _conservative_compare(version_lte, app_version, max_ver)
+    patched_ver = extract_patched_macos_version(patched_version)
+    if patched_ver is not None:
+        return _conservative_compare(version_lt, app_version, patched_ver)
+    return True
+
+
+def _conservative_compare(compare, version: str, ceiling: str) -> bool:
+    try:
+        return compare(version, ceiling)
+    except ValueError:
+        return True

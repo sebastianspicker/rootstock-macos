@@ -441,11 +441,8 @@
         "name",
         "bundle_id",
         "path",
-        "hardened_runtime",
-        "library_validation",
         "is_electron",
-        "is_system",
-        "signed"
+        "is_system"
       ],
       "additionalProperties": false,
       "properties": {
@@ -475,12 +472,14 @@
           "description": "Apple Developer Team ID from the code signature."
         },
         "hardened_runtime": {
-          "type": "boolean",
-          "description": "Whether the Hardened Runtime is enabled."
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the Hardened Runtime is enabled. Null means code-signing analysis failed or state is unknown."
         },
         "library_validation": {
-          "type": "boolean",
-          "description": "Whether library validation is enforced."
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether library validation is enforced. Null means code-signing analysis failed or state is unknown."
         },
         "is_electron": {
           "type": "boolean",
@@ -491,8 +490,14 @@
           "description": "Whether this is an Apple system application."
         },
         "signed": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the application has a valid code signature. Null means code-signing analysis failed or state is unknown."
+        },
+        "code_signing_analysis_error": {
           "type": "boolean",
-          "description": "Whether the application has a valid code signature."
+          "default": false,
+          "description": "Whether code-signing analysis failed for this application. When true, signing posture fields are unknown and should not be treated as false."
         },
         "is_sip_protected": {
           "type": "boolean",
@@ -509,6 +514,16 @@
           "items": { "type": "string" },
           "default": [],
           "description": "Sandbox exception entitlements."
+        },
+        "entitlements_available": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether entitlement extraction succeeded for this application. False means an empty entitlements list is unknown, not proven absent."
+        },
+        "entitlement_extraction_error": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Recoverable entitlement extraction error for this application, if entitlement availability is false."
         },
         "is_notarized": {
           "type": ["boolean", "null"],
@@ -930,8 +945,8 @@
           "description": "Bundle identifier of the application."
         },
         "allow_incoming": {
-          "type": "boolean",
-          "description": "Whether incoming connections are allowed for this application."
+          "type": ["boolean", "null"],
+          "description": "Whether incoming connections are allowed for this application. Null means the ALF rule state was missing or unreadable."
         }
       }
     },

@@ -25,23 +25,13 @@ import sys
 from pathlib import Path
 
 from neo4j_connection import add_neo4j_args, connect_from_args
-from query_runner import discover_queries, load_cypher
+from query_runner import discover_queries
 from utils import first_cypher_statement, run_query
-from report_formatters import (  # noqa: F401
-    format_no_findings,
-    format_generic_table,
-    format_injectable_fda_table,
-    format_electron_table,
-    format_apple_event_table,
-    format_tcc_overview_table,
-    format_private_entitlement_table,
-    format_executive_summary,
-)
-from report_assembly import (  # noqa: F401
-    RECOMMENDATIONS,
-    assemble_report,
-    markdown_to_html,
-)
+from report_assembly import assemble_report, markdown_to_html
+
+
+class ScanMetadataError(RuntimeError):
+    """Raised when report metadata cannot be read from scan JSON."""
 
 
 # ── Default Parameters for Parameterized Queries ────────────────────────────
@@ -55,6 +45,7 @@ _DEFAULT_PARAMS = {
     "min_methods": 1,
     "username": "",
     "scope": None,
+    "app_name": None,
 }
 
 
@@ -78,8 +69,7 @@ def run_all_queries(driver) -> dict[str, list[dict] | str]:
         for q in queries:
             filename = q["filename"]
             try:
-                cypher = load_cypher(q)
-                stmt = first_cypher_statement(cypher)
+                stmt = first_cypher_statement(q["cypher"])
                 params = _DEFAULT_PARAMS if _has_parameters(q) else {}
                 rows = run_query(session, stmt, params)
                 results[filename] = rows
@@ -96,6 +86,7 @@ def run_all_queries(driver) -> dict[str, list[dict] | str]:
 
 def get_scan_metadata_from_neo4j(driver) -> dict:
     """Query Neo4j for node counts and available scan metadata."""
+    errors = []
     with driver.session() as session:
         try:
             row = dict(
@@ -111,6 +102,7 @@ def get_scan_metadata_from_neo4j(driver) -> dict:
             )
         except Exception as e:
             print(f"  ⚠ Metadata query failed: {e}", file=sys.stderr)
+            errors.append(f"metadata counts: {e}")
             row = {}
 
         try:
@@ -134,24 +126,28 @@ def get_scan_metadata_from_neo4j(driver) -> dict:
             )
         except Exception as e:
             print(f"  ⚠ Scan metadata query failed: {e}", file=sys.stderr)
+            errors.append(f"scan metadata: {e}")
             meta_row = {}
 
-    return {**row, **meta_row}
+    metadata = {**row, **meta_row}
+    if errors:
+        metadata["_metadata_errors"] = errors
+    return metadata
 
 
 def get_scan_metadata_from_json(json_path: Path) -> dict:
     """Read scan metadata from the original collector JSON file."""
     try:
         data = json.loads(json_path.read_text(encoding="utf-8"))
-        elev = data.get("elevation", {})
+        elev = data.get("elevation") if isinstance(data.get("elevation"), dict) else {}
         return {
             "scan_id": data.get("scan_id", "unknown"),
             "hostname": data.get("hostname", socket.gethostname()),
             "macos_version": data.get("macos_version", "unknown"),
             "collector_version": data.get("collector_version", "unknown"),
             "timestamp": data.get("timestamp", "unknown"),
-            "is_root": elev.get("is_root", False),
-            "has_fda": elev.get("has_fda", False),
+            "is_root": elev.get("is_root"),
+            "has_fda": elev.get("has_fda"),
             "app_count": len(data.get("applications", [])),
             "tcc_grant_count": len(data.get("tcc_grants", [])),
             "entitlement_count": sum(
@@ -165,13 +161,40 @@ def get_scan_metadata_from_json(json_path: Path) -> dict:
             "icloud_keychain_enabled": data.get("icloud_keychain_enabled"),
         }
     except Exception as e:
-        return {"error": str(e)}
+        raise ScanMetadataError(
+            f"Cannot read scan metadata from {json_path}: {e}"
+        ) from e
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 
 def main() -> int:
+    parser = _parser()
+    args = parser.parse_args()
+
+    driver = connect_from_args(args)
+
+    metadata = _report_metadata(args, driver)
+    if isinstance(metadata, ScanMetadataError):
+        driver.close()
+        print(f"Report metadata failed: {metadata}", file=sys.stderr)
+        return 1
+
+    print("Running queries…", file=sys.stderr)
+    query_results = run_all_queries(driver)
+    driver.close()
+
+    if _report_query_failures(query_results):
+        return 1
+
+    print("Assembling report…", file=sys.stderr)
+    md = assemble_report(query_results, metadata)
+    _write_report(args, md)
+    return 0
+
+
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Rootstock Security Assessment Report Generator"
     )
@@ -187,36 +210,42 @@ def main() -> int:
         "--scan-json",
         help="Optional: path to original scan.json for richer metadata",
     )
-    args = parser.parse_args()
+    return parser
 
-    # Connect to Neo4j
-    driver = connect_from_args(args)
 
-    # Gather metadata
+def _report_metadata(args: argparse.Namespace, driver) -> dict | ScanMetadataError:
     if args.scan_json:
-        metadata = get_scan_metadata_from_json(Path(args.scan_json))
-    else:
-        metadata = get_scan_metadata_from_neo4j(driver)
+        try:
+            return get_scan_metadata_from_json(Path(args.scan_json))
+        except ScanMetadataError as e:
+            return e
 
-    # Run queries
-    print("Running queries…", file=sys.stderr)
-    query_results = run_all_queries(driver)
-    driver.close()
+    metadata = get_scan_metadata_from_neo4j(driver)
+    if metadata.get("_metadata_errors"):
+        return ScanMetadataError(str(metadata.get("_metadata_errors")))
+    return metadata
 
-    # Assemble report
-    print("Assembling report…", file=sys.stderr)
-    md = assemble_report(query_results, metadata)
 
-    # Write output
+def _report_query_failures(query_results: dict[str, list[dict] | str]) -> bool:
+    failures = {
+        filename: result
+        for filename, result in query_results.items()
+        if isinstance(result, str)
+    }
+    if not failures:
+        return False
+
+    print("Report query failures:", file=sys.stderr)
+    for filename, error in sorted(failures.items()):
+        print(f"  {filename}: {error}", file=sys.stderr)
+    return True
+
+
+def _write_report(args: argparse.Namespace, markdown: str) -> None:
     out_path = Path(args.output)
-    if args.format == "html":
-        content = markdown_to_html(md)
-    else:
-        content = md
-
+    content = markdown_to_html(markdown) if args.format == "html" else markdown
     out_path.write_text(content, encoding="utf-8")
     print(f"Report written to {out_path}", file=sys.stderr)
-    return 0
 
 
 if __name__ == "__main__":

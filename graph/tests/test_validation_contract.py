@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest import TestCase
+
 import importlib.util
 import json
 from pathlib import Path
@@ -16,9 +18,11 @@ FIXTURE_SCAN_PATH = ROOT / "graph" / "tests" / "fixture_minimal.json"
 VALIDATOR_PATH = ROOT / "scripts" / "validate-scan.py"
 
 
+checks = TestCase()
+
 spec = importlib.util.spec_from_file_location("validate_scan", VALIDATOR_PATH)
 validate_scan = importlib.util.module_from_spec(spec)
-assert spec and spec.loader
+checks.assertTrue(spec and spec.loader)
 spec.loader.exec_module(validate_scan)
 
 
@@ -32,7 +36,7 @@ def test_demo_scan_matches_schema_and_models() -> None:
 
     jsonschema.Draft202012Validator(schema).validate(data)
     ScanResult.model_validate(data)
-    assert validate_scan.validate_semantics(data) == []
+    checks.assertEqual(validate_scan.validate_semantics(data), [])
 
 
 def test_fixture_scan_matches_schema_and_models() -> None:
@@ -41,7 +45,7 @@ def test_fixture_scan_matches_schema_and_models() -> None:
 
     jsonschema.Draft202012Validator(schema).validate(data)
     ScanResult.model_validate(data)
-    assert validate_scan.validate_semantics(data) == []
+    checks.assertEqual(validate_scan.validate_semantics(data), [])
 
 
 def test_duplicate_bundle_ids_are_allowed_when_paths_differ() -> None:
@@ -50,4 +54,17 @@ def test_duplicate_bundle_ids_are_allowed_when_paths_differ() -> None:
     duplicate["path"] = "/Applications/Alternate/iTerm.app"
     data["applications"].append(duplicate)
 
-    assert validate_scan.validate_semantics(data) == []
+    checks.assertEqual(validate_scan.validate_semantics(data), [])
+    result = ScanResult.model_validate(data)
+    matching = [
+        app
+        for app in result.applications
+        if app.bundle_id == data["applications"][0]["bundle_id"]
+    ]
+    checks.assertGreaterEqual(
+        {app.path for app in matching},
+        {
+            data["applications"][0]["path"],
+            duplicate["path"],
+        },
+    )

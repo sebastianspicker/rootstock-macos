@@ -19,7 +19,8 @@ only and never modifies the system. See `docs/THREAT_MODEL.md` for details.
 
 ### Why does the TCC scanner return 0 grants?
 On macOS Tahoe (26.x) and Sequoia (15.x), even the user-level TCC.db requires Full Disk Access.
-Grant FDA to your terminal app, then run: `sudo rootstock-collector --output scan.json`
+Grant FDA to your terminal app, then run the built collector with elevated
+access, for example: `sudo collector/.build/release/RootstockCLI --output scan.json`
 
 ### Why are some apps missing entitlements?
 System apps on the Signed System Volume (SSV) may restrict `codesign` access. Unsigned apps
@@ -45,6 +46,13 @@ artifact with `graph/import_cve_scan.py --input <rootstock-export.json>` or
 No. Real `scan.json`, `rootstock-export.json`, reports, caches, generated
 viewers, and screenshots may contain infrastructure data. Keep them local. The
 checked-in `examples/cve-scan-export.json` file is synthetic.
+
+### Can I commit archived plans, audits, ledgers, or status files?
+No. Retired planning, audit, ledger, status, deprecated-note, generated-report,
+investigation, announcement, and remediation material is not part of the public
+documentation set. Keep any local copies in ignored paths such as
+`docs/archive/` or `archive/`, and keep public docs focused on the current
+project state.
 
 ## Graph Pipeline
 

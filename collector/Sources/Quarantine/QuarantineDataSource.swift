@@ -61,7 +61,7 @@ public struct QuarantineDataSource {
         guard let raw = getQuarantineXattr(path: canonicalPath) ?? getQuarantineXattr(path: path) else {
             return QuarantineInfo(hasQuarantineFlag: false)
         }
-        return parseQuarantineString(raw)
+        return Self.parseQuarantineString(raw)
     }
 
     /// Parse the quarantine hex string into structured data.
@@ -110,11 +110,6 @@ public struct QuarantineDataSource {
     }
 
     // MARK: - Private
-
-    /// Instance method that delegates to the static parser.
-    private func parseQuarantineString(_ raw: String) -> QuarantineInfo {
-        Self.parseQuarantineString(raw)
-    }
 
     /// Read the `com.apple.quarantine` xattr from the given file path.
     /// Returns the raw string value, or nil if the attribute is absent.

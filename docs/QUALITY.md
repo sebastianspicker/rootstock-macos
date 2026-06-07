@@ -35,9 +35,14 @@
 
 - Every design decision has a rationale ("why", not just "what")
 - Research docs cite sources with links and specify macOS version tested
-- Exec-plans have concrete acceptance criteria with checkboxes
 - README stays in sync with actual project state
-- Superseded plans move under `docs/archive/exec-plans/` instead of remaining in active docs
+- Public docs describe only the active project surface.
+- One-off plans, ledgers, status files, audits, paper drafts, announcements,
+  investigation notes, deprecated notes, generated reports, remediation packets,
+  and retired roadmaps stay out of the committed documentation set.
+- Current-status claims must distinguish fast non-Neo4j checks from the live
+  Neo4j lane required for graph import, inference, query, report, and API
+  semantics.
 
 ## Security Quality
 

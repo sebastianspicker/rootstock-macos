@@ -31,22 +31,34 @@ def import_xpc_services(
     if not services:
         return 0, 0
 
-    records = [
+    records = _xpc_service_records(services)
+    _merge_xpc_service_nodes(session, records)
+    comm_edges = _link_xpc_communicates_with_edges(session, records)
+    return len(services), comm_edges
+
+
+def _xpc_service_records(services: list[XPCServiceData]) -> list[dict[str, object]]:
+    return [
         {
-            "label": s.label,
-            "path": s.path,
-            "program": s.program,
-            "type": s.type,
-            "user": s.user,
-            "run_at_load": s.run_at_load,
-            "keep_alive": s.keep_alive,
-            "mach_services": s.mach_services,
-            "entitlements": s.entitlements,
-            "has_client_verification": s.has_client_verification,
+            "label": service.label,
+            "path": service.path,
+            "program": service.program,
+            "type": service.type,
+            "user": service.user,
+            "run_at_load": service.run_at_load,
+            "keep_alive": service.keep_alive,
+            "mach_services": service.mach_services,
+            "entitlements": service.entitlements,
+            "has_client_verification": service.has_client_verification,
         }
-        for s in services
+        for service in services
     ]
 
+
+def _merge_xpc_service_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -64,7 +76,11 @@ def import_xpc_services(
         records=records,
     )
 
-    # COMMUNICATES_WITH: Application has entitlement key matching a mach service name
+
+def _link_xpc_communicates_with_edges(
+    session: Session,
+    records: list[dict[str, object]],
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -77,8 +93,7 @@ def import_xpc_services(
         """,
         records=records,
     )
-    comm_edges = result.single()["n"]
-    return len(services), comm_edges
+    return result.single()["n"]
 
 
 def import_launch_items(
@@ -98,7 +113,17 @@ def import_launch_items(
     if not items:
         return 0, 0, 0, 0
 
-    records = [
+    records = _launch_item_records(items)
+    _merge_launch_item_nodes(session, records)
+    persists_count = _link_persistence_edges(session, records, scan_id)
+    runs_count = _link_runs_as_edges(session, records)
+    hijack_count = _link_launch_hijack_edges(session, records)
+
+    return len(items), persists_count, runs_count, hijack_count
+
+
+def _launch_item_records(items: list[LaunchItemData]) -> list[dict[str, object]]:
+    return [
         {
             "label": i.label,
             "path": i.path,
@@ -114,7 +139,11 @@ def import_launch_items(
         for i in items
     ]
 
-    # MERGE LaunchItem nodes
+
+def _merge_launch_item_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -132,8 +161,13 @@ def import_launch_items(
         records=records,
     )
 
-    # PERSISTS_VIA: Application's bundle path is a prefix of the LaunchItem program path
-    persists_result = session.run(
+
+def _link_persistence_edges(
+    session: Session,
+    records: list[dict[str, object]],
+    scan_id: str | None,
+) -> int:
+    result = session.run(
         """
         UNWIND $records AS r
         WITH r WHERE r.program IS NOT NULL
@@ -147,10 +181,11 @@ def import_launch_items(
         records=records,
         scan_id=scan_id,
     )
-    persists_count = persists_result.single()["n"]
+    return result.single()["n"]
 
-    # RUNS_AS: LaunchItem → User (MERGE User node by name)
-    runs_result = session.run(
+
+def _link_runs_as_edges(session: Session, records: list[dict[str, object]]) -> int:
+    result = session.run(
         """
         UNWIND $records AS r
         WITH r WHERE r.user IS NOT NULL
@@ -161,12 +196,14 @@ def import_launch_items(
         """,
         records=records,
     )
-    runs_count = runs_result.single()["n"]
+    return result.single()["n"]
 
-    # CAN_HIJACK: User → LaunchItem where daemon binary is writable by non-root.
-    # Only create edges from admin group members (who can actually exploit writability),
-    # not from every User node in the graph (which includes system accounts).
-    hijack_result = session.run(
+
+def _link_launch_hijack_edges(
+    session: Session,
+    records: list[dict[str, object]],
+) -> int:
+    result = session.run(
         """
         UNWIND $records AS r
         WITH r WHERE r.type = 'daemon'
@@ -179,9 +216,7 @@ def import_launch_items(
         """,
         records=records,
     )
-    hijack_count = hijack_result.single()["n"]
-
-    return len(items), persists_count, runs_count, hijack_count
+    return result.single()["n"]
 
 
 def import_mdm_profiles(
@@ -199,17 +234,33 @@ def import_mdm_profiles(
     if not profiles:
         return 0, 0
 
-    profile_records = [
+    profile_records = _mdm_profile_records(profiles)
+    _merge_mdm_profile_nodes(session, profile_records)
+
+    policy_records = _mdm_policy_records(profiles)
+    if not policy_records:
+        return len(profiles), 0
+
+    edges = _link_mdm_configures_edges(session, policy_records)
+    return len(profiles), edges
+
+
+def _mdm_profile_records(profiles: list[MDMProfileData]) -> list[dict[str, object]]:
+    return [
         {
-            "identifier": p.identifier,
-            "display_name": p.display_name,
-            "organization": p.organization,
-            "install_date": p.install_date,
+            "identifier": profile.identifier,
+            "display_name": profile.display_name,
+            "organization": profile.organization,
+            "install_date": profile.install_date,
         }
-        for p in profiles
+        for profile in profiles
     ]
 
-    # MERGE MDM_Profile nodes
+
+def _merge_mdm_profile_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -218,26 +269,27 @@ def import_mdm_profiles(
             m.organization = r.organization,
             m.install_date = r.install_date
         """,
-        records=profile_records,
+        records=records,
     )
 
-    # Flatten TCC policies across all profiles
-    policy_records = [
+
+def _mdm_policy_records(profiles: list[MDMProfileData]) -> list[dict[str, object]]:
+    return [
         {
-            "profile_identifier": p.identifier,
+            "profile_identifier": profile.identifier,
             "service": policy.service,
             "bundle_id": policy.client_bundle_id,
             "allowed": policy.allowed,
         }
-        for p in profiles
-        for policy in p.tcc_policies
+        for profile in profiles
+        for policy in profile.tcc_policies
     ]
 
-    if not policy_records:
-        return len(profiles), 0
 
-    # CONFIGURES: MDM_Profile → TCC_Permission
-    # Also MERGE the TCC_Permission node in case it doesn't exist yet.
+def _link_mdm_configures_edges(
+    session: Session,
+    records: list[dict[str, object]],
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -248,11 +300,9 @@ def import_mdm_profiles(
         SET rel.allowed = r.allowed
         RETURN count(rel) AS n
         """,
-        records=policy_records,
+        records=records,
     )
-    edges = result.single()["n"]
-
-    return len(profiles), edges
+    return result.single()["n"]
 
 
 def _keychain_sensitivity(kind: str, service: str | None) -> str:
@@ -284,7 +334,14 @@ def import_keychain_items(
     if not items:
         return 0, 0
 
-    records = [
+    records = _keychain_item_records(items)
+    _merge_keychain_item_nodes(session, records)
+    edges = _link_can_read_keychain_edges(session, records, scan_id)
+    return len(records), edges
+
+
+def _keychain_item_records(items: list[KeychainItemData]) -> list[dict[str, object]]:
+    return [
         {
             "label": item.label,
             "kind": item.kind,
@@ -296,7 +353,11 @@ def import_keychain_items(
         for item in items
     ]
 
-    # MERGE Keychain_Item nodes (label + kind forms the composite identity)
+
+def _merge_keychain_item_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -308,7 +369,12 @@ def import_keychain_items(
         records=records,
     )
 
-    # CAN_READ_KEYCHAIN: Application → Keychain_Item where bundle_id is in trusted_apps
+
+def _link_can_read_keychain_edges(
+    session: Session,
+    records: list[dict[str, object]],
+    scan_id: str | None,
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -323,6 +389,4 @@ def import_keychain_items(
         records=records,
         scan_id=scan_id,
     )
-    edges = result.single()["n"]
-
-    return len(records), edges
+    return result.single()["n"]

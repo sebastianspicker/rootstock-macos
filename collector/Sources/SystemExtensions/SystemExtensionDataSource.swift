@@ -35,9 +35,7 @@ public struct SystemExtensionDataSource: DataSource {
         guard !trimmed.isEmpty else { return nil }
 
         let tokens = trimmed.split(whereSeparator: \.isWhitespace).map(String.init)
-        guard let firstToken = tokens.first,
-              firstToken == "---" || firstToken == "*" || firstToken == "-"
-        else { return nil }
+        guard hasSystemExtensionRowMarker(tokens) else { return nil }
 
         guard let identifier = tokens.first(where: isBundleIdentifier) else {
             return nil
@@ -47,7 +45,7 @@ public struct SystemExtensionDataSource: DataSource {
             token != identifier && isTeamIdentifier(token)
         }
         let subscribedEvents = parseSubscribedEvents(trimmed)
-        guard teamId != nil || hasLifecycleState(in: trimmed) || !subscribedEvents.isEmpty else {
+        guard hasExtensionEvidence(teamId: teamId, subscribedEvents: subscribedEvents, line: trimmed) else {
             return nil
         }
 
@@ -58,6 +56,19 @@ public struct SystemExtensionDataSource: DataSource {
             enabled: isEnabled(tokens: tokens, line: trimmed),
             subscribedEvents: subscribedEvents
         )
+    }
+
+    private static func hasSystemExtensionRowMarker(_ tokens: [String]) -> Bool {
+        guard let firstToken = tokens.first else { return false }
+        return firstToken == "---" || firstToken == "*" || firstToken == "-"
+    }
+
+    private static func hasExtensionEvidence(
+        teamId: String?,
+        subscribedEvents: [String],
+        line: String
+    ) -> Bool {
+        teamId != nil || hasLifecycleState(in: line) || !subscribedEvents.isEmpty
     }
 
     private static func isBundleIdentifier(_ token: String) -> Bool {
@@ -126,13 +137,17 @@ public struct SystemExtensionDataSource: DataSource {
     /// Determine extension type from identifier patterns.
     private static func classifyExtensionType(_ identifier: String) -> SystemExtension.ExtensionType {
         let identifier = identifier.lowercased()
-        if identifier.contains("network") || identifier.contains("dns") || identifier.contains("vpn") || identifier.contains("firewall") {
+        if containsAny(["network", "dns", "vpn", "firewall"], in: identifier) {
             return .network
-        } else if identifier.contains("endpoint") || identifier.contains("security") || identifier.contains("falcon") || identifier.contains("sentinel") {
-            return .endpointSecurity
-        } else {
-            return .driver
         }
+        if containsAny(["endpoint", "security", "falcon", "sentinel"], in: identifier) {
+            return .endpointSecurity
+        }
+        return .driver
+    }
+
+    private static func containsAny(_ keywords: [String], in value: String) -> Bool {
+        keywords.contains { value.contains($0) }
     }
 
     /// Parse ESF event subscriptions from systemextensionsctl output.

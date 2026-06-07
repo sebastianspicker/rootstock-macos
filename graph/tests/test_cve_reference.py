@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import re
 import sys
+import logging
 from pathlib import Path
+from unittest import TestCase
+from types import SimpleNamespace
 
 import pytest
 
@@ -55,7 +58,11 @@ def _unique_cves_by_id() -> dict[str, CveEntry]:
     return unique
 
 
+checks = TestCase()
+
+
 # ── Registry integrity ───────────────────────────────────────────────────────
+
 
 class TestRegistryIntegrity:
     def test_all_categories_have_at_least_one_technique(self):
@@ -63,7 +70,7 @@ class TestRegistryIntegrity:
         for cat, ctx in _REGISTRY.items():
             if not ctx.techniques:
                 missing.append(cat)
-        assert not missing, f"Categories without techniques: {missing}"
+        checks.assertFalse(missing, f"Categories without techniques: {missing}")
 
     def test_cve_ids_match_format(self):
         bad = []
@@ -71,7 +78,7 @@ class TestRegistryIntegrity:
             for cve in ctx.cves:
                 if not _CVE_ID_RE.match(cve.cve_id):
                     bad.append(cve.cve_id)
-        assert not bad, f"Invalid CVE ID format: {bad}"
+        checks.assertFalse(bad, f"Invalid CVE ID format: {bad}")
 
     def test_technique_ids_match_format(self):
         bad = []
@@ -79,7 +86,7 @@ class TestRegistryIntegrity:
             for tech in ctx.techniques:
                 if not _TECHNIQUE_ID_RE.match(tech.technique_id):
                     bad.append(tech.technique_id)
-        assert not bad, f"Invalid technique ID format: {bad}"
+        checks.assertFalse(bad, f"Invalid technique ID format: {bad}")
 
     def test_cvss_scores_in_range(self):
         out_of_range = []
@@ -87,30 +94,32 @@ class TestRegistryIntegrity:
             for cve in ctx.cves:
                 if not (0.0 <= cve.cvss_score <= 10.0):
                     out_of_range.append(f"{cve.cve_id}: {cve.cvss_score}")
-        assert not out_of_range, f"CVSS scores out of range: {out_of_range}"
+        checks.assertFalse(out_of_range, f"CVSS scores out of range: {out_of_range}")
 
     def test_remediation_priorities_valid(self):
         bad = []
         for cat, ctx in _REGISTRY.items():
             if ctx.remediation_priority not in _VALID_PRIORITIES:
                 bad.append(f"{cat}: {ctx.remediation_priority}")
-        assert not bad, f"Invalid priorities: {bad}"
+        checks.assertFalse(bad, f"Invalid priorities: {bad}")
 
     def test_category_field_matches_key(self):
         mismatched = []
         for key, ctx in _REGISTRY.items():
             if ctx.category != key:
                 mismatched.append(f"{key} != {ctx.category}")
-        assert not mismatched, f"Category/key mismatch: {mismatched}"
+        checks.assertFalse(mismatched, f"Category/key mismatch: {mismatched}")
 
     def test_no_duplicate_cve_ids_within_category(self):
         duplicates = []
         for category, ctx in _REGISTRY.items():
             cve_ids = [cve.cve_id for cve in ctx.cves]
-            duplicate_ids = sorted({cve_id for cve_id in cve_ids if cve_ids.count(cve_id) > 1})
+            duplicate_ids = sorted(
+                {cve_id for cve_id in cve_ids if cve_ids.count(cve_id) > 1}
+            )
             if duplicate_ids:
                 duplicates.append(f"{category}: {duplicate_ids}")
-        assert not duplicates, f"Duplicate CVE IDs in category: {duplicates}"
+        checks.assertFalse(duplicates, f"Duplicate CVE IDs in category: {duplicates}")
 
     def test_duplicate_cve_ids_have_identical_records(self):
         """CVEs may be referenced by multiple categories, but must not conflict."""
@@ -120,7 +129,9 @@ class TestRegistryIntegrity:
             existing = seen.setdefault(cve.cve_id, cve)
             if existing != cve:
                 conflicts.append(cve.cve_id)
-        assert not conflicts, f"Conflicting duplicate CVE records: {sorted(conflicts)}"
+        checks.assertFalse(
+            conflicts, f"Conflicting duplicate CVE records: {sorted(conflicts)}"
+        )
 
     def test_cve_required_fields_populated(self):
         missing = []
@@ -140,7 +151,7 @@ class TestRegistryIntegrity:
                 missing.append(f"{cve.cve_id}.cwe_ids")
             if not cve.reference_url.startswith(("https://", "http://")):
                 missing.append(f"{cve.cve_id}.reference_url")
-        assert not missing, f"Missing or invalid CVE fields: {missing}"
+        checks.assertFalse(missing, f"Missing or invalid CVE fields: {missing}")
 
     def test_referenced_cwe_ids_resolve(self):
         unresolved = []
@@ -149,7 +160,7 @@ class TestRegistryIntegrity:
                 cwe = get_cwe(cwe_id)
                 if not _CWE_ID_RE.match(cwe_id) or cwe is None:
                     unresolved.append(f"{cve.cve_id}: {cwe_id}")
-        assert not unresolved, f"Unresolved CWE references: {unresolved}"
+        checks.assertFalse(unresolved, f"Unresolved CWE references: {unresolved}")
 
     def test_cwe_registry_entries_are_populated(self):
         bad = []
@@ -160,104 +171,106 @@ class TestRegistryIntegrity:
                 bad.append(f"{cwe_id}: missing name")
             if not cwe.category.strip():
                 bad.append(f"{cwe_id}: missing category")
-        assert not bad, f"Invalid CWE registry entries: {bad}"
+        checks.assertFalse(bad, f"Invalid CWE registry entries: {bad}")
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+
 class TestGetContext:
     def test_known_category_returns_context(self):
         ctx = get_context("injectable_fda")
-        assert ctx is not None
-        assert isinstance(ctx, AttackContext)
-        assert ctx.category == "injectable_fda"
+        checks.assertIsNotNone(ctx)
+        checks.assertTrue(isinstance(ctx, AttackContext))
+        checks.assertEqual(ctx.category, "injectable_fda")
 
     def test_unknown_category_returns_none(self):
-        assert get_context("nonexistent_category") is None
+        checks.assertIsNone(get_context("nonexistent_category"))
 
     def test_injectable_fda_has_expected_cves(self):
         ctx = get_context("injectable_fda")
-        assert ctx is not None
+        checks.assertIsNotNone(ctx)
         cve_ids = {c.cve_id for c in ctx.cves}
-        assert "CVE-2025-31191" in cve_ids
-        assert "CVE-2024-44168" in cve_ids
+        checks.assertIn("CVE-2025-31191", cve_ids)
+        checks.assertIn("CVE-2024-44168", cve_ids)
 
     def test_authorization_hardening_has_no_cves(self):
         ctx = get_context("authorization_hardening")
-        assert ctx is not None
-        assert ctx.cves == []
-        assert len(ctx.techniques) >= 1
+        checks.assertIsNotNone(ctx)
+        checks.assertEqual(ctx.cves, [])
+        checks.assertGreaterEqual(len(ctx.techniques), 1)
 
 
 class TestGetContextsForQuery:
     def test_query_with_cve_field(self):
         query = {"cve": "CVE-2025-31191, CVE-2024-44168"}
         contexts = get_contexts_for_query(query)
-        assert len(contexts) >= 1
+        checks.assertGreaterEqual(len(contexts), 1)
         categories = {c.category for c in contexts}
-        assert "injectable_fda" in categories
+        checks.assertIn("injectable_fda", categories)
 
     def test_query_without_cve_field(self):
         query = {"name": "Some query", "cve": ""}
-        assert get_contexts_for_query(query) == []
+        checks.assertEqual(get_contexts_for_query(query), [])
 
     def test_query_missing_cve_key(self):
         query = {"name": "Some query"}
-        assert get_contexts_for_query(query) == []
+        checks.assertEqual(get_contexts_for_query(query), [])
 
 
 class TestGetAllCriticalCves:
     def test_returns_high_cvss_entries(self):
         cves = get_all_critical_cves(min_cvss=8.0)
-        assert len(cves) >= 1
+        checks.assertGreaterEqual(len(cves), 1)
         for cve in cves:
-            assert cve.cvss_score >= 8.0
+            checks.assertGreaterEqual(cve.cvss_score, 8.0)
 
     def test_sorted_by_cvss_descending(self):
         cves = get_all_critical_cves(min_cvss=0.0)
         for i in range(len(cves) - 1):
-            assert cves[i].cvss_score >= cves[i + 1].cvss_score
+            checks.assertGreaterEqual(cves[i].cvss_score, cves[i + 1].cvss_score)
 
     def test_no_duplicates(self):
         cves = get_all_critical_cves(min_cvss=0.0)
         ids = [c.cve_id for c in cves]
-        assert len(ids) == len(set(ids)), "Duplicate CVE IDs in results"
+        checks.assertEqual(len(ids), len(set(ids)), "Duplicate CVE IDs in results")
 
     def test_high_threshold_filters_correctly(self):
         cves_high = get_all_critical_cves(min_cvss=9.0)
         cves_all = get_all_critical_cves(min_cvss=0.0)
-        assert len(cves_high) < len(cves_all)
+        checks.assertLess(len(cves_high), len(cves_all))
 
 
 # ── Formatter ─────────────────────────────────────────────────────────────────
 
+
 class TestFormatVulnerabilitySummary:
     def test_empty_contexts_returns_fallback(self):
         result = format_vulnerability_summary([])
-        assert "No CVE" in result
+        checks.assertIn("No CVE", result)
 
     def test_single_context_produces_tables(self):
         ctx = get_context("injectable_fda")
-        assert ctx is not None
+        checks.assertIsNotNone(ctx)
         result = format_vulnerability_summary([ctx])
-        assert "CVE-2025-31191" in result
-        assert "T1574.006" in result
-        assert "### CVE Reference" in result
-        assert "### MITRE ATT&CK Techniques" in result
+        checks.assertIn("CVE-2025-31191", result)
+        checks.assertIn("T1574.006", result)
+        checks.assertIn("### CVE Reference", result)
+        checks.assertIn("### MITRE ATT&CK Techniques", result)
 
     def test_deduplication_across_categories(self):
         ctx1 = get_context("injectable_fda")
         ctx2 = get_context("dyld_injection")
-        assert ctx1 is not None and ctx2 is not None
+        checks.assertTrue(ctx1 is not None and ctx2 is not None)
         result = format_vulnerability_summary([ctx1, ctx2])
         # CVE-2025-31191 appears in both categories but should appear once in table
-        assert result.count("CVE-2025-31191") == 1
+        checks.assertEqual(result.count("CVE-2025-31191"), 1)
 
     def test_category_without_cves_still_shows_techniques(self):
         ctx = get_context("authorization_hardening")
-        assert ctx is not None
+        checks.assertIsNotNone(ctx)
         result = format_vulnerability_summary([ctx])
-        assert "T1548.003" in result
+        checks.assertIn("T1548.003", result)
 
     def test_multiple_categories_produce_valid_markdown(self):
         contexts = [
@@ -268,14 +281,33 @@ class TestFormatVulnerabilitySummary:
         contexts = [c for c in contexts if c is not None]
         result = format_vulnerability_summary(contexts)
         # Check table headers present
-        assert "CVE ID" in result
-        assert "CVSS" in result
-        assert "Technique" in result
+        checks.assertIn("CVE ID", result)
+        checks.assertIn("CVSS", result)
+        checks.assertIn("Technique", result)
         # Check pipe-delimited table format (github tablefmt)
-        assert "|" in result
+        checks.assertIn("|", result)
+
+    def test_enrichment_unavailable_annotation_and_warning(self, monkeypatch, caplog):
+        monkeypatch.setitem(
+            sys.modules,
+            "cve_enrichment",
+            SimpleNamespace(enrich_registry=lambda: {}),
+        )
+        ctx = get_context("injectable_fda")
+        checks.assertIsNotNone(ctx)
+
+        with caplog.at_level(logging.WARNING, logger="report_formatters"):
+            result = format_vulnerability_summary([ctx])
+
+        checks.assertIn("CVE enrichment data unavailable", result)
+        checks.assertIn("Run with --refresh-cve to populate", result)
+        checks.assertNotIn("| EPSS ", result)
+        checks.assertNotIn("| KEV ", result)
+        checks.assertIn("CVE enrichment data unavailable", caplog.text)
 
 
 # ── Exploitation Status ──────────────────────────────────────────────────────
+
 
 class TestExploitationStatus:
     def test_all_statuses_are_valid(self):
@@ -286,7 +318,7 @@ class TestExploitationStatus:
                 status = getattr(cve, "exploitation_status", "theoretical")
                 if status not in _VALID_EXPLOITATION_STATUSES:
                     bad.append(f"{cve.cve_id}: {status}")
-        assert not bad, f"Invalid exploitation statuses: {bad}"
+        checks.assertFalse(bad, f"Invalid exploitation statuses: {bad}")
 
     def test_all_complexities_are_valid(self):
         """Every CVE in the registry has a valid attack_complexity."""
@@ -296,13 +328,13 @@ class TestExploitationStatus:
                 complexity = getattr(cve, "attack_complexity", "medium")
                 if complexity not in _VALID_ATTACK_COMPLEXITIES:
                     bad.append(f"{cve.cve_id}: {complexity}")
-        assert not bad, f"Invalid attack complexities: {bad}"
+        checks.assertFalse(bad, f"Invalid attack complexities: {bad}")
 
     def test_exploitation_icon_values(self):
-        assert _exploitation_icon("actively_exploited") == "[!!!] Active"
-        assert _exploitation_icon("poc_available") == "[!!] PoC"
-        assert _exploitation_icon("theoretical") == "[!] Theory"
-        assert _exploitation_icon("unknown") == ""
+        checks.assertEqual(_exploitation_icon("actively_exploited"), "[!!!] Active")
+        checks.assertEqual(_exploitation_icon("poc_available"), "[!!] PoC")
+        checks.assertEqual(_exploitation_icon("theoretical"), "[!] Theory")
+        checks.assertEqual(_exploitation_icon("unknown"), "")
 
 
 # ── Regression Categories ────────────────────────────────────────────────────
@@ -326,9 +358,9 @@ class TestRegressionCategories:
     @pytest.mark.parametrize("category", _REGRESSION_CATEGORIES)
     def test_regression_category_exists(self, category: str):
         ctx = get_context(category)
-        assert ctx is not None, f"Category {category!r} not in registry"
-        assert ctx.category == category
-        assert len(ctx.techniques) >= 1
+        checks.assertIsNotNone(ctx, f"Category {category!r} not in registry")
+        checks.assertEqual(ctx.category, category)
+        checks.assertGreaterEqual(len(ctx.techniques), 1)
 
     @pytest.mark.parametrize("category, expected_cves", _REQUIRED_CATEGORY_CVES.items())
     def test_known_category_cves_remain_reachable(
@@ -337,41 +369,42 @@ class TestRegressionCategories:
         expected_cves: set[str],
     ):
         ctx = get_context(category)
-        assert ctx is not None, f"Category {category!r} not in registry"
+        checks.assertIsNotNone(ctx, f"Category {category!r} not in registry")
         actual = {cve.cve_id for cve in ctx.cves}
-        assert expected_cves <= actual
+        checks.assertLessEqual(expected_cves, actual)
 
 
 # ── Regression Coverage ──────────────────────────────────────────────────────
+
 
 class TestRegressionCoverage:
     def test_known_cves_reachable_via_unique_registry(self):
         cves = _unique_cves_by_id()
         expected = set().union(*_REQUIRED_CATEGORY_CVES.values())
         missing = sorted(expected - set(cves))
-        assert not missing, f"Known regression CVEs missing: {missing}"
+        checks.assertFalse(missing, f"Known regression CVEs missing: {missing}")
 
     def test_formatter_shows_exploited_column(self):
         ctx = get_context("kernel_escalation")
-        assert ctx is not None
+        checks.assertIsNotNone(ctx)
         result = format_vulnerability_summary([ctx])
-        assert "Exploited" in result
+        checks.assertIn("Exploited", result)
 
     def test_actively_exploited_shows_triple_bang(self):
         ctx = get_context("kernel_escalation")
-        assert ctx is not None
+        checks.assertIsNotNone(ctx)
         result = format_vulnerability_summary([ctx])
-        assert "!!!" in result
+        checks.assertIn("!!!", result)
 
     def test_poc_available_shows_double_bang(self):
         ctx = get_context("file_acl_escalation")
-        assert ctx is not None
+        checks.assertIsNotNone(ctx)
         result = format_vulnerability_summary([ctx])
-        assert "!!" in result
+        checks.assertIn("!!", result)
 
     def test_regression_cves_reachable_via_get_all_critical(self):
         """High-CVSS regression CVEs should appear in the critical list."""
         cves = get_all_critical_cves(min_cvss=8.0)
         cve_ids = {c.cve_id for c in cves}
-        assert "CVE-2023-38606" in cve_ids
-        assert "CVE-2025-24201" in cve_ids
+        checks.assertIn("CVE-2023-38606", cve_ids)
+        checks.assertIn("CVE-2025-24201", cve_ids)

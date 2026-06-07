@@ -8,75 +8,62 @@ final class XPCTests: XCTestCase {
     // MARK: - Helpers
 
     /// Write plist XML to a temp file and return its path. Caller owns cleanup.
-    private func writeTempPlist(_ xml: String, name: String, in dir: URL) -> String {
+    private func writeTempPlist(_ xml: String, name: String, in dir: URL) throws -> String {
         let url = dir.appendingPathComponent(name)
-        try! xml.data(using: .utf8)!.write(to: url)
+        let data = try XCTUnwrap(xml.data(using: .utf8))
+        try data.write(to: url)
         return url.path
     }
 
-    private func makeTempDir() -> URL {
+    private func makeTempDir() throws -> URL {
         let dir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString)
-        try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
 
     // MARK: - LaunchdPlistParser: single-file parsing
 
-    func testParsesDaemonWithMachServices() {
-        let xml = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Label</key><string>com.example.testdaemon</string>
-            <key>Program</key><string>/usr/libexec/testdaemon</string>
-            <key>UserName</key><string>_daemon</string>
-            <key>RunAtLoad</key><true/>
-            <key>KeepAlive</key><true/>
-            <key>MachServices</key><dict>
-                <key>com.example.testdaemon.xpc</key><true/>
-                <key>com.example.testdaemon.helper</key><true/>
-            </dict>
-        </dict></plist>
-        """
-        let dir = makeTempDir()
+    func testParsesDaemonWithMachServices() throws {
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        let path = writeTempPlist(xml, name: "com.example.testdaemon.plist", in: dir)
+        let path = try writeTempPlist(
+            Self.daemonWithMachServicesXML,
+            name: "com.example.testdaemon.plist",
+            in: dir
+        )
 
         let parser = LaunchdPlistParser()
         let entry = parser.parse(at: path)
 
+        assertDaemonWithMachServices(entry)
+    }
+
+    private func assertDaemonWithMachServices(
+        _ entry: LaunchdPlistParser.ParsedEntry?,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
         XCTAssertNotNil(entry)
-        XCTAssertEqual(entry?.label, "com.example.testdaemon")
-        XCTAssertEqual(entry?.program, "/usr/libexec/testdaemon")
-        XCTAssertEqual(entry?.user, "_daemon")
-        XCTAssertTrue(entry?.runAtLoad ?? false)
-        XCTAssertTrue(entry?.keepAlive ?? false)
+        XCTAssertEqual(entry?.label, "com.example.testdaemon", file: file, line: line)
+        XCTAssertEqual(entry?.program, "/usr/libexec/testdaemon", file: file, line: line)
+        XCTAssertEqual(entry?.user, "_daemon", file: file, line: line)
+        XCTAssertTrue(entry?.runAtLoad ?? false, file: file, line: line)
+        XCTAssertTrue(entry?.keepAlive ?? false, file: file, line: line)
         XCTAssertEqual(entry?.machServices.sorted(), [
             "com.example.testdaemon.helper",
             "com.example.testdaemon.xpc"
-        ])
+        ], file: file, line: line)
     }
 
-    func testParsesAgentWithProgramArguments() {
-        let xml = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Label</key><string>com.example.testagent</string>
-            <key>ProgramArguments</key><array>
-                <string>/usr/bin/testagent</string>
-                <string>--config</string>
-                <string>/etc/test.conf</string>
-            </array>
-            <key>RunAtLoad</key><false/>
-        </dict></plist>
-        """
-        let dir = makeTempDir()
+    func testParsesAgentWithProgramArguments() throws {
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        let path = writeTempPlist(xml, name: "com.example.testagent.plist", in: dir)
+        let path = try writeTempPlist(
+            Self.agentWithProgramArgumentsXML,
+            name: "com.example.testagent.plist",
+            in: dir
+        )
 
         let parser = LaunchdPlistParser()
         let entry = parser.parse(at: path)
@@ -91,18 +78,10 @@ final class XPCTests: XCTestCase {
         XCTAssertEqual(entry?.machServices, [])
     }
 
-    func testReturnsNilForMissingLabelKey() {
-        let xml = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Program</key><string>/usr/bin/something</string>
-        </dict></plist>
-        """
-        let dir = makeTempDir()
+    func testReturnsNilForMissingLabelKey() throws {
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        let path = writeTempPlist(xml, name: "no-label.plist", in: dir)
+        let path = try writeTempPlist(Self.missingLabelXML, name: "no-label.plist", in: dir)
 
         let parser = LaunchdPlistParser()
         XCTAssertNil(parser.parse(at: path), "Plist without Label should return nil")
@@ -113,33 +92,22 @@ final class XPCTests: XCTestCase {
         XCTAssertNil(parser.parse(at: "/nonexistent/path/to/file.plist"))
     }
 
-    func testReturnsNilForMalformedXML() {
-        let dir = makeTempDir()
+    func testReturnsNilForMalformedXML() throws {
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
         let url = dir.appendingPathComponent("bad.plist")
-        try! "NOT XML AT ALL <<<>>>".data(using: .utf8)!.write(to: url)
+        let data = try XCTUnwrap("NOT XML AT ALL <<<>>>".data(using: .utf8))
+        try data.write(to: url)
 
         let parser = LaunchdPlistParser()
         XCTAssertNil(parser.parse(at: url.path))
     }
 
-    func testKeepAliveDict() {
+    func testKeepAliveDict() throws {
         // KeepAlive can be a throttle-config dict instead of Bool
-        let xml = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Label</key><string>com.example.keepalive-dict</string>
-            <key>Program</key><string>/usr/bin/x</string>
-            <key>KeepAlive</key><dict>
-                <key>SuccessfulExit</key><false/>
-            </dict>
-        </dict></plist>
-        """
-        let dir = makeTempDir()
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        let path = writeTempPlist(xml, name: "keepalive.plist", in: dir)
+        let path = try writeTempPlist(Self.keepAliveDictXML, name: "keepalive.plist", in: dir)
 
         let parser = LaunchdPlistParser()
         let entry = parser.parse(at: path)
@@ -148,32 +116,15 @@ final class XPCTests: XCTestCase {
 
     // MARK: - LaunchdPlistParser: directory scanning
 
-    func testParsesDirectoryWithMultiplePlists() {
-        let dir = makeTempDir()
+    func testParsesDirectoryWithMultiplePlists() throws {
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
 
-        let xml1 = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Label</key><string>com.example.one</string>
-            <key>Program</key><string>/usr/bin/one</string>
-        </dict></plist>
-        """
-        let xml2 = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Label</key><string>com.example.two</string>
-            <key>Program</key><string>/usr/bin/two</string>
-        </dict></plist>
-        """
-        _ = writeTempPlist(xml1, name: "one.plist", in: dir)
-        _ = writeTempPlist(xml2, name: "two.plist", in: dir)
+        _ = try writeTempPlist(Self.directoryEntryOneXML, name: "one.plist", in: dir)
+        _ = try writeTempPlist(Self.directoryEntryTwoXML, name: "two.plist", in: dir)
         // Also write a non-plist file that should be ignored
-        try! "ignored".data(using: .utf8)!.write(to: dir.appendingPathComponent("ignored.txt"))
+        let ignoredData = try XCTUnwrap("ignored".data(using: .utf8))
+        try ignoredData.write(to: dir.appendingPathComponent("ignored.txt"))
 
         let parser = LaunchdPlistParser()
         let (entries, errors) = parser.parseDirectory(at: dir.path)
@@ -191,23 +142,15 @@ final class XPCTests: XCTestCase {
         XCTAssertTrue(errors.isEmpty, "Missing directory is normal — should not produce an error")
     }
 
-    func testMalformedPlistInDirectoryIsSkippedWithError() {
-        let dir = makeTempDir()
+    func testMalformedPlistInDirectoryIsSkippedWithError() throws {
+        let dir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: dir) }
 
         // One valid plist
-        let validXML = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-            <key>Label</key><string>com.example.valid</string>
-            <key>Program</key><string>/usr/bin/valid</string>
-        </dict></plist>
-        """
-        _ = writeTempPlist(validXML, name: "valid.plist", in: dir)
+        _ = try writeTempPlist(Self.validDirectoryEntryXML, name: "valid.plist", in: dir)
         // One broken plist
-        try! "BROKEN".data(using: .utf8)!.write(to: dir.appendingPathComponent("broken.plist"))
+        let brokenData = try XCTUnwrap("BROKEN".data(using: .utf8))
+        try brokenData.write(to: dir.appendingPathComponent("broken.plist"))
 
         let parser = LaunchdPlistParser()
         let (entries, errors) = parser.parseDirectory(at: dir.path)
@@ -237,11 +180,15 @@ final class XPCTests: XCTestCase {
             path: "/Library/LaunchDaemons/com.example.test.plist",
             program: "/usr/sbin/testd",
             type: .daemon,
-            user: "_testd",
-            runAtLoad: true,
-            keepAlive: false,
-            machServices: ["com.example.test.xpc"],
-            entitlements: []
+            launch: XPCService.LaunchBehavior(
+                user: "_testd",
+                runAtLoad: true,
+                keepAlive: false
+            ),
+            exposure: XPCService.Exposure(
+                machServices: ["com.example.test.xpc"],
+                entitlements: []
+            )
         )
         XCTAssertEqual(service.nodeType, "XPCService")
         XCTAssertEqual(service.type, .daemon)
@@ -253,14 +200,18 @@ final class XPCTests: XCTestCase {
             path: "/Library/LaunchDaemons/com.example.enc.plist",
             program: nil,
             type: .agent,
-            user: nil,
-            runAtLoad: false,
-            keepAlive: true,
-            machServices: [],
-            entitlements: ["com.apple.private.test"]
+            launch: XPCService.LaunchBehavior(
+                user: nil,
+                runAtLoad: false,
+                keepAlive: true
+            ),
+            exposure: XPCService.Exposure(
+                machServices: [],
+                entitlements: ["com.apple.private.test"]
+            )
         )
         let data = try JSONEncoder().encode(service)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertEqual(json["label"] as? String, "com.example.enc")
         XCTAssertEqual(json["type"] as? String, "agent")
@@ -271,4 +222,88 @@ final class XPCTests: XCTestCase {
         // nodeType is a computed property and must NOT appear in JSON
         XCTAssertNil(json["node_type"], "nodeType is a Swift abstraction and should not be serialized")
     }
+
+    private static let daemonWithMachServicesXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Label</key><string>com.example.testdaemon</string>
+            <key>Program</key><string>/usr/libexec/testdaemon</string>
+            <key>UserName</key><string>_daemon</string>
+            <key>RunAtLoad</key><true/>
+            <key>KeepAlive</key><true/>
+            <key>MachServices</key><dict>
+                <key>com.example.testdaemon.xpc</key><true/>
+                <key>com.example.testdaemon.helper</key><true/>
+            </dict>
+        </dict></plist>
+        """
+
+    private static let agentWithProgramArgumentsXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Label</key><string>com.example.testagent</string>
+            <key>ProgramArguments</key><array>
+                <string>/usr/bin/testagent</string>
+                <string>--config</string>
+                <string>/etc/test.conf</string>
+            </array>
+            <key>RunAtLoad</key><false/>
+        </dict></plist>
+        """
+
+    private static let missingLabelXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Program</key><string>/usr/bin/something</string>
+        </dict></plist>
+        """
+
+    private static let keepAliveDictXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Label</key><string>com.example.keepalive-dict</string>
+            <key>Program</key><string>/usr/bin/x</string>
+            <key>KeepAlive</key><dict>
+                <key>SuccessfulExit</key><false/>
+            </dict>
+        </dict></plist>
+        """
+
+    private static let directoryEntryOneXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Label</key><string>com.example.one</string>
+            <key>Program</key><string>/usr/bin/one</string>
+        </dict></plist>
+        """
+
+    private static let directoryEntryTwoXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Label</key><string>com.example.two</string>
+            <key>Program</key><string>/usr/bin/two</string>
+        </dict></plist>
+        """
+
+    private static let validDirectoryEntryXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+            <key>Label</key><string>com.example.valid</string>
+            <key>Program</key><string>/usr/bin/valid</string>
+        </dict></plist>
+        """
 }

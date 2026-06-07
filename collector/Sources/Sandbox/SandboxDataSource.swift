@@ -125,14 +125,18 @@ public struct SandboxDataSource {
         return SandboxProfile(
             bundleId: app.bundleId,
             profileSource: profileSource,
-            fileReadRules: allFileRead,
-            fileWriteRules: allFileWrite,
-            machLookupRules: allMachLookup,
-            networkRules: allNetwork,
-            iokitRules: allIokit,
-            exceptionCount: exceptionCount,
-            hasUnconstrainedNetwork: hasUnconstrainedNetwork,
-            hasUnconstrainedFileRead: hasUnconstrainedFileRead
+            rules: SandboxProfile.Rules(
+                fileReadRules: allFileRead,
+                fileWriteRules: allFileWrite,
+                machLookupRules: allMachLookup,
+                networkRules: allNetwork,
+                iokitRules: allIokit
+            ),
+            exposure: SandboxProfile.Exposure(
+                exceptionCount: exceptionCount,
+                hasUnconstrainedNetwork: hasUnconstrainedNetwork,
+                hasUnconstrainedFileRead: hasUnconstrainedFileRead
+            )
         )
     }
 

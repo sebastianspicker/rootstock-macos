@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from unittest import TestCase
 
 # Ensure graph/ is on the import path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -28,34 +29,37 @@ from opengraph_export import (
 )
 
 
+checks = TestCase()
+
+
 # ── Node ID generation ──────────────────────────────────────────────────────
 
 
 class TestNodeIdGeneration:
     def test_basic_node_id(self):
         nid = make_node_id("mymac", "Application", "com.1password.1password")
-        assert nid == "rs-mymac-application-com.1password.1password"
+        checks.assertEqual(nid, "rs-mymac-application-com.1password.1password")
 
     def test_node_id_sanitizes_special_chars(self):
         nid = make_node_id("my mac!", "User", "admin user")
-        assert " " not in nid
-        assert "!" not in nid
+        checks.assertNotIn(" ", nid)
+        checks.assertNotIn("!", nid)
 
     def test_node_id_preserves_dots_and_dashes(self):
         nid = make_node_id("host", "Application", "com.apple.Safari")
-        assert "com.apple.Safari" in nid
+        checks.assertIn("com.apple.Safari", nid)
 
     def test_sanitize_alphanumeric_passthrough(self):
-        assert _sanitize("abc123") == "abc123"
+        checks.assertEqual(_sanitize("abc123"), "abc123")
 
     def test_sanitize_special_chars_replaced(self):
         result = _sanitize("hello world/foo@bar")
-        assert " " not in result
-        assert "/" not in result
-        assert "@" not in result
+        checks.assertNotIn(" ", result)
+        checks.assertNotIn("/", result)
+        checks.assertNotIn("@", result)
 
     def test_sanitize_preserves_allowed_chars(self):
-        assert _sanitize("a-b_c.d") == "a-b_c.d"
+        checks.assertEqual(_sanitize("a-b_c.d"), "a-b_c.d")
 
 
 # ── Node key extraction ─────────────────────────────────────────────────────
@@ -71,77 +75,77 @@ class TestNodeKey:
                 "name": "Example",
             },
         )
-        assert key == "scan-1:com.example.app:/Applications/Example.app"
+        checks.assertEqual(key, "scan-1:com.example.app:/Applications/Example.app")
 
     def test_computer_key_prefers_composite_identity(self):
         key = _node_key(
             "Computer", {"computer_key": "scan-1:host-a", "hostname": "host-a"}
         )
-        assert key == "scan-1:host-a"
+        checks.assertEqual(key, "scan-1:host-a")
 
     def test_tcc_permission_key(self):
         key = _node_key("TCC_Permission", {"service": "kTCCServiceMicrophone"})
-        assert key == "kTCCServiceMicrophone"
+        checks.assertEqual(key, "kTCCServiceMicrophone")
 
     def test_entitlement_key(self):
         key = _node_key("Entitlement", {"name": "com.apple.security.app-sandbox"})
-        assert key == "com.apple.security.app-sandbox"
+        checks.assertEqual(key, "com.apple.security.app-sandbox")
 
     def test_keychain_item_composite_key(self):
         key = _node_key(
             "Keychain_Item", {"label": "My Credential", "kind": "generic_password"}
         )
-        assert key == "My Credential-generic_password"
+        checks.assertEqual(key, "My Credential-generic_password")
 
     def test_user_key(self):
         key = _node_key("User", {"name": "admin"})
-        assert key == "admin"
+        checks.assertEqual(key, "admin")
 
     def test_local_group_key(self):
         key = _node_key("LocalGroup", {"name": "wheel"})
-        assert key == "wheel"
+        checks.assertEqual(key, "wheel")
 
     def test_remote_access_key(self):
         key = _node_key("RemoteAccessService", {"service": "ssh"})
-        assert key == "ssh"
+        checks.assertEqual(key, "ssh")
 
     def test_firewall_key(self):
         key = _node_key("FirewallPolicy", {"name": "default"})
-        assert key == "default"
+        checks.assertEqual(key, "default")
 
     def test_login_session_key(self):
         key = _node_key("LoginSession", {"terminal": "ttys000"})
-        assert key == "ttys000"
+        checks.assertEqual(key, "ttys000")
 
     def test_authorization_right_key(self):
         key = _node_key("AuthorizationRight", {"name": "system.privilege.admin"})
-        assert key == "system.privilege.admin"
+        checks.assertEqual(key, "system.privilege.admin")
 
     def test_authorization_plugin_key(self):
         key = _node_key("AuthorizationPlugin", {"name": "MyPlugin"})
-        assert key == "MyPlugin"
+        checks.assertEqual(key, "MyPlugin")
 
     def test_system_extension_key(self):
         key = _node_key("SystemExtension", {"identifier": "com.example.ext"})
-        assert key == "com.example.ext"
+        checks.assertEqual(key, "com.example.ext")
 
     def test_sudoers_rule_key(self):
         key = _node_key("SudoersRule", {"key": "admin:ALL:ALL"})
-        assert key == "admin:ALL:ALL"
+        checks.assertEqual(key, "admin:ALL:ALL")
 
     def test_bluetooth_device_key(self):
         key = _node_key(
             "BluetoothDevice", {"address": "AA:BB:CC:DD:EE:FF", "name": "Keyboard"}
         )
-        assert key == "AA:BB:CC:DD:EE:FF"
+        checks.assertEqual(key, "AA:BB:CC:DD:EE:FF")
 
     def test_unknown_label_fallback(self):
         key = _node_key("UnknownLabel", {"name": "test", "other": "value"})
-        assert key == "test"
+        checks.assertEqual(key, "test")
 
     def test_missing_key_returns_unknown(self):
         key = _node_key("Application", {})
-        assert key == "unknown"
+        checks.assertEqual(key, "unknown")
 
 
 # ── Node display names ──────────────────────────────────────────────────────
@@ -152,24 +156,24 @@ class TestNodeDisplayName:
         name = _node_display_name(
             "Application", {"name": "Safari", "bundle_id": "com.apple.Safari"}
         )
-        assert name == "Safari"
+        checks.assertEqual(name, "Safari")
 
     def test_application_fallback_to_bundle_id(self):
         name = _node_display_name("Application", {"bundle_id": "com.example.app"})
-        assert name == "com.example.app"
+        checks.assertEqual(name, "com.example.app")
 
     def test_tcc_permission_display_name(self):
         name = _node_display_name(
             "TCC_Permission",
             {"display_name": "Microphone", "service": "kTCCServiceMicrophone"},
         )
-        assert name == "Microphone"
+        checks.assertEqual(name, "Microphone")
 
     def test_entitlement_display_name(self):
         name = _node_display_name(
             "Entitlement", {"name": "com.apple.security.app-sandbox"}
         )
-        assert name == "com.apple.security.app-sandbox"
+        checks.assertEqual(name, "com.apple.security.app-sandbox")
 
 
 # ── Property serialization ──────────────────────────────────────────────────
@@ -179,17 +183,19 @@ class TestSerializeProps:
     def test_primitives_pass_through(self):
         props = {"name": "Test", "count": 42, "flag": True, "empty": None}
         result = _serialize_props(props)
-        assert result == props
+        checks.assertEqual(result, props)
 
     def test_lists_stringified(self):
         props = {"methods": ["dyld_insert", "missing_library_validation"]}
         result = _serialize_props(props)
-        assert result["methods"] == ["dyld_insert", "missing_library_validation"]
+        checks.assertEqual(
+            result["methods"], ["dyld_insert", "missing_library_validation"]
+        )
 
     def test_complex_types_stringified(self):
         props = {"timestamp": 1234567890}
         result = _serialize_props(props)
-        assert result["timestamp"] == 1234567890
+        checks.assertEqual(result["timestamp"], 1234567890)
 
 
 # ── Type map completeness ───────────────────────────────────────────────────
@@ -198,42 +204,45 @@ class TestSerializeProps:
 class TestTypeMaps:
     def test_all_node_types_have_kind(self):
         for label, info in NODE_TYPE_MAP.items():
-            assert "kind" in info, f"{label} missing 'kind'"
-            assert info["kind"].startswith("rs_"), (
-                f"{label} kind should start with 'rs_'"
+            checks.assertIn("kind", info, f"{label} missing 'kind'")
+            checks.assertTrue(
+                info["kind"].startswith("rs_"), f"{label} kind should start with 'rs_'"
             )
 
     def test_all_node_types_have_icon(self):
         for label, info in NODE_TYPE_MAP.items():
-            assert "icon" in info, f"{label} missing 'icon'"
-            assert info["icon"].startswith("fa-"), (
-                f"{label} icon should be Font Awesome"
+            checks.assertIn("icon", info, f"{label} missing 'icon'")
+            checks.assertTrue(
+                info["icon"].startswith("fa-"), f"{label} icon should be Font Awesome"
             )
 
     def test_all_node_types_have_color(self):
         for label, info in NODE_TYPE_MAP.items():
-            assert "color" in info, f"{label} missing 'color'"
-            assert info["color"].startswith("#"), f"{label} color should be hex"
+            checks.assertIn("color", info, f"{label} missing 'color'")
+            checks.assertTrue(
+                info["color"].startswith("#"), f"{label} color should be hex"
+            )
 
     def test_all_edge_types_have_kind(self):
         for rel_type, info in EDGE_TYPE_MAP.items():
-            assert "kind" in info, f"{rel_type} missing 'kind'"
-            assert info["kind"].startswith("rs_"), (
-                f"{rel_type} kind should start with 'rs_'"
+            checks.assertIn("kind", info, f"{rel_type} missing 'kind'")
+            checks.assertTrue(
+                info["kind"].startswith("rs_"),
+                f"{rel_type} kind should start with 'rs_'",
             )
 
     def test_all_edge_types_have_traversable(self):
         for rel_type, info in EDGE_TYPE_MAP.items():
-            assert "traversable" in info, f"{rel_type} missing 'traversable'"
-            assert isinstance(info["traversable"], bool)
+            checks.assertIn("traversable", info, f"{rel_type} missing 'traversable'")
+            checks.assertTrue(isinstance(info["traversable"], bool))
 
     def test_node_type_count(self):
         """Verify Rootstock and cve-scan module node types are mapped."""
-        assert len(NODE_TYPE_MAP) == 44
+        checks.assertEqual(len(NODE_TYPE_MAP), 44)
 
     def test_edge_type_count(self):
         """Verify Rootstock and cve-scan module edge types are mapped."""
-        assert len(EDGE_TYPE_MAP) == 68
+        checks.assertEqual(len(EDGE_TYPE_MAP), 68)
 
 
 # ── Primary label selection ─────────────────────────────────────────────────
@@ -241,16 +250,16 @@ class TestTypeMaps:
 
 class TestPrimaryLabel:
     def test_known_label_selected(self):
-        assert _primary_label(["Application"]) == "Application"
+        checks.assertEqual(_primary_label(["Application"]), "Application")
 
     def test_known_label_preferred_over_unknown(self):
-        assert _primary_label(["SomeOther", "Application"]) == "Application"
+        checks.assertEqual(_primary_label(["SomeOther", "Application"]), "Application")
 
     def test_unknown_label_fallback(self):
-        assert _primary_label(["CustomLabel"]) == "CustomLabel"
+        checks.assertEqual(_primary_label(["CustomLabel"]), "CustomLabel")
 
     def test_empty_labels_returns_unknown(self):
-        assert _primary_label([]) == "Unknown"
+        checks.assertEqual(_primary_label([]), "Unknown")
 
 
 # ── OpenGraph JSON format validation ────────────────────────────────────────
@@ -263,10 +272,10 @@ class TestOpenGraphFormat:
             "metadata": {"source_kind": "Rootstock"},
             "graph": {"nodes": [], "edges": []},
         }
-        assert "metadata" in og
-        assert "graph" in og
-        assert "nodes" in og["graph"]
-        assert "edges" in og["graph"]
+        checks.assertIn("metadata", og)
+        checks.assertIn("graph", og)
+        checks.assertIn("nodes", og["graph"])
+        checks.assertIn("edges", og["graph"])
 
     def test_node_has_required_fields(self):
         node = {
@@ -275,10 +284,10 @@ class TestOpenGraphFormat:
             "label": "Example App",
             "properties": {},
         }
-        assert "id" in node
-        assert "kind" in node
-        assert "label" in node
-        assert "properties" in node
+        checks.assertIn("id", node)
+        checks.assertIn("kind", node)
+        checks.assertIn("label", node)
+        checks.assertIn("properties", node)
 
     def test_edge_has_required_fields(self):
         edge = {
@@ -287,7 +296,7 @@ class TestOpenGraphFormat:
             "kind": "rs_HasTCCGrant",
             "properties": {"_traversable": True},
         }
-        assert "source" in edge
-        assert "target" in edge
-        assert "kind" in edge
-        assert "properties" in edge
+        checks.assertIn("source", edge)
+        checks.assertIn("target", edge)
+        checks.assertIn("kind", edge)
+        checks.assertIn("properties", edge)

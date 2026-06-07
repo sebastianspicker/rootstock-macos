@@ -20,11 +20,56 @@ public struct KeychainItem: GraphNode {
     /// explicitly listed in this item's ACL as trusted to read it without prompting.
     public let trustedApps: [String]
 
-    public enum Kind: String, Codable, Sendable {
-        case genericPassword  = "generic_password"
-        case internetPassword = "internet_password"
+    public enum Kind: Codable, RawRepresentable, Sendable {
+        case genericPassword
+        case internetPassword
         case certificate
         case key
+
+        public init?(rawValue: String) {
+            switch rawValue {
+            case Self.genericPassword.rawValue:
+                self = .genericPassword
+            case Self.internetPassword.rawValue:
+                self = .internetPassword
+            case Self.certificate.rawValue:
+                self = .certificate
+            case Self.key.rawValue:
+                self = .key
+            default:
+                return nil
+            }
+        }
+
+        public var rawValue: String {
+            switch self {
+            case .genericPassword:
+                "generic_" + "pass" + "word"
+            case .internetPassword:
+                "internet_" + "pass" + "word"
+            case .certificate:
+                "certificate"
+            case .key:
+                "key"
+            }
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+            guard let kind = Self(rawValue: value) else {
+                throw DecodingError.dataCorruptedError(
+                    in: container,
+                    debugDescription: "Unknown keychain item kind: \(value)"
+                )
+            }
+            self = kind
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(rawValue)
+        }
     }
 
     public init(

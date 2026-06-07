@@ -193,82 +193,90 @@ def generate_dot(nodes: list[dict], edges: list[dict]) -> str:
     seen_dot_ids: set[str] = set()
 
     for node in nodes:
-        raw_id = str(node["id"])
-        display = node.get("display") or "?"
-        node_type = node.get("label") or "Unknown"
-        bundle = node.get("bundle_id") or ""
-
-        # Build unique dot id
-        base_id = sanitize_id(bundle if bundle else display)
-        dot_id = base_id
-        counter = 0
-        while dot_id in seen_dot_ids:
-            counter += 1
-            dot_id = f"{base_id}_{counter}"
-        seen_dot_ids.add(dot_id)
-        id_map[raw_id] = dot_id
-
-        color = NODE_COLORS.get(node_type, "#444c56")
-        label = escape_dot_string(truncate(display, MAX_LABEL_LEN))
-        shape = NODE_SHAPES.get(node_type, "ellipse")
-        lines.append(
-            f'  {dot_id} [label="{label}" fillcolor="{color}" shape={shape}]'
-        )
+        _append_dot_node(lines, id_map, seen_dot_ids, node)
 
     lines.append("")
 
     for edge in edges:
-        src_raw = str(edge["src_id"])
-        dst_raw = str(edge["dst_id"])
-        rel = edge.get("rel_type", "REL")
-        is_inferred = edge.get("inferred", False) or rel in INFERRED_RELS
-
-        src_dot = id_map.get(src_raw)
-        dst_dot = id_map.get(dst_raw)
-        if src_dot is None or dst_dot is None:
-            continue  # skip orphan edges (node may have been excluded by LIMIT)
-
-        style = "dashed" if is_inferred else "solid"
-        edge_color = "#f85149" if rel in {"CAN_INJECT_INTO", "CAN_MODIFY_TCC",
-                                           "CAN_ESCAPE_SANDBOX"} else (
-            "#d29922" if is_inferred else "#58a6ff"
-        )
-        safe_rel = escape_dot_string(rel)
-        lines.append(
-            f'  {src_dot} -> {dst_dot} [label="{safe_rel}" style={style}'
-            f' color="{edge_color}" fontcolor="{edge_color}"]'
-        )
+        _append_dot_edge(lines, id_map, edge)
 
     lines.append("}")
     return "\n".join(lines)
 
 
+def _append_dot_node(
+    lines: list[str],
+    id_map: dict[str, str],
+    seen_dot_ids: set[str],
+    node: dict,
+) -> None:
+    raw_id = str(node["id"])
+    display = node.get("display") or "?"
+    node_type = node.get("label") or "Unknown"
+    bundle = node.get("bundle_id") or ""
+    dot_id = _unique_dot_id(bundle if bundle else display, seen_dot_ids)
+    id_map[raw_id] = dot_id
+
+    color = NODE_COLORS.get(node_type, "#444c56")
+    label = escape_dot_string(truncate(display, MAX_LABEL_LEN))
+    shape = NODE_SHAPES.get(node_type, "ellipse")
+    lines.append(f'  {dot_id} [label="{label}" fillcolor="{color}" shape={shape}]')
+
+
+def _unique_dot_id(value: object, seen_dot_ids: set[str]) -> str:
+    base_id = sanitize_id(value)
+    dot_id = base_id
+    counter = 0
+    while dot_id in seen_dot_ids:
+        counter += 1
+        dot_id = f"{base_id}_{counter}"
+    seen_dot_ids.add(dot_id)
+    return dot_id
+
+
+def _append_dot_edge(lines: list[str], id_map: dict[str, str], edge: dict) -> None:
+    rel = edge.get("rel_type", "REL")
+    src_dot = id_map.get(str(edge["src_id"]))
+    dst_dot = id_map.get(str(edge["dst_id"]))
+    if src_dot is None or dst_dot is None:
+        return
+
+    is_inferred = edge.get("inferred", False) or rel in INFERRED_RELS
+    style = "dashed" if is_inferred else "solid"
+    edge_color = _edge_color(rel, is_inferred=is_inferred)
+    safe_rel = escape_dot_string(rel)
+    lines.append(
+        f'  {src_dot} -> {dst_dot} [label="{safe_rel}" style={style}'
+        f' color="{edge_color}" fontcolor="{edge_color}"]'
+    )
+
+
+def _edge_color(rel: str, *, is_inferred: bool) -> str:
+    high_risk_rels = {"CAN_INJECT_INTO", "CAN_MODIFY_TCC", "CAN_ESCAPE_SANDBOX"}
+    if rel in high_risk_rels:
+        return "#f85149"
+    if is_inferred:
+        return "#d29922"
+    return "#58a6ff"
+
+
 # ── Rendering ─────────────────────────────────────────────────────────────────
 
 def render_dot(dot_path: Path, output_format: str = "png") -> Path:
-    """Render a DOT file to PNG/SVG using the `dot` command (requires Graphviz)."""
-    out_path = dot_path.with_suffix(f".{output_format}")
-    try:
-        subprocess.run(
-            ["dot", f"-T{output_format}", str(dot_path), "-o", str(out_path)],
-            check=True,
-            capture_output=True,
-        )
-        return out_path
-    except FileNotFoundError:
-        print(
-            "Warning: `dot` command not found. Install Graphviz to render DOT files.",
-            file=sys.stderr,
-        )
-        raise
-    except subprocess.CalledProcessError as e:
-        print(f"Error rendering DOT file: {e.stderr.decode()}", file=sys.stderr)
-        raise
+    """Render a DOT file with Graphviz using an argument vector, never a shell."""
+    if output_format not in {"png", "svg"}:
+        raise ValueError(f"Unsupported Graphviz output format: {output_format}")
+    output_path = dot_path.with_suffix(f".{output_format}")
+    subprocess.run(
+        ["dot", f"-T{output_format}", str(dot_path), "-o", str(output_path)],
+        check=True,
+    )
+    return output_path
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
-def main() -> int:
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Export Rootstock graph to Graphviz DOT format"
     )
@@ -289,36 +297,44 @@ def main() -> int:
         "--edge-limit", type=int, default=DEFAULT_EDGE_LIMIT,
         help=f"Max edges to fetch (default: {DEFAULT_EDGE_LIMIT})",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def _connect_driver(args: argparse.Namespace):
     password = args.password or os.environ.get("NEO4J_PASSWORD")
     if not password:
         print("ERROR: Neo4j password required via --password or NEO4J_PASSWORD env var",
               file=sys.stderr)
-        return 1
+        return None
 
     driver = GraphDatabase.driver(args.neo4j, auth=(args.username, password))
     try:
         driver.verify_connectivity()
     except Exception as e:
         print(f"Cannot connect to Neo4j at {args.neo4j}: {e}", file=sys.stderr)
-        return 1
+        return None
+    return driver
 
-    print(f"Fetching graph data from {args.neo4j}…", file=sys.stderr)
-    nodes, edges = fetch_graph_data(driver, args.node_limit, args.edge_limit)
-    driver.close()
 
+def _write_graphviz_output(args: argparse.Namespace, nodes: list[dict], edges: list[dict]) -> None:
     print(f"  {len(nodes)} nodes, {len(edges)} edges", file=sys.stderr)
-
     dot_content = generate_dot(nodes, edges)
     out_path = Path(args.output)
     out_path.write_text(dot_content, encoding="utf-8")
     print(f"DOT file written to {out_path}", file=sys.stderr)
-
     if args.render:
-        rendered = render_dot(out_path, args.render)
-        print(f"Rendered to {rendered}", file=sys.stderr)
+        render_dot(out_path, args.render)
 
+
+def main() -> int:
+    args = _parse_args()
+    driver = _connect_driver(args)
+    if driver is None:
+        return 1
+    print(f"Fetching graph data from {args.neo4j}…", file=sys.stderr)
+    nodes, edges = fetch_graph_data(driver, args.node_limit, args.edge_limit)
+    driver.close()
+    _write_graphviz_output(args, nodes, edges)
     return 0
 
 

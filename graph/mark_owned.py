@@ -67,8 +67,9 @@ def mark_by_label_key(session, label: str, keys: list[str], timestamp: str) -> i
     """Mark nodes by Neo4j label and their unique key property. Returns count marked."""
     key_prop = NODE_KEY_PROPERTY.get(label)
     if not key_prop:
-        print(f"ERROR: Unknown label '{label}'. Valid labels: {', '.join(sorted(NODE_KEY_PROPERTY))}", file=sys.stderr)
-        return 0
+        raise ValueError(
+            f"Unknown label '{label}'. Valid labels: {', '.join(sorted(NODE_KEY_PROPERTY))}"
+        )
 
     # SAFETY: `label` is safe to interpolate — NODE_KEY_PROPERTY.get(label) above
     # rejects any label not in the hardcoded allowlist (constants.py:23-43).
@@ -101,7 +102,7 @@ def list_owned(session) -> list[dict]:
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
-def main() -> int:
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Mark graph nodes as owned (compromised) for attack path analysis"
     )
@@ -114,47 +115,81 @@ def main() -> int:
     group.add_argument("--list", action="store_true", help="List all currently owned nodes")
 
     parser.add_argument("--key", nargs="+", help="Unique key value(s) for --label mode")
+    parser.add_argument(
+        "--allow-zero",
+        action="store_true",
+        help="Return success when a mark operation matches zero nodes",
+    )
+    return parser
+
+
+def _print_owned_nodes(owned: list[dict]) -> None:
+    if not owned:
+        print("No owned nodes found.")
+        return
+    print(f"Owned nodes ({len(owned)}):")
+    for item in owned:
+        labels = ", ".join(item["labels"])
+        props = item["props"]
+        name = props.get("name", props.get("bundle_id", props.get("label", "?")))
+        ts = props.get(OWNED_AT_PROPERTY, "?")
+        print(f"  [{labels}] {name}  (owned_at: {ts})")
+
+
+def _mark_from_args(session, args, timestamp: str) -> tuple[int, str]:
+    if args.bundle_id:
+        count = mark_by_bundle_id(session, args.bundle_id, timestamp)
+        return count, f"Marked {count} Application node(s) as owned."
+    if args.username:
+        count = mark_by_username(session, args.username, timestamp)
+        return count, f"Marked {count} User node(s) as owned."
+    if args.label:
+        count = mark_by_label_key(session, args.label, args.key, timestamp)
+        return count, f"Marked {count} {args.label} node(s) as owned."
+    return 0, "Marked 0 node(s) as owned."
+
+
+def _mark_exit_code(count: int, allow_zero: bool) -> int:
+    if count != 0:
+        return 0
+    if allow_zero:
+        print("WARNING: No matching nodes found in graph.", file=sys.stderr)
+        return 0
+    print(
+        "ERROR: No matching nodes found in graph. Use --allow-zero to accept a no-op mark operation.",
+        file=sys.stderr,
+    )
+    return 1
+
+
+def main() -> int:
+    parser = _build_parser()
     args = parser.parse_args()
 
     if args.label and not args.key:
         parser.error("--label requires --key")
+    if args.label and args.label not in NODE_KEY_PROPERTY:
+        print(
+            f"ERROR: Unknown label '{args.label}'. Valid labels: {', '.join(sorted(NODE_KEY_PROPERTY))}",
+            file=sys.stderr,
+        )
+        return 1
 
     driver = connect_from_args(args)
     timestamp = datetime.now(timezone.utc).isoformat()
 
     with driver.session() as session:
         if args.list:
-            owned = list_owned(session)
-            if not owned:
-                print("No owned nodes found.")
-            else:
-                print(f"Owned nodes ({len(owned)}):")
-                for item in owned:
-                    labels = ", ".join(item["labels"])
-                    props = item["props"]
-                    name = props.get("name", props.get("bundle_id", props.get("label", "?")))
-                    ts = props.get(OWNED_AT_PROPERTY, "?")
-                    print(f"  [{labels}] {name}  (owned_at: {ts})")
+            _print_owned_nodes(list_owned(session))
             driver.close()
             return 0
 
-        if args.bundle_id:
-            count = mark_by_bundle_id(session, args.bundle_id, timestamp)
-            print(f"Marked {count} Application node(s) as owned.")
-        elif args.username:
-            count = mark_by_username(session, args.username, timestamp)
-            print(f"Marked {count} User node(s) as owned.")
-        elif args.label:
-            count = mark_by_label_key(session, args.label, args.key, timestamp)
-            print(f"Marked {count} {args.label} node(s) as owned.")
-        else:
-            count = 0
-
-        if count == 0:
-            print("WARNING: No matching nodes found in graph.", file=sys.stderr)
+        count, message = _mark_from_args(session, args, timestamp)
+        print(message)
+        exit_code = _mark_exit_code(count, args.allow_zero)
 
     driver.close()
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

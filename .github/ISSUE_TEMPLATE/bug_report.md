@@ -9,9 +9,13 @@ labels: bug
 - macOS version:
 - Rootstock version:
 - Elevation level: (user / root / FDA)
+- Affected area: (collector / graph pipeline / cve-scan / docs / CI)
 
 ## Description
 A clear description of the bug.
+
+Scope note: remediation should target active source/docs, not `deprecated/`,
+`docs/archive/`, or `docs/deprecated/`.
 
 ## Steps to Reproduce
 1.
@@ -22,9 +26,18 @@ A clear description of the bug.
 
 ## Actual Behavior
 
-## Collector Output
+## Diagnostics
 ```
-Paste relevant JSON output or error messages here
+Paste redacted logs, command output, or error messages here.
+Do not paste real scan JSON, graph exports, reports, generated viewers,
+screenshots, tokens, hostnames, usernames, paths, package inventories, or
+infrastructure details from a real environment.
 ```
+
+## Verification Attempted
+- [ ] Collector command:
+- [ ] Graph command:
+- [ ] cve-scan command:
+- [ ] Relevant test or validation command:
 
 ## Additional Context

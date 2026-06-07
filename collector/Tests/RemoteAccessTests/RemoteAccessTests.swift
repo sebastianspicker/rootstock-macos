@@ -150,4 +150,42 @@ final class RemoteAccessTests: XCTestCase {
         XCTAssertTrue(services.allSatisfy { $0.enabled == nil })
         XCTAssertFalse(result.errors.isEmpty)
     }
+
+    func testAbsentLaunchctlServiceIsDisabledWhenDisabledStateWasReadable() async {
+        let source = RemoteAccessDataSource(
+            launchctlRunner: { args in
+                args == ["print-disabled", "system"] ? "" : nil
+            }
+        )
+
+        let result = await source.collect()
+        let services = result.nodes.compactMap { $0 as? RemoteAccessService }
+
+        XCTAssertEqual(services.count, 2)
+        XCTAssertTrue(services.allSatisfy { $0.enabled == false })
+        XCTAssertTrue(result.errors.isEmpty)
+    }
+
+    func testCollectWithUnreadableSSHConfigRecordsError() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let source = RemoteAccessDataSource(
+            sshdConfigPath: directory.path,
+            launchctlRunner: { args in
+                args == ["print-disabled", "system"] ? "" : nil
+            }
+        )
+
+        let result = await source.collect()
+        let sshConfigErrors = result.errors.filter {
+            $0.message.contains("Cannot read sshd_config")
+        }
+
+        XCTAssertEqual(sshConfigErrors.count, 1)
+        XCTAssertEqual(sshConfigErrors[0].source, "Remote Access")
+        XCTAssertTrue(sshConfigErrors[0].recoverable)
+    }
 }

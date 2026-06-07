@@ -25,6 +25,10 @@ struct InjectionAssessment {
     ) -> InjectionAssessmentResult {
         let names = Set(entitlements.map(\.name))
 
+        if signingInfo.analysisError {
+            return InjectionAssessmentResult(methods: [], effectiveLibraryValidation: false)
+        }
+
         // Library validation: CS_REQUIRE_LV flag OR
         // (hardened runtime AND no disable-library-validation entitlement).
         let hasDisableLV = names.contains(Self.disableLibraryValidationEntitlement)
@@ -36,27 +40,45 @@ struct InjectionAssessment {
             return InjectionAssessmentResult(methods: [], effectiveLibraryValidation: effectiveLV)
         }
 
-        var methods: [InjectionMethod] = []
+        return InjectionAssessmentResult(
+            methods: injectionMethods(
+                signingInfo: signingInfo,
+                entitlementNames: names,
+                isElectron: isElectron,
+                effectiveLibraryValidation: effectiveLV
+            ),
+            effectiveLibraryValidation: effectiveLV
+        )
+    }
 
-        // DYLD_INSERT_LIBRARIES injection
-        if !signingInfo.hardenedRuntime {
-            methods.append(.dyldInsert)
-        } else if names.contains(Self.allowDyldEntitlement) {
-            methods.append(.dyldInsertViaEntitlement)
-        }
+    private func injectionMethods(
+        signingInfo: CodeSigningInfo,
+        entitlementNames: Set<String>,
+        isElectron: Bool,
+        effectiveLibraryValidation: Bool
+    ) -> [InjectionMethod] {
+        var methods = dyldInjectionMethods(signingInfo: signingInfo, entitlementNames: entitlementNames)
 
-        if !effectiveLV {
+        if !effectiveLibraryValidation {
             methods.append(.missingLibraryValidation)
         }
-
-        // Electron — injectable via ELECTRON_RUN_AS_NODE
         if isElectron {
             methods.append(.electronEnvVar)
         }
 
-        return InjectionAssessmentResult(
-            methods: methods,
-            effectiveLibraryValidation: effectiveLV
-        )
+        return methods
+    }
+
+    private func dyldInjectionMethods(
+        signingInfo: CodeSigningInfo,
+        entitlementNames: Set<String>
+    ) -> [InjectionMethod] {
+        if !signingInfo.hardenedRuntime {
+            return [.dyldInsert]
+        }
+        if entitlementNames.contains(Self.allowDyldEntitlement) {
+            return [.dyldInsertViaEntitlement]
+        }
+        return []
     }
 }

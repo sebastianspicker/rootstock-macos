@@ -13,7 +13,7 @@ from __future__ import annotations
 from neo4j import Session
 
 from constants import ATTACKER_BUNDLE_ID
-from infer_injection import ensure_attacker_node
+from infer_common import ensure_attacker_node
 
 
 def infer(session: Session) -> int:

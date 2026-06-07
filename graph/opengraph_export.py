@@ -416,32 +416,8 @@ def export_cross_domain(session, hostname: str) -> dict:
         username = props.get("name", "unknown")
         rs_id = make_node_id(hostname, "User", username)
 
-        nodes.append(
-            {
-                "id": rs_id,
-                "kind": "rs_User",
-                "label": username,
-                "properties": _serialize_props(props),
-            }
-        )
-
-        # Emit a cross-domain edge stub: rs_User → AZUser (matched by name).
-        # NOTE: The target ID format "az-user-{username}" is a stub that only
-        # resolves if a BloodHound AZUser node with that exact ID exists in the
-        # consuming graph. For cross-domain correlation to work, the BloodHound
-        # import must use the same ID format or the consuming tool must perform
-        # username-based matching via the match_key property.
-        edges.append(
-            {
-                "source": rs_id,
-                "target": f"az-user-{_sanitize(username)}",
-                "kind": "rs_SameIdentity",
-                "properties": {
-                    "match_key": username,
-                    "_traversable": False,
-                },
-            }
-        )
+        nodes.append(_cross_domain_user_node(rs_id, username, props))
+        edges.append(_cross_domain_identity_edge(rs_id, username))
 
     return {
         "metadata": {
@@ -452,6 +428,27 @@ def export_cross_domain(session, hostname: str) -> dict:
         "graph": {
             "nodes": nodes,
             "edges": edges,
+        },
+    }
+
+
+def _cross_domain_user_node(rs_id: str, username: str, props: dict) -> dict:
+    return {
+        "id": rs_id,
+        "kind": "rs_User",
+        "label": username,
+        "properties": _serialize_props(props),
+    }
+
+
+def _cross_domain_identity_edge(rs_id: str, username: str) -> dict:
+    return {
+        "source": rs_id,
+        "target": f"az-user-{_sanitize(username)}",
+        "kind": "rs_SameIdentity",
+        "properties": {
+            "match_key": username,
+            "_traversable": False,
         },
     }
 

@@ -66,18 +66,11 @@ public enum Shell {
             return nil
         }
 
-        var timedOut = false
-        if let timeoutSeconds {
-            let deadline = DispatchTime.now() + timeoutSeconds
-            if completed.wait(timeout: deadline) == .timedOut {
-                timedOut = true
-                process.terminate()
-            }
-        } else {
-            process.waitUntilExit()
-        }
-
-        process.waitUntilExit()
+        let timedOut = waitForCompletion(
+            of: process,
+            completionSignal: completed,
+            timeoutSeconds: timeoutSeconds
+        )
         outputGroup.wait()
 
         return ShellResult(
@@ -86,6 +79,26 @@ public enum Shell {
             terminationStatus: process.terminationStatus,
             timedOut: timedOut
         )
+    }
+
+    private static func waitForCompletion(
+        of process: Process,
+        completionSignal: DispatchSemaphore,
+        timeoutSeconds: TimeInterval?
+    ) -> Bool {
+        guard let timeoutSeconds else {
+            process.waitUntilExit()
+            return false
+        }
+
+        let deadline = DispatchTime.now() + timeoutSeconds
+        if completionSignal.wait(timeout: deadline) == .timedOut {
+            process.terminate()
+            process.waitUntilExit()
+            return true
+        }
+        process.waitUntilExit()
+        return false
     }
 
     /// Run a command and return stderr as a trimmed String, or nil on failure / non-zero exit.

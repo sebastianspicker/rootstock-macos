@@ -52,7 +52,7 @@ final class ActiveDirectoryTests: XCTestCase {
             computerAccount: "MAC$"
         )
         let data = try JSONEncoder().encode(binding)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertNotNil(json["is_bound"])
         XCTAssertNotNil(json["computer_account"])

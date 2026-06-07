@@ -26,7 +26,24 @@ def import_ad_binding(
     if ad_binding is None or not ad_binding.is_bound:
         return 0, 0
 
-    # Enrich Computer node with AD properties
+    computer_key = _computer_key(hostname, scan_id)
+    _enrich_computer_ad_binding(session, ad_binding, computer_key)
+    _link_ad_users_to_computer(session, computer_key)
+
+    if not ad_binding.group_mappings:
+        return 0, 0
+
+    records = _ad_group_mapping_records(ad_binding)
+    _merge_ad_group_nodes(session, records)
+    edges = _link_ad_group_mappings(session, records)
+    return len(ad_binding.group_mappings), edges
+
+
+def _enrich_computer_ad_binding(
+    session: Session,
+    ad_binding: ADBindingData,
+    computer_key: str | None,
+) -> None:
     session.run(
         """
         MATCH (c:Computer {computer_key: $computer_key})
@@ -37,7 +54,7 @@ def import_ad_binding(
             c.ad_ou = $ou,
             c.ad_preferred_dc = $preferred_dc
         """,
-        computer_key=f"{scan_id}:{hostname}" if scan_id is not None else None,
+        computer_key=computer_key,
         realm=ad_binding.realm,
         forest=ad_binding.forest,
         computer_account=ad_binding.computer_account,
@@ -45,21 +62,20 @@ def import_ad_binding(
         preferred_dc=ad_binding.preferred_dc,
     )
 
-    # AD_USER_OF: User{is_ad_user} → Computer{ad_bound}
-    # Connects floating AD user nodes to the host they were discovered on.
+
+def _link_ad_users_to_computer(session: Session, computer_key: str | None) -> None:
     session.run(
         """
         MATCH (u:User {is_ad_user: true})
         MATCH (c:Computer {computer_key: $computer_key, ad_bound: true})
         MERGE (u)-[:AD_USER_OF]->(c)
         """,
-        computer_key=f"{scan_id}:{hostname}" if scan_id is not None else None,
+        computer_key=computer_key,
     )
 
-    if not ad_binding.group_mappings:
-        return 0, 0
 
-    records = [
+def _ad_group_mapping_records(ad_binding: ADBindingData) -> list[dict[str, str]]:
+    return [
         {
             "ad_group": m.ad_group,
             "local_group": m.local_group,
@@ -67,7 +83,11 @@ def import_ad_binding(
         for m in ad_binding.group_mappings
     ]
 
-    # MERGE ADGroup nodes
+
+def _merge_ad_group_nodes(
+    session: Session,
+    records: list[dict[str, str]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -76,7 +96,11 @@ def import_ad_binding(
         records=records,
     )
 
-    # MAPPED_TO: ADGroup → LocalGroup
+
+def _link_ad_group_mappings(
+    session: Session,
+    records: list[dict[str, str]],
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -87,29 +111,17 @@ def import_ad_binding(
         """,
         records=records,
     )
-    edges = result.single()["n"]
-
-    return len(ad_binding.group_mappings), edges
+    return result.single()["n"]
 
 
-def import_kerberos_artifacts(
-    session: Session,
+def _computer_key(hostname: str, scan_id: str | None) -> str | None:
+    return f"{scan_id}:{hostname}" if scan_id is not None else None
+
+
+def _kerberos_artifact_records(
     artifacts: list[KerberosArtifactData],
-    hostname: str,
-    scan_id: str | None = None,
-) -> tuple[int, int, int, int]:
-    """
-    MERGE KerberosArtifact nodes and create:
-    - FOUND_ON edges (KerberosArtifact → Computer)
-    - HAS_KERBEROS_CACHE edges (User → KerberosArtifact) for ccache with principal_hint
-    - HAS_KEYTAB edges (Computer → KerberosArtifact) for keytab type
-
-    Returns (artifact_nodes, found_on_edges, has_kerberos_cache_edges, has_keytab_edges).
-    """
-    if not artifacts:
-        return 0, 0, 0, 0
-
-    records = [
+) -> list[dict[str, object]]:
+    return [
         {
             "path": a.path,
             "artifact_type": a.artifact_type,
@@ -121,7 +133,6 @@ def import_kerberos_artifacts(
             "is_readable": a.is_readable,
             "is_world_readable": a.is_world_readable,
             "is_group_readable": a.is_group_readable,
-            # krb5.conf parsed fields
             "default_realm": a.default_realm,
             "permitted_enc_types": a.permitted_enc_types,
             "realm_names": a.realm_names,
@@ -130,7 +141,11 @@ def import_kerberos_artifacts(
         for a in artifacts
     ]
 
-    # MERGE KerberosArtifact nodes
+
+def _import_kerberos_artifact_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -152,7 +167,12 @@ def import_kerberos_artifacts(
         records=records,
     )
 
-    # FOUND_ON: KerberosArtifact → Computer
+
+def _import_kerberos_found_on_edges(
+    session: Session,
+    records: list[dict[str, object]],
+    computer_key: str | None,
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -162,43 +182,79 @@ def import_kerberos_artifacts(
         RETURN count(rel) AS n
         """,
         records=records,
-        computer_key=f"{scan_id}:{hostname}" if scan_id is not None else None,
+        computer_key=computer_key,
     )
-    found_on = result.single()["n"]
+    return result.single()["n"]
 
-    # HAS_KERBEROS_CACHE: User → KerberosArtifact (ccache with principal_hint)
+
+def _import_kerberos_cache_edges(
+    session: Session,
+    records: list[dict[str, object]],
+) -> int:
     ccache_records = [
         r for r in records if r["artifact_type"] == "ccache" and r["principal_hint"]
     ]
-    has_cache = 0
-    if ccache_records:
-        result = session.run(
-            """
-            UNWIND $records AS r
-            MATCH (ka:KerberosArtifact {path: r.path})
-            MERGE (u:User {name: r.principal_hint})
-            MERGE (u)-[rel:HAS_KERBEROS_CACHE]->(ka)
-            RETURN count(rel) AS n
-            """,
-            records=ccache_records,
-        )
-        has_cache = result.single()["n"]
+    if not ccache_records:
+        return 0
 
-    # HAS_KEYTAB: Computer → KerberosArtifact (keytab type)
+    result = session.run(
+        """
+        UNWIND $records AS r
+        MATCH (ka:KerberosArtifact {path: r.path})
+        MERGE (u:User {name: r.principal_hint})
+        MERGE (u)-[rel:HAS_KERBEROS_CACHE]->(ka)
+        RETURN count(rel) AS n
+        """,
+        records=ccache_records,
+    )
+    return result.single()["n"]
+
+
+def _import_keytab_edges(
+    session: Session,
+    records: list[dict[str, object]],
+    computer_key: str | None,
+) -> int:
     keytab_records = [r for r in records if r["artifact_type"] == "keytab"]
-    has_keytab = 0
-    if keytab_records:
-        result = session.run(
-            """
-            UNWIND $records AS r
-            MATCH (ka:KerberosArtifact {path: r.path})
-            MATCH (c:Computer {computer_key: $computer_key})
-            MERGE (c)-[rel:HAS_KEYTAB]->(ka)
-            RETURN count(rel) AS n
-            """,
-            records=keytab_records,
-            computer_key=f"{scan_id}:{hostname}" if scan_id is not None else None,
-        )
-        has_keytab = result.single()["n"]
+    if not keytab_records:
+        return 0
+
+    result = session.run(
+        """
+        UNWIND $records AS r
+        MATCH (ka:KerberosArtifact {path: r.path})
+        MATCH (c:Computer {computer_key: $computer_key})
+        MERGE (c)-[rel:HAS_KEYTAB]->(ka)
+        RETURN count(rel) AS n
+        """,
+        records=keytab_records,
+        computer_key=computer_key,
+    )
+    return result.single()["n"]
+
+
+def import_kerberos_artifacts(
+    session: Session,
+    artifacts: list[KerberosArtifactData],
+    hostname: str,
+    scan_id: str | None = None,
+) -> tuple[int, int, int, int]:
+    """
+    MERGE KerberosArtifact nodes and create:
+    - FOUND_ON edges (KerberosArtifact → Computer)
+    - HAS_KERBEROS_CACHE edges (User → KerberosArtifact) for ccache with principal_hint
+    - HAS_KEYTAB edges (Computer → KerberosArtifact) for keytab type
+
+    Returns (artifact_nodes, found_on_edges, has_kerberos_cache_edges, has_keytab_edges).
+    """
+    if not artifacts:
+        return 0, 0, 0, 0
+
+    records = _kerberos_artifact_records(artifacts)
+    computer_key = _computer_key(hostname, scan_id)
+    _import_kerberos_artifact_nodes(session, records)
+    found_on = _import_kerberos_found_on_edges(session, records, computer_key)
+    has_cache = _import_kerberos_cache_edges(session, records)
+    has_keytab = _import_keytab_edges(session, records, computer_key)
 
     return len(artifacts), found_on, has_cache, has_keytab

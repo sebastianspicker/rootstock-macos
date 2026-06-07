@@ -42,6 +42,25 @@ public struct LaunchItem: GraphNode {
         case loginHook = "login_hook"
     }
 
+    public struct Ownership: Codable, Sendable {
+        public let plistOwner: String?
+        public let programOwner: String?
+        public let plistWritableByNonRoot: Bool
+        public let programWritableByNonRoot: Bool
+
+        public init(
+            plistOwner: String? = nil,
+            programOwner: String? = nil,
+            plistWritableByNonRoot: Bool = false,
+            programWritableByNonRoot: Bool = false
+        ) {
+            self.plistOwner = plistOwner
+            self.programOwner = programOwner
+            self.plistWritableByNonRoot = plistWritableByNonRoot
+            self.programWritableByNonRoot = programWritableByNonRoot
+        }
+    }
+
     public init(
         label: String,
         path: String,
@@ -49,10 +68,7 @@ public struct LaunchItem: GraphNode {
         program: String?,
         runAtLoad: Bool,
         user: String?,
-        plistOwner: String? = nil,
-        programOwner: String? = nil,
-        plistWritableByNonRoot: Bool = false,
-        programWritableByNonRoot: Bool = false
+        ownership: Ownership = Ownership()
     ) {
         self.label = label
         self.path = path
@@ -60,10 +76,10 @@ public struct LaunchItem: GraphNode {
         self.program = program
         self.runAtLoad = runAtLoad
         self.user = user
-        self.plistOwner = plistOwner
-        self.programOwner = programOwner
-        self.plistWritableByNonRoot = plistWritableByNonRoot
-        self.programWritableByNonRoot = programWritableByNonRoot
+        self.plistOwner = ownership.plistOwner
+        self.programOwner = ownership.programOwner
+        self.plistWritableByNonRoot = ownership.plistWritableByNonRoot
+        self.programWritableByNonRoot = ownership.programWritableByNonRoot
     }
 
     enum CodingKeys: String, CodingKey {

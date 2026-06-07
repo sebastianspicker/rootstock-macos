@@ -52,7 +52,10 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 ### Technical Limitations
 
 - **TCC access on macOS 15+.** Starting with macOS 15 Sequoia, reading the user-level TCC.db requires Full Disk Access at the kernel level. Without FDA, the TCC module returns zero grants and logs a recoverable error.
-- **SIP-protected apps.** System applications (e.g., Safari, Terminal) are protected by SIP at the kernel level, which prevents DYLD injection regardless of code signing flags. The current injection assessment does not account for SIP, so these apps may appear as injectable when they are not in practice (see TD-006).
+- **SIP-protected apps.** System applications (e.g., Safari, Terminal) are
+  protected by SIP at the kernel level, which prevents DYLD injection
+  regardless of code signing flags. Treat injection findings on platform
+  binaries as candidates that require SIP-aware validation.
 - **Schema stability.** Apple changes TCC schemas, entitlement semantics, and security mechanisms with each macOS release. Rootstock uses PRAGMA-based runtime schema detection to be forward-compatible, but new security mechanisms may not be modeled until explicitly added.
 - **Inference is necessary conditions, not sufficient.** The `CAN_INJECT_INTO` relationship indicates that the target app _lacks the code signing protections_ that would prevent injection. It does not guarantee that a working exploit exists — additional factors (ASLR, code signature validation timing, sandboxing) may prevent exploitation.
 - **Electron inheritance model.** The `CHILD_INHERITS_TCC` relationship for Electron apps assumes the `ELECTRON_RUN_AS_NODE` attack vector. Apple has mitigated this in recent macOS versions for hardened Electron apps, but the mitigation coverage is not comprehensive.
@@ -75,7 +78,7 @@ It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/
 | **Graph model** | Identity-centric (users, groups, GPOs, ACLs) | App-centric (TCC, entitlements, code signing) |
 | **Node types** | User, Group, Computer, Domain, GPO, OU | Application, TCC_Permission, Entitlement, XPC_Service, Keychain_Item, LaunchItem, MDM_Profile, User |
 | **Attack paths** | Kerberoast, DCSync, AdminTo, GenericAll | DYLD injection, TCC abuse, Electron inheritance, Apple Events |
-| **Data collection** | SharpHound (C#/.NET), remote LDAP queries | rootstock-collector (Swift), local macOS APIs |
+| **Data collection** | SharpHound (C#/.NET), remote LDAP queries | Rootstock Swift collector (`RootstockCLI`), local macOS APIs |
 | **Analysis** | Neo4j + custom UI | Neo4j + Cypher query library |
 | **Operating system** | Windows / Linux / macOS (collector runs anywhere with AD access) | macOS only (collector must run on target) |
 | **Complementary?** | Yes — BloodHound does not model macOS-native boundaries | Yes — Rootstock does not model AD trust relationships |

@@ -22,8 +22,10 @@ Usage:
 from __future__ import annotations
 
 import json
+import logging
 import sys
 import time
+import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,6 +37,8 @@ try:
 except ImportError:
     requests = None  # type: ignore[assignment]
 
+logger = logging.getLogger(__name__)
+
 
 # ── Constants ──────────────────────────────────────────────────────────────
 
@@ -42,8 +46,8 @@ CACHE_DIR = Path.home() / ".rootstock" / "cache"
 EPSS_CACHE = CACHE_DIR / "epss.json"
 KEV_CACHE = CACHE_DIR / "kev.json"
 
-EPSS_TTL_SECONDS = 24 * 3600   # 24 hours
-KEV_TTL_SECONDS = 24 * 3600    # 24 hours (aligned with EPSS)
+EPSS_TTL_SECONDS = 24 * 3600  # 24 hours
+KEV_TTL_SECONDS = 24 * 3600  # 24 hours (aligned with EPSS)
 
 EPSS_API_URL = "https://api.first.org/data/v1/epss"
 KEV_FEED_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
@@ -58,6 +62,7 @@ REQUEST_TIMEOUT = 30
 
 
 # ── Enriched data model ───────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class EnrichedCveEntry:
@@ -74,6 +79,7 @@ class EnrichedCveEntry:
 
 
 # ── Cache management ─────────────────────────────────────────────────────
+
 
 def _ensure_cache_dir() -> None:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -113,7 +119,12 @@ def _is_stale(cache: dict | None, ttl: float) -> bool:
     return _cache_age_seconds(cache) > ttl
 
 
+def _cache_entry_count(cache: dict) -> int:
+    return sum(1 for key in cache if not key.startswith("_"))
+
+
 # ── EPSS fetch ───────────────────────────────────────────────────────────
+
 
 def _all_registry_cve_ids() -> list[str]:
     """Collect all unique CVE IDs from the static registry."""
@@ -164,7 +175,7 @@ def fetch_epss(force: bool = False) -> dict:
 
     all_epss: dict[str, dict] = {}
     for i in range(0, len(cve_ids), EPSS_BATCH_SIZE):
-        batch = cve_ids[i:i + EPSS_BATCH_SIZE]
+        batch = cve_ids[i : i + EPSS_BATCH_SIZE]
         batch_result = _fetch_epss_batch(batch)
         all_epss.update(batch_result)
 
@@ -177,6 +188,7 @@ def fetch_epss(force: bool = False) -> dict:
 
 
 # ── CISA KEV fetch ───────────────────────────────────────────────────────
+
 
 def fetch_kev(force: bool = False) -> dict:
     """Fetch CISA KEV catalog. Returns the cache dict."""
@@ -199,7 +211,8 @@ def fetch_kev(force: bool = False) -> dict:
             result[cve_id] = {
                 "date_added": vuln.get("dateAdded"),
                 "due_date": vuln.get("dueDate"),
-                "ransomware": vuln.get("knownRansomwareCampaignUse", "Unknown") == "Known",
+                "ransomware": vuln.get("knownRansomwareCampaignUse", "Unknown")
+                == "Known",
             }
 
     result["_fetched_at"] = datetime.now(timezone.utc).isoformat()  # type: ignore[assignment]
@@ -208,6 +221,7 @@ def fetch_kev(force: bool = False) -> dict:
 
 
 # ── NVD CVSS vector fetch ───────────────────────────────────────────────
+
 
 def _fetch_nvd_single(cve_id: str) -> str | None:
     """Fetch CVSS vector string for a single CVE from NVD 2.0 API."""
@@ -238,7 +252,7 @@ def _fetch_nvd_single(cve_id: str) -> str | None:
     return None
 
 
-def fetch_nvd(force: bool = False) -> dict:
+def fetch_nvd(force: bool = False, errors: list[str] | None = None) -> dict:
     """Fetch NVD CVSS vector strings for all registry CVEs. Returns the cache dict."""
     cache = _read_cache(NVD_CACHE)
 
@@ -249,24 +263,9 @@ def fetch_nvd(force: bool = False) -> dict:
     if not cve_ids:
         return cache or {}
 
-    # Start with existing cache data to avoid re-fetching known CVEs
-    all_nvd: dict[str, dict] = {}
-    if cache is not None:
-        for k, v in cache.items():
-            if not k.startswith("_"):
-                all_nvd[k] = v
-
-    for cve_id in cve_ids:
-        if not force and cve_id in all_nvd:
-            continue
-        try:
-            vector = _fetch_nvd_single(cve_id)
-            all_nvd[cve_id] = {"vector": vector}
-            # Rate-limit to stay within NVD's public API limits
-            time.sleep(NVD_BATCH_DELAY)
-        except Exception:
-            # Skip individual failures; keep going
-            all_nvd[cve_id] = {"vector": None}
+    all_nvd = _cached_nvd_entries(cache)
+    fail_count = _fetch_missing_nvd_vectors(cve_ids, all_nvd, force)
+    _record_nvd_failures(fail_count, len(cve_ids), errors)
 
     result = {
         **all_nvd,
@@ -276,45 +275,86 @@ def fetch_nvd(force: bool = False) -> dict:
     return result
 
 
+def _cached_nvd_entries(cache: dict | None) -> dict[str, dict]:
+    """Keep existing per-CVE cache entries while dropping metadata keys."""
+    if cache is None:
+        return {}
+    return {key: value for key, value in cache.items() if not key.startswith("_")}
+
+
+def _fetch_missing_nvd_vectors(
+    cve_ids: list[str],
+    all_nvd: dict[str, dict],
+    force: bool,
+) -> int:
+    fail_count = 0
+    for cve_id in cve_ids:
+        if not force and cve_id in all_nvd:
+            continue
+        try:
+            all_nvd[cve_id] = {"vector": _fetch_nvd_single(cve_id)}
+            # Rate-limit to stay within NVD's public API limits.
+            time.sleep(NVD_BATCH_DELAY)
+        except Exception:
+            fail_count += 1
+            all_nvd[cve_id] = {"vector": None}
+    return fail_count
+
+
+def _record_nvd_failures(
+    fail_count: int,
+    total_count: int,
+    errors: list[str] | None,
+) -> None:
+    if fail_count and errors is not None:
+        errors.append(f"NVD partial: {fail_count}/{total_count} CVEs failed enrichment")
+
+
 # ── Combined fetch ───────────────────────────────────────────────────────
 
-def fetch_and_cache(force: bool = False) -> None:
+
+def _has_any_enrichment_cache() -> bool:
+    return any(_read_cache(path) for path in (EPSS_CACHE, KEV_CACHE, NVD_CACHE))
+
+
+def fetch_and_cache(force: bool = False) -> list[str]:
     """Fetch EPSS, KEV, and NVD data. CLI entry point."""
     errors: list[str] = []
 
-    try:
-        epss = fetch_epss(force=force)
-        epss_count = sum(1 for k in epss if not k.startswith("_"))
-        print(f"  EPSS: {epss_count} CVEs cached")
-    except Exception as e:
-        errors.append(f"EPSS fetch failed: {e}")
-        print(f"  EPSS: fetch failed ({e})")
+    _fetch_cache_source("EPSS", fetch_epss, "CVEs", force, errors)
+    _fetch_cache_source("KEV", fetch_kev, "entries", force, errors)
+    _fetch_cache_source(
+        "NVD",
+        lambda force: fetch_nvd(force=force, errors=errors),
+        "CVEs",
+        force,
+        errors,
+    )
 
-    try:
-        kev = fetch_kev(force=force)
-        kev_count = sum(1 for k in kev if not k.startswith("_"))
-        print(f"  KEV:  {kev_count} entries cached")
-    except Exception as e:
-        errors.append(f"KEV fetch failed: {e}")
-        print(f"  KEV:  fetch failed ({e})")
+    if errors and _has_any_enrichment_cache():
+        print("  Using stale cache as fallback")
 
-    try:
-        nvd = fetch_nvd(force=force)
-        nvd_count = sum(1 for k in nvd if not k.startswith("_"))
-        print(f"  NVD:  {nvd_count} CVEs cached")
-    except Exception as e:
-        errors.append(f"NVD fetch failed: {e}")
-        print(f"  NVD:  fetch failed ({e})")
+    return errors
 
-    if errors:
-        cache_epss = _read_cache(EPSS_CACHE)
-        cache_kev = _read_cache(KEV_CACHE)
-        cache_nvd = _read_cache(NVD_CACHE)
-        if cache_epss or cache_kev or cache_nvd:
-            print("  Using stale cache as fallback")
+
+def _fetch_cache_source(
+    name: str,
+    fetcher,
+    count_label: str,
+    force: bool,
+    errors: list[str],
+) -> None:
+    display = f"{name}:".ljust(6)
+    try:
+        cache = fetcher(force=force)
+        print(f"  {display}{_cache_entry_count(cache)} {count_label} cached")
+    except Exception as e:
+        errors.append(f"{name} fetch failed: {e}")
+        print(f"  {display}fetch failed ({e})")
 
 
 # ── Enrichment ───────────────────────────────────────────────────────────
+
 
 def enrich_registry() -> dict[str, EnrichedCveEntry]:
     """Enrich all registry CVEs with cached EPSS/KEV/NVD data.
@@ -326,36 +366,66 @@ def enrich_registry() -> dict[str, EnrichedCveEntry]:
     kev_cache = _read_cache(KEV_CACHE) or {}
     nvd_cache = _read_cache(NVD_CACHE) or {}
 
-    result: dict[str, EnrichedCveEntry] = {}
-    seen: set[str] = set()
+    result = {
+        cve.cve_id: _enriched_cve_entry(cve, epss_cache, kev_cache, nvd_cache)
+        for cve in _unique_registry_cves()
+    }
+    _warn_if_no_enrichment_cache(epss_cache, kev_cache, nvd_cache)
+    return result
 
+
+def _unique_registry_cves() -> list[CveEntry]:
+    result: list[CveEntry] = []
+    seen: set[str] = set()
     for ctx in _REGISTRY.values():
         for cve in ctx.cves:
             if cve.cve_id in seen:
                 continue
             seen.add(cve.cve_id)
-
-            epss_data = epss_cache.get(cve.cve_id)
-            kev_data = kev_cache.get(cve.cve_id)
-            nvd_data = nvd_cache.get(cve.cve_id)
-
-            result[cve.cve_id] = EnrichedCveEntry(
-                base=cve,
-                epss_score=epss_data["epss"] if epss_data else None,
-                epss_percentile=epss_data["percentile"] if epss_data else None,
-                in_kev=kev_data is not None,
-                kev_date_added=kev_data["date_added"] if kev_data else None,
-                kev_due_date=kev_data["due_date"] if kev_data else None,
-                kev_ransomware=kev_data.get("ransomware", False) if kev_data else False,
-                cvss_vector=nvd_data.get("vector") if nvd_data else None,
-            )
-
+            result.append(cve)
     return result
+
+
+def _enriched_cve_entry(
+    cve: CveEntry,
+    epss_cache: dict,
+    kev_cache: dict,
+    nvd_cache: dict,
+) -> EnrichedCveEntry:
+    epss_data = epss_cache.get(cve.cve_id)
+    kev_data = kev_cache.get(cve.cve_id)
+    nvd_data = nvd_cache.get(cve.cve_id)
+    return EnrichedCveEntry(
+        base=cve,
+        epss_score=epss_data["epss"] if epss_data else None,
+        epss_percentile=epss_data["percentile"] if epss_data else None,
+        in_kev=kev_data is not None,
+        kev_date_added=kev_data["date_added"] if kev_data else None,
+        kev_due_date=kev_data["due_date"] if kev_data else None,
+        kev_ransomware=kev_data.get("ransomware", False) if kev_data else False,
+        cvss_vector=nvd_data.get("vector") if nvd_data else None,
+    )
+
+
+def _warn_if_no_enrichment_cache(
+    epss_cache: dict,
+    kev_cache: dict,
+    nvd_cache: dict,
+) -> None:
+    if epss_cache or kev_cache or nvd_cache:
+        return
+    logger.warning(
+        "No enrichment caches found; scoring uses CVSS-only. "
+        "Run --refresh-cve to populate."
+    )
 
 
 # ── Temporal scoring ─────────────────────────────────────────────────────
 
-def temporal_score(cvss: float, epss: float | None, years_since_disclosure: float) -> float:
+
+def temporal_score(
+    cvss: float, epss: float | None, years_since_disclosure: float
+) -> float:
     """Compute a temporal priority score combining CVSS, EPSS, and age decay.
 
     Score = (CVSS/10 * 0.4) + (EPSS * 0.4) + (age_decay * 0.2)
@@ -371,6 +441,7 @@ def temporal_score(cvss: float, epss: float | None, years_since_disclosure: floa
 
 
 # ── Status ───────────────────────────────────────────────────────────────
+
 
 def get_enrichment_status() -> dict:
     """Return cache freshness and stats."""
@@ -401,14 +472,72 @@ def get_enrichment_status() -> dict:
 
 # ── CLI ──────────────────────────────────────────────────────────────────
 
-def main() -> int:
-    import argparse
 
-    parser = argparse.ArgumentParser(description="EPSS + CISA KEV enrichment for Rootstock CVEs")
-    parser.add_argument("--fetch", action="store_true", help="Download and cache EPSS + KEV data")
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="EPSS + CISA KEV enrichment for Rootstock CVEs"
+    )
+    parser.add_argument(
+        "--fetch", action="store_true", help="Download and cache EPSS + KEV data"
+    )
     parser.add_argument("--status", action="store_true", help="Show cache freshness")
-    parser.add_argument("--lookup", metavar="CVE_ID", help="Look up enrichment for a specific CVE")
-    parser.add_argument("--force", action="store_true", help="Force refresh (ignore TTL)")
+    parser.add_argument(
+        "--lookup", metavar="CVE_ID", help="Look up enrichment for a specific CVE"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force refresh (ignore TTL)"
+    )
+    return parser
+
+
+def _run_fetch(force: bool) -> int:
+    print("Fetching CVE enrichment data...")
+    errors = fetch_and_cache(force=force)
+    if errors and not _has_any_enrichment_cache():
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        return 1
+    for error in errors:
+        print(f"WARNING: {error}", file=sys.stderr)
+    return 0
+
+
+def _print_enrichment_status() -> None:
+    status = get_enrichment_status()
+    print(f"Registry CVEs: {status['registry_cve_count']}")
+    for source in ("epss", "kev", "nvd"):
+        source_status = status[source]
+        if source_status["cached"]:
+            stale = " (STALE)" if source_status["stale"] else ""
+            print(
+                f"  {source.upper()}: {source_status['count']} entries, "
+                f"{source_status['age_hours']}h old{stale}"
+            )
+        else:
+            print(f"  {source.upper()}: not cached")
+
+
+def _print_cve_lookup(cve_id: str) -> int:
+    enriched = enrich_registry()
+    entry = enriched.get(cve_id)
+    if entry is None:
+        print(f"{cve_id}: not in registry")
+        return 1
+    print(f"{entry.base.cve_id}: {entry.base.title}")
+    print(f"  CVSS:      {entry.base.cvss_score}")
+    print(f"  EPSS:      {entry.epss_score or 'N/A'}")
+    print(f"  Percentile:{entry.epss_percentile or 'N/A'}")
+    print(f"  KEV:       {'Yes' if entry.in_kev else 'No'}")
+    if entry.kev_date_added:
+        print(f"  KEV Added: {entry.kev_date_added}")
+    if entry.kev_ransomware:
+        print("  Ransomware: Yes")
+    print(f"  Status:    {entry.base.exploitation_status}")
+    return 0
+
+
+def main() -> int:
+    parser = _build_parser()
     args = parser.parse_args()
 
     if not any([args.fetch, args.status, args.lookup]):
@@ -416,40 +545,15 @@ def main() -> int:
         return 0
 
     if args.fetch:
-        print("Fetching CVE enrichment data...")
-        try:
-            fetch_and_cache(force=args.force)
-        except Exception as e:
-            print(f"ERROR: {e}", file=sys.stderr)
-            return 1
+        fetch_exit = _run_fetch(args.force)
+        if fetch_exit:
+            return fetch_exit
 
     if args.status:
-        status = get_enrichment_status()
-        print(f"Registry CVEs: {status['registry_cve_count']}")
-        for source in ("epss", "kev", "nvd"):
-            s = status[source]
-            if s["cached"]:
-                stale = " (STALE)" if s["stale"] else ""
-                print(f"  {source.upper()}: {s['count']} entries, {s['age_hours']}h old{stale}")
-            else:
-                print(f"  {source.upper()}: not cached")
+        _print_enrichment_status()
 
     if args.lookup:
-        enriched = enrich_registry()
-        entry = enriched.get(args.lookup)
-        if entry is None:
-            print(f"{args.lookup}: not in registry")
-            return 1
-        print(f"{entry.base.cve_id}: {entry.base.title}")
-        print(f"  CVSS:      {entry.base.cvss_score}")
-        print(f"  EPSS:      {entry.epss_score or 'N/A'}")
-        print(f"  Percentile:{entry.epss_percentile or 'N/A'}")
-        print(f"  KEV:       {'Yes' if entry.in_kev else 'No'}")
-        if entry.kev_date_added:
-            print(f"  KEV Added: {entry.kev_date_added}")
-        if entry.kev_ransomware:
-            print("  Ransomware: Yes")
-        print(f"  Status:    {entry.base.exploitation_status}")
+        return _print_cve_lookup(args.lookup)
 
     return 0
 

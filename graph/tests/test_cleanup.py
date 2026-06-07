@@ -6,6 +6,8 @@ Requires a running Neo4j instance. Tests are skipped if Neo4j is unavailable.
 
 from __future__ import annotations
 
+from unittest import TestCase
+
 import pytest
 
 from conftest import cleanup_test_nodes
@@ -25,6 +27,9 @@ def session(neo4j_driver):
             "MATCH (r:Recommendation {title: $title}) DETACH DELETE r",
             title=UNRELATED_TITLE,
         )
+
+
+checks = TestCase()
 
 
 def test_cleanup_only_removes_test_subgraph(session):
@@ -67,8 +72,8 @@ def test_cleanup_only_removes_test_subgraph(session):
         title=UNRELATED_TITLE,
     ).single()
 
-    assert counts["unrelated_exists"] is True
-    assert counts["app_exists"] is False
-    assert counts["perm_exists"] is False
-    assert counts["launch_exists"] is False
-    assert counts["user_exists"] is False
+    checks.assertIs(counts["unrelated_exists"], True)
+    checks.assertIs(counts["app_exists"], False)
+    checks.assertIs(counts["perm_exists"], False)
+    checks.assertIs(counts["launch_exists"], False)
+    checks.assertIs(counts["user_exists"], False)

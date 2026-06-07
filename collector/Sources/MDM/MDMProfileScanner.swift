@@ -100,42 +100,49 @@ struct MDMProfileScanner {
             return []
         }
 
-        var policies: [TCCPolicy] = []
-
-        for item in payloadItems {
-            guard let payloadType = item["PayloadType"] as? String,
-                  payloadType == "com.apple.TCC.configuration-profile-policy",
-                  let payloadContent = item["PayloadContent"] as? [String: Any],
-                  let services = payloadContent["Services"] as? [String: Any] else {
-                continue
-            }
-
-            for (service, entriesAny) in services {
-                guard let entries = entriesAny as? [[String: Any]] else { continue }
-                for entry in entries {
-                    guard let identifier = entry["Identifier"] as? String,
-                          let identifierType = entry["IdentifierType"] as? String,
-                          identifierType == "bundleID" else { continue }
-
-                    // Allowed can be Bool (true/false) or Int (1/0) depending on plist encoding
-                    let allowed: Bool
-                    if let b = entry["Allowed"] as? Bool {
-                        allowed = b
-                    } else if let n = entry["Allowed"] as? Int {
-                        allowed = n != 0
-                    } else {
-                        allowed = false
-                    }
-
-                    policies.append(TCCPolicy(
-                        service: service,
-                        clientBundleId: identifier,
-                        allowed: allowed
-                    ))
-                }
+        return payloadItems.flatMap { item in
+            tccServices(from: item).flatMap { service, entriesAny in
+                policiesByService(service: service, entriesAny: entriesAny)
             }
         }
+    }
 
-        return policies
+    private func tccServices(from item: [String: Any]) -> [String: Any] {
+        guard let payloadType = item["PayloadType"] as? String,
+              payloadType == "com.apple.TCC.configuration-profile-policy",
+              let payloadContent = item["PayloadContent"] as? [String: Any],
+              let services = payloadContent["Services"] as? [String: Any] else {
+            return [:]
+        }
+        return services
+    }
+
+    private func policiesByService(service: String, entriesAny: Any) -> [TCCPolicy] {
+        guard let entries = entriesAny as? [[String: Any]] else { return [] }
+        return entries.compactMap { policy(service: service, entry: $0) }
+    }
+
+    private func policy(service: String, entry: [String: Any]) -> TCCPolicy? {
+        guard let identifier = entry["Identifier"] as? String,
+              let identifierType = entry["IdentifierType"] as? String,
+              identifierType == "bundleID" else {
+            return nil
+        }
+
+        return TCCPolicy(
+            service: service,
+            clientBundleId: identifier,
+            allowed: allowedValue(from: entry["Allowed"])
+        )
+    }
+
+    private func allowedValue(from value: Any?) -> Bool {
+        if let boolValue = value as? Bool {
+            return boolValue
+        }
+        if let numberValue = value as? Int {
+            return numberValue != 0
+        }
+        return false
     }
 }

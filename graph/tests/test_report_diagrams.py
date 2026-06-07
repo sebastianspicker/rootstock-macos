@@ -1,6 +1,9 @@
 """Tests for report_diagrams.py — all pure functions, no Neo4j required."""
+
 import sys
+from unittest import TestCase
 import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from report_diagrams import (
@@ -10,18 +13,21 @@ from report_diagrams import (
 )
 
 
+checks = TestCase()
+
+
 class TestSanitizeMermaidId:
     def test_strips_dots_and_spaces(self):
-        assert "com_apple_foo" == sanitize_mermaid_id("com.apple.foo")
+        checks.assertEqual("com_apple_foo", sanitize_mermaid_id("com.apple.foo"))
 
     def test_handles_slashes(self):
         result = sanitize_mermaid_id("/Applications/Foo.app")
-        assert "/" not in result
-        assert "." not in result
+        checks.assertNotIn("/", result)
+        checks.assertNotIn(".", result)
 
     def test_empty_string(self):
         result = sanitize_mermaid_id("")
-        assert isinstance(result, str)
+        checks.assertTrue(isinstance(result, str))
 
 
 class TestMermaidAttackPath:
@@ -32,10 +38,10 @@ class TestMermaidAttackPath:
             "path_length": 1,
         }
         diagram = mermaid_attack_path(path_result)
-        assert "graph LR" in diagram
-        assert "CAN_INJECT_INTO" in diagram
-        assert "attacker_payload" in diagram
-        assert "iTerm2" in diagram
+        checks.assertIn("graph LR", diagram)
+        checks.assertIn("CAN_INJECT_INTO", diagram)
+        checks.assertIn("attacker_payload", diagram)
+        checks.assertIn("iTerm2", diagram)
 
     def test_three_node_path(self):
         path_result = {
@@ -44,9 +50,9 @@ class TestMermaidAttackPath:
             "path_length": 2,
         }
         diagram = mermaid_attack_path(path_result)
-        assert "graph LR" in diagram
-        assert "CAN_INJECT_INTO" in diagram
-        assert "HAS_TCC_GRANT" in diagram
+        checks.assertIn("graph LR", diagram)
+        checks.assertIn("CAN_INJECT_INTO", diagram)
+        checks.assertIn("HAS_TCC_GRANT", diagram)
 
     def test_highlights_tcc_node(self):
         path_result = {
@@ -56,11 +62,13 @@ class TestMermaidAttackPath:
         }
         diagram = mermaid_attack_path(path_result)
         # TCC nodes should be styled red
-        assert "fill:#ff6666" in diagram
+        checks.assertIn("fill:#ff6666", diagram)
 
     def test_empty_path_returns_empty(self):
-        result = mermaid_attack_path({"node_names": [], "rel_types": [], "path_length": 0})
-        assert result == ""
+        result = mermaid_attack_path(
+            {"node_names": [], "rel_types": [], "path_length": 0}
+        )
+        checks.assertEqual(result, "")
 
     def test_mismatched_nodes_rels_is_safe(self):
         # Should not raise, even if len(nodes) != len(rels) + 1
@@ -70,7 +78,7 @@ class TestMermaidAttackPath:
             "path_length": 0,
         }
         result = mermaid_attack_path(path_result)
-        assert isinstance(result, str)
+        checks.assertTrue(isinstance(result, str))
 
 
 class TestMermaidTccPie:
@@ -81,16 +89,16 @@ class TestMermaidTccPie:
             {"permission": "Microphone", "total_grants": 2},
         ]
         diagram = mermaid_tcc_pie(rows)
-        assert "pie" in diagram
-        assert "Full Disk Access" in diagram
-        assert "5" in diagram
+        checks.assertIn("pie", diagram)
+        checks.assertIn("Full Disk Access", diagram)
+        checks.assertIn("5", diagram)
 
     def test_empty_rows(self):
         diagram = mermaid_tcc_pie([])
-        assert isinstance(diagram, str)
+        checks.assertTrue(isinstance(diagram, str))
 
     def test_top_n_limiting(self):
         rows = [{"permission": f"Perm{i}", "total_grants": i} for i in range(1, 20)]
         diagram = mermaid_tcc_pie(rows, top_n=10)
         # Should not include all 19 entries
-        assert diagram.count('"') <= 22  # 10 entries × 2 quotes + some extra
+        checks.assertLessEqual(diagram.count('"'), 22)

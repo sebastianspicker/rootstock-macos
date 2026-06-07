@@ -78,14 +78,17 @@ class ApplicationData(BaseModel):
     path: str = Field(min_length=1)
     version: str | None = None
     team_id: str | None = None
-    hardened_runtime: bool
-    library_validation: bool
+    hardened_runtime: bool | None = None
+    library_validation: bool | None = None
     is_electron: bool
     is_system: bool
-    signed: bool
+    signed: bool | None = None
+    code_signing_analysis_error: bool = False
     is_sip_protected: bool = False
     is_sandboxed: bool = False
     sandbox_exceptions: list[str] = Field(default_factory=list)
+    entitlements_available: bool = True
+    entitlement_extraction_error: str | None = None
     is_notarized: bool | None = None
     is_adhoc_signed: bool = False
     signing_certificate_cn: str | None = None
@@ -198,7 +201,7 @@ class RemoteAccessServiceData(BaseModel):
 
 class FirewallAppRuleData(BaseModel):
     bundle_id: str = Field(min_length=1)
-    allow_incoming: bool
+    allow_incoming: bool | None = None
 
 
 class FirewallStatusData(BaseModel):
@@ -391,21 +394,22 @@ class ScanResult(BaseModel):
     errors: list[CollectionErrorData] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def check_unique_bundle_ids(self) -> ScanResult:
+    def check_unique_applications(self) -> ScanResult:
         import logging
 
         _logger = logging.getLogger(__name__)
-        seen: set[str] = set()
+        seen: set[tuple[str, str]] = set()
         deduped: list[ApplicationData] = []
         for app in self.applications:
-            if app.bundle_id in seen:
+            app_key = (app.bundle_id, app.path)
+            if app_key in seen:
                 _logger.warning(
-                    "Duplicate bundle_id '%s' — keeping first occurrence, discarding duplicate at path '%s'",
+                    "Duplicate bundle_id/path '%s' at '%s' — keeping first occurrence",
                     app.bundle_id,
                     app.path,
                 )
                 continue
-            seen.add(app.bundle_id)
+            seen.add(app_key)
             deduped.append(app)
         self.applications = deduped
         return self

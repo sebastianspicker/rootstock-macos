@@ -7,14 +7,17 @@ public struct Application: Codable, Sendable, GraphNode {
     public let path: String
     public let version: String?
     public let teamId: String?
-    public let hardenedRuntime: Bool
-    public let libraryValidation: Bool
+    public let hardenedRuntime: Bool?
+    public let libraryValidation: Bool?
     public let isElectron: Bool
     public let isSystem: Bool
-    public let signed: Bool
+    public let signed: Bool?
+    public let codeSigningAnalysisError: Bool
     public let isSipProtected: Bool
     public let isSandboxed: Bool
     public let sandboxExceptions: [String]
+    public let entitlementsAvailable: Bool
+    public let entitlementExtractionError: String?
     public let isNotarized: Bool?
     public let isAdhocSigned: Bool
     public let signingCertificateCN: String?
@@ -32,60 +35,190 @@ public struct Application: Codable, Sendable, GraphNode {
 
     public var nodeType: String { "Application" }
 
+    public struct Identity: Codable, Sendable {
+        public let name: String
+        public let bundleId: String
+        public let path: String
+        public let version: String?
+
+        public init(name: String, bundleId: String, path: String, version: String?) {
+            self.name = name
+            self.bundleId = bundleId
+            self.path = path
+            self.version = version
+        }
+    }
+
+    public struct Flags: Codable, Sendable {
+        public let isElectron: Bool
+        public let isSystem: Bool
+
+        public init(isElectron: Bool, isSystem: Bool) {
+            self.isElectron = isElectron
+            self.isSystem = isSystem
+        }
+    }
+
+    public struct Signing: Codable, Sendable {
+        public let teamId: String?
+        public let hardenedRuntime: Bool?
+        public let libraryValidation: Bool?
+        public let signed: Bool?
+        public let codeSigningAnalysisError: Bool
+        public let isNotarized: Bool?
+        public let isAdhocSigned: Bool
+        public let signingCertificateCN: String?
+        public let signingCertificateSHA256: String?
+        public let certificateExpires: String?
+        public let isCertificateExpired: Bool
+        public let certificateChainLength: Int?
+        public let certificateTrustValid: Bool?
+        public let certificateChain: [CertificateDetail]
+
+        public init(
+            teamId: String? = nil,
+            hardenedRuntime: Bool? = nil,
+            libraryValidation: Bool? = nil,
+            signed: Bool? = nil,
+            analysis: SigningAnalysis = SigningAnalysis(),
+            certificate: CertificateState = CertificateState()
+        ) {
+            self.teamId = teamId
+            self.hardenedRuntime = hardenedRuntime
+            self.libraryValidation = libraryValidation
+            self.signed = signed
+            self.codeSigningAnalysisError = analysis.codeSigningAnalysisError
+            self.isNotarized = analysis.isNotarized
+            self.isAdhocSigned = analysis.isAdhocSigned
+            self.signingCertificateCN = certificate.signingCertificateCN
+            self.signingCertificateSHA256 = certificate.signingCertificateSHA256
+            self.certificateExpires = certificate.certificateExpires
+            self.isCertificateExpired = certificate.isCertificateExpired
+            self.certificateChainLength = certificate.certificateChainLength
+            self.certificateTrustValid = certificate.certificateTrustValid
+            self.certificateChain = certificate.certificateChain
+        }
+    }
+
+    public struct SigningAnalysis: Codable, Sendable {
+        public let codeSigningAnalysisError: Bool
+        public let isNotarized: Bool?
+        public let isAdhocSigned: Bool
+
+        public init(
+            codeSigningAnalysisError: Bool = false,
+            isNotarized: Bool? = nil,
+            isAdhocSigned: Bool = false
+        ) {
+            self.codeSigningAnalysisError = codeSigningAnalysisError
+            self.isNotarized = isNotarized
+            self.isAdhocSigned = isAdhocSigned
+        }
+    }
+
+    public struct CertificateState: Codable, Sendable {
+        public let signingCertificateCN: String?
+        public let signingCertificateSHA256: String?
+        public let certificateExpires: String?
+        public let isCertificateExpired: Bool
+        public let certificateChainLength: Int?
+        public let certificateTrustValid: Bool?
+        public let certificateChain: [CertificateDetail]
+
+        public init(
+            signingCertificateCN: String? = nil,
+            signingCertificateSHA256: String? = nil,
+            certificateExpires: String? = nil,
+            isCertificateExpired: Bool = false,
+            certificateChainLength: Int? = nil,
+            certificateTrustValid: Bool? = nil,
+            certificateChain: [CertificateDetail] = []
+        ) {
+            self.signingCertificateCN = signingCertificateCN
+            self.signingCertificateSHA256 = signingCertificateSHA256
+            self.certificateExpires = certificateExpires
+            self.isCertificateExpired = isCertificateExpired
+            self.certificateChainLength = certificateChainLength
+            self.certificateTrustValid = certificateTrustValid
+            self.certificateChain = certificateChain
+        }
+    }
+
+    public struct Security: Codable, Sendable {
+        public let isSipProtected: Bool
+        public let isSandboxed: Bool
+        public let sandboxExceptions: [String]
+
+        public init(
+            isSipProtected: Bool = false,
+            isSandboxed: Bool = false,
+            sandboxExceptions: [String] = []
+        ) {
+            self.isSipProtected = isSipProtected
+            self.isSandboxed = isSandboxed
+            self.sandboxExceptions = sandboxExceptions
+        }
+    }
+
+    public struct EntitlementState: Codable, Sendable {
+        public let entitlementsAvailable: Bool
+        public let entitlementExtractionError: String?
+        public let entitlements: [EntitlementInfo]
+        public let injectionMethods: [InjectionMethod]
+        public let launchConstraintCategory: String?
+
+        public init(
+            entitlementsAvailable: Bool = true,
+            entitlementExtractionError: String? = nil,
+            entitlements: [EntitlementInfo] = [],
+            injectionMethods: [InjectionMethod] = [],
+            launchConstraintCategory: String? = nil
+        ) {
+            self.entitlementsAvailable = entitlementsAvailable
+            self.entitlementExtractionError = entitlementExtractionError
+            self.entitlements = entitlements
+            self.injectionMethods = injectionMethods
+            self.launchConstraintCategory = launchConstraintCategory
+        }
+    }
+
     public init(
-        name: String,
-        bundleId: String,
-        path: String,
-        version: String?,
-        teamId: String?,
-        hardenedRuntime: Bool,
-        libraryValidation: Bool,
-        isElectron: Bool,
-        isSystem: Bool,
-        signed: Bool,
-        isSipProtected: Bool = false,
-        isSandboxed: Bool = false,
-        sandboxExceptions: [String] = [],
-        isNotarized: Bool? = nil,
-        isAdhocSigned: Bool = false,
-        signingCertificateCN: String? = nil,
-        signingCertificateSHA256: String? = nil,
-        certificateExpires: String? = nil,
-        isCertificateExpired: Bool = false,
-        certificateChainLength: Int? = nil,
-        certificateTrustValid: Bool? = nil,
-        certificateChain: [CertificateDetail] = [],
-        entitlements: [EntitlementInfo] = [],
-        injectionMethods: [InjectionMethod] = [],
-        launchConstraintCategory: String? = nil,
+        identity: Identity,
+        flags: Flags,
+        signing: Signing = Signing(),
+        security: Security = Security(),
+        entitlementState: EntitlementState = EntitlementState(),
         sandboxProfile: SandboxProfile? = nil,
         quarantineInfo: QuarantineInfo? = nil
     ) {
-        self.name = name
-        self.bundleId = bundleId
-        self.path = path
-        self.version = version
-        self.teamId = teamId
-        self.hardenedRuntime = hardenedRuntime
-        self.libraryValidation = libraryValidation
-        self.isElectron = isElectron
-        self.isSystem = isSystem
-        self.signed = signed
-        self.isSipProtected = isSipProtected
-        self.isSandboxed = isSandboxed
-        self.sandboxExceptions = sandboxExceptions
-        self.isNotarized = isNotarized
-        self.isAdhocSigned = isAdhocSigned
-        self.signingCertificateCN = signingCertificateCN
-        self.signingCertificateSHA256 = signingCertificateSHA256
-        self.certificateExpires = certificateExpires
-        self.isCertificateExpired = isCertificateExpired
-        self.certificateChainLength = certificateChainLength
-        self.certificateTrustValid = certificateTrustValid
-        self.certificateChain = certificateChain
-        self.entitlements = entitlements
-        self.injectionMethods = injectionMethods
-        self.launchConstraintCategory = launchConstraintCategory
+        self.name = identity.name
+        self.bundleId = identity.bundleId
+        self.path = identity.path
+        self.version = identity.version
+        self.teamId = signing.teamId
+        self.hardenedRuntime = signing.hardenedRuntime
+        self.libraryValidation = signing.libraryValidation
+        self.isElectron = flags.isElectron
+        self.isSystem = flags.isSystem
+        self.signed = signing.signed
+        self.codeSigningAnalysisError = signing.codeSigningAnalysisError
+        self.isSipProtected = security.isSipProtected
+        self.isSandboxed = security.isSandboxed
+        self.sandboxExceptions = security.sandboxExceptions
+        self.entitlementsAvailable = entitlementState.entitlementsAvailable
+        self.entitlementExtractionError = entitlementState.entitlementExtractionError
+        self.isNotarized = signing.isNotarized
+        self.isAdhocSigned = signing.isAdhocSigned
+        self.signingCertificateCN = signing.signingCertificateCN
+        self.signingCertificateSHA256 = signing.signingCertificateSHA256
+        self.certificateExpires = signing.certificateExpires
+        self.isCertificateExpired = signing.isCertificateExpired
+        self.certificateChainLength = signing.certificateChainLength
+        self.certificateTrustValid = signing.certificateTrustValid
+        self.certificateChain = signing.certificateChain
+        self.entitlements = entitlementState.entitlements
+        self.injectionMethods = entitlementState.injectionMethods
+        self.launchConstraintCategory = entitlementState.launchConstraintCategory
         self.sandboxProfile = sandboxProfile
         self.quarantineInfo = quarantineInfo
     }
@@ -101,9 +234,12 @@ public struct Application: Codable, Sendable, GraphNode {
         case isElectron = "is_electron"
         case isSystem = "is_system"
         case signed
+        case codeSigningAnalysisError = "code_signing_analysis_error"
         case isSipProtected = "is_sip_protected"
         case isSandboxed = "is_sandboxed"
         case sandboxExceptions = "sandbox_exceptions"
+        case entitlementsAvailable = "entitlements_available"
+        case entitlementExtractionError = "entitlement_extraction_error"
         case isNotarized = "is_notarized"
         case isAdhocSigned = "is_adhoc_signed"
         case signingCertificateCN = "signing_certificate_cn"
@@ -127,21 +263,11 @@ extension Application {
     /// Returns a copy with a different sandboxProfile, preserving all other fields.
     public func with(sandboxProfile newProfile: SandboxProfile?) -> Application {
         Application(
-            name: name, bundleId: bundleId, path: path, version: version,
-            teamId: teamId, hardenedRuntime: hardenedRuntime,
-            libraryValidation: libraryValidation, isElectron: isElectron,
-            isSystem: isSystem, signed: signed, isSipProtected: isSipProtected,
-            isSandboxed: isSandboxed, sandboxExceptions: sandboxExceptions,
-            isNotarized: isNotarized, isAdhocSigned: isAdhocSigned,
-            signingCertificateCN: signingCertificateCN,
-            signingCertificateSHA256: signingCertificateSHA256,
-            certificateExpires: certificateExpires,
-            isCertificateExpired: isCertificateExpired,
-            certificateChainLength: certificateChainLength,
-            certificateTrustValid: certificateTrustValid,
-            certificateChain: certificateChain, entitlements: entitlements,
-            injectionMethods: injectionMethods,
-            launchConstraintCategory: launchConstraintCategory,
+            identity: identity,
+            flags: flags,
+            signing: signing,
+            security: security,
+            entitlementState: entitlementState,
             sandboxProfile: newProfile,
             quarantineInfo: quarantineInfo
         )
@@ -150,23 +276,62 @@ extension Application {
     /// Returns a copy with different quarantineInfo, preserving all other fields.
     public func with(quarantineInfo newInfo: QuarantineInfo?) -> Application {
         Application(
-            name: name, bundleId: bundleId, path: path, version: version,
-            teamId: teamId, hardenedRuntime: hardenedRuntime,
-            libraryValidation: libraryValidation, isElectron: isElectron,
-            isSystem: isSystem, signed: signed, isSipProtected: isSipProtected,
-            isSandboxed: isSandboxed, sandboxExceptions: sandboxExceptions,
-            isNotarized: isNotarized, isAdhocSigned: isAdhocSigned,
-            signingCertificateCN: signingCertificateCN,
-            signingCertificateSHA256: signingCertificateSHA256,
-            certificateExpires: certificateExpires,
-            isCertificateExpired: isCertificateExpired,
-            certificateChainLength: certificateChainLength,
-            certificateTrustValid: certificateTrustValid,
-            certificateChain: certificateChain, entitlements: entitlements,
-            injectionMethods: injectionMethods,
-            launchConstraintCategory: launchConstraintCategory,
+            identity: identity,
+            flags: flags,
+            signing: signing,
+            security: security,
+            entitlementState: entitlementState,
             sandboxProfile: sandboxProfile,
             quarantineInfo: newInfo
+        )
+    }
+
+    private var identity: Identity {
+        Identity(name: name, bundleId: bundleId, path: path, version: version)
+    }
+
+    private var flags: Flags {
+        Flags(isElectron: isElectron, isSystem: isSystem)
+    }
+
+    private var signing: Signing {
+        Signing(
+            teamId: teamId,
+            hardenedRuntime: hardenedRuntime,
+            libraryValidation: libraryValidation,
+            signed: signed,
+            analysis: SigningAnalysis(
+                codeSigningAnalysisError: codeSigningAnalysisError,
+                isNotarized: isNotarized,
+                isAdhocSigned: isAdhocSigned
+            ),
+            certificate: CertificateState(
+                signingCertificateCN: signingCertificateCN,
+                signingCertificateSHA256: signingCertificateSHA256,
+                certificateExpires: certificateExpires,
+                isCertificateExpired: isCertificateExpired,
+                certificateChainLength: certificateChainLength,
+                certificateTrustValid: certificateTrustValid,
+                certificateChain: certificateChain
+            )
+        )
+    }
+
+    private var security: Security {
+        Security(
+            isSipProtected: isSipProtected,
+            isSandboxed: isSandboxed,
+            sandboxExceptions: sandboxExceptions
+        )
+    }
+
+    private var entitlementState: EntitlementState {
+        EntitlementState(
+            entitlementsAvailable: entitlementsAvailable,
+            entitlementExtractionError: entitlementExtractionError,
+            entitlements: entitlements,
+            injectionMethods: injectionMethods,
+            launchConstraintCategory: launchConstraintCategory
         )
     }
 }

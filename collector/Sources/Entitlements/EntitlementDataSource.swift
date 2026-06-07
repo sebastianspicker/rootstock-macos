@@ -20,10 +20,17 @@ public struct EntitlementDataSource: DataSource {
     /// Balances parallelism against Security.framework / I/O contention.
     private static let maxConcurrency = 8
 
+    private struct ProcessedApp: Sendable {
+        let application: Application
+        let error: CollectionError?
+    }
+
     public func collect() async -> DataSourceResult {
-        let discovered = discovery.discover()
+        let discoveryResult = discovery.discover()
+        let discovered = discoveryResult.applications
+        var errors = discoveryResult.errors
         guard !discovered.isEmpty else {
-            return DataSourceResult(nodes: [], errors: [])
+            return DataSourceResult(nodes: [], errors: errors)
         }
 
         // Process apps in parallel with bounded concurrency.
@@ -34,7 +41,7 @@ public struct EntitlementDataSource: DataSource {
         let ext = extractor
         let cls = classifier
 
-        await withTaskGroup(of: Application.self) { group in
+        await withTaskGroup(of: ProcessedApp.self) { group in
             var iterator = discovered.makeIterator()
             var inFlight = 0
 
@@ -46,7 +53,10 @@ public struct EntitlementDataSource: DataSource {
 
             // Drain the group, adding the next app each time one completes
             for await result in group {
-                applications.append(result)
+                applications.append(result.application)
+                if let error = result.error {
+                    errors.append(error)
+                }
                 inFlight -= 1
                 if let next = iterator.next() {
                     group.addTask { Self.processApp(next, extractor: ext, classifier: cls) }
@@ -55,8 +65,8 @@ public struct EntitlementDataSource: DataSource {
             }
         }
 
-        var errors: [CollectionError] = []
-        if !applications.isEmpty && applications.allSatisfy({ $0.entitlements.isEmpty }) {
+        let appsWithKnownEntitlements = applications.filter(\.entitlementsAvailable)
+        if !appsWithKnownEntitlements.isEmpty && appsWithKnownEntitlements.allSatisfy({ $0.entitlements.isEmpty }) {
             errors.append(CollectionError(
                 source: name,
                 message: "All \(applications.count) apps returned zero entitlements — codesign may not be working",
@@ -70,25 +80,36 @@ public struct EntitlementDataSource: DataSource {
         _ app: DiscoveredApp,
         extractor: EntitlementExtractor,
         classifier: EntitlementClassifier
-    ) -> Application {
-        let entitlementDict = extractor.extract(from: URL(fileURLWithPath: app.executablePath))
+    ) -> ProcessedApp {
+        let extraction = extractor.extract(from: URL(fileURLWithPath: app.executablePath))
+        let entitlementDict = extraction.entitlements
         let entitlements = classifier.classify(entitlementDict)
         let sandbox = classifier.analyzeSandbox(entitlementDict)
-        return Application(
-            name: app.name,
-            bundleId: app.bundleId,
-            path: app.path,
-            version: app.version,
-            teamId: nil,
-            hardenedRuntime: false,
-            libraryValidation: false,
-            isElectron: app.isElectron,
-            isSystem: app.isSystem,
-            signed: false,  // pessimistic default; CodeSigningDataSource.enrich() sets the real value
-            isSandboxed: sandbox.isSandboxed,
-            sandboxExceptions: sandbox.exceptions,
-            entitlements: entitlements,
-            injectionMethods: []  // populated by CodeSigningDataSource
+        let error = extraction.available ? nil : CollectionError(
+            source: "Entitlements",
+            message: "Failed to extract entitlements for \(app.bundleId): \(extraction.errorMessage ?? "unknown error")",
+            recoverable: true
         )
+        let application = Application(
+            identity: Application.Identity(
+                name: app.name,
+                bundleId: app.bundleId,
+                path: app.path,
+                version: app.version
+            ),
+            flags: Application.Flags(isElectron: app.isElectron, isSystem: app.isSystem),
+            signing: Application.Signing(signed: nil),  // CodeSigningDataSource.enrich() sets the real value.
+            security: Application.Security(
+                isSandboxed: sandbox.isSandboxed,
+                sandboxExceptions: sandbox.exceptions
+            ),
+            entitlementState: Application.EntitlementState(
+                entitlementsAvailable: extraction.available,
+                entitlementExtractionError: extraction.errorMessage,
+                entitlements: entitlements,
+                injectionMethods: []  // populated by CodeSigningDataSource
+            )
+        )
+        return ProcessedApp(application: application, error: error)
     }
 }

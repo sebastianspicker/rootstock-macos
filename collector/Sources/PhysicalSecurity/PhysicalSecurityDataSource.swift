@@ -17,6 +17,13 @@ public struct PhysicalSecurityResult {
     public let errors: [CollectionError]
 }
 
+struct BluetoothCollectionResult {
+    let devices: [BluetoothDevice]
+    let enabled: Bool?
+    let discoverable: Bool?
+    let errors: [CollectionError]
+}
+
 /// Collects physical security posture: Bluetooth devices & discoverability,
 /// Lockdown Mode, screen lock settings, Thunderbolt security, and secure boot status.
 public struct PhysicalSecurityDataSource {
@@ -30,8 +37,8 @@ public struct PhysicalSecurityDataSource {
         var errors: [CollectionError] = []
 
         // Bluetooth — single system_profiler call for devices + posture
-        let (devices, btEnabled, btDiscoverable, btErrors) = collectBluetooth()
-        errors.append(contentsOf: btErrors)
+        let bluetooth = collectBluetooth()
+        errors.append(contentsOf: bluetooth.errors)
 
         // Lockdown Mode
         let lockdown = detectLockdownMode()
@@ -49,9 +56,9 @@ public struct PhysicalSecurityDataSource {
         let (secureBoot, externalBoot) = collectSecureBoot()
 
         return PhysicalSecurityResult(
-            bluetoothDevices: devices,
-            bluetoothEnabled: btEnabled,
-            bluetoothDiscoverable: btDiscoverable,
+            bluetoothDevices: bluetooth.devices,
+            bluetoothEnabled: bluetooth.enabled,
+            bluetoothDiscoverable: bluetooth.discoverable,
             lockdownModeEnabled: lockdown,
             screenLockEnabled: screenLock,
             screenLockDelay: screenDelay,
@@ -65,16 +72,16 @@ public struct PhysicalSecurityDataSource {
 
     // MARK: - Bluetooth
 
-    func collectBluetooth() -> ([BluetoothDevice], Bool?, Bool?, [CollectionError]) {
+    func collectBluetooth() -> BluetoothCollectionResult {
         guard let output = Shell.run("/usr/sbin/system_profiler", ["SPBluetoothDataType", "-json"]) else {
-            return ([], nil, nil, [
+            return BluetoothCollectionResult(devices: [], enabled: nil, discoverable: nil, errors: [
                 CollectionError(source: name, message: "system_profiler SPBluetoothDataType failed", recoverable: true)
             ])
         }
 
         guard let data = output.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return ([], nil, nil, [
+            return BluetoothCollectionResult(devices: [], enabled: nil, discoverable: nil, errors: [
                 CollectionError(source: name, message: "Failed to parse Bluetooth JSON", recoverable: true)
             ])
         }
@@ -84,10 +91,10 @@ public struct PhysicalSecurityDataSource {
 
     /// Parse system_profiler SPBluetoothDataType JSON output.
     /// Exposed as internal for testability via `@testable import`.
-    func parseBluetoothJSON(_ json: [String: Any]) -> ([BluetoothDevice], Bool?, Bool?, [CollectionError]) {
+    func parseBluetoothJSON(_ json: [String: Any]) -> BluetoothCollectionResult {
         guard let items = json["SPBluetoothDataType"] as? [[String: Any]],
               let entry = items.first else {
-            return ([], nil, nil, [])
+            return BluetoothCollectionResult(devices: [], enabled: nil, discoverable: nil, errors: [])
         }
 
         // Controller state
@@ -107,7 +114,12 @@ public struct PhysicalSecurityDataSource {
         devices.append(contentsOf: parseDeviceArray(entry["device_connected"], connected: true))
         devices.append(contentsOf: parseDeviceArray(entry["device_not_connected"], connected: false))
 
-        return (devices, btEnabled, btDiscoverable, [])
+        return BluetoothCollectionResult(
+            devices: devices,
+            enabled: btEnabled,
+            discoverable: btDiscoverable,
+            errors: []
+        )
     }
 
     private func parseDeviceArray(_ value: Any?, connected: Bool) -> [BluetoothDevice] {
@@ -225,20 +237,37 @@ public struct PhysicalSecurityDataSource {
 
         for line in output.split(separator: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces).lowercased()
-            if trimmed.contains("full security") {
-                level = "full"
-            } else if trimmed.contains("reduced security") {
-                level = "reduced"
-            } else if trimmed.contains("permissive security") {
-                level = "permissive"
+            if let parsedLevel = secureBootLevel(from: trimmed) {
+                level = parsedLevel
             }
-            if trimmed.contains("external boot") {
-                let isNegated = trimmed.contains("not allowed") || trimmed.contains("disallowed") || trimmed.contains("false")
-                let isAllowed = trimmed.contains("allowed") || trimmed.contains("true")
-                externalBoot = isAllowed && !isNegated
+            if let parsedExternalBoot = externalBootAllowed(from: trimmed) {
+                externalBoot = parsedExternalBoot
             }
         }
 
         return (level, externalBoot)
+    }
+
+    private func secureBootLevel(from line: String) -> String? {
+        if line.contains("full security") {
+            return "full"
+        }
+        if line.contains("reduced security") {
+            return "reduced"
+        }
+        if line.contains("permissive security") {
+            return "permissive"
+        }
+        return nil
+    }
+
+    private func externalBootAllowed(from line: String) -> Bool? {
+        guard line.contains("external boot") else { return nil }
+
+        let isNegated = line.contains("not allowed")
+            || line.contains("disallowed")
+            || line.contains("false")
+        let isAllowed = line.contains("allowed") || line.contains("true")
+        return isAllowed && !isNegated
     }
 }

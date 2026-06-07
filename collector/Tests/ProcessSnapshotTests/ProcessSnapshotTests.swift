@@ -13,7 +13,7 @@ final class ProcessSnapshotTests: XCTestCase {
     func testRunningProcessJSONEncoding() throws {
         let proc = RunningProcess(pid: 42, user: "admin", command: "/Applications/Safari.app/Contents/MacOS/Safari", bundleId: "com.apple.Safari")
         let data = try JSONEncoder().encode(proc)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertEqual(json["pid"] as? Int, 42)
         XCTAssertEqual(json["bundle_id"] as? String, "com.apple.Safari")
     }
@@ -27,19 +27,29 @@ final class ProcessSnapshotTests: XCTestCase {
         """
         let apps = [
             Application(
-                name: "Safari", bundleId: "com.apple.Safari",
-                path: "/Applications/Safari.app",
-                version: nil, teamId: nil,
-                hardenedRuntime: true, libraryValidation: true,
-                isElectron: false, isSystem: true, signed: true
+                identity: Application.Identity(
+                    name: "Safari",
+                    bundleId: "com.apple.Safari",
+                    path: "/Applications/Safari.app",
+                    version: nil
+                ),
+                flags: Application.Flags(isElectron: false, isSystem: true),
+                signing: Application.Signing(
+                    hardenedRuntime: true,
+                    libraryValidation: true,
+                    signed: true
+                )
             ),
         ]
         let processes = ProcessSnapshotDataSource.parsePsOutput(output, knownApps: apps)
-        // Only processes with resolved bundle IDs are emitted
-        XCTAssertEqual(processes.count, 1)
-        XCTAssertEqual(processes[0].bundleId, "com.apple.Safari")
-        XCTAssertEqual(processes[0].pid, 123)
-        XCTAssertEqual(processes[0].user, "admin")
+        XCTAssertEqual(processes.count, 3)
+        XCTAssertEqual(processes[0].bundleId, nil)
+        XCTAssertEqual(processes[0].pid, 1)
+        XCTAssertEqual(processes[1].bundleId, "com.apple.Safari")
+        XCTAssertEqual(processes[1].pid, 123)
+        XCTAssertEqual(processes[1].user, "admin")
+        XCTAssertEqual(processes[2].bundleId, nil)
+        XCTAssertEqual(processes[2].command, "/usr/sbin/httpd")
     }
 
     func testParsePsOutputEmpty() {
@@ -66,11 +76,18 @@ final class ProcessSnapshotTests: XCTestCase {
         let output = "321 admin \(realApp.path)/Contents/MacOS/Real"
         let apps = [
             Application(
-                name: "Linked", bundleId: "com.example.linked",
-                path: symlinkApp.path,
-                version: nil, teamId: nil,
-                hardenedRuntime: true, libraryValidation: true,
-                isElectron: false, isSystem: false, signed: true
+                identity: Application.Identity(
+                    name: "Linked",
+                    bundleId: "com.example.linked",
+                    path: symlinkApp.path,
+                    version: nil
+                ),
+                flags: Application.Flags(isElectron: false, isSystem: false),
+                signing: Application.Signing(
+                    hardenedRuntime: true,
+                    libraryValidation: true,
+                    signed: true
+                )
             ),
         ]
 

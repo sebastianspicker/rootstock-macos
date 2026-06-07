@@ -31,8 +31,16 @@ for i in 1 2 3; do
 	OUTFILE="${OUTFILE_PREFIX}-${i}.json"
 
 	START=$(date +%s%3N)
-	/usr/bin/time -l "$BINARY" --output "$OUTFILE" 2>"${OUTFILE_PREFIX}-${i}.time.txt" || true
+	set +e
+	/usr/bin/time -l "$BINARY" --output "$OUTFILE" 2>"${OUTFILE_PREFIX}-${i}.time.txt"
+	STATUS=$?
+	set -e
 	END=$(date +%s%3N)
+
+	if [[ "$STATUS" -ne 0 ]]; then
+		echo "ERROR: collector run $i failed with exit status $STATUS" >&2
+		exit 1
+	fi
 
 	WALL=$(echo "scale=2; ($END - $START) / 1000" | bc)
 	USER_TIME=$(grep "user" "${OUTFILE_PREFIX}-${i}.time.txt" | awk '{print $1}' | head -1)
@@ -40,9 +48,23 @@ for i in 1 2 3; do
 	MEM_MB=$(echo "scale=1; $MEM_BYTES / 1048576" | bc)
 	SIZE_KB=$(echo "scale=0; $(wc -c <"$OUTFILE") / 1024" | bc)
 
-	# Parse scan summary from stdout (already printed during run — read the JSON)
-	APP_COUNT=$(python3 -c "import json,sys; d=json.load(open('$OUTFILE')); print(len(d['applications']))" 2>/dev/null || echo "?")
-	GRANT_COUNT=$(python3 -c "import json,sys; d=json.load(open('$OUTFILE')); print(len(d['tcc_grants']))" 2>/dev/null || echo "?")
+	if ! COUNTS=$(python3 - "$OUTFILE" <<'PYTHON'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, encoding="utf-8") as infile:
+    data = json.load(infile)
+for key in ("applications", "tcc_grants"):
+    if not isinstance(data.get(key), list):
+        raise ValueError(f"{key} must be a list")
+print(len(data["applications"]), len(data["tcc_grants"]))
+PYTHON
+	); then
+		echo "ERROR: collector run $i produced invalid JSON: $OUTFILE" >&2
+		exit 1
+	fi
+	read -r APP_COUNT GRANT_COUNT <<<"$COUNTS"
 
 	echo "Run $i: ${WALL}s wall, ${MEM_MB} MB peak, ${APP_COUNT} apps, ${GRANT_COUNT} TCC grants, ${SIZE_KB} KB"
 

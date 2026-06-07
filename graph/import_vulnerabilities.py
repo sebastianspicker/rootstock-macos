@@ -22,6 +22,7 @@ import argparse
 import logging
 import sys
 
+from category_predicates import VULNERABILITY_CATEGORY_PREDICATES
 from neo4j_connection import add_neo4j_args, connect_from_args
 from cve_reference import (
     _REGISTRY,
@@ -35,148 +36,14 @@ from cve_enrichment import enrich_registry, EnrichedCveEntry, temporal_score
 from version_matcher import (
     extract_macos_max_version,
     is_affected,
+    parse_version_tuple,
+    version_lte,
 )
 
 logger = logging.getLogger(__name__)
 
 
-# ── Category -> Cypher match patterns ────────────────────────────────────────
-#
-# Each maps a CVE registry category to a Cypher WHERE clause that identifies
-# which Application nodes are "affected by" that category's vulnerabilities.
-# This reuses the same matching logic as report_assembly's active_categories.
-
-_CATEGORY_MATCH: dict[str, str] = {
-    "injectable_fda": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "dyld_injection": """
-        size(app.injection_methods) > 0
-        AND any(m IN app.injection_methods WHERE m CONTAINS 'dyld')
-    """,
-    "tcc_bypass": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission)
-        }
-    """,
-    "electron_inheritance": """
-        EXISTS {
-            MATCH (app)-[:CHILD_INHERITS_TCC]->()
-        }
-    """,
-    "sip_bypass": """
-        EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement)
-            WHERE app.team_id IS NOT NULL AND app.team_id <> 'com.apple'
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "persistence_hijack": """
-        EXISTS {
-            MATCH (app)-[:PERSISTS_VIA]->(li:LaunchItem)
-            WHERE li.program_writable_by_non_root = true OR li.plist_writable_by_non_root = true
-        }
-    """,
-    "xpc_exploitation": """
-        EXISTS {
-            MATCH (app)-[:COMMUNICATES_WITH]->(:XPC_Service)
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "apple_events": """
-        EXISTS {
-            MATCH (app)-[:CAN_SEND_APPLE_EVENT]->()
-        }
-    """,
-    "accessibility_abuse": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission {service: 'kTCCServiceAccessibility'})
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "kerberos": """
-        EXISTS {
-            MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(u:User)-[:HAS_KERBEROS_CACHE]->()
-        }
-        OR EXISTS {
-            MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(u:User)-[:HAS_KEYTAB]->()
-        }
-    """,
-    "keychain_access": """
-        EXISTS {
-            MATCH (app)-[:CAN_READ_KEYCHAIN]->(:Keychain_Item)
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "kernel_escalation": """
-        size(app.injection_methods) > 0
-        AND EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement {is_private: true})
-        }
-    """,
-    "physical_security": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission)
-        }
-    """,
-    "certificate_hygiene": """
-        app.signed = true
-        AND (
-            coalesce(app.is_certificate_expired, false) = true
-            OR coalesce(app.is_adhoc_signed, false) = true
-            OR app.certificate_trust_valid = false
-        )
-    """,
-    "shell_hooks": """
-        EXISTS {
-            MATCH (app)-[:CAN_INJECT_SHELL]->()
-        }
-    """,
-    "file_acl_escalation": """
-        EXISTS {
-            MATCH (app)-[:CAN_WRITE]->(:CriticalFile)
-        }
-    """,
-    "esf_bypass": """
-        EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement)
-            WHERE app.name CONTAINS 'Security' OR app.name CONTAINS 'Endpoint'
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "sandbox_escape": """
-        coalesce(app.is_sandboxed, false) = false
-        AND size(app.injection_methods) > 0
-    """,
-    "mdm_risk": """
-        EXISTS {
-            MATCH (app)-[:MDM_OVERGRANT]->()
-        }
-    """,
-    "running_processes": """
-        app.is_running = true
-        AND size(app.injection_methods) > 0
-    """,
-    "icloud_risk": """
-        EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement)
-            WHERE app.bundle_id IS NOT NULL
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "blastpass_class": """
-        size(app.injection_methods) > 0
-    """,
-    "firewall_exposure": """
-        EXISTS {
-            MATCH (app)-[:HAS_FIREWALL_RULE]->(:FirewallPolicy)
-        }
-        AND size(app.injection_methods) > 0
-    """,
-}
+_CATEGORY_MATCH = VULNERABILITY_CATEGORY_PREDICATES
 
 
 # ── Import functions ─────────────────────────────────────────────────────
@@ -212,36 +79,36 @@ def _estimate_years_since_disclosure(entry: EnrichedCveEntry) -> float:
     return 1.0
 
 
+def _vulnerability_row(entry: EnrichedCveEntry) -> dict[str, object]:
+    cve = entry.base
+    years = _estimate_years_since_disclosure(entry)
+    priority = temporal_score(cve.cvss_score, entry.epss_score, years)
+    return {
+        "cve_id": cve.cve_id,
+        "title": cve.title,
+        "cvss_score": cve.cvss_score,
+        "epss_score": entry.epss_score,
+        "epss_percentile": entry.epss_percentile,
+        "in_kev": entry.in_kev,
+        "kev_date_added": entry.kev_date_added,
+        "exploitation_status": cve.exploitation_status,
+        "attack_complexity": cve.attack_complexity,
+        "affected_versions": cve.affected_versions,
+        "patched_version": cve.patched_version,
+        "description": cve.description,
+        "reference_url": cve.reference_url,
+        "kev_ransomware": entry.kev_ransomware,
+        "cwe_ids": list(cve.cwe_ids),
+        "cvss_vector": entry.cvss_vector,
+        "temporal_priority": round(priority, 4),
+    }
+
+
 def import_vulnerability_nodes(session) -> int:
     """MERGE Vulnerability nodes from the enriched CVE registry (batched)."""
     enriched = enrich_registry()
 
-    batch = []
-    for entry in enriched.values():
-        cve = entry.base
-        years = _estimate_years_since_disclosure(entry)
-        tp = temporal_score(cve.cvss_score, entry.epss_score, years)
-        batch.append(
-            {
-                "cve_id": cve.cve_id,
-                "title": cve.title,
-                "cvss_score": cve.cvss_score,
-                "epss_score": entry.epss_score,
-                "epss_percentile": entry.epss_percentile,
-                "in_kev": entry.in_kev,
-                "kev_date_added": entry.kev_date_added,
-                "exploitation_status": cve.exploitation_status,
-                "attack_complexity": cve.attack_complexity,
-                "affected_versions": cve.affected_versions,
-                "patched_version": cve.patched_version,
-                "description": cve.description,
-                "reference_url": cve.reference_url,
-                "kev_ransomware": entry.kev_ransomware,
-                "cwe_ids": list(cve.cwe_ids),
-                "cvss_vector": entry.cvss_vector,
-                "temporal_priority": round(tp, 4),
-            }
-        )
+    batch = [_vulnerability_row(entry) for entry in enriched.values()]
 
     if not batch:
         return 0
@@ -356,7 +223,7 @@ def _collect_precise_cves() -> list[CveEntry]:
     return result
 
 
-def import_precise_affected_by_edges(session) -> int:
+def import_precise_affected_by_edges(session) -> tuple[int, int]:
     """Tier 1: Create AFFECTED_BY edges for CVEs with specific bundle ID targets.
 
     Matches Application nodes by bundle_id, then filters by version range
@@ -364,79 +231,89 @@ def import_precise_affected_by_edges(session) -> int:
     """
     precise_cves = _collect_precise_cves()
     if not precise_cves:
-        return 0
+        return 0, 0
 
     count = 0
+    warning_count = 0
     for cve in precise_cves:
-        bundle_ids = list(cve.affected_bundle_ids)
-
-        # Query apps matching the bundle IDs, returning their versions for
-        # client-side version checking
-        cypher = """
-            MATCH (app:Application)
-            WHERE app.bundle_id IN $bundle_ids
-            OPTIONAL MATCH (app)-[:INSTALLED_ON]->(c:Computer)
-            RETURN app.bundle_id AS bundle_id,
-                   app.version AS app_version,
-                   c.macos_version AS macos_version,
-                   elementId(app) AS app_id
-        """
-
         try:
-            result = session.run(cypher, bundle_ids=bundle_ids)
-            records = list(result)
+            records = _precise_match_records(session, cve)
         except Exception as e:
+            warning_count += 1
             print(f"  Warning: Precise match for {cve.cve_id} failed: {e}")
             continue
 
         is_macos = _has_macos_version_constraint(cve.affected_versions)
 
         for record in records:
-            app_version = record["app_version"]
-            macos_version = record["macos_version"]
-            app_id = record["app_id"]
-
-            # Use max_affected_version for direct version ceiling if set
-            if cve.max_affected_version and app_version and not is_macos:
-                from version_matcher import parse_version_tuple, version_lte
-
-                app_v = parse_version_tuple(app_version)
-                max_v = parse_version_tuple(cve.max_affected_version)
-                affected = (
-                    app_v is not None
-                    and max_v is not None
-                    and version_lte(app_v, max_v)
+            if not _precise_record_is_affected(cve, record, is_macos=is_macos):
+                continue
+            try:
+                count += _create_precise_affected_by_edge(
+                    session,
+                    app_id=record["app_id"],
+                    cve_id=cve.cve_id,
                 )
-            else:
-                affected = is_affected(
-                    app_version=app_version,
-                    affected_versions=cve.affected_versions,
-                    patched_version=cve.patched_version,
-                    is_macos_cve=is_macos,
-                    macos_version=macos_version,
-                )
+            except Exception as e:
+                warning_count += 1
+                print(f"  Warning: Edge creation for {cve.cve_id} failed: {e}")
 
-            if affected:
-                try:
-                    edge_result = session.run(
-                        """
-                        MATCH (app:Application) WHERE elementId(app) = $app_id
-                        MATCH (v:Vulnerability {cve_id: $cve_id})
-                        MERGE (app)-[r:AFFECTED_BY]->(v)
-                        SET r.match_tier = 'precise'
-                        RETURN count(*) AS n
-                        """,
-                        app_id=app_id,
-                        cve_id=cve.cve_id,
-                    )
-                    count += edge_result.single()["n"]
-                except Exception as e:
-                    print(f"  Warning: Edge creation for {cve.cve_id} failed: {e}")
-
-    return count
+    return count, warning_count
 
 
-def import_affected_by_edges(session) -> int:
+def _precise_match_records(session, cve: CveEntry) -> list[dict]:
+    result = session.run(
+        """
+        MATCH (app:Application)
+        WHERE app.bundle_id IN $bundle_ids
+        OPTIONAL MATCH (app)-[:INSTALLED_ON]->(c:Computer)
+        RETURN app.bundle_id AS bundle_id,
+               app.version AS app_version,
+               c.macos_version AS macos_version,
+               elementId(app) AS app_id
+        """,
+        bundle_ids=list(cve.affected_bundle_ids),
+    )
+    return list(result)
+
+
+def _precise_record_is_affected(
+    cve: CveEntry,
+    record: dict,
+    *,
+    is_macos: bool,
+) -> bool:
+    app_version = record["app_version"]
+    if cve.max_affected_version and app_version and not is_macos:
+        app_v = parse_version_tuple(app_version)
+        max_v = parse_version_tuple(cve.max_affected_version)
+        return app_v is not None and max_v is not None and version_lte(app_v, max_v)
+
+    return is_affected(
+        app_version=app_version,
+        affected_versions=cve.affected_versions,
+        patched_version=cve.patched_version,
+        is_macos_cve=is_macos,
+        macos_version=record["macos_version"],
+    )
+
+
+def _create_precise_affected_by_edge(session, *, app_id: str, cve_id: str) -> int:
+    result = session.run(
+        """
+        MATCH (app:Application) WHERE elementId(app) = $app_id
+        MATCH (v:Vulnerability {cve_id: $cve_id})
+        MERGE (app)-[r:AFFECTED_BY]->(v)
+        SET r.match_tier = 'precise'
+        RETURN count(*) AS n
+        """,
+        app_id=app_id,
+        cve_id=cve_id,
+    )
+    return result.single()["n"]
+
+
+def import_affected_by_edges(session) -> tuple[int, int]:
     """Tier 2: Create AFFECTED_BY edges based on category matching (fallback).
 
     CVEs that already have Tier 1 (precise) edges are excluded from Tier 2
@@ -446,43 +323,57 @@ def import_affected_by_edges(session) -> int:
     precise_cve_ids = {cve.cve_id for cve in _collect_precise_cves()}
 
     count = 0
+    warning_count = 0
 
     for category, ctx in _REGISTRY.items():
-        if not ctx.cves:
-            continue
-
-        match_clause = _CATEGORY_MATCH.get(category)
-        if not match_clause:
-            continue
-
-        # Filter out CVEs that have precise bundle ID matching
-        # (they were handled in Tier 1)
-        fallback_cves = [cve for cve in ctx.cves if cve.cve_id not in precise_cve_ids]
+        fallback_cves = _category_fallback_cves(ctx.cves, precise_cve_ids)
         if not fallback_cves:
             continue
 
-        cve_ids = [cve.cve_id for cve in fallback_cves]
-
-        # Build a single Cypher query that matches apps for this category
-        # and links them to all CVEs in the category
-        cypher = f"""
-            MATCH (app:Application)
-            WHERE {match_clause}
-            WITH app
-            UNWIND $cve_ids AS cve_id
-            MATCH (v:Vulnerability {{cve_id: cve_id}})
-            MERGE (app)-[r:AFFECTED_BY]->(v)
-            ON CREATE SET r.match_tier = 'category'
-            RETURN count(*) AS n
-        """
-
         try:
-            result = session.run(cypher, cve_ids=cve_ids)
-            count += result.single()["n"]
+            count += _import_category_affected_by_edges(session, category, fallback_cves)
         except Exception as e:
+            warning_count += 1
             print(f"  Warning: AFFECTED_BY for category '{category}' failed: {e}")
 
-    return count
+    return count, warning_count
+
+
+def _category_fallback_cves(
+    cves: list[CveEntry],
+    precise_cve_ids: set[str],
+) -> list[CveEntry]:
+    return [cve for cve in cves if cve.cve_id not in precise_cve_ids]
+
+
+def _import_category_affected_by_edges(
+    session,
+    category: str,
+    cves: list[CveEntry],
+) -> int:
+    match_clause = _CATEGORY_MATCH.get(category)
+    if not match_clause:
+        return 0
+
+    cypher = f"""
+        MATCH (app:Application)
+        WHERE {match_clause}
+        WITH app
+        UNWIND $cve_ids AS cve_id
+        MATCH (v:Vulnerability {{cve_id: cve_id}})
+        MERGE (app)-[r:AFFECTED_BY]->(v)
+        SET r.match_tier = 'category',
+            r.match_source = 'category_fallback',
+            r.match_confidence = 'heuristic',
+            r.match_category = $category
+        RETURN count(*) AS n
+    """
+    result = session.run(
+        cypher,
+        cve_ids=[cve.cve_id for cve in cves],
+        category=category,
+    )
+    return result.single()["n"]
 
 
 def import_threat_group_nodes(session) -> int:
@@ -572,8 +463,9 @@ def import_all(session) -> dict[str, int]:
     vuln_count = import_vulnerability_nodes(session)
     tech_count = import_technique_nodes(session)
     maps_count = import_technique_edges(session)
-    precise_count = import_precise_affected_by_edges(session)
-    category_count = import_affected_by_edges(session)
+    precise_count, precise_warnings = import_precise_affected_by_edges(session)
+    category_count, category_warnings = import_affected_by_edges(session)
+    warning_count = precise_warnings + category_warnings
     group_count = import_threat_group_nodes(session)
     group_edge_count = import_group_technique_edges(session)
     cwe_count = import_cwe_nodes(session)
@@ -590,6 +482,7 @@ def import_all(session) -> dict[str, int]:
         "uses_technique": group_edge_count,
         "cwe_nodes": cwe_count,
         "has_cwe_edges": cwe_edge_count,
+        "warning_count": warning_count,
     }
 
 
@@ -621,6 +514,13 @@ def main() -> int:
     print(f"  USES_TECHNIQUE edges: {counts['uses_technique']}")
     print(f"  CWE nodes: {counts['cwe_nodes']}")
     print(f"  HAS_CWE edges: {counts['has_cwe_edges']}")
+    if counts.get("warning_count", 0) > 0:
+        print(
+            f"  WARNING: {counts['warning_count']} vulnerability edge(s) failed; "
+            "graph may be incomplete",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

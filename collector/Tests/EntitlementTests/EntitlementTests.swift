@@ -122,7 +122,7 @@ final class EntitlementTests: XCTestCase {
         FileManager.default.createFile(atPath: macosDir.appendingPathComponent("FakeApp").path, contents: nil)
 
         let discovery = AppDiscovery(additionalDirectories: [tempDir])
-        let found = discovery.discover()
+        let found = discovery.discover().applications
 
         XCTAssertTrue(found.contains { $0.bundleId == "com.test.fakeapp" }, "Should discover fake app")
         let app = found.first { $0.bundleId == "com.test.fakeapp" }
@@ -143,8 +143,13 @@ final class EntitlementTests: XCTestCase {
         )
 
         let discovery = AppDiscovery(additionalDirectories: [tempDir])
-        let found = discovery.discover()
+        let result = discovery.discover()
+        let found = result.applications
         XCTAssertFalse(found.contains { $0.path == appDir.path }, "Broken app should be skipped")
+        XCTAssertTrue(
+            result.errors.contains { $0.message.contains("Info.plist missing or unreadable") },
+            "Skipped app should produce a discovery diagnostic"
+        )
     }
 
     func testElectronDetection() throws {
@@ -171,11 +176,61 @@ final class EntitlementTests: XCTestCase {
         FileManager.default.createFile(atPath: macosDir.appendingPathComponent("ElectronApp").path, contents: nil)
 
         let discovery = AppDiscovery(additionalDirectories: [tempDir])
-        let found = discovery.discover()
+        let found = discovery.discover().applications
 
         let app = found.first { $0.bundleId == "com.test.electron" }
         XCTAssertNotNil(app, "Should discover Electron app")
         XCTAssertTrue(app?.isElectron == true, "Should detect as Electron")
+    }
+
+    func testDiscoveryReportsMalformedInfoPlist() throws {
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("test-discovery-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let appDir = tempDir.appendingPathComponent("Broken.app")
+        let contentsDir = appDir.appendingPathComponent("Contents")
+        try FileManager.default.createDirectory(
+            at: contentsDir.appendingPathComponent("MacOS"),
+            withIntermediateDirectories: true
+        )
+        try Data("not a plist".utf8).write(to: contentsDir.appendingPathComponent("Info.plist"))
+
+        let result = AppDiscovery(additionalDirectories: [tempDir]).discover()
+
+        XCTAssertFalse(result.applications.contains { $0.path == appDir.path })
+        XCTAssertTrue(
+            result.errors.contains { $0.message.contains("malformed Info.plist") },
+            "Malformed Info.plist should produce a discovery diagnostic"
+        )
+    }
+
+    func testDiscoveryReportsMissingExecutable() throws {
+        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("test-discovery-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let appDir = tempDir.appendingPathComponent("MissingExecutable.app")
+        let contentsDir = appDir.appendingPathComponent("Contents")
+        try FileManager.default.createDirectory(
+            at: contentsDir.appendingPathComponent("MacOS"),
+            withIntermediateDirectories: true
+        )
+        let plist: [String: Any] = [
+            "CFBundleIdentifier": "com.test.missing-exec",
+            "CFBundleName": "MissingExecutable",
+            "CFBundleExecutable": "MissingExecutable",
+        ]
+        let plistData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        try plistData.write(to: contentsDir.appendingPathComponent("Info.plist"))
+
+        let result = AppDiscovery(additionalDirectories: [tempDir]).discover()
+
+        XCTAssertFalse(result.applications.contains { $0.path == appDir.path })
+        XCTAssertTrue(
+            result.errors.contains { $0.message.contains("executable missing") },
+            "Missing executable should produce a discovery diagnostic"
+        )
     }
 
     // MARK: - Integration test: real app entitlement extraction
@@ -191,8 +246,21 @@ final class EntitlementTests: XCTestCase {
         let result = extractor.extract(from: URL(fileURLWithPath: terminalExec))
 
         // Terminal.app must have at least some entitlements
-        XCTAssertFalse(result.isEmpty, "Terminal.app should have entitlements")
+        XCTAssertTrue(result.available, "Terminal.app entitlement extraction should be available")
+        XCTAssertFalse(result.entitlements.isEmpty, "Terminal.app should have entitlements")
         // On macOS 26.3, Terminal.app has TCC private entitlements (not sandboxed)
-        XCTAssertNotNil(result["com.apple.private.tcc.allow-prompting"], "Terminal.app should have TCC prompting entitlement")
+        XCTAssertNotNil(
+            result.entitlements["com.apple.private.tcc.allow-prompting"],
+            "Terminal.app should have TCC prompting entitlement"
+        )
+    }
+
+    func testExtractorMissingExecutableReportsUnavailable() {
+        let extractor = EntitlementExtractor()
+        let result = extractor.extract(from: URL(fileURLWithPath: "/nonexistent/Fake.app/Contents/MacOS/Fake"))
+
+        XCTAssertFalse(result.available, "Missing executable should not look like a valid empty entitlement set")
+        XCTAssertTrue(result.entitlements.isEmpty)
+        XCTAssertNotNil(result.errorMessage)
     }
 }

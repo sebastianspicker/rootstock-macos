@@ -54,14 +54,11 @@ public struct ProcessSnapshotDataSource: DataSource {
                 bundleId = pathToBundle[appPath]
             }
 
-            // Only emit processes with a resolved bundle ID (reduces JSON by ~90%)
-            guard let resolvedId = bundleId else { continue }
-
             processes.append(RunningProcess(
                 pid: pid,
                 user: user,
                 command: command,
-                bundleId: resolvedId
+                bundleId: bundleId
             ))
         }
 

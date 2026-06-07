@@ -22,140 +22,8 @@ from constants import (
     CRITICAL_FINDING_COUNT_PROPERTY,
     HIGH_FINDING_COUNT_PROPERTY,
 )
+from category_predicates import RISK_CATEGORY_PREDICATES
 
-
-# ── Category detection queries ───────────────────────────────────────────────
-# Reuses the same matching logic as import_vulnerabilities._CATEGORY_MATCH
-# and report_assembly.py active_categories.
-
-_CATEGORY_CHECKS: dict[str, str] = {
-    "injectable_fda": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "dyld_injection": """
-        size(app.injection_methods) > 0
-        AND any(m IN app.injection_methods WHERE m CONTAINS 'dyld')
-    """,
-    "tcc_bypass": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission)
-        }
-    """,
-    "electron_inheritance": """
-        EXISTS {
-            MATCH ()-[:CHILD_INHERITS_TCC]->(app)
-        }
-    """,
-    "sip_bypass": """
-        EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement)
-            WHERE app.team_id IS NOT NULL AND app.team_id <> 'com.apple'
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "persistence_hijack": """
-        EXISTS {
-            MATCH (app)-[:PERSISTS_VIA]->(li:LaunchItem)
-            WHERE li.program_writable_by_non_root = true OR li.plist_writable_by_non_root = true
-        }
-    """,
-    "xpc_exploitation": """
-        EXISTS {
-            MATCH (app)-[:COMMUNICATES_WITH]->(:XPC_Service)
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "apple_events": """
-        EXISTS {
-            MATCH (app)-[:CAN_SEND_APPLE_EVENT]->()
-        }
-    """,
-    "accessibility_abuse": """
-        EXISTS {
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission {service: 'kTCCServiceAccessibility'})
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "kerberos": """
-        EXISTS {
-            MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(u:User)-[:HAS_KERBEROS_CACHE]->()
-        }
-        OR EXISTS {
-            MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(u:User)-[:HAS_KEYTAB]->()
-        }
-    """,
-    "keychain_access": """
-        EXISTS {
-            MATCH (app)-[:CAN_READ_KEYCHAIN]->(:Keychain_Item)
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "kernel_escalation": """
-        size(app.injection_methods) > 0
-        AND EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement {is_private: true})
-        }
-    """,
-    "physical_security": """
-        false
-    """,
-    "esf_bypass": """
-        EXISTS {
-            MATCH (app)-[:CAN_BLIND_MONITORING]->()
-        }
-    """,
-    "shell_hooks": """
-        EXISTS {
-            MATCH (app)-[:CAN_INJECT_SHELL]->()
-        }
-    """,
-    "file_acl_escalation": """
-        EXISTS {
-            MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(:User)-[:CAN_WRITE]->(:CriticalFile)
-        }
-    """,
-    "sandbox_escape": """
-        coalesce(app.is_sandboxed, false) = false
-        AND size(app.injection_methods) > 0
-    """,
-    "mdm_risk": """
-        EXISTS {
-            MATCH (:MDM_Profile)-[:CONFIGURES {bundle_id: app.bundle_id, allowed: true}]->(t:TCC_Permission)
-            MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(t)
-        }
-    """,
-    "running_processes": """
-        app.is_running = true
-        AND size(app.injection_methods) > 0
-    """,
-    "icloud_risk": """
-        EXISTS {
-            MATCH (app)-[:HAS_ENTITLEMENT]->(:Entitlement)
-            WHERE app.bundle_id IS NOT NULL
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "firewall_exposure": """
-        EXISTS {
-            MATCH (app)-[:HAS_FIREWALL_RULE]->(:FirewallPolicy)
-        }
-        AND size(app.injection_methods) > 0
-    """,
-    "certificate_hygiene": """
-        app.signed = true
-        AND (
-            coalesce(app.is_certificate_expired, false) = true
-            OR coalesce(app.is_adhoc_signed, false) = true
-            OR app.certificate_trust_valid = false
-        )
-    """,
-    "blastpass_class": """
-        size(app.injection_methods) > 0
-    """,
-}
 
 # Categories that count as critical findings
 _CRITICAL_CATEGORIES = {
@@ -185,19 +53,15 @@ _WEIGHT_CERT_ISSUE = 0.5  # Certificate health issue
 _WEIGHT_ELECTRON = 1.0  # Electron TCC inheritance
 
 
-def infer(session: Session) -> int:
-    """
-    Compute risk scores and attack categories for all Application nodes.
-
-    Returns the number of Application nodes updated.
-    """
-    # Step 1: Compute attack_categories per app using batch queries
-    # Build a single query that collects all matching categories per app
+def _category_case_clauses() -> str:
     category_cases = []
-    for cat, clause in _CATEGORY_CHECKS.items():
+    for cat, clause in RISK_CATEGORY_PREDICATES.items():
         category_cases.append(f"CASE WHEN {clause} THEN '{cat}' ELSE NULL END")
+    return ",\n        ".join(category_cases)
 
-    cases_str = ",\n        ".join(category_cases)
+
+def _set_attack_categories(session: Session) -> None:
+    cases_str = _category_case_clauses()
     category_query = f"""
         MATCH (app:Application)
         WITH app,
@@ -206,10 +70,10 @@ def infer(session: Session) -> int:
         SET app.{ATTACK_CATEGORIES_PROPERTY} = categories
         RETURN count(app) AS n
     """
-    result = session.run(category_query)
-    n_categorized = result.single()["n"]
+    session.run(category_query)
 
-    # Step 2: Compute finding counts
+
+def _set_finding_counts(session: Session) -> None:
     critical_cats = list(_CRITICAL_CATEGORIES)
     high_cats = list(_HIGH_CATEGORIES)
 
@@ -227,8 +91,8 @@ def infer(session: Session) -> int:
         high_cats=high_cats,
     )
 
-    # Step 3: Compute composite risk_score
-    # Score components: injection methods, FDA, TCC, tier, CVEs, cert health, electron
+
+def _set_risk_scores(session: Session) -> None:
     session.run(
         f"""
         MATCH (app:Application)
@@ -275,4 +139,25 @@ def infer(session: Session) -> int:
         w_elec=_WEIGHT_ELECTRON,
     )
 
-    return n_categorized
+
+def _count_scored_apps(session: Session) -> int:
+    scored = session.run(
+        f"""
+        MATCH (app:Application)
+        WHERE app.{RISK_SCORE_PROPERTY} IS NOT NULL
+        RETURN count(app) AS n
+        """
+    )
+    return scored.single()["n"]
+
+
+def infer(session: Session) -> int:
+    """
+    Compute risk scores and attack categories for all Application nodes.
+
+    Returns the number of Application nodes updated.
+    """
+    _set_attack_categories(session)
+    _set_finding_counts(session)
+    _set_risk_scores(session)
+    return _count_scored_apps(session)

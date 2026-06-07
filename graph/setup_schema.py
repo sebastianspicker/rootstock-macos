@@ -49,6 +49,7 @@ CONSTRAINTS = [
     ("threat_group_id_unique", "ThreatGroup", "g.group_id"),
     ("cwe_id_unique", "CWE", "c.cwe_id"),
     ("recommendation_key_unique", "Recommendation", "r.key"),
+    ("unresolved_tcc_grant_key_unique", "UnresolvedTCCGrant", "u.grant_key"),
     ("cve_scan_asset_id_unique", "Asset", "a.id"),
     ("cve_scan_asset_context_id_unique", "AssetContext", "ac.id"),
     ("cve_scan_certificate_id_unique", "Certificate", "cert.id"),
@@ -148,12 +149,12 @@ def main() -> int:
     print("Creating schema...")
     with driver.session() as session:
         apply_schema(session)
-        for name, label, prop in CONSTRAINTS:
+        for _name, label, prop in CONSTRAINTS:
             print(f"  ✓ UNIQUE {label}.{prop.split('.')[1]}")
-        for name, label, *props in COMPOSITE_CONSTRAINTS:
+        for _name, label, *props in COMPOSITE_CONSTRAINTS:
             prop_names = ", ".join(p.split(".")[1] for p in props)
             print(f"  ✓ UNIQUE {label}.({prop_names})")
-        for name, label, prop in INDEXES:
+        for _name, label, prop in INDEXES:
             print(f"  ✓ INDEX  {label}.{prop.split('.')[1]}")
 
     driver.close()

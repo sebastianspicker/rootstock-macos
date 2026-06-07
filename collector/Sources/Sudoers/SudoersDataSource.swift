@@ -6,27 +6,44 @@ public struct SudoersDataSource: DataSource {
     public let name = "Sudoers"
     public let requiresElevation = false
 
-    public init() {}
+    private let sudoersPath: String
+    private let includeDirectoryPath: String
+
+    public init() {
+        self.init(sudoersPath: "/etc/sudoers", includeDirectoryPath: "/etc/sudoers.d")
+    }
+
+    internal init(sudoersPath: String, includeDirectoryPath: String) {
+        self.sudoersPath = sudoersPath
+        self.includeDirectoryPath = includeDirectoryPath
+    }
 
     public func collect() async -> DataSourceResult {
         var rules: [SudoersRule] = []
         var errors: [CollectionError] = []
 
         // Main sudoers file
-        let (mainRules, mainErrors) = parseSudoersFile(at: "/etc/sudoers")
+        let (mainRules, mainErrors) = parseSudoersFile(at: sudoersPath)
         rules += mainRules
         errors += mainErrors.map { CollectionError(source: name, message: $0, recoverable: true) }
 
         // Included files from sudoers.d
         let fm = FileManager.default
-        let sudoersD = "/etc/sudoers.d"
-        if fm.fileExists(atPath: sudoersD),
-           let files = try? fm.contentsOfDirectory(atPath: sudoersD) {
-            for file in files where !file.hasPrefix(".") {
-                let path = (sudoersD as NSString).appendingPathComponent(file)
-                let (subRules, subErrors) = parseSudoersFile(at: path)
-                rules += subRules
-                errors += subErrors.map { CollectionError(source: name, message: $0, recoverable: true) }
+        if fm.fileExists(atPath: includeDirectoryPath) {
+            do {
+                let files = try fm.contentsOfDirectory(atPath: includeDirectoryPath)
+                for file in files where !file.hasPrefix(".") {
+                    let path = (includeDirectoryPath as NSString).appendingPathComponent(file)
+                    let (subRules, subErrors) = parseSudoersFile(at: path)
+                    rules += subRules
+                    errors += subErrors.map { CollectionError(source: name, message: $0, recoverable: true) }
+                }
+            } catch {
+                errors.append(CollectionError(
+                    source: name,
+                    message: "Cannot list sudoers include directory: \(includeDirectoryPath)",
+                    recoverable: true
+                ))
             }
         }
 
@@ -38,7 +55,7 @@ public struct SudoersDataSource: DataSource {
             let content = try String(contentsOfFile: path, encoding: .utf8)
             return (Self.parseSudoersContent(content), [])
         } catch let error as NSError where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoSuchFileError {
-            return ([], [])
+            return ([], ["Cannot read sudoers file: \(path)"])
         } catch {
             return ([], ["Cannot read sudoers file (requires elevation): \(path)"])
         }
@@ -82,7 +99,7 @@ public struct SudoersDataSource: DataSource {
             // Extract command (strip runas and NOPASSWD tags)
             var command = rhs
             // Remove (runas) spec
-            if let parenStart = command.firstIndex(of: "("),
+            if command.firstIndex(of: "(") != nil,
                let parenEnd = command.firstIndex(of: ")") {
                 command = String(command[command.index(after: parenEnd)...]).trimmingCharacters(in: .whitespaces)
             }

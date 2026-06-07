@@ -10,12 +10,89 @@ Usage:
 
 from __future__ import annotations
 
+from unittest import TestCase
+
+import sys
+
 import pytest
 
 from conftest import cleanup_test_nodes
 from constants import ATTACKER_BUNDLE_ID, ALLOW_DYLD_ENTITLEMENT
+import infer as infer_command
 
 TEST_SCAN_ID = "test-infer-00000000-0000-0000-0000-000000000002"
+
+
+checks = TestCase()
+
+
+class _FakeSession:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+
+class _FakeDriver:
+    def session(self):
+        return _FakeSession()
+
+    def close(self):
+        return None
+
+
+def _patch_inference_counts(monkeypatch, counts: dict[str, int]) -> None:
+    module_names = [
+        "infer_injection",
+        "infer_electron",
+        "infer_automation",
+        "infer_finder_fda",
+        "infer_mdm_overgrant",
+        "infer_keychain_groups",
+        "infer_file_acl",
+        "infer_shell_hooks",
+        "infer_accessibility",
+        "infer_esf",
+        "infer_group_capabilities",
+        "infer_password",
+        "infer_kerberos",
+        "infer_sandbox",
+        "infer_quarantine",
+        "infer_risk_score",
+        "infer_recommendations",
+    ]
+    for module_name in module_names:
+        module = getattr(infer_command, module_name)
+        monkeypatch.setattr(
+            module,
+            "infer",
+            lambda _session, module_name=module_name: counts.get(module_name, 0),
+        )
+
+
+def test_main_fails_zero_inference_without_allow_empty(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["infer.py"])
+    monkeypatch.setattr(infer_command, "connect_from_args", lambda _args: _FakeDriver())
+    _patch_inference_counts(monkeypatch, {})
+
+    checks.assertEqual(infer_command.main(), 1)
+
+
+def test_main_allows_zero_inference_when_explicit(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["infer.py", "--allow-empty"])
+    monkeypatch.setattr(infer_command, "connect_from_args", lambda _args: _FakeDriver())
+    _patch_inference_counts(monkeypatch, {})
+
+    checks.assertEqual(infer_command.main(), 0)
+
+
+def test_main_succeeds_when_inference_creates_edges(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["infer.py"])
+    monkeypatch.setattr(infer_command, "connect_from_args", lambda _args: _FakeDriver())
+    _patch_inference_counts(monkeypatch, {"infer_injection": 1})
+
+    checks.assertEqual(infer_command.main(), 0)
 
 
 @pytest.fixture(scope="module")
@@ -35,6 +112,12 @@ def _seed_graph(session) -> None:
     App B (test.app.bravo):  Electron, has Screen Recording   → injectable via CHILD_INHERITS_TCC
     App C (test.app.charlie): has AppleEvents grant           → can send Apple Events to A and B
     """
+    _seed_permissions(session)
+    _seed_applications(session)
+    _seed_test_relationships(session)
+
+
+def _seed_permissions(session) -> None:
     session.run(
         """
         MERGE (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
@@ -43,7 +126,13 @@ def _seed_graph(session) -> None:
         ON CREATE SET screen.display_name = 'Screen Recording'
         MERGE (events:TCC_Permission {service: 'kTCCServiceAppleEvents'})
         ON CREATE SET events.display_name = 'Automation'
+        """
+    )
 
+
+def _seed_applications(session) -> None:
+    session.run(
+        """
         MERGE (appA:Application {bundle_id: 'test.app.alpha'})
         SET appA.name = 'Test App Alpha',
             appA.path = '/Applications/Alpha.app',
@@ -70,7 +159,20 @@ def _seed_graph(session) -> None:
             appC.is_electron = false, appC.is_system = false, appC.signed = true,
             appC.injection_methods = [],
             appC.scan_id = $scan_id
+        """,
+        scan_id=TEST_SCAN_ID,
+    )
 
+
+def _seed_test_relationships(session) -> None:
+    session.run(
+        """
+        MATCH (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
+        MATCH (screen:TCC_Permission {service: 'kTCCServiceScreenCapture'})
+        MATCH (events:TCC_Permission {service: 'kTCCServiceAppleEvents'})
+        MATCH (appA:Application {bundle_id: 'test.app.alpha'})
+        MATCH (appB:Application {bundle_id: 'test.app.bravo'})
+        MATCH (appC:Application {bundle_id: 'test.app.charlie'})
         MERGE (appA)-[:HAS_TCC_GRANT {scope: 'user', allowed: true}]->(fda)
         MERGE (appB)-[:HAS_TCC_GRANT {scope: 'user', allowed: true}]->(screen)
         MERGE (appC)-[:HAS_TCC_GRANT {scope: 'user', allowed: true}]->(events)
@@ -88,6 +190,7 @@ class TestInferInjection:
     def test_can_inject_into_missing_library_validation(self, session):
         _seed_graph(session)
         from infer_injection import infer
+
         infer(session)
 
         result = session.run(
@@ -99,11 +202,16 @@ class TestInferInjection:
             """,
             attacker_id=ATTACKER_BUNDLE_ID,
         )
-        assert result.single()["n"] >= 1, "Expected CAN_INJECT_INTO (missing_library_validation) → test.app.alpha"
+        checks.assertGreaterEqual(
+            result.single()["n"],
+            1,
+            "Expected CAN_INJECT_INTO (missing_library_validation) → test.app.alpha",
+        )
 
     def test_can_inject_into_dyld_insert(self, session):
         _seed_graph(session)
         from infer_injection import infer
+
         infer(session)
 
         # App A (hardened_runtime=false) should have dyld_insert edge
@@ -116,11 +224,12 @@ class TestInferInjection:
             """,
             attacker_id=ATTACKER_BUNDLE_ID,
         )
-        assert result.single()["n"] >= 1
+        checks.assertGreaterEqual(result.single()["n"], 1)
 
     def test_can_inject_via_dyld_entitlement(self, session):
         _seed_graph(session)
         from infer_injection import infer
+
         infer(session)
 
         # App B has allow-dyld-environment-variables entitlement → dyld_insert_via_entitlement
@@ -133,11 +242,12 @@ class TestInferInjection:
             """,
             attacker_id=ATTACKER_BUNDLE_ID,
         )
-        assert result.single()["n"] >= 1
+        checks.assertGreaterEqual(result.single()["n"], 1)
 
     def test_inferred_flag_set(self, session):
         _seed_graph(session)
         from infer_injection import infer
+
         infer(session)
 
         result = session.run(
@@ -147,22 +257,24 @@ class TestInferInjection:
             RETURN count(r) AS n
             """
         )
-        assert result.single()["n"] > 0
+        checks.assertGreater(result.single()["n"], 0)
 
     def test_attacker_node_created(self, session):
         _seed_graph(session)
         from infer_injection import infer
+
         infer(session)
 
         result = session.run(
             "MATCH (a:Application {bundle_id: $id}) RETURN count(a) AS n",
             id=ATTACKER_BUNDLE_ID,
         )
-        assert result.single()["n"] == 1
+        checks.assertEqual(result.single()["n"], 1)
 
     def test_idempotency(self, session):
         _seed_graph(session)
         from infer_injection import infer
+
         infer(session)
         n1 = session.run(
             "MATCH ()-[r:CAN_INJECT_INTO {inferred: true}]->() RETURN count(r) AS n"
@@ -173,7 +285,7 @@ class TestInferInjection:
             "MATCH ()-[r:CAN_INJECT_INTO {inferred: true}]->() RETURN count(r) AS n"
         ).single()["n"]
 
-        assert n1 == n2, f"Idempotency failed: {n1} → {n2} after second run"
+        checks.assertEqual(n1, n2, f"Idempotency failed: {n1} → {n2} after second run")
 
 
 class TestInferElectron:
@@ -181,6 +293,7 @@ class TestInferElectron:
         _seed_graph(session)
         from infer_injection import infer as infer_inj
         from infer_electron import infer
+
         infer_inj(session)  # ensure attacker node exists
         infer(session)
 
@@ -193,12 +306,13 @@ class TestInferElectron:
             """,
             attacker_id=ATTACKER_BUNDLE_ID,
         )
-        assert result.single()["n"] >= 1
+        checks.assertGreaterEqual(result.single()["n"], 1)
 
     def test_non_electron_app_not_targeted(self, session):
         _seed_graph(session)
         from infer_injection import infer as infer_inj
         from infer_electron import infer
+
         infer_inj(session)
         infer(session)
 
@@ -209,12 +323,13 @@ class TestInferElectron:
             RETURN count(r) AS n
             """
         )
-        assert result.single()["n"] == 0
+        checks.assertEqual(result.single()["n"], 0)
 
     def test_idempotency(self, session):
         _seed_graph(session)
         from infer_injection import infer as infer_inj
         from infer_electron import infer
+
         infer_inj(session)
         infer(session)
         n1 = session.run(
@@ -224,7 +339,7 @@ class TestInferElectron:
         n2 = session.run(
             "MATCH ()-[r:CHILD_INHERITS_TCC {inferred: true}]->() RETURN count(r) AS n"
         ).single()["n"]
-        assert n1 == n2
+        checks.assertEqual(n1, n2)
 
 
 class TestInferAutomation:
@@ -232,6 +347,7 @@ class TestInferAutomation:
         _seed_graph(session)
         from infer_injection import infer as infer_inj
         from infer_automation import infer
+
         infer_inj(session)
         infer(session)
 
@@ -244,12 +360,13 @@ class TestInferAutomation:
             RETURN count(r) AS n
             """
         )
-        assert result.single()["n"] >= 1
+        checks.assertGreaterEqual(result.single()["n"], 1)
 
     def test_idempotency(self, session):
         _seed_graph(session)
         from infer_injection import infer as infer_inj
         from infer_automation import infer
+
         infer_inj(session)
         infer(session)
         n1 = session.run(
@@ -259,4 +376,4 @@ class TestInferAutomation:
         n2 = session.run(
             "MATCH ()-[r:CAN_SEND_APPLE_EVENT {inferred: true}]->() RETURN count(r) AS n"
         ).single()["n"]
-        assert n1 == n2
+        checks.assertEqual(n1, n2)

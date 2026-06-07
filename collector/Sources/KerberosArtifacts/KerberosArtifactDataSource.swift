@@ -59,6 +59,11 @@ public struct KerberosArtifactDataSource: DataSource {
         var results: [KerberosArtifact] = []
 
         guard let contents = try? fm.contentsOfDirectory(atPath: directory) else {
+            errors.append(CollectionError(
+                source: name,
+                message: "Cannot read ccache directory: \(directory)",
+                recoverable: true
+            ))
             return []
         }
 
@@ -70,14 +75,18 @@ public struct KerberosArtifactDataSource: DataSource {
                 artifact = KerberosArtifact(
                     path: artifact.path,
                     artifactType: artifact.artifactType,
-                    owner: artifact.owner,
-                    group: artifact.group,
-                    mode: artifact.mode,
-                    modificationTime: artifact.modificationTime,
-                    principalHint: principal ?? artifact.principalHint,
-                    isReadable: artifact.isReadable,
-                    isWorldReadable: artifact.isWorldReadable,
-                    isGroupReadable: artifact.isGroupReadable
+                    metadata: KerberosArtifact.FileMetadata(
+                        owner: artifact.owner,
+                        group: artifact.group,
+                        mode: artifact.mode,
+                        modificationTime: artifact.modificationTime,
+                        principalHint: principal ?? artifact.principalHint
+                    ),
+                    readability: KerberosArtifact.Readability(
+                        isReadable: artifact.isReadable,
+                        isWorldReadable: artifact.isWorldReadable,
+                        isGroupReadable: artifact.isGroupReadable
+                    )
                 )
                 results.append(artifact)
             }
@@ -120,18 +129,23 @@ public struct KerberosArtifactDataSource: DataSource {
         return KerberosArtifact(
             path: path,
             artifactType: type,
-            owner: owner,
-            group: group,
-            mode: mode,
-            modificationTime: modTime,
-            principalHint: nil,
-            isReadable: isReadable,
-            isWorldReadable: isWorldReadable,
-            isGroupReadable: isGroupReadable,
-            defaultRealm: defaultRealm,
-            permittedEncTypes: permittedEncTypes,
-            realmNames: realmNames,
-            isForwardable: isForwardable
+            metadata: KerberosArtifact.FileMetadata(
+                owner: owner,
+                group: group,
+                mode: mode,
+                modificationTime: modTime
+            ),
+            readability: KerberosArtifact.Readability(
+                isReadable: isReadable,
+                isWorldReadable: isWorldReadable,
+                isGroupReadable: isGroupReadable
+            ),
+            config: KerberosArtifact.ConfigFields(
+                defaultRealm: defaultRealm,
+                permittedEncTypes: permittedEncTypes,
+                realmNames: realmNames,
+                isForwardable: isForwardable
+            )
         )
     }
 
@@ -195,47 +209,20 @@ public struct KerberosArtifactDataSource: DataSource {
 
         for line in contents.components(separatedBy: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if shouldSkipKrb5Line(trimmed) { continue }
 
-            // Skip comments and empty lines
-            if trimmed.isEmpty || trimmed.hasPrefix("#") || trimmed.hasPrefix(";") {
-                continue
-            }
-
-            // Section header: [libdefaults], [realms], etc.
-            if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") {
-                currentSection = String(trimmed.dropFirst().dropLast())
-                    .trimmingCharacters(in: .whitespaces)
-                    .lowercased()
+            if let section = krb5SectionName(from: trimmed) {
+                currentSection = section
                 continue
             }
 
             switch currentSection {
             case "libdefaults":
-                if let value = extractValue(trimmed, key: "default_realm") {
-                    config.defaultRealm = value
-                } else if config.permittedEncTypes == nil,
-                          let value = extractValue(trimmed, key: "permitted_enctypes")
-                            ?? extractValue(trimmed, key: "default_tkt_enctypes")
-                            ?? extractValue(trimmed, key: "default_tgs_enctypes") {
-                    config.permittedEncTypes = value
-                        .split(whereSeparator: { $0 == " " || $0 == "," })
-                        .map { $0.trimmingCharacters(in: .whitespaces) }
-                        .filter { !$0.isEmpty }
-                } else if let value = extractValue(trimmed, key: "forwardable") {
-                    config.isForwardable = (value.lowercased() == "true"
-                                            || value.lowercased() == "yes"
-                                            || value == "1")
-                }
+                applyLibdefaultsLine(trimmed, to: &config)
 
             case "realms":
-                // Realm names appear as "REALM.COM = {" lines
-                if trimmed.contains("=") && trimmed.hasSuffix("{") {
-                    let realmName = trimmed
-                        .split(separator: "=").first?
-                        .trimmingCharacters(in: .whitespaces) ?? ""
-                    if !realmName.isEmpty {
-                        realmNames.append(realmName)
-                    }
+                if let realmName = realmName(from: trimmed) {
+                    realmNames.append(realmName)
                 }
 
             default:
@@ -248,6 +235,62 @@ public struct KerberosArtifactDataSource: DataSource {
         }
 
         return config
+    }
+
+    private func shouldSkipKrb5Line(_ line: String) -> Bool {
+        line.isEmpty || line.hasPrefix("#") || line.hasPrefix(";")
+    }
+
+    private func krb5SectionName(from line: String) -> String? {
+        guard line.hasPrefix("[") && line.hasSuffix("]") else { return nil }
+        return String(line.dropFirst().dropLast())
+            .trimmingCharacters(in: .whitespaces)
+            .lowercased()
+    }
+
+    private func applyLibdefaultsLine(_ line: String, to config: inout Krb5Config) {
+        if let value = extractValue(line, key: "default_realm") {
+            config.defaultRealm = value
+            return
+        }
+
+        if config.permittedEncTypes == nil,
+           let value = firstEncryptionTypeValue(in: line) {
+            config.permittedEncTypes = splitEncryptionTypes(value)
+            return
+        }
+
+        if let value = extractValue(line, key: "forwardable") {
+            config.isForwardable = parseKrb5Boolean(value)
+        }
+    }
+
+    private func firstEncryptionTypeValue(in line: String) -> String? {
+        extractValue(line, key: "permitted_enctypes")
+            ?? extractValue(line, key: "default_tkt_enctypes")
+            ?? extractValue(line, key: "default_tgs_enctypes")
+    }
+
+    private func splitEncryptionTypes(_ value: String) -> [String] {
+        value
+            .split(whereSeparator: { $0 == " " || $0 == "," })
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    private func parseKrb5Boolean(_ value: String) -> Bool {
+        let lowercased = value.lowercased()
+        return lowercased == "true" || lowercased == "yes" || value == "1"
+    }
+
+    private func realmName(from line: String) -> String? {
+        // Realm names appear as "REALM.COM = {" lines.
+        guard line.contains("=") && line.hasSuffix("{") else { return nil }
+        let name = line
+            .split(separator: "=")
+            .first?
+            .trimmingCharacters(in: .whitespaces) ?? ""
+        return name.isEmpty ? nil : name
     }
 
     /// Extract value from a "key = value" line.

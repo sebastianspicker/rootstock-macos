@@ -39,28 +39,52 @@ public struct XPCService: GraphNode {
         case agent
     }
 
+    public struct LaunchBehavior: Codable, Sendable {
+        public let user: String?
+        public let runAtLoad: Bool
+        public let keepAlive: Bool
+
+        public init(user: String?, runAtLoad: Bool, keepAlive: Bool) {
+            self.user = user
+            self.runAtLoad = runAtLoad
+            self.keepAlive = keepAlive
+        }
+    }
+
+    public struct Exposure: Codable, Sendable {
+        public let machServices: [String]
+        public let entitlements: [String]
+        public let hasClientVerification: Bool
+
+        public init(
+            machServices: [String],
+            entitlements: [String],
+            hasClientVerification: Bool = false
+        ) {
+            self.machServices = machServices
+            self.entitlements = entitlements
+            self.hasClientVerification = hasClientVerification
+        }
+    }
+
     public init(
         label: String,
         path: String,
         program: String?,
         type: ServiceType,
-        user: String?,
-        runAtLoad: Bool,
-        keepAlive: Bool,
-        machServices: [String],
-        entitlements: [String],
-        hasClientVerification: Bool = false
+        launch: LaunchBehavior,
+        exposure: Exposure
     ) {
         self.label = label
         self.path = path
         self.program = program
         self.type = type
-        self.user = user
-        self.runAtLoad = runAtLoad
-        self.keepAlive = keepAlive
-        self.machServices = machServices
-        self.entitlements = entitlements
-        self.hasClientVerification = hasClientVerification
+        self.user = launch.user
+        self.runAtLoad = launch.runAtLoad
+        self.keepAlive = launch.keepAlive
+        self.machServices = exposure.machServices
+        self.entitlements = exposure.entitlements
+        self.hasClientVerification = exposure.hasClientVerification
     }
 
     enum CodingKeys: String, CodingKey {

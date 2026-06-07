@@ -36,7 +36,7 @@ analysis phase (running on the analyst's workstation):
 
 | Phase | Rootstock | BloodHound |
 |-------|-----------|------------|
-| Collection | `rootstock-collector` runs on macOS endpoint | SharpHound runs on domain-joined Windows |
+| Collection | Rootstock Swift collector (`RootstockCLI`) runs on macOS endpoint | SharpHound runs on domain-joined Windows |
 | Transport | JSON file (manual transfer) | JSON/ZIP files (manual transfer) |
 | Import | Python script -> Neo4j | BloodHound GUI / API -> Neo4j |
 | Analysis | Cypher queries + Neo4j Browser | BloodHound GUI + pre-built queries |
@@ -87,8 +87,9 @@ or Azure AD). A single SharpHound run can enumerate the entire domain.
 
 **Rootstock** collects from a single macOS endpoint. Multi-host analysis
 requires running the collector on each machine and importing all scans into
-the same Neo4j database. Cross-host attack paths (e.g., SSH key reuse) are
-a planned future feature.
+the same Neo4j database. Current queries cover supported multi-scan signals
+such as cross-host user presence and SSH-to-injectable-app chains; deeper
+fleet-wide correlation remains an active research area.
 
 ### 3. Network vs. Local
 
@@ -144,8 +145,8 @@ for organizations that manage both macOS and Windows/AD environments.
 
 | Feature | Status |
 |---------|--------|
-| Shared Neo4j database with BloodHound/OpenGraph export data | Partially supported |
-| Cross-platform edge inference | Research phase |
+| Shared Neo4j database with BloodHound/OpenGraph export data | Supported for current Rootstock export/import surfaces |
+| Cross-platform edge inference | Partially supported for AD identity and Kerberos artifacts; broader inference remains research |
 | Unified query library | Not started |
 | Shared visualization | OpenGraph export available; deeper UX not started |
 
@@ -162,7 +163,7 @@ for organizations that manage both macOS and Windows/AD environments.
 | `LaunchItem` | (no equivalent) | macOS persistence mechanism |
 | `Keychain_Item` | (no equivalent) | macOS credential storage |
 | `MDM_Profile` | `GPO` (loosely) | Configuration management |
-| (planned) `User` | `User` | Local macOS users |
+| `User` | `User` | Local macOS users and AD identity mappings |
 
 ### Edge Types
 

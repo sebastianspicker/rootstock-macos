@@ -4,13 +4,16 @@ Areas where community contributions would be valuable.
 
 ## New Data Sources (Swift Collector)
 
-- **Endpoint Security Framework (ESF)** — Real-time process events for live analysis
-- **Login/Logout Hooks** — Legacy authentication hooks
-- **Authorization Database** — `/etc/authorization` rules
-- **Spotlight Metadata** — App metadata via `mdls`
-- **Gatekeeper Assessment** — `spctl --assess` results per app
-- **Network Extensions** — VPN, content filter, DNS proxy extensions
-- **System Extensions** — Endpoint security, network, driver extensions
+- **Endpoint Security Framework event snapshots** — Bounded, passive coverage
+  data that complements the existing ESF monitoring-gap inference.
+- **Login/logout hook enrichment** — Legacy authentication hooks and launch
+  paths not already covered by persistence data.
+- **Spotlight metadata enrichment** — App metadata via `mdls` for better app
+  identity and provenance.
+- **Network extension detail enrichment** — Deeper VPN, content-filter, and DNS
+  proxy context on top of the existing system-extension module.
+- **Per-app Gatekeeper context** — More explicit notarization and quarantine
+  evidence beyond current code-signing and quarantine fields.
 
 ## New Cypher Queries
 
@@ -28,7 +31,7 @@ Areas where community contributions would be valuable.
 
 ## Testing & Quality
 
-- Test on macOS 14, 15, 16 across different hardware
+- Test on macOS 14, 15, and 26 across different hardware
 - Test with MDM-managed Macs (enterprise environments)
 - Fuzzing the collector with malformed plist/SQLite inputs
 - Performance optimization for Macs with 500+ apps

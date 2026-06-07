@@ -137,16 +137,18 @@ final class QuarantineTests: XCTestCase {
             wasUserApproved: true
         )
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.test",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: nil,
-            hardenedRuntime: true,
-            libraryValidation: true,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.test",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                hardenedRuntime: true,
+                libraryValidation: true,
+                signed: true
+            ),
             quarantineInfo: qInfo
         )
         let data = try JSONEncoder().encode(app)
@@ -160,16 +162,18 @@ final class QuarantineTests: XCTestCase {
 
     func testApplicationWithoutQuarantineInfoEncoding() throws {
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.test",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: nil,
-            hardenedRuntime: true,
-            libraryValidation: true,
-            isElectron: false,
-            isSystem: false,
-            signed: true
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.test",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                hardenedRuntime: true,
+                libraryValidation: true,
+                signed: true
+            )
         )
         let data = try JSONEncoder().encode(app)
         let decoded = try JSONDecoder().decode(Application.self, from: data)
@@ -185,16 +189,19 @@ final class QuarantineTests: XCTestCase {
             wasTranslocated: false
         )
         let original = Application(
-            name: "TestApp",
-            bundleId: "com.example.test",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: "TEST123",
-            hardenedRuntime: true,
-            libraryValidation: true,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.test",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                teamId: "TEST123",
+                hardenedRuntime: true,
+                libraryValidation: true,
+                signed: true
+            ),
             quarantineInfo: qInfo
         )
         let data = try JSONEncoder().encode(original)
@@ -213,28 +220,33 @@ final class QuarantineTests: XCTestCase {
         let source = QuarantineDataSource()
         var apps = [
             Application(
-                name: "SystemApp",
-                bundleId: "com.apple.system",
-                path: "/System/Applications/System.app",
-                version: "1.0",
-                teamId: nil,
-                hardenedRuntime: true,
-                libraryValidation: true,
-                isElectron: false,
-                isSystem: true,
-                signed: true
+                identity: Application.Identity(
+                    name: "SystemApp",
+                    bundleId: "com.apple.system",
+                    path: "/System/Applications/System.app",
+                    version: "1.0"
+                ),
+                flags: Application.Flags(isElectron: false, isSystem: true),
+                signing: Application.Signing(
+                    hardenedRuntime: true,
+                    libraryValidation: true,
+                    signed: true
+                )
             ),
             Application(
-                name: "UserApp",
-                bundleId: "com.example.user",
-                path: "/Applications/UserApp.app",
-                version: "1.0",
-                teamId: "TEST",
-                hardenedRuntime: false,
-                libraryValidation: false,
-                isElectron: false,
-                isSystem: false,
-                signed: true
+                identity: Application.Identity(
+                    name: "UserApp",
+                    bundleId: "com.example.user",
+                    path: "/Applications/UserApp.app",
+                    version: "1.0"
+                ),
+                flags: Application.Flags(isElectron: false, isSystem: false),
+                signing: Application.Signing(
+                    teamId: "TEST",
+                    hardenedRuntime: false,
+                    libraryValidation: false,
+                    signed: true
+                )
             ),
         ]
         // After enrichment, all apps should have quarantineInfo set

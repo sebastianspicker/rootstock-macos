@@ -8,28 +8,36 @@ final class JSONExportTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeSampleScanResult() -> ScanResult {
+    private func makeSampleApplication() -> Application {
         let entitlement = EntitlementInfo(
             name: "com.apple.security.cs.allow-dyld-environment-variables",
             isPrivate: false,
             category: "injection",
             isSecurityCritical: true
         )
-        let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.testapp",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: "TEAM123",
-            hardenedRuntime: false,
-            libraryValidation: false,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
-            entitlements: [entitlement],
-            injectionMethods: [.missingLibraryValidation]
+        return Application(
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.testapp",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                teamId: "TEAM123",
+                hardenedRuntime: false,
+                libraryValidation: false,
+                signed: true
+            ),
+            entitlementState: Application.EntitlementState(
+                entitlements: [entitlement],
+                injectionMethods: [.missingLibraryValidation]
+            )
         )
-        let grant = TCCGrant(
+    }
+
+    private func makeSampleTCCGrant() -> TCCGrant {
+        TCCGrant(
             service: "kTCCServiceSystemPolicyAllFiles",
             displayName: "Full Disk Access",
             client: "com.example.testapp",
@@ -39,19 +47,24 @@ final class JSONExportTests: XCTestCase {
             scope: "user",
             lastModified: 1710748800
         )
+    }
+
+    private func makeSampleScanResult() -> ScanResult {
         return ScanResult(
-            scanId: "test-scan-001",
-            timestamp: "2026-03-18T10:00:00Z",
-            hostname: "test-mac",
-            macosVersion: "macOS 14.5",
-            collectorVersion: "0.1.0",
+            metadata: ScanResult.Metadata(
+                scanId: "test-scan-001",
+                timestamp: "2026-03-18T10:00:00Z",
+                hostname: "test-mac",
+                macosVersion: "macOS 14.5",
+                collectorVersion: "0.1.0"
+            ),
             elevation: ElevationInfo(isRoot: false, hasFda: false),
-            applications: [app],
-            tccGrants: [grant],
-            xpcServices: [],
-            keychainAcls: [],
-            mdmProfiles: [],
-            launchItems: [],
+            collections: ScanResult.Collections(
+                core: ScanResult.CoreCollections(
+                    applications: [makeSampleApplication()],
+                    tccGrants: [makeSampleTCCGrant()]
+                )
+            ),
             errors: []
         )
     }
@@ -79,6 +92,41 @@ final class JSONExportTests: XCTestCase {
         XCTAssertTrue(jsonString.contains("\"bundle_id\""), "Expected snake_case key 'bundle_id'")
         XCTAssertTrue(jsonString.contains("\"hardened_runtime\""), "Expected snake_case key 'hardened_runtime'")
         XCTAssertTrue(jsonString.contains("\"injection_methods\""), "Expected snake_case key 'injection_methods'")
+    }
+
+    func testSecurityCriticalFieldsEncodeAsJSONBooleans() throws {
+        let exporter = JSONExporter()
+        let result = makeSampleScanResult()
+        let data = try exporter.encode(result)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data, options: []) as? [String: Any])
+        let elevation = try XCTUnwrap(json["elevation"] as? [String: Any])
+        assertJSONBool(elevation["is_root"], equals: false, at: "elevation.is_root")
+        assertJSONBool(elevation["has_fda"], equals: false, at: "elevation.has_fda")
+
+        let applications = try XCTUnwrap(json["applications"] as? [[String: Any]])
+        let app = try XCTUnwrap(applications.first)
+        assertJSONBool(app["hardened_runtime"], equals: false, at: "applications[0].hardened_runtime")
+        assertJSONBool(app["library_validation"], equals: false, at: "applications[0].library_validation")
+        assertJSONBool(app["is_electron"], equals: false, at: "applications[0].is_electron")
+        assertJSONBool(app["is_system"], equals: false, at: "applications[0].is_system")
+        assertJSONBool(app["signed"], equals: true, at: "applications[0].signed")
+        assertJSONBool(
+            app["code_signing_analysis_error"],
+            equals: false,
+            at: "applications[0].code_signing_analysis_error"
+        )
+        assertJSONBool(app["is_sip_protected"], equals: false, at: "applications[0].is_sip_protected")
+        assertJSONBool(app["is_sandboxed"], equals: false, at: "applications[0].is_sandboxed")
+        assertJSONBool(app["entitlements_available"], equals: true, at: "applications[0].entitlements_available")
+
+        let entitlements = try XCTUnwrap(app["entitlements"] as? [[String: Any]])
+        let entitlement = try XCTUnwrap(entitlements.first)
+        assertJSONBool(entitlement["is_private"], equals: false, at: "applications[0].entitlements[0].is_private")
+        assertJSONBool(
+            entitlement["is_security_critical"],
+            equals: true,
+            at: "applications[0].entitlements[0].is_security_critical"
+        )
     }
 
     // MARK: - Round-trip tests
@@ -147,18 +195,14 @@ final class JSONExportTests: XCTestCase {
     func testRoundTripEmptyScanResult() throws {
         let exporter = JSONExporter()
         let empty = ScanResult(
-            scanId: "empty-scan",
-            timestamp: "2026-03-18T00:00:00Z",
-            hostname: "empty",
-            macosVersion: "macOS 14.0",
-            collectorVersion: "0.1.0",
+            metadata: ScanResult.Metadata(
+                scanId: "empty-scan",
+                timestamp: "2026-03-18T00:00:00Z",
+                hostname: "empty",
+                macosVersion: "macOS 14.0",
+                collectorVersion: "0.1.0"
+            ),
             elevation: ElevationInfo(isRoot: false, hasFda: false),
-            applications: [],
-            tccGrants: [],
-            xpcServices: [],
-            keychainAcls: [],
-            mdmProfiles: [],
-            launchItems: [],
             errors: []
         )
         let data = try exporter.encode(empty)
@@ -241,5 +285,26 @@ final class JSONExportTests: XCTestCase {
             XCTAssertTrue(String(describing: error).contains("outputIsSymlink"))
         }
         XCTAssertEqual(try String(contentsOf: target), "existing")
+    }
+
+    private func assertJSONBool(
+        _ value: Any?,
+        equals expected: Bool,
+        at path: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        guard let value else {
+            XCTFail("Missing JSON value at \(path)", file: file, line: line)
+            return
+        }
+        XCTAssertEqual(
+            CFGetTypeID(value as AnyObject),
+            CFBooleanGetTypeID(),
+            "\(path) must encode as a JSON boolean, not a number",
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(value as? Bool, expected, file: file, line: line)
     }
 }

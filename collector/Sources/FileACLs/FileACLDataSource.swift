@@ -46,41 +46,17 @@ public struct FileACLDataSource: DataSource {
         let fm = FileManager.default
 
         for (rawPath, category) in Self.criticalPaths {
-            let path = Self.expandTilde(rawPath)
-
-            // For directory paths, check the directory itself
-            if rawPath.hasSuffix("/") {
-                let (acl, error) = collectPath(path, category: category, fm: fm)
-                if let acl { results.append(acl) }
-                if let error { errors.append(CollectionError(source: name, message: error, recoverable: true)) }
-
-                // Also enumerate files within LaunchAgent/Daemon directories
-                if let entries = try? fm.contentsOfDirectory(atPath: path) {
-                    for entry in entries where entry.hasSuffix(".plist") {
-                        let filePath = (path as NSString).appendingPathComponent(entry)
-                        let (fileAcl, fileError) = collectPath(filePath, category: category, fm: fm)
-                        if let fileAcl { results.append(fileAcl) }
-                        if let fileError { errors.append(CollectionError(source: name, message: fileError, recoverable: true)) }
-                    }
-                }
-            } else {
-                let (acl, error) = collectPath(path, category: category, fm: fm)
-                if let acl { results.append(acl) }
-                if let error { errors.append(CollectionError(source: name, message: error, recoverable: true)) }
-            }
+            collectCriticalPath(
+                rawPath,
+                category: category,
+                fm: fm,
+                results: &results,
+                errors: &errors
+            )
 
             // Handle sudoers.d include directory
             if rawPath == "/etc/sudoers" {
-                let sudoersD = "/etc/sudoers.d"
-                if fm.fileExists(atPath: sudoersD),
-                   let files = try? fm.contentsOfDirectory(atPath: sudoersD) {
-                    for file in files where !file.hasPrefix(".") {
-                        let filePath = (sudoersD as NSString).appendingPathComponent(file)
-                        let (acl, error) = collectPath(filePath, category: "sudoers", fm: fm)
-                        if let acl { results.append(acl) }
-                        if let error { errors.append(CollectionError(source: name, message: error, recoverable: true)) }
-                    }
-                }
+                collectSudoersIncludes(fm: fm, results: &results, errors: &errors)
             }
         }
 
@@ -120,6 +96,71 @@ public struct FileACLDataSource: DataSource {
             isWritableByNonRoot: isWritableByNonRoot,
             category: category
         ), nil)
+    }
+
+    private func collectCriticalPath(
+        _ rawPath: String,
+        category: String,
+        fm: FileManager,
+        results: inout [FileACL],
+        errors: inout [CollectionError]
+    ) {
+        let path = Self.expandTilde(rawPath)
+        appendCollectedPath(path, category: category, fm: fm, results: &results, errors: &errors)
+
+        if rawPath.hasSuffix("/") {
+            collectPlistEntries(in: path, category: category, fm: fm, results: &results, errors: &errors)
+        }
+    }
+
+    private func collectPlistEntries(
+        in directory: String,
+        category: String,
+        fm: FileManager,
+        results: inout [FileACL],
+        errors: inout [CollectionError]
+    ) {
+        guard let entries = try? fm.contentsOfDirectory(atPath: directory) else {
+            return
+        }
+
+        for entry in entries where entry.hasSuffix(".plist") {
+            let filePath = (directory as NSString).appendingPathComponent(entry)
+            appendCollectedPath(filePath, category: category, fm: fm, results: &results, errors: &errors)
+        }
+    }
+
+    private func collectSudoersIncludes(
+        fm: FileManager,
+        results: inout [FileACL],
+        errors: inout [CollectionError]
+    ) {
+        let sudoersD = "/etc/sudoers.d"
+        guard fm.fileExists(atPath: sudoersD),
+              let files = try? fm.contentsOfDirectory(atPath: sudoersD) else {
+            return
+        }
+
+        for file in files where !file.hasPrefix(".") {
+            let filePath = (sudoersD as NSString).appendingPathComponent(file)
+            appendCollectedPath(filePath, category: "sudoers", fm: fm, results: &results, errors: &errors)
+        }
+    }
+
+    private func appendCollectedPath(
+        _ path: String,
+        category: String,
+        fm: FileManager,
+        results: inout [FileACL],
+        errors: inout [CollectionError]
+    ) {
+        let (acl, error) = collectPath(path, category: category, fm: fm)
+        if let acl {
+            results.append(acl)
+        }
+        if let error {
+            errors.append(CollectionError(source: name, message: error, recoverable: true))
+        }
     }
 
     /// Expand ~ to the current user's home directory.

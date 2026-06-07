@@ -25,7 +25,7 @@ final class AuthorizationDBTests: XCTestCase {
             requireAuthentication: true
         )
         let data = try JSONEncoder().encode(right)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertEqual(json["name"] as? String, "system.preferences")
         XCTAssertEqual(json["rule"] as? String, "authenticate-session-owner")
@@ -50,46 +50,17 @@ final class AuthorizationDBTests: XCTestCase {
     // MARK: - Parser
 
     func testParseSecurityOutputValid() {
-        let plistXml = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>rule</key>
-            <string>authenticate-admin-nonshared</string>
-            <key>allow-root</key>
-            <true/>
-            <key>authenticate-user</key>
-            <true/>
-        </dict>
-        </plist>
-        """
         let (right, error) = AuthorizationDBDataSource.parseSecurityOutput(
-            rightName: "system.privilege.admin", output: plistXml
+            rightName: "system.privilege.admin",
+            output: Self.validSecurityOutputXML
         )
-        XCTAssertNil(error)
-        XCTAssertNotNil(right)
-        XCTAssertEqual(right?.name, "system.privilege.admin")
-        XCTAssertEqual(right?.rule, "authenticate-admin-nonshared")
-        XCTAssertTrue(right?.allowRoot ?? false)
-        XCTAssertTrue(right?.requireAuthentication ?? false)
+        assertAdminRight(right, error: error)
     }
 
     func testParseSecurityOutputRuleAsArray() {
-        let plistXml = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>rule</key>
-            <array>
-                <string>is-admin</string>
-            </array>
-        </dict>
-        </plist>
-        """
         let (right, error) = AuthorizationDBDataSource.parseSecurityOutput(
-            rightName: "system.login.console", output: plistXml
+            rightName: "system.login.console",
+            output: Self.ruleAsArraySecurityOutputXML
         )
         XCTAssertNil(error)
         XCTAssertEqual(right?.rule, "is-admin")
@@ -119,4 +90,46 @@ final class AuthorizationDBTests: XCTestCase {
         // security authorizationdb should work without elevation
         XCTAssertGreaterThanOrEqual(rights.count, 0)
     }
+
+    private func assertAdminRight(
+        _ right: AuthorizationRight?,
+        error: String?,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertNil(error, file: file, line: line)
+        XCTAssertNotNil(right, file: file, line: line)
+        XCTAssertEqual(right?.name, "system.privilege.admin", file: file, line: line)
+        XCTAssertEqual(right?.rule, "authenticate-admin-nonshared", file: file, line: line)
+        XCTAssertTrue(right?.allowRoot ?? false, file: file, line: line)
+        XCTAssertTrue(right?.requireAuthentication ?? false, file: file, line: line)
+    }
+
+    private static let validSecurityOutputXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>rule</key>
+            <string>authenticate-admin-nonshared</string>
+            <key>allow-root</key>
+            <true/>
+            <key>authenticate-user</key>
+            <true/>
+        </dict>
+        </plist>
+        """
+
+    private static let ruleAsArraySecurityOutputXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>rule</key>
+            <array>
+                <string>is-admin</string>
+            </array>
+        </dict>
+        </plist>
+        """
 }

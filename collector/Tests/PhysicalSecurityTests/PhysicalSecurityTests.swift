@@ -24,7 +24,7 @@ final class PhysicalSecurityTests: XCTestCase {
     func testBluetoothDeviceSnakeCaseEncoding() throws {
         let device = BluetoothDevice(name: "Mouse", address: "AA:BB:CC:DD:EE:FF", deviceType: "Mouse", connected: true)
         let data = try JSONEncoder().encode(device)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertNotNil(json["device_type"])
         XCTAssertNil(json["deviceType"])
     }
@@ -56,19 +56,19 @@ final class PhysicalSecurityTests: XCTestCase {
             ]
         ]
 
-        let (devices, enabled, discoverable, errors) = ds.parseBluetoothJSON(json)
-        XCTAssertEqual(devices.count, 2)
-        XCTAssertEqual(enabled, true)
-        XCTAssertEqual(discoverable, false)
-        XCTAssertTrue(errors.isEmpty)
+        let result = ds.parseBluetoothJSON(json)
+        XCTAssertEqual(result.devices.count, 2)
+        XCTAssertEqual(result.enabled, true)
+        XCTAssertEqual(result.discoverable, false)
+        XCTAssertTrue(result.errors.isEmpty)
 
-        let keyboard = devices.first { $0.name == "Magic Keyboard" }
+        let keyboard = result.devices.first { $0.name == "Magic Keyboard" }
         XCTAssertNotNil(keyboard)
         XCTAssertEqual(keyboard?.address, "AA:BB:CC:DD:EE:FF")
         XCTAssertEqual(keyboard?.deviceType, "Keyboard")
         XCTAssertTrue(keyboard?.connected ?? false)
 
-        let airpods = devices.first { $0.name == "AirPods" }
+        let airpods = result.devices.first { $0.name == "AirPods" }
         XCTAssertNotNil(airpods)
         XCTAssertFalse(airpods?.connected ?? true)
     }
@@ -76,11 +76,11 @@ final class PhysicalSecurityTests: XCTestCase {
     func testParseBluetoothJSONEmpty() {
         let ds = PhysicalSecurityDataSource()
         let json: [String: Any] = ["SPBluetoothDataType": [[:] as [String: Any]]]
-        let (devices, enabled, discoverable, errors) = ds.parseBluetoothJSON(json)
-        XCTAssertTrue(devices.isEmpty)
-        XCTAssertNil(enabled)
-        XCTAssertNil(discoverable)
-        XCTAssertTrue(errors.isEmpty)
+        let result = ds.parseBluetoothJSON(json)
+        XCTAssertTrue(result.devices.isEmpty)
+        XCTAssertNil(result.enabled)
+        XCTAssertNil(result.discoverable)
+        XCTAssertTrue(result.errors.isEmpty)
     }
 
     // MARK: - Display sleep parsing

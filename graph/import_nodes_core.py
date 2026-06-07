@@ -3,18 +3,59 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from neo4j import Session
 
+from import_nodes_certificates import (
+    import_certificate_authorities as import_certificate_authorities,
+)
+from import_nodes_sandbox import import_sandbox_profiles as import_sandbox_profiles
 from models import (
     ApplicationData,
     TCCGrantData,
     ComputerData,
-    SandboxProfileData,
 )
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "ComputerImportContext",
+    "import_applications",
+    "import_certificate_authorities",
+    "import_computer",
+    "import_entitlements",
+    "import_installed_on",
+    "import_local_to",
+    "import_sandbox_profiles",
+    "import_signed_by_team",
+    "import_tcc_grants",
+]
+
+
+@dataclass(frozen=True)
+class ComputerImportContext:
+    gatekeeper_enabled: bool | None = None
+    sip_enabled: bool | None = None
+    filevault_enabled: bool | None = None
+    lockdown_mode_enabled: bool | None = None
+    bluetooth_enabled: bool | None = None
+    bluetooth_discoverable: bool | None = None
+    screen_lock_enabled: bool | None = None
+    screen_lock_delay: int | None = None
+    display_sleep_timeout: int | None = None
+    thunderbolt_security_level: str | None = None
+    secure_boot_level: str | None = None
+    external_boot_allowed: bool | None = None
+    icloud_signed_in: bool | None = None
+    icloud_drive_enabled: bool | None = None
+    icloud_keychain_enabled: bool | None = None
+    collection_error_count: int = 0
+    collection_error_sources: list[str] | None = None
+    tcc_grants_linked: int = 0
+    tcc_grants_skipped: int = 0
+    import_status: str = "complete"
 
 
 def _now_iso() -> str:
@@ -24,25 +65,11 @@ def _now_iso() -> str:
 def import_computer(
     session: Session,
     computer: ComputerData,
-    gatekeeper_enabled: bool | None = None,
-    sip_enabled: bool | None = None,
-    filevault_enabled: bool | None = None,
-    lockdown_mode_enabled: bool | None = None,
-    bluetooth_enabled: bool | None = None,
-    bluetooth_discoverable: bool | None = None,
-    screen_lock_enabled: bool | None = None,
-    screen_lock_delay: int | None = None,
-    display_sleep_timeout: int | None = None,
-    thunderbolt_security_level: str | None = None,
-    secure_boot_level: str | None = None,
-    external_boot_allowed: bool | None = None,
-    icloud_signed_in: bool | None = None,
-    icloud_drive_enabled: bool | None = None,
-    icloud_keychain_enabled: bool | None = None,
-    collection_error_count: int = 0,
-    collection_error_sources: list[str] | None = None,
+    context: ComputerImportContext | None = None,
 ) -> int:
     """MERGE a Computer node representing the scanned host. Returns 1."""
+    context = context or ComputerImportContext()
+    params = _computer_import_params(computer, context)
     session.run(
         """
         MERGE (c:Computer {computer_key: $computer_key})
@@ -69,35 +96,61 @@ def import_computer(
             c.icloud_drive_enabled = $icloud_drive_enabled,
             c.icloud_keychain_enabled = $icloud_keychain_enabled,
             c.collection_error_count = $collection_error_count,
-            c.collection_error_sources = $collection_error_sources
+            c.collection_error_sources = $collection_error_sources,
+            c.tcc_grants_linked = $tcc_grants_linked,
+            c.tcc_grants_skipped = $tcc_grants_skipped,
+            c.import_status = $import_status
         """,
-        computer_key=f"{computer.scan_id}:{computer.hostname}",
-        hostname=computer.hostname,
-        macos_version=computer.macos_version,
-        scan_id=computer.scan_id,
-        scanned_at=computer.scanned_at,
-        collector_version=computer.collector_version,
-        elevation_is_root=computer.elevation_is_root,
-        elevation_has_fda=computer.elevation_has_fda,
-        gatekeeper_enabled=gatekeeper_enabled,
-        sip_enabled=sip_enabled,
-        filevault_enabled=filevault_enabled,
-        lockdown_mode_enabled=lockdown_mode_enabled,
-        bluetooth_enabled=bluetooth_enabled,
-        bluetooth_discoverable=bluetooth_discoverable,
-        screen_lock_enabled=screen_lock_enabled,
-        screen_lock_delay=screen_lock_delay,
-        display_sleep_timeout=display_sleep_timeout,
-        thunderbolt_security_level=thunderbolt_security_level,
-        secure_boot_level=secure_boot_level,
-        external_boot_allowed=external_boot_allowed,
-        icloud_signed_in=icloud_signed_in,
-        icloud_drive_enabled=icloud_drive_enabled,
-        icloud_keychain_enabled=icloud_keychain_enabled,
-        collection_error_count=collection_error_count,
-        collection_error_sources=collection_error_sources or [],
+        **params,
     )
     return 1
+
+
+def _computer_import_params(
+    computer: ComputerData,
+    context: ComputerImportContext,
+) -> dict[str, object]:
+    params = _computer_identity_params(computer)
+    params.update(_computer_context_params(context))
+    return params
+
+
+def _computer_identity_params(computer: ComputerData) -> dict[str, object]:
+    return {
+        "computer_key": f"{computer.scan_id}:{computer.hostname}",
+        "hostname": computer.hostname,
+        "macos_version": computer.macos_version,
+        "scan_id": computer.scan_id,
+        "scanned_at": computer.scanned_at,
+        "collector_version": computer.collector_version,
+        "elevation_is_root": computer.elevation_is_root,
+        "elevation_has_fda": computer.elevation_has_fda,
+    }
+
+
+def _computer_context_params(context: ComputerImportContext) -> dict[str, object]:
+    return {
+        "gatekeeper_enabled": context.gatekeeper_enabled,
+        "sip_enabled": context.sip_enabled,
+        "filevault_enabled": context.filevault_enabled,
+        "lockdown_mode_enabled": context.lockdown_mode_enabled,
+        "bluetooth_enabled": context.bluetooth_enabled,
+        "bluetooth_discoverable": context.bluetooth_discoverable,
+        "screen_lock_enabled": context.screen_lock_enabled,
+        "screen_lock_delay": context.screen_lock_delay,
+        "display_sleep_timeout": context.display_sleep_timeout,
+        "thunderbolt_security_level": context.thunderbolt_security_level,
+        "secure_boot_level": context.secure_boot_level,
+        "external_boot_allowed": context.external_boot_allowed,
+        "icloud_signed_in": context.icloud_signed_in,
+        "icloud_drive_enabled": context.icloud_drive_enabled,
+        "icloud_keychain_enabled": context.icloud_keychain_enabled,
+        "collection_error_count": context.collection_error_count,
+        "collection_error_sources": context.collection_error_sources or [],
+        "tcc_grants_linked": context.tcc_grants_linked,
+        "tcc_grants_skipped": context.tcc_grants_skipped,
+        "import_status": context.import_status,
+    }
 
 
 def import_installed_on(session: Session, hostname: str, scan_id: str) -> int:
@@ -161,53 +214,15 @@ def import_applications(
         return 0
 
     now = _now_iso()
-    records = [
-        {
-            "app_key": f"{scan_id}:{app.bundle_id}:{app.path}",
-            "bundle_id": app.bundle_id,
-            "name": app.name,
-            "path": app.path,
-            "version": app.version,
-            "team_id": app.team_id,
-            "hardened_runtime": app.hardened_runtime,
-            "library_validation": app.library_validation,
-            "is_electron": app.is_electron,
-            "is_system": app.is_system,
-            "signed": app.signed,
-            "is_sip_protected": app.is_sip_protected,
-            "is_sandboxed": app.is_sandboxed,
-            "sandbox_exceptions": app.sandbox_exceptions,
-            "is_notarized": app.is_notarized,
-            "is_adhoc_signed": app.is_adhoc_signed,
-            "signing_certificate_cn": app.signing_certificate_cn,
-            "signing_certificate_sha256": app.signing_certificate_sha256,
-            "certificate_expires": app.certificate_expires,
-            "is_certificate_expired": app.is_certificate_expired,
-            "certificate_chain_length": app.certificate_chain_length,
-            "certificate_trust_valid": app.certificate_trust_valid,
-            "injection_methods": app.injection_methods,
-            "launch_constraint_category": app.launch_constraint_category,
-            "has_quarantine_flag": app.quarantine_info.has_quarantine_flag
-            if app.quarantine_info
-            else None,
-            "quarantine_agent": app.quarantine_info.quarantine_agent
-            if app.quarantine_info
-            else None,
-            "quarantine_timestamp": app.quarantine_info.quarantine_timestamp
-            if app.quarantine_info
-            else None,
-            "was_user_approved": app.quarantine_info.was_user_approved
-            if app.quarantine_info
-            else None,
-            "was_translocated": app.quarantine_info.was_translocated
-            if app.quarantine_info
-            else None,
-            "scan_id": scan_id,
-            "imported_at": now,
-        }
-        for app in apps
-    ]
+    records = [_application_record(app, scan_id, now) for app in apps]
+    _merge_application_records(session, records)
+    return len(records)
 
+
+def _merge_application_records(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -222,9 +237,12 @@ def import_applications(
             a.is_electron      = r.is_electron,
             a.is_system        = r.is_system,
             a.signed           = r.signed,
+            a.code_signing_analysis_error = r.code_signing_analysis_error,
             a.is_sip_protected = r.is_sip_protected,
             a.is_sandboxed     = r.is_sandboxed,
             a.sandbox_exceptions = r.sandbox_exceptions,
+            a.entitlements_available = r.entitlements_available,
+            a.entitlement_extraction_error = r.entitlement_extraction_error,
             a.is_notarized     = r.is_notarized,
             a.is_adhoc_signed  = r.is_adhoc_signed,
             a.signing_certificate_cn = r.signing_certificate_cn,
@@ -245,7 +263,64 @@ def import_applications(
         """,
         records=records,
     )
-    return len(records)
+
+
+def _application_record(
+    app: ApplicationData,
+    scan_id: str,
+    imported_at: str,
+) -> dict[str, object]:
+    return {
+        "app_key": f"{scan_id}:{app.bundle_id}:{app.path}",
+        "bundle_id": app.bundle_id,
+        "name": app.name,
+        "path": app.path,
+        "version": app.version,
+        "team_id": app.team_id,
+        "hardened_runtime": app.hardened_runtime,
+        "library_validation": app.library_validation,
+        "is_electron": app.is_electron,
+        "is_system": app.is_system,
+        "signed": app.signed,
+        "code_signing_analysis_error": app.code_signing_analysis_error,
+        "is_sip_protected": app.is_sip_protected,
+        "is_sandboxed": app.is_sandboxed,
+        "sandbox_exceptions": app.sandbox_exceptions,
+        "entitlements_available": app.entitlements_available,
+        "entitlement_extraction_error": app.entitlement_extraction_error,
+        "is_notarized": app.is_notarized,
+        "is_adhoc_signed": app.is_adhoc_signed,
+        "signing_certificate_cn": app.signing_certificate_cn,
+        "signing_certificate_sha256": app.signing_certificate_sha256,
+        "certificate_expires": app.certificate_expires,
+        "is_certificate_expired": app.is_certificate_expired,
+        "certificate_chain_length": app.certificate_chain_length,
+        "certificate_trust_valid": app.certificate_trust_valid,
+        "injection_methods": app.injection_methods,
+        "launch_constraint_category": app.launch_constraint_category,
+        **_application_quarantine_record(app),
+        "scan_id": scan_id,
+        "imported_at": imported_at,
+    }
+
+
+def _application_quarantine_record(app: ApplicationData) -> dict[str, object]:
+    quarantine = app.quarantine_info
+    if quarantine is None:
+        return {
+            "has_quarantine_flag": None,
+            "quarantine_agent": None,
+            "quarantine_timestamp": None,
+            "was_user_approved": None,
+            "was_translocated": None,
+        }
+    return {
+        "has_quarantine_flag": quarantine.has_quarantine_flag,
+        "quarantine_agent": quarantine.quarantine_agent,
+        "quarantine_timestamp": quarantine.quarantine_timestamp,
+        "was_user_approved": quarantine.was_user_approved,
+        "was_translocated": quarantine.was_translocated,
+    }
 
 
 def import_tcc_grants(
@@ -259,7 +334,24 @@ def import_tcc_grants(
     if not grants:
         return 0, 0
 
-    records = [
+    records = _tcc_grant_records(grants, scan_id)
+    _merge_tcc_permission_nodes(session, records)
+    linked = _link_tcc_grants(session, records)
+    skipped = len(records) - linked
+    if skipped > 0:
+        _record_unresolved_tcc_grants(session, records)
+        logger.debug(
+            "%d TCC grants had no matching Application node (path-only clients)",
+            skipped,
+        )
+    return linked, skipped
+
+
+def _tcc_grant_records(
+    grants: list[TCCGrantData],
+    scan_id: str,
+) -> list[dict[str, object]]:
+    return [
         {
             "service": g.service,
             "display_name": g.display_name,
@@ -271,11 +363,16 @@ def import_tcc_grants(
             "scope": g.scope,
             "last_modified": g.last_modified,
             "scan_id": scan_id,
+            "grant_key": f"{scan_id}:{g.client}:{g.service}:{g.scope}",
         }
         for g in grants
     ]
 
-    # MERGE the TCC_Permission nodes (they may already exist from the seed)
+
+def _merge_tcc_permission_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -285,7 +382,8 @@ def import_tcc_grants(
         records=records,
     )
 
-    # Create HAS_TCC_GRANT edges only where an Application node matches the client
+
+def _link_tcc_grants(session: Session, records: list[dict[str, object]]) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -302,14 +400,38 @@ def import_tcc_grants(
         """,
         records=records,
     )
-    linked = result.single()["linked"]
-    skipped = len(records) - linked
-    if skipped > 0:
-        logger.debug(
-            "%d TCC grants had no matching Application node (path-only clients)",
-            skipped,
-        )
-    return linked, skipped
+    return result.single()["linked"]
+
+
+def _record_unresolved_tcc_grants(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
+    session.run(
+        """
+        UNWIND $records AS r
+        OPTIONAL MATCH (a:Application {scan_id: r.scan_id, bundle_id: r.client})
+        WITH r, a
+        WHERE a IS NULL
+        MATCH (t:TCC_Permission {service: r.service})
+        MERGE (u:UnresolvedTCCGrant {grant_key: r.grant_key})
+        SET u.service       = r.service,
+            u.display_name  = r.display_name,
+            u.client        = r.client,
+            u.client_type   = r.client_type,
+            u.allowed       = r.allowed,
+            u.auth_reason   = r.auth_reason,
+            u.auth_value    = r.auth_value,
+            u.scope         = r.scope,
+            u.last_modified = r.last_modified,
+            u.scan_id       = r.scan_id,
+            u.imported_at   = $imported_at
+        MERGE (u)-[rel:REFERENCES_TCC_PERMISSION]->(t)
+        SET rel.scan_id = r.scan_id
+        """,
+        records=records,
+        imported_at=_now_iso(),
+    )
 
 
 def import_entitlements(
@@ -319,8 +441,21 @@ def import_entitlements(
     MERGE Entitlement nodes and HAS_ENTITLEMENT relationships.
     Returns (entitlement_nodes_created_or_merged, relationships_created_or_merged).
     """
-    # Flatten app → entitlement pairs, keyed by bundle_id
-    records = [
+    records = _entitlement_records(apps, scan_id)
+    if not records:
+        return 0, 0
+
+    _merge_entitlement_nodes(session, records)
+    rels = _link_entitlement_edges(session, records)
+    unique_names = len({r["name"] for r in records})
+    return unique_names, rels
+
+
+def _entitlement_records(
+    apps: list[ApplicationData],
+    scan_id: str,
+) -> list[dict[str, object]]:
+    return [
         {
             "scan_id": scan_id,
             "bundle_id": app.bundle_id,
@@ -334,10 +469,11 @@ def import_entitlements(
         for ent in app.entitlements
     ]
 
-    if not records:
-        return 0, 0
 
-    # MERGE Entitlement nodes
+def _merge_entitlement_nodes(
+    session: Session,
+    records: list[dict[str, object]],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -349,7 +485,11 @@ def import_entitlements(
         records=records,
     )
 
-    # MERGE HAS_ENTITLEMENT relationships
+
+def _link_entitlement_edges(
+    session: Session,
+    records: list[dict[str, object]],
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -360,106 +500,7 @@ def import_entitlements(
         """,
         records=records,
     )
-    rels = result.single()["rels"]
-
-    # Count distinct entitlement names (nodes merged)
-    unique_names = len({r["name"] for r in records})
-    return unique_names, rels
-
-
-def import_certificate_authorities(
-    session: Session, apps: list[ApplicationData], scan_id: str
-) -> tuple[int, int, int]:
-    """
-    Extract CertificateAuthority nodes from application certificate chains.
-    Creates SIGNED_BY_CA (Application -> CA) and ISSUED_BY (CA -> CA) edges.
-    Returns (ca_nodes, signed_by_ca_edges, issued_by_edges).
-    """
-    # Collect unique CAs by sha256 from all apps
-    unique_cas: dict[str, dict] = {}
-    for app in apps:
-        for cert in app.certificate_chain:
-            if cert.sha256 not in unique_cas:
-                unique_cas[cert.sha256] = {
-                    "sha256": cert.sha256,
-                    "common_name": cert.common_name,
-                    "organization": cert.organization,
-                    "is_root": cert.is_root,
-                    "valid_from": cert.valid_from,
-                    "valid_to": cert.valid_to,
-                }
-
-    if not unique_cas:
-        return 0, 0, 0
-
-    # MERGE CertificateAuthority nodes
-    ca_records = list(unique_cas.values())
-    session.run(
-        """
-        UNWIND $records AS r
-        MERGE (ca:CertificateAuthority {sha256: r.sha256})
-        SET ca.common_name  = r.common_name,
-            ca.organization = r.organization,
-            ca.is_root      = r.is_root,
-            ca.valid_from   = r.valid_from,
-            ca.valid_to     = r.valid_to
-        """,
-        records=ca_records,
-    )
-
-    # SIGNED_BY_CA: Application -> leaf cert's CA (first in chain)
-    signed_by_records = [
-        {
-            "scan_id": scan_id,
-            "bundle_id": app.bundle_id,
-            "path": app.path,
-            "sha256": app.certificate_chain[0].sha256,
-        }
-        for app in apps
-        if app.certificate_chain
-    ]
-
-    signed_by_count = 0
-    if signed_by_records:
-        result = session.run(
-            """
-            UNWIND $records AS r
-            MATCH (a:Application {scan_id: r.scan_id, bundle_id: r.bundle_id, path: r.path})
-            MATCH (ca:CertificateAuthority {sha256: r.sha256})
-            MERGE (a)-[rel:SIGNED_BY_CA]->(ca)
-            RETURN count(rel) AS n
-            """,
-            records=signed_by_records,
-        )
-        signed_by_count = result.single()["n"]
-
-    # ISSUED_BY: consecutive pairs in each chain (chain[i] -> chain[i+1])
-    issued_by_records = []
-    for app in apps:
-        chain = app.certificate_chain
-        for i in range(len(chain) - 1):
-            issued_by_records.append(
-                {
-                    "child_sha256": chain[i].sha256,
-                    "parent_sha256": chain[i + 1].sha256,
-                }
-            )
-
-    issued_by_count = 0
-    if issued_by_records:
-        result = session.run(
-            """
-            UNWIND $records AS r
-            MATCH (child:CertificateAuthority {sha256: r.child_sha256})
-            MATCH (parent:CertificateAuthority {sha256: r.parent_sha256})
-            MERGE (child)-[rel:ISSUED_BY]->(parent)
-            RETURN count(rel) AS n
-            """,
-            records=issued_by_records,
-        )
-        issued_by_count = result.single()["n"]
-
-    return len(ca_records), signed_by_count, issued_by_count
+    return result.single()["rels"]
 
 
 def import_signed_by_team(session: Session) -> int:
@@ -484,69 +525,3 @@ def import_signed_by_team(session: Session) -> int:
         """
     )
     return result.single()["rels"]
-
-
-def import_sandbox_profiles(
-    session: Session, profiles: list[SandboxProfileData], scan_id: str
-) -> tuple[int, int]:
-    """
-    MERGE SandboxProfile nodes and HAS_SANDBOX_PROFILE relationships.
-    Returns (nodes_created, edges_created).
-    """
-    if not profiles:
-        return 0, 0
-
-    now = _now_iso()
-    records = [
-        {
-            "profile_key": f"{scan_id}:{p.bundle_id}",
-            "scan_id": scan_id,
-            "bundle_id": p.bundle_id,
-            "profile_source": p.profile_source,
-            "file_read_rules": p.file_read_rules,
-            "file_write_rules": p.file_write_rules,
-            "mach_lookup_rules": p.mach_lookup_rules,
-            "network_rules": p.network_rules,
-            "iokit_rules": p.iokit_rules,
-            "exception_count": p.exception_count,
-            "has_unconstrained_network": p.has_unconstrained_network,
-            "has_unconstrained_file_read": p.has_unconstrained_file_read,
-            "imported_at": now,
-        }
-        for p in profiles
-    ]
-
-    # MERGE SandboxProfile nodes
-    session.run(
-        """
-        UNWIND $records AS r
-        MERGE (sp:SandboxProfile {profile_key: r.profile_key})
-        SET sp.scan_id                  = r.scan_id,
-            sp.bundle_id                = r.bundle_id,
-            sp.profile_source           = r.profile_source,
-            sp.file_read_rules          = r.file_read_rules,
-            sp.file_write_rules         = r.file_write_rules,
-            sp.mach_lookup_rules        = r.mach_lookup_rules,
-            sp.network_rules            = r.network_rules,
-            sp.iokit_rules              = r.iokit_rules,
-            sp.exception_count          = r.exception_count,
-            sp.has_unconstrained_network  = r.has_unconstrained_network,
-            sp.has_unconstrained_file_read = r.has_unconstrained_file_read,
-            sp.imported_at              = r.imported_at
-        """,
-        records=records,
-    )
-
-    # Create HAS_SANDBOX_PROFILE edges from Application to SandboxProfile
-    result = session.run(
-        """
-        UNWIND $records AS r
-        MATCH (a:Application {scan_id: r.scan_id, bundle_id: r.bundle_id})
-        MATCH (sp:SandboxProfile {profile_key: r.profile_key})
-        MERGE (a)-[rel:HAS_SANDBOX_PROFILE]->(sp)
-        RETURN count(rel) AS n
-        """,
-        records=records,
-    )
-    edges = result.single()["n"]
-    return len(records), edges

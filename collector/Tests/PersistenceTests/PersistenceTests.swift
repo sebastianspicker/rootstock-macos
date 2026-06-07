@@ -7,22 +7,23 @@ final class PersistenceTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeTempDir() -> URL {
+    private func makeTempDir() throws -> URL {
         let dir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString)
-        try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
 
-    private func write(_ xml: String, name: String, in dir: URL) -> String {
+    private func write(_ xml: String, name: String, in dir: URL) throws -> String {
         let url = dir.appendingPathComponent(name)
-        try! xml.data(using: .utf8)!.write(to: url)
+        let data = try XCTUnwrap(xml.data(using: .utf8))
+        try data.write(to: url)
         return url.path
     }
 
     // MARK: - CronParser
 
-    func testParsesCronLineWithUserField() {
+    func testParsesCronLineWithUserField() throws {
         // /etc/crontab format: min hour dom month dow user command
         let crontab = """
         # Comment line
@@ -31,9 +32,9 @@ final class PersistenceTests: XCTestCase {
         @reboot root /usr/local/bin/startup.sh
         """
         let parser = CronParser()
-        let tempDir = makeTempDir()
+        let tempDir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: tempDir) }
-        let path = write(crontab, name: "crontab", in: tempDir)
+        let path = try write(crontab, name: "crontab", in: tempDir)
 
         let entries = parser.parseSystemCrontab(at: path)
         XCTAssertEqual(entries.count, 3)
@@ -48,16 +49,16 @@ final class PersistenceTests: XCTestCase {
         XCTAssertTrue(startup.program.contains("startup.sh"))
     }
 
-    func testParsesUserCrontab() {
+    func testParsesUserCrontab() throws {
         let crontab = """
         # User crontab - no username field
         * * * * * /usr/local/bin/heartbeat.sh
         @reboot /usr/local/bin/onstart.sh
         """
         let parser = CronParser()
-        let tempDir = makeTempDir()
+        let tempDir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: tempDir) }
-        let path = write(crontab, name: "testuser", in: tempDir)
+        let path = try write(crontab, name: "testuser", in: tempDir)
 
         let entries = parser.parseUserCrontab(at: path, username: "testuser")
         XCTAssertEqual(entries.count, 2)
@@ -66,11 +67,11 @@ final class PersistenceTests: XCTestCase {
         XCTAssertTrue(entries[1].runAtLoad)
     }
 
-    func testEmptyCrontabReturnsNoEntries() {
+    func testEmptyCrontabReturnsNoEntries() throws {
         let parser = CronParser()
-        let tempDir = makeTempDir()
+        let tempDir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: tempDir) }
-        let path = write("# Only comments\n", name: "empty", in: tempDir)
+        let path = try write("# Only comments\n", name: "empty", in: tempDir)
         let entries = parser.parseSystemCrontab(at: path)
         XCTAssertTrue(entries.isEmpty)
     }
@@ -79,6 +80,19 @@ final class PersistenceTests: XCTestCase {
         let parser = CronParser()
         let entries = parser.parseSystemCrontab(at: "/nonexistent/crontab")
         XCTAssertTrue(entries.isEmpty)
+    }
+
+    func testUnreadableSystemCrontabRecordsError() throws {
+        let parser = CronParser()
+        let tempDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+        var errors: [String] = []
+
+        let entries = parser.parseSystemCrontab(at: tempDir.path, errors: &errors)
+
+        XCTAssertTrue(entries.isEmpty)
+        XCTAssertEqual(errors.count, 1)
+        XCTAssertTrue(errors[0].contains("Cannot read system crontab"))
     }
 
     // MARK: - LaunchItem model
@@ -106,7 +120,7 @@ final class PersistenceTests: XCTestCase {
             user: nil
         )
         let data = try JSONEncoder().encode(item)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertEqual(json["label"] as? String, "com.example.agent")
         XCTAssertEqual(json["type"] as? String, "agent")
@@ -124,7 +138,7 @@ final class PersistenceTests: XCTestCase {
             user: nil
         )
         let data = try JSONEncoder().encode(item)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertEqual(json["type"] as? String, "login_item")
     }
 

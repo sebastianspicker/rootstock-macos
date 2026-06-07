@@ -70,8 +70,8 @@ separation is intentional:
 - **Security:** The collector has minimal footprint and no network dependencies.
   cve-scan scanning is opt-in per scope file and writes local artifacts.
 - **Portability:** The JSON output can be analyzed on any machine with Neo4j.
-- **Reproducibility:** Scan results are static artifacts that can be shared, compared,
-  and version-controlled.
+- **Reproducibility:** Scan results are static artifacts that can be retained
+  outside the repository, compared, and validated without rerunning collection.
 - **Multi-host and multi-surface:** Multiple collector scans and cve-scan
   exports can be ingested into the same graph.
 
@@ -100,7 +100,7 @@ Operationally, the main flow is:
 
 ## Component: cve-scan Module
 
-### Responsibility
+### cve-scan Responsibility
 Collect bounded CVE evidence for declared infrastructure, repositories, web
 targets, TLS endpoints, containers, and configuration files, then write local
 reports plus a Rootstock graph artifact.
@@ -131,7 +131,7 @@ See `docs/guides/cve-scan-module.md` for operator commands.
 
 ## Component: Collector
 
-### Responsibility
+### Collector Responsibility
 Extract security-relevant metadata from the local macOS system and serialize it as JSON.
 
 ### Language & Build
@@ -197,7 +197,7 @@ This abstraction serves three purposes:
 
 ## Component: Graph Import
 
-### Responsibility
+### Graph Import Responsibility
 Parse collector JSON, validate it, and create/update nodes and relationships in Neo4j.
 
 ### Language & Dependencies

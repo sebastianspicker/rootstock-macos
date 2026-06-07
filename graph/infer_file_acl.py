@@ -14,6 +14,37 @@ from __future__ import annotations
 from neo4j import Session
 
 
+_CAN_WRITE_RULES = (
+    (
+        "owner_writable",
+        """
+        MATCH (cf:CriticalFile)
+        WHERE cf.is_writable_by_non_root = true
+          AND cf.owner IS NOT NULL
+        MERGE (u:User {name: cf.owner})
+        """,
+    ),
+    (
+        "group_writable",
+        """
+        MATCH (cf:CriticalFile)
+        WHERE cf.is_group_writable = true
+          AND cf.group_name IS NOT NULL
+        MATCH (lg:LocalGroup {name: cf.group_name})
+        MATCH (u:User)-[:MEMBER_OF]->(lg)
+        """,
+    ),
+    (
+        "world_writable",
+        """
+        MATCH (cf:CriticalFile)
+        WHERE cf.is_world_writable = true
+        MATCH (u:User)
+        """,
+    ),
+)
+
+
 def infer(session: Session) -> int:
     """
     Infer file-ACL-based attack paths. Returns total edges created.
@@ -21,52 +52,15 @@ def infer(session: Session) -> int:
     """
     total = 0
 
-    # 1a. CAN_WRITE: Users who own writable critical files
-    result = session.run(
-        """
-        MATCH (cf:CriticalFile)
-        WHERE cf.is_writable_by_non_root = true
-          AND cf.owner IS NOT NULL
-        MERGE (u:User {name: cf.owner})
-        MERGE (u)-[r:CAN_WRITE]->(cf)
-        SET r.inferred = true,
-            r.reason = 'owner_writable'
-        RETURN count(r) AS n
-        """
-    )
-    total += result.single()["n"]
+    total += _infer_can_write_edges(session)
+    total += _infer_tcc_protection_edges(session)
+    total += _infer_keychain_protection_edges(session)
+    total += _infer_can_modify_tcc_edges(session)
 
-    # 1b. CAN_WRITE: Group members who can write group-writable critical files
-    result = session.run(
-        """
-        MATCH (cf:CriticalFile)
-        WHERE cf.is_group_writable = true
-          AND cf.group_name IS NOT NULL
-        MATCH (lg:LocalGroup {name: cf.group_name})
-        MATCH (u:User)-[:MEMBER_OF]->(lg)
-        MERGE (u)-[r:CAN_WRITE]->(cf)
-        SET r.inferred = true,
-            r.reason = 'group_writable'
-        RETURN count(r) AS n
-        """
-    )
-    total += result.single()["n"]
+    return total
 
-    # 1c. CAN_WRITE: All users can write world-writable critical files
-    result = session.run(
-        """
-        MATCH (cf:CriticalFile)
-        WHERE cf.is_world_writable = true
-        MATCH (u:User)
-        MERGE (u)-[r:CAN_WRITE]->(cf)
-        SET r.inferred = true,
-            r.reason = 'world_writable'
-        RETURN count(r) AS n
-        """
-    )
-    total += result.single()["n"]
 
-    # 2a. PROTECTS: TCC database files protect all TCC_Permission nodes
+def _infer_tcc_protection_edges(session: Session) -> int:
     result = session.run(
         """
         MATCH (cf:CriticalFile)
@@ -77,9 +71,10 @@ def infer(session: Session) -> int:
         RETURN count(r) AS n
         """
     )
-    total += result.single()["n"]
+    return result.single()["n"]
 
-    # 2b. PROTECTS: Keychain files protect all Keychain_Item nodes
+
+def _infer_keychain_protection_edges(session: Session) -> int:
     result = session.run(
         """
         MATCH (cf:CriticalFile)
@@ -90,10 +85,10 @@ def infer(session: Session) -> int:
         RETURN count(r) AS n
         """
     )
-    total += result.single()["n"]
+    return result.single()["n"]
 
-    # 3. CAN_MODIFY_TCC: Transitive — users who can write TCC.db can modify any TCC grant.
-    #    Collect all writable TCC paths per user to avoid overwriting via on MERGE.
+
+def _infer_can_modify_tcc_edges(session: Session) -> int:
     result = session.run(
         """
         MATCH (u:User)-[:CAN_WRITE]->(cf:CriticalFile {category: 'tcc_database'})
@@ -105,6 +100,21 @@ def infer(session: Session) -> int:
         RETURN count(r) AS n
         """
     )
-    total += result.single()["n"]
+    return result.single()["n"]
 
+
+def _infer_can_write_edges(session: Session) -> int:
+    total = 0
+    for reason, match_clause in _CAN_WRITE_RULES:
+        result = session.run(
+            f"""
+            {match_clause}
+            MERGE (u)-[r:CAN_WRITE]->(cf)
+            SET r.inferred = true,
+                r.reason = $reason
+            RETURN count(r) AS n
+            """,
+            reason=reason,
+        )
+        total += result.single()["n"]
     return total

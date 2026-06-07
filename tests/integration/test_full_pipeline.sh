@@ -6,8 +6,9 @@ set -euo pipefail
 NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 NEO4J_USER="${NEO4J_USER:-neo4j}"
 NEO4J_PASSWORD="${NEO4J_PASSWORD:-}"
+NEO4J_AUTH="${NEO4J_AUTH:-}"
 
-if [[ -z "$NEO4J_PASSWORD" ]]; then
+if [[ -z "$NEO4J_PASSWORD" && "$NEO4J_AUTH" != "none" ]]; then
 	echo "ERROR: Set NEO4J_PASSWORD before running the integration test" >&2
 	exit 1
 fi
@@ -16,6 +17,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GRAPH_DIR="$REPO_ROOT/graph"
 FIXTURE_JSON="$GRAPH_DIR/tests/fixture_minimal.json"
 REPORT_OUT="/tmp/rootstock-integration-report.md"
+REPORT_ERR="/tmp/rootstock-integration-report.err"
 TEMP_SCAN_JSON="/tmp/rootstock-integration-scan.json"
 TEST_SCAN_ID="integration-$(date +%s)"
 
@@ -44,7 +46,10 @@ from neo4j import GraphDatabase
 query = sys.argv[1]
 driver = GraphDatabase.driver(
     os.environ["NEO4J_URI"],
-    auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
+    auth=None if os.environ.get("NEO4J_AUTH") == "none" else (
+        os.environ["NEO4J_USER"],
+        os.environ["NEO4J_PASSWORD"],
+    ),
 )
 with driver.session() as session:
     record = session.run(query).single()
@@ -54,7 +59,7 @@ PYTHON
 }
 
 cleanup() {
-	rm -f "$TEMP_SCAN_JSON" "$REPORT_OUT"
+	rm -f "$TEMP_SCAN_JSON" "$REPORT_OUT" "$REPORT_ERR"
 	python3 - <<'PYTHON'
 import os
 from neo4j import GraphDatabase
@@ -62,7 +67,10 @@ from neo4j import GraphDatabase
 scan_id = os.environ["TEST_SCAN_ID"]
 driver = GraphDatabase.driver(
     os.environ["NEO4J_URI"],
-    auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
+    auth=None if os.environ.get("NEO4J_AUTH") == "none" else (
+        os.environ["NEO4J_USER"],
+        os.environ["NEO4J_PASSWORD"],
+    ),
 )
 with driver.session() as session:
     session.run(
@@ -73,7 +81,7 @@ driver.close()
 PYTHON
 }
 
-export NEO4J_URI NEO4J_USER NEO4J_PASSWORD TEST_SCAN_ID FIXTURE_JSON TEMP_SCAN_JSON
+export NEO4J_URI NEO4J_USER NEO4J_PASSWORD NEO4J_AUTH TEST_SCAN_ID FIXTURE_JSON TEMP_SCAN_JSON
 
 trap cleanup EXIT
 
@@ -105,7 +113,10 @@ from neo4j import GraphDatabase
 
 driver = GraphDatabase.driver(
     os.environ["NEO4J_URI"],
-    auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]),
+    auth=None if os.environ.get("NEO4J_AUTH") == "none" else (
+        os.environ["NEO4J_USER"],
+        os.environ["NEO4J_PASSWORD"],
+    ),
 )
 driver.verify_connectivity()
 driver.close()
@@ -144,11 +155,34 @@ else
 fi
 
 step "Report Surface"
-python3 "$GRAPH_DIR/report.py" --output "$REPORT_OUT" --scan-json "$TEMP_SCAN_JSON" >/dev/null
+if python3 "$GRAPH_DIR/report.py" --output "$REPORT_OUT" --scan-json "$TEMP_SCAN_JSON" >/dev/null 2>"$REPORT_ERR"; then
+	ok "report command completed"
+else
+	fail "report command failed"
+	if [[ -s "$REPORT_ERR" ]]; then
+		sed 's/^/  report stderr: /' "$REPORT_ERR" >&2
+	fi
+fi
+
 if [[ -s "$REPORT_OUT" ]]; then
 	ok "report generated"
 else
 	fail "report output missing"
+fi
+
+if grep -Eq "Query failed|Metadata query failed|Traceback|✗" "$REPORT_ERR"; then
+	fail "report command emitted query or metadata failure"
+else
+	ok "report command emitted no query or metadata failures"
+fi
+
+if grep -q "# Rootstock Security Assessment Report" "$REPORT_OUT" \
+	&& grep -q "## Scan Metadata" "$REPORT_OUT" \
+	&& grep -q "## Executive Summary" "$REPORT_OUT" \
+	&& grep -q "$TEST_SCAN_ID" "$REPORT_OUT"; then
+	ok "report contains expected semantic sections and scan id"
+else
+	fail "report missing expected semantic sections or scan id"
 fi
 
 echo

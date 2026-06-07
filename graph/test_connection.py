@@ -47,7 +47,10 @@ def main() -> int:
     with driver.session() as session:
         # Basic connectivity
         result = session.run("RETURN 1 AS ok")
-        assert result.single()["ok"] == 1, "Unexpected result from RETURN 1"
+        if result.single()["ok"] != 1:
+            print("FAIL: Unexpected result from RETURN 1", file=sys.stderr)
+            driver.close()
+            return 1
 
         # TCC nodes
         result = session.run("MATCH (t:TCC_Permission) RETURN count(t) AS n")

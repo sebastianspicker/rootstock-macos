@@ -8,6 +8,7 @@ import Models
 public struct GroupDataSource: DataSource {
     public let name = "Local Groups"
     public let requiresElevation = false
+    private let runCommand: (String, [String]) -> String?
 
     /// Groups with security-relevant membership. Other groups are noise.
     static let securityRelevantGroups = Set([
@@ -16,7 +17,13 @@ public struct GroupDataSource: DataSource {
         "_lpadmin", "com.apple.access_ftp",
     ])
 
-    public init() {}
+    public init() {
+        self.runCommand = Shell.run
+    }
+
+    init(runCommand: @escaping (String, [String]) -> String?) {
+        self.runCommand = runCommand
+    }
 
     public func collect() async -> DataSourceResult {
         var groups: [LocalGroup] = []
@@ -56,7 +63,7 @@ public struct GroupDataSource: DataSource {
 
     /// Lists all groups as (name, gid) pairs via `dscl . -list /Groups PrimaryGroupID`.
     private func listGroups() -> [(String, Int)] {
-        guard let output = Shell.run("/usr/bin/dscl", [
+        guard let output = runCommand("/usr/bin/dscl", [
             ".", "-list", "/Groups", "PrimaryGroupID",
         ]) else {
             return []
@@ -74,7 +81,7 @@ public struct GroupDataSource: DataSource {
 
     /// Reads extended user details via a single `dscl . -read /Users/<name>` call.
     private func readUserDetail(_ username: String) -> UserDetail? {
-        guard let output = Shell.run("/usr/bin/dscl", [
+        guard let output = runCommand("/usr/bin/dscl", [
             ".", "-read", "/Users/\(username)",
             "UserShell", "NFSHomeDirectory", "IsHidden",
         ]) else {
@@ -102,7 +109,7 @@ public struct GroupDataSource: DataSource {
 
     /// Reads the member list for a single group via `dscl . -read /Groups/<name> GroupMembership`.
     private func readGroupMembers(_ groupName: String) -> [String] {
-        guard let output = Shell.run("/usr/bin/dscl", [
+        guard let output = runCommand("/usr/bin/dscl", [
             ".", "-read", "/Groups/\(groupName)", "GroupMembership",
         ]) else {
             return []

@@ -84,6 +84,16 @@ class CveScanExport:
     edges: tuple[dict[str, str], ...]
 
 
+@dataclass(frozen=True)
+class _ExportMetadata:
+    schema_version: int
+    scope_name: str
+    generated_at: str
+    scan_profile: str
+    node_types: frozenset[str]
+    edge_vocabulary: frozenset[str]
+
+
 def load_export(path: Path) -> CveScanExport:
     """Load and validate a cve-scan Rootstock export from disk."""
     try:
@@ -98,15 +108,37 @@ def validate_export(raw: object) -> CveScanExport:
     if not isinstance(raw, dict):
         raise CveScanImportError("export root must be a JSON object")
 
+    metadata = _export_metadata(raw)
+
+    raw_nodes = raw.get("nodes")
+    if not isinstance(raw_nodes, list):
+        raise CveScanImportError("nodes must be a list")
+    raw_edges = raw.get("edges")
+    if not isinstance(raw_edges, list):
+        raise CveScanImportError("edges must be a list")
+
+    nodes, node_ids = _validated_nodes(raw_nodes, metadata.node_types)
+    edges = _validated_edges(raw_edges, metadata.edge_vocabulary, node_ids)
+
+    return CveScanExport(
+        schema_version=metadata.schema_version,
+        scope_name=metadata.scope_name,
+        generated_at=metadata.generated_at,
+        scan_profile=metadata.scan_profile,
+        node_types=metadata.node_types,
+        edge_vocabulary=metadata.edge_vocabulary,
+        nodes=tuple(nodes),
+        edges=tuple(edges),
+    )
+
+
+def _export_metadata(raw: dict[object, object]) -> _ExportMetadata:
     schema_version = _required_int(raw, "schema_version")
     if schema_version != SUPPORTED_SCHEMA_VERSION:
         raise CveScanImportError(
             f"unsupported schema_version {schema_version}; expected {SUPPORTED_SCHEMA_VERSION}"
         )
 
-    scope_name = _required_string(raw, "scope_name")
-    generated_at = _required_string(raw, "generated_at")
-    scan_profile = _required_string(raw, "scan_profile")
     node_types = frozenset(_required_string_list(raw, "node_types"))
     edge_vocabulary = frozenset(_required_string_list(raw, "edge_vocabulary"))
     edges_metadata = frozenset(_string_list(raw.get("edge_types"), "edge_types"))
@@ -117,13 +149,20 @@ def validate_export(raw: object) -> CveScanExport:
         unknown = ", ".join(sorted(edges_metadata - edge_vocabulary))
         raise CveScanImportError(f"edge_types not in edge_vocabulary: {unknown}")
 
-    raw_nodes = raw.get("nodes")
-    if not isinstance(raw_nodes, list):
-        raise CveScanImportError("nodes must be a list")
-    raw_edges = raw.get("edges")
-    if not isinstance(raw_edges, list):
-        raise CveScanImportError("edges must be a list")
+    return _ExportMetadata(
+        schema_version=schema_version,
+        scope_name=_required_string(raw, "scope_name"),
+        generated_at=_required_string(raw, "generated_at"),
+        scan_profile=_required_string(raw, "scan_profile"),
+        node_types=node_types,
+        edge_vocabulary=edge_vocabulary,
+    )
 
+
+def _validated_nodes(
+    raw_nodes: list[object],
+    node_types: frozenset[str],
+) -> tuple[list[dict[str, object]], set[str]]:
     nodes: list[dict[str, object]] = []
     node_ids: set[str] = set()
     for index, raw_node in enumerate(raw_nodes):
@@ -137,7 +176,14 @@ def validate_export(raw: object) -> CveScanExport:
             raise CveScanImportError(f"duplicate node id: {node_id}")
         node_ids.add(node_id)
         nodes.append(dict(raw_node))
+    return nodes, node_ids
 
+
+def _validated_edges(
+    raw_edges: list[object],
+    edge_vocabulary: frozenset[str],
+    node_ids: set[str],
+) -> list[dict[str, str]]:
     edges: list[dict[str, str]] = []
     for index, raw_edge in enumerate(raw_edges):
         if not isinstance(raw_edge, dict):
@@ -154,17 +200,7 @@ def validate_export(raw: object) -> CveScanExport:
         if target_id not in node_ids:
             raise CveScanImportError(f"edge target is not a known node id: {target_id}")
         edges.append({"from": source_id, "to": target_id, "type": edge_type})
-
-    return CveScanExport(
-        schema_version=schema_version,
-        scope_name=scope_name,
-        generated_at=generated_at,
-        scan_profile=scan_profile,
-        node_types=node_types,
-        edge_vocabulary=edge_vocabulary,
-        nodes=tuple(nodes),
-        edges=tuple(edges),
-    )
+    return edges
 
 
 def import_cve_scan_export(session, export: CveScanExport) -> dict[str, int]:

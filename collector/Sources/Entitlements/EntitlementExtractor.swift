@@ -3,6 +3,13 @@ import Security
 import os.log
 import Models
 
+/// Entitlement extraction result with explicit uncertainty.
+public struct EntitlementExtractionResult {
+    public let entitlements: [String: Any]
+    public let available: Bool
+    public let errorMessage: String?
+}
+
 /// Extracts the entitlements dictionary from a signed executable.
 ///
 /// Primary method: Security.framework `SecCodeCopySigningInformation`
@@ -13,13 +20,29 @@ public struct EntitlementExtractor {
 
     public init() { }
 
-    /// Returns an empty dictionary if extraction fails.
-    public func extract(from executableURL: URL) -> [String: Any] {
+    /// Returns entitlements plus an availability flag so extraction failure
+    /// cannot be confused with a valid empty entitlement set.
+    public func extract(from executableURL: URL) -> EntitlementExtractionResult {
         if let result = extractWithSecurityFramework(url: executableURL) {
-            return result
+            return EntitlementExtractionResult(
+                entitlements: result,
+                available: true,
+                errorMessage: nil
+            )
         }
         Self.logger.debug("Security.framework extraction failed for \(executableURL.path, privacy: .public), falling back to codesign CLI")
-        return extractWithCodesignCLI(path: executableURL.path) ?? [:]
+        if let result = extractWithCodesignCLI(path: executableURL.path) {
+            return EntitlementExtractionResult(
+                entitlements: result,
+                available: true,
+                errorMessage: nil
+            )
+        }
+        return EntitlementExtractionResult(
+            entitlements: [:],
+            available: false,
+            errorMessage: "Security.framework and codesign entitlement extraction failed"
+        )
     }
 
     // MARK: - Security.framework (primary)

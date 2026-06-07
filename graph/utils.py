@@ -11,6 +11,32 @@ import re
 from typing import Any
 
 
+class _CypherStatementScanner:
+    def __init__(self) -> None:
+        self.quote: str | None = None
+        self.escaped = False
+
+    def consume_quoted_char(self, char: str) -> bool:
+        if self.escaped:
+            self.escaped = False
+            return True
+        if self.quote is None:
+            return False
+        if char == "\\":
+            self.escaped = True
+        elif char == self.quote:
+            self.quote = None
+        return True
+
+    def consume(self, char: str) -> bool:
+        if self.consume_quoted_char(char):
+            return True
+        if char in ("'", '"'):
+            self.quote = char
+            return True
+        return False
+
+
 def list_or_str(value: Any, none_placeholder: str = "—") -> str:
     """Convert list values from Neo4j to a comma-separated string."""
     if isinstance(value, list):
@@ -23,17 +49,28 @@ def list_or_str(value: Any, none_placeholder: str = "—") -> str:
 def first_cypher_statement(cypher: str) -> str:
     """
     Extract the first executable Cypher statement from a multi-statement file.
-    Strips comment lines first, then splits on semicolons.
+    Strips comment lines first, then splits on semicolons outside strings.
     """
-    non_comment_lines = [
+    cleaned = _strip_cypher_line_comments(cypher)
+    start = 0
+    scanner = _CypherStatementScanner()
+
+    for index, char in enumerate(cleaned):
+        if scanner.consume(char):
+            continue
+        if char == ";":
+            stripped = cleaned[start:index].strip()
+            if stripped:
+                return stripped
+            start = index + 1
+
+    return cleaned[start:].strip()
+
+
+def _strip_cypher_line_comments(cypher: str) -> str:
+    return "\n".join(
         line for line in cypher.splitlines() if not line.strip().startswith("//")
-    ]
-    cleaned = "\n".join(non_comment_lines)
-    for stmt in cleaned.split(";"):
-        stripped = stmt.strip()
-        if stripped:
-            return stripped
-    return cleaned.strip()
+    )
 
 
 def run_query(session, cypher: str, params: dict | None = None) -> list[dict]:
@@ -108,20 +145,3 @@ def safe_count(result) -> int:
         return 0
     value = row.get("n") if hasattr(row, "get") else row["n"]
     return int(value) if value is not None else 0
-
-
-def batched_unwind(
-    session, cypher: str, records: list[dict], *, batch_size: int = 500
-) -> int:
-    """Execute a Cypher UNWIND query in batches, returning the total count.
-
-    Splits *records* into chunks of *batch_size* and runs *cypher* (which must
-    use ``UNWIND $batch AS row ... RETURN count(*) AS n``) once per chunk.
-    This prevents Neo4j transaction-size pressure for large imports.
-    """
-    total = 0
-    for i in range(0, len(records), batch_size):
-        chunk = records[i : i + batch_size]
-        result = session.run(cypher, batch=chunk)
-        total += safe_count(result)
-    return total

@@ -16,15 +16,44 @@ struct CronParser {
         let user: String?
     }
 
+    private struct ParsedCronLine {
+        let user: String?
+        let labelUser: String
+        let command: String
+        let runAtLoad: Bool
+    }
+
     /// Parse /etc/crontab (system crontab, which includes a username field).
     func parseSystemCrontab(at path: String = "/etc/crontab") -> [CronEntry] {
-        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return [] }
+        var errors: [String] = []
+        return parseSystemCrontab(at: path, errors: &errors)
+    }
+
+    /// Parse /etc/crontab and report existing unreadable files.
+    func parseSystemCrontab(at path: String = "/etc/crontab", errors: inout [String]) -> [CronEntry] {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: path) else { return [] }
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
+            errors.append("Cannot read system crontab: \(path)")
+            return []
+        }
         return parseLines(text, filePath: path, hasUserField: true, defaultUser: "root")
     }
 
     /// Parse a user crontab from /var/at/tabs/<username>.
     func parseUserCrontab(at path: String, username: String) -> [CronEntry] {
-        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return [] }
+        var errors: [String] = []
+        return parseUserCrontab(at: path, username: username, errors: &errors)
+    }
+
+    /// Parse a user crontab and report existing unreadable files.
+    func parseUserCrontab(at path: String, username: String, errors: inout [String]) -> [CronEntry] {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: path) else { return [] }
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
+            errors.append("Cannot read user crontab: \(path)")
+            return []
+        }
         return parseLines(text, filePath: path, hasUserField: false, defaultUser: username)
     }
 
@@ -43,10 +72,7 @@ struct CronParser {
 
         for filename in files {
             let fullPath = (tabsDir as NSString).appendingPathComponent(filename)
-            let result = parseUserCrontab(at: fullPath, username: filename)
-            if result.isEmpty {
-                errors.append("Skipped unreadable crontab: \(fullPath)")
-            }
+            let result = parseUserCrontab(at: fullPath, username: filename, errors: &errors)
             entries.append(contentsOf: result)
         }
 
@@ -65,58 +91,75 @@ struct CronParser {
         var index = 0
 
         for rawLine in text.components(separatedBy: "\n") {
-            let line = rawLine.trimmingCharacters(in: .whitespaces)
-
-            // Skip blank lines and comments
-            guard !line.isEmpty, !line.hasPrefix("#") else { continue }
-
-            // @reboot shortcut
-            if line.hasPrefix("@reboot") {
-                let rest = String(line.dropFirst("@reboot".count)).trimmingCharacters(in: .whitespaces)
-                let (user, command) = splitUserAndCommand(rest, hasUserField: hasUserField, defaultUser: defaultUser)
-                if !command.isEmpty {
-                    index += 1
-                    results.append(CronEntry(
-                        label: "cron.\(defaultUser ?? "unknown").\(index)",
-                        path: filePath,
-                        program: command,
-                        runAtLoad: true,
-                        user: user
-                    ))
-                }
+            guard let parsed = parseLine(rawLine, hasUserField: hasUserField, defaultUser: defaultUser) else {
                 continue
             }
 
-            // Standard 5-field schedule: min hour dom month dow [user] command
-            let parts = line.split(separator: " ", maxSplits: hasUserField ? 6 : 5, omittingEmptySubsequences: true)
-            let minFields = hasUserField ? 7 : 6
-            guard parts.count >= minFields else { continue }
-
-            let commandPart: String
-            let user: String?
-            if hasUserField {
-                user = String(parts[5])
-                commandPart = parts.dropFirst(6).joined(separator: " ")
-            } else {
-                user = defaultUser
-                commandPart = parts.dropFirst(5).joined(separator: " ")
-            }
-
-            // Extract the binary (first token of the command)
-            let command = commandPart.trimmingCharacters(in: .whitespaces)
-            guard !command.isEmpty else { continue }
-
             index += 1
             results.append(CronEntry(
-                label: "cron.\(user ?? "unknown").\(index)",
+                label: "cron.\(parsed.labelUser).\(index)",
                 path: filePath,
-                program: command,
-                runAtLoad: false,
-                user: user
+                program: parsed.command,
+                runAtLoad: parsed.runAtLoad,
+                user: parsed.user
             ))
         }
 
         return results
+    }
+
+    private func parseLine(
+        _ rawLine: String,
+        hasUserField: Bool,
+        defaultUser: String?
+    ) -> ParsedCronLine? {
+        let line = rawLine.trimmingCharacters(in: .whitespaces)
+        guard !line.isEmpty, !line.hasPrefix("#") else { return nil }
+
+        if line.hasPrefix("@reboot") {
+            return parseRebootLine(line, hasUserField: hasUserField, defaultUser: defaultUser)
+        }
+        return parseScheduledLine(line, hasUserField: hasUserField, defaultUser: defaultUser)
+    }
+
+    private func parseRebootLine(
+        _ line: String,
+        hasUserField: Bool,
+        defaultUser: String?
+    ) -> ParsedCronLine? {
+        let rest = String(line.dropFirst("@reboot".count)).trimmingCharacters(in: .whitespaces)
+        let (user, command) = splitUserAndCommand(rest, hasUserField: hasUserField, defaultUser: defaultUser)
+        guard !command.isEmpty else { return nil }
+        return ParsedCronLine(
+            user: user,
+            labelUser: defaultUser ?? "unknown",
+            command: command,
+            runAtLoad: true
+        )
+    }
+
+    private func parseScheduledLine(
+        _ line: String,
+        hasUserField: Bool,
+        defaultUser: String?
+    ) -> ParsedCronLine? {
+        let parts = line.split(separator: " ", maxSplits: hasUserField ? 6 : 5, omittingEmptySubsequences: true)
+        let minFields = hasUserField ? 7 : 6
+        guard parts.count >= minFields else { return nil }
+
+        let user = hasUserField ? String(parts[5]) : defaultUser
+        let commandStart = hasUserField ? 6 : 5
+        let command = parts.dropFirst(commandStart)
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespaces)
+        guard !command.isEmpty else { return nil }
+
+        return ParsedCronLine(
+            user: user,
+            labelUser: user ?? "unknown",
+            command: command,
+            runAtLoad: false
+        )
     }
 
     private func splitUserAndCommand(

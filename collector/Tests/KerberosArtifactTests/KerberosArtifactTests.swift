@@ -11,13 +11,17 @@ final class KerberosArtifactTests: XCTestCase {
         let artifact = KerberosArtifact(
             path: "/tmp/krb5cc_501",
             artifactType: .ccache,
-            owner: "testuser",
-            group: "staff",
-            mode: "600",
-            modificationTime: "2026-03-18T10:00:00Z",
-            principalHint: "testuser",
-            isReadable: true,
-            isWorldReadable: false
+            metadata: KerberosArtifact.FileMetadata(
+                owner: "testuser",
+                group: "staff",
+                mode: "600",
+                modificationTime: "2026-03-18T10:00:00Z",
+                principalHint: "testuser"
+            ),
+            readability: KerberosArtifact.Readability(
+                isReadable: true,
+                isWorldReadable: false
+            )
         )
         let data = try JSONEncoder().encode(artifact)
         let decoded = try JSONDecoder().decode(KerberosArtifact.self, from: data)
@@ -36,11 +40,15 @@ final class KerberosArtifactTests: XCTestCase {
         let artifact = KerberosArtifact(
             path: "/etc/krb5.keytab",
             artifactType: .keytab,
-            owner: "root",
-            group: "wheel",
-            mode: "600",
-            isReadable: false,
-            isWorldReadable: false
+            metadata: KerberosArtifact.FileMetadata(
+                owner: "root",
+                group: "wheel",
+                mode: "600"
+            ),
+            readability: KerberosArtifact.Readability(
+                isReadable: false,
+                isWorldReadable: false
+            )
         )
         let data = try JSONEncoder().encode(artifact)
         let decoded = try JSONDecoder().decode(KerberosArtifact.self, from: data)
@@ -54,11 +62,15 @@ final class KerberosArtifactTests: XCTestCase {
         let artifact = KerberosArtifact(
             path: "/etc/krb5.conf",
             artifactType: .config,
-            owner: "root",
-            group: "wheel",
-            mode: "644",
-            isReadable: true,
-            isWorldReadable: true
+            metadata: KerberosArtifact.FileMetadata(
+                owner: "root",
+                group: "wheel",
+                mode: "644"
+            ),
+            readability: KerberosArtifact.Readability(
+                isReadable: true,
+                isWorldReadable: true
+            )
         )
         let data = try JSONEncoder().encode(artifact)
         let decoded = try JSONDecoder().decode(KerberosArtifact.self, from: data)
@@ -71,12 +83,14 @@ final class KerberosArtifactTests: XCTestCase {
         let artifact = KerberosArtifact(
             path: "/tmp/krb5cc_501",
             artifactType: .ccache,
-            principalHint: "user",
-            isReadable: true,
-            isWorldReadable: false
+            metadata: KerberosArtifact.FileMetadata(principalHint: "user"),
+            readability: KerberosArtifact.Readability(
+                isReadable: true,
+                isWorldReadable: false
+            )
         )
         let data = try JSONEncoder().encode(artifact)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertNotNil(json["artifact_type"])
         XCTAssertNotNil(json["principal_hint"])
@@ -90,16 +104,22 @@ final class KerberosArtifactTests: XCTestCase {
         let artifact = KerberosArtifact(
             path: "/etc/krb5.conf",
             artifactType: .config,
-            owner: "root",
-            group: "wheel",
-            mode: "644",
-            isReadable: true,
-            isWorldReadable: true,
-            isGroupReadable: true,
-            defaultRealm: "CORP.EXAMPLE.COM",
-            permittedEncTypes: ["aes256-cts-hmac-sha1-96", "rc4-hmac"],
-            realmNames: ["CORP.EXAMPLE.COM", "DEV.EXAMPLE.COM"],
-            isForwardable: true
+            metadata: KerberosArtifact.FileMetadata(
+                owner: "root",
+                group: "wheel",
+                mode: "644"
+            ),
+            readability: KerberosArtifact.Readability(
+                isReadable: true,
+                isWorldReadable: true,
+                isGroupReadable: true
+            ),
+            config: KerberosArtifact.ConfigFields(
+                defaultRealm: "CORP.EXAMPLE.COM",
+                permittedEncTypes: ["aes256-cts-hmac-sha1-96", "rc4-hmac"],
+                realmNames: ["CORP.EXAMPLE.COM", "DEV.EXAMPLE.COM"],
+                isForwardable: true
+            )
         )
         let data = try JSONEncoder().encode(artifact)
         let decoded = try JSONDecoder().decode(KerberosArtifact.self, from: data)
@@ -115,11 +135,13 @@ final class KerberosArtifactTests: XCTestCase {
         let artifact = KerberosArtifact(
             path: "/etc/krb5.conf",
             artifactType: .config,
-            defaultRealm: "TEST.COM",
-            permittedEncTypes: ["aes256-cts-hmac-sha1-96"]
+            config: KerberosArtifact.ConfigFields(
+                defaultRealm: "TEST.COM",
+                permittedEncTypes: ["aes256-cts-hmac-sha1-96"]
+            )
         )
         let data = try JSONEncoder().encode(artifact)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertNotNil(json["default_realm"])
         XCTAssertNotNil(json["permitted_enc_types"])
@@ -276,6 +298,23 @@ final class KerberosArtifactTests: XCTestCase {
         let ds = KerberosArtifactDataSource()
         XCTAssertEqual(ds.name, "Kerberos Artifacts")
         XCTAssertFalse(ds.requiresElevation)
+    }
+
+    func testScanCcacheDirectoryUnreadableRecordsError() throws {
+        let ds = KerberosArtifactDataSource()
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try Data().write(to: fileURL)
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        var errors: [CollectionError] = []
+        let result = ds.scanCcacheDirectory(fileURL.path, errors: &errors)
+
+        XCTAssertTrue(result.isEmpty)
+        XCTAssertEqual(errors.count, 1)
+        XCTAssertEqual(errors[0].source, "Kerberos Artifacts")
+        XCTAssertTrue(errors[0].message.contains("Cannot read ccache directory"))
+        XCTAssertTrue(errors[0].recoverable)
     }
 
     // MARK: - GraphNode conformance

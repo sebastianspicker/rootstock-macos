@@ -91,18 +91,32 @@ def import_remote_access_services(
     if not services:
         return 0, 0
 
-    records = [
+    records = _remote_access_service_records(services)
+    _merge_remote_access_service_nodes(session, records)
+    total_edges = _link_remote_access_edges(session)
+    return len(services), total_edges
+
+
+def _remote_access_service_records(
+    services: list[RemoteAccessServiceData],
+) -> list[dict]:
+    return [
         {
-            "service": s.service,
-            "enabled": s.enabled,
-            "port": s.port,
+            "service": service.service,
+            "enabled": service.enabled,
+            "port": service.port,
             # Stored as config_json (not config) because Neo4j doesn't support
             # map properties. Cypher queries must use s.config_json, not s.config.
-            "config_json": json.dumps(s.config) if s.config else "{}",
+            "config_json": json.dumps(service.config) if service.config else "{}",
         }
-        for s in services
+        for service in services
     ]
 
+
+def _merge_remote_access_service_nodes(
+    session: Session,
+    records: list[dict],
+) -> None:
     session.run(
         """
         UNWIND $records AS r
@@ -114,7 +128,8 @@ def import_remote_access_services(
         records=records,
     )
 
-    # ACCESSIBLE_BY edges: cross-reference group membership
+
+def _link_remote_access_edges(session: Session) -> int:
     result = session.run(
         """
         UNWIND $mappings AS m
@@ -126,9 +141,7 @@ def import_remote_access_services(
         """,
         mappings=_REMOTE_ACCESS_GROUP_MAP,
     )
-    total_edges = result.single()["n"]
-
-    return len(services), total_edges
+    return result.single()["n"]
 
 
 def import_firewall_status(
@@ -142,16 +155,7 @@ def import_firewall_status(
     if not statuses:
         return 0, 0
 
-    fw_records = [
-        {
-            "name": _FIREWALL_POLICY_NAME,
-            "enabled": s.enabled,
-            "stealth_mode": s.stealth_mode,
-            "allow_signed": s.allow_signed,
-            "allow_built_in": s.allow_built_in,
-        }
-        for s in statuses
-    ]
+    fw_records = _firewall_policy_records(statuses)
 
     session.run(
         """
@@ -165,20 +169,43 @@ def import_firewall_status(
         records=fw_records,
     )
 
-    # Flatten app rules across all statuses
-    rule_records = [
+    rule_records = _firewall_rule_records(statuses)
+    if not rule_records:
+        return len(statuses), 0
+
+    edges = _import_firewall_rule_edges(session, rule_records, scan_id)
+    return len(statuses), edges
+
+
+def _firewall_policy_records(statuses: list[FirewallStatusData]) -> list[dict]:
+    return [
+        {
+            "name": _FIREWALL_POLICY_NAME,
+            "enabled": status.enabled,
+            "stealth_mode": status.stealth_mode,
+            "allow_signed": status.allow_signed,
+            "allow_built_in": status.allow_built_in,
+        }
+        for status in statuses
+    ]
+
+
+def _firewall_rule_records(statuses: list[FirewallStatusData]) -> list[dict]:
+    return [
         {
             "bundle_id": rule.bundle_id,
             "allow_incoming": rule.allow_incoming,
         }
-        for s in statuses
-        for rule in s.app_rules
+        for status in statuses
+        for rule in status.app_rules
     ]
 
-    if not rule_records:
-        return len(statuses), 0
 
-    # HAS_FIREWALL_RULE: Application → FirewallPolicy
+def _import_firewall_rule_edges(
+    session: Session,
+    records: list[dict],
+    scan_id: str | None,
+) -> int:
     result = session.run(
         """
         UNWIND $records AS r
@@ -189,13 +216,11 @@ def import_firewall_status(
         SET rel.allow_incoming = r.allow_incoming
         RETURN count(rel) AS n
         """,
-        records=rule_records,
+        records=records,
         policy_name=_FIREWALL_POLICY_NAME,
         scan_id=scan_id,
     )
-    edges = result.single()["n"]
-
-    return len(statuses), edges
+    return result.single()["n"]
 
 
 def import_login_sessions(

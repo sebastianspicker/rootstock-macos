@@ -37,32 +37,41 @@ public struct PersistenceDataSource: DataSource {
         for dir in Self.daemonDirs {
             let (entries, errs) = parseLaunchdDirectory(at: dir)
             items += entries.map { launchItemFrom($0, type: .daemon) }
-            errors += errs.map { CollectionError(source: name, message: $0, recoverable: true) }
+            appendRecoverableErrors(errs, to: &errors)
         }
 
         // 2. LaunchAgents
         for dir in Self.agentDirs {
             let (entries, errs) = parseLaunchdDirectory(at: dir)
             items += entries.map { launchItemFrom($0, type: .agent) }
-            errors += errs.map { CollectionError(source: name, message: $0, recoverable: true) }
+            appendRecoverableErrors(errs, to: &errors)
         }
 
         // 3. Login Items (BTM database)
         let (loginItems, loginErrors) = collectLoginItems()
         items += loginItems
-        errors += loginErrors.map { CollectionError(source: name, message: $0, recoverable: true) }
+        appendRecoverableErrors(loginErrors, to: &errors)
 
         // 4. Cron jobs
         let (cronItems, cronErrors) = collectCronJobs()
         items += cronItems
-        errors += cronErrors.map { CollectionError(source: name, message: $0, recoverable: true) }
+        appendRecoverableErrors(cronErrors, to: &errors)
 
         // 5. Login hooks (legacy)
         let (hookItems, hookErrors) = collectLoginHooks()
         items += hookItems
-        errors += hookErrors.map { CollectionError(source: name, message: $0, recoverable: true) }
+        appendRecoverableErrors(hookErrors, to: &errors)
 
         return DataSourceResult(nodes: items, errors: errors)
+    }
+
+    private func appendRecoverableErrors(
+        _ messages: [String],
+        to errors: inout [CollectionError]
+    ) {
+        errors += messages.map {
+            CollectionError(source: name, message: $0, recoverable: true)
+        }
     }
 
     // MARK: - Launchd plist parsing (delegates to shared LaunchdPlistParser)
@@ -82,10 +91,12 @@ public struct PersistenceDataSource: DataSource {
             program: entry.program,
             runAtLoad: entry.runAtLoad,
             user: entry.user,
-            plistOwner: plistOwnership.owner,
-            programOwner: programOwnership?.owner,
-            plistWritableByNonRoot: plistOwnership.writableByNonRoot,
-            programWritableByNonRoot: programOwnership?.writableByNonRoot ?? false
+            ownership: LaunchItem.Ownership(
+                plistOwner: plistOwnership.owner,
+                programOwner: programOwnership?.owner,
+                plistWritableByNonRoot: plistOwnership.writableByNonRoot,
+                programWritableByNonRoot: programOwnership?.writableByNonRoot ?? false
+            )
         )
     }
 
@@ -161,49 +172,79 @@ public struct PersistenceDataSource: DataSource {
     ///   Developer: TeamID
     internal static func parseSfltoolOutput(_ output: String) -> [LaunchItem] {
         var items: [LaunchItem] = []
-        var currentIdentifier: String?
-        var currentURL: String?
-        var currentType: String?
-
-        let flushItem = { () -> Void in
-            guard let identifier = currentIdentifier else { return }
-            let path = currentURL.flatMap { urlString -> String? in
-                guard urlString.hasPrefix("file://") else { return urlString }
-                return URL(string: urlString)?.path
-            }
-            guard let resolvedPath = path else { return }  // skip entries with no parseable path
-            items.append(LaunchItem(
-                label: identifier,
-                path: resolvedPath,
-                type: currentType == "login item" ? .loginItem : .agent,
-                program: resolvedPath,
-                runAtLoad: true,
-                user: nil
-            ))
-        }
+        var record = SfltoolRecord()
 
         for line in output.split(separator: "\n", omittingEmptySubsequences: false) {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
 
-            if trimmed.isEmpty || trimmed.hasPrefix("===") || trimmed.hasPrefix("---") {
-                flushItem()
-                currentIdentifier = nil
-                currentURL = nil
-                currentType = nil
+            if isSfltoolRecordSeparator(trimmed) {
+                appendSfltoolItem(from: record, into: &items)
+                record.reset()
                 continue
             }
 
-            if let range = trimmed.range(of: "Identifier:") {
-                currentIdentifier = String(trimmed[range.upperBound...]).trimmingCharacters(in: .whitespaces)
-            } else if let range = trimmed.range(of: "URL:") {
-                currentURL = String(trimmed[range.upperBound...]).trimmingCharacters(in: .whitespaces)
-            } else if let range = trimmed.range(of: "Type:") {
-                currentType = String(trimmed[range.upperBound...]).trimmingCharacters(in: .whitespaces).lowercased()
+            record.apply(trimmed)
+        }
+
+        appendSfltoolItem(from: record, into: &items)
+        return items
+    }
+
+    private static func isSfltoolRecordSeparator(_ line: String) -> Bool {
+        line.isEmpty || line.hasPrefix("===") || line.hasPrefix("---")
+    }
+
+    private static func appendSfltoolItem(
+        from record: SfltoolRecord,
+        into items: inout [LaunchItem]
+    ) {
+        guard let item = record.launchItem() else { return }
+        items.append(item)
+    }
+
+    private struct SfltoolRecord {
+        var identifier: String?
+        var url: String?
+        var type: String?
+
+        mutating func reset() {
+            identifier = nil
+            url = nil
+            type = nil
+        }
+
+        mutating func apply(_ line: String) {
+            if let value = Self.value(in: line, after: "Identifier:") {
+                identifier = value
+            } else if let value = Self.value(in: line, after: "URL:") {
+                url = value
+            } else if let value = Self.value(in: line, after: "Type:") {
+                type = value.lowercased()
             }
         }
 
-        flushItem()
-        return items
+        func launchItem() -> LaunchItem? {
+            guard let identifier, let path = resolvedPath() else { return nil }
+            return LaunchItem(
+                label: identifier,
+                path: path,
+                type: type == "login item" ? .loginItem : .agent,
+                program: path,
+                runAtLoad: true,
+                user: nil
+            )
+        }
+
+        private func resolvedPath() -> String? {
+            guard let url else { return nil }
+            guard url.hasPrefix("file://") else { return url }
+            return URL(string: url)?.path
+        }
+
+        private static func value(in line: String, after marker: String) -> String? {
+            guard let range = line.range(of: marker) else { return nil }
+            return String(line[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+        }
     }
 
     private func extractLoginItemsFromPlist(
@@ -240,7 +281,7 @@ public struct PersistenceDataSource: DataSource {
         var errors: [String] = []
 
         // System crontab
-        let systemEntries = cronParser.parseSystemCrontab()
+        let systemEntries = cronParser.parseSystemCrontab(errors: &errors)
         items += systemEntries.map {
             LaunchItem(
                 label: $0.label,

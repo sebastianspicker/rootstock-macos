@@ -16,20 +16,30 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections import Counter
 from pathlib import Path
 
 from neo4j_connection import add_neo4j_args, connect_from_args
 from models import ScanResult, ComputerData
-from import_nodes import (
+from import_nodes_core import (
+    ComputerImportContext,
     import_applications,
     import_tcc_grants,
     import_entitlements,
     import_signed_by_team,
     import_certificate_authorities,
+    import_computer,
+    import_installed_on,
+    import_local_to,
+    import_sandbox_profiles,
+)
+from import_nodes_services import (
     import_xpc_services,
     import_keychain_items,
     import_mdm_profiles,
     import_launch_items,
+)
+from import_nodes_security import (
     import_local_groups,
     import_remote_access_services,
     import_firewall_status,
@@ -38,35 +48,29 @@ from import_nodes import (
     import_authorization_plugins,
     import_system_extensions,
     import_sudoers_rules,
+)
+from import_nodes_enrichment import (
     import_running_processes,
     import_file_acls,
     import_user_details,
     import_bluetooth_devices,
-    import_computer,
-    import_installed_on,
-    import_local_to,
+)
+from import_nodes_security_enterprise import (
     import_ad_binding,
     import_kerberos_artifacts,
-    import_sandbox_profiles,
 )
 
 from scan_loader import load_scan
 
 
-def import_scan(session, scan: ScanResult) -> None:
-    """Import a single scan with all its data."""
-    hostname = scan.hostname
+def _report_scan_errors(scan: ScanResult) -> None:
+    for err in scan.errors:
+        print(f"  [{scan.hostname}] WARNING: {err.source}: {err.message}", file=sys.stderr)
 
-    # Report any collection errors from the scan
-    if scan.errors:
-        for err in scan.errors:
-            print(
-                f"  [{hostname}] WARNING: {err.source}: {err.message}", file=sys.stderr
-            )
 
-    # Computer node with posture data
-    computer = ComputerData(
-        hostname=hostname,
+def _scan_computer(scan: ScanResult) -> ComputerData:
+    return ComputerData(
+        hostname=scan.hostname,
         macos_version=scan.macos_version,
         scan_id=scan.scan_id,
         scanned_at=scan.timestamp,
@@ -74,9 +78,10 @@ def import_scan(session, scan: ScanResult) -> None:
         elevation_is_root=scan.elevation.is_root,
         elevation_has_fda=scan.elevation.has_fda,
     )
-    import_computer(
-        session,
-        computer,
+
+
+def _scan_computer_context(scan: ScanResult) -> ComputerImportContext:
+    return ComputerImportContext(
         gatekeeper_enabled=scan.gatekeeper_enabled,
         sip_enabled=scan.sip_enabled,
         filevault_enabled=scan.filevault_enabled,
@@ -94,7 +99,8 @@ def import_scan(session, scan: ScanResult) -> None:
         icloud_keychain_enabled=scan.icloud_keychain_enabled,
     )
 
-    # All data imports
+
+def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
     n_apps = import_applications(session, scan.applications, scan.scan_id)
     grants_linked, _ = import_tcc_grants(session, scan.tcc_grants, scan.scan_id)
     import_entitlements(session, scan.applications, scan.scan_id)
@@ -107,7 +113,7 @@ def import_scan(session, scan: ScanResult) -> None:
     import_local_groups(session, scan.local_groups, scan.scan_id)
     import_remote_access_services(session, scan.remote_access_services)
     import_firewall_status(session, scan.firewall_status, scan.scan_id)
-    import_login_sessions(session, scan.login_sessions, hostname)
+    import_login_sessions(session, scan.login_sessions, scan.hostname)
     import_authorization_rights(session, scan.authorization_rights)
     import_authorization_plugins(session, scan.authorization_plugins)
     import_system_extensions(session, scan.system_extensions)
@@ -115,18 +121,24 @@ def import_scan(session, scan: ScanResult) -> None:
     import_running_processes(session, scan.running_processes, scan.scan_id)
     import_user_details(session, scan.user_details)
     import_file_acls(session, scan.file_acls)
-
-    # AD binding, Kerberos artifacts, and sandbox profiles
-    import_ad_binding(session, scan.ad_binding, hostname, scan.scan_id)
-    import_kerberos_artifacts(session, scan.kerberos_artifacts, hostname, scan.scan_id)
+    import_ad_binding(session, scan.ad_binding, scan.hostname, scan.scan_id)
+    import_kerberos_artifacts(session, scan.kerberos_artifacts, scan.hostname, scan.scan_id)
     import_sandbox_profiles(session, scan.sandbox_profiles, scan.scan_id)
+    import_bluetooth_devices(session, scan.bluetooth_devices, scan.hostname, scan.scan_id)
+    return n_apps, grants_linked
 
-    # Computer linkage
+
+def import_scan(session, scan: ScanResult) -> None:
+    """Import a single scan with all its data."""
+    hostname = scan.hostname
+
+    if scan.errors:
+        _report_scan_errors(scan)
+
+    import_computer(session, _scan_computer(scan), _scan_computer_context(scan))
+    n_apps, grants_linked = _import_scan_entities(session, scan)
     n_installed = import_installed_on(session, hostname, scan.scan_id)
     n_local_to = import_local_to(session, hostname, scan.scan_id)
-
-    # Bluetooth devices
-    import_bluetooth_devices(session, scan.bluetooth_devices, hostname, scan.scan_id)
 
     print(
         f"  [{hostname}] {n_apps} apps, {grants_linked} grants, "
@@ -135,6 +147,26 @@ def import_scan(session, scan: ScanResult) -> None:
 
 
 def main() -> int:
+    args = _parse_args()
+    input_paths = _input_paths_from_args(args)
+    if input_paths is None:
+        return 1
+
+    scans = _load_input_scans(input_paths)
+    if scans is None:
+        return 1
+
+    hostnames = [s.hostname for s in scans]
+    if not _validate_unique_hostnames(hostnames):
+        return 1
+
+    driver = connect_from_args(args)
+    _import_scans(driver, scans)
+    print(f"\nMerged {len(scans)} scans from hosts: {', '.join(hostnames)}")
+    return 0
+
+
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Import multiple Rootstock scans for multi-host correlation"
     )
@@ -143,8 +175,10 @@ def main() -> int:
     )
     parser.add_argument("--input-dir", help="Directory of scan JSON files to import")
     add_neo4j_args(parser)
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def _input_paths_from_args(args: argparse.Namespace) -> list[str] | None:
     input_paths = list(args.input)
     if args.input_dir:
         dir_path = Path(args.input_dir)
@@ -155,24 +189,26 @@ def main() -> int:
 
     if not input_paths:
         print("ERROR: No input files. Use --input or --input-dir.", file=sys.stderr)
-        return 1
+        return None
+    return input_paths
 
+
+def _load_input_scans(input_paths: list[str]) -> list[ScanResult] | None:
     scans = []
     for path_str in input_paths:
         path = Path(path_str)
         if not path.exists():
             print(f"ERROR: File not found: {path}", file=sys.stderr)
-            return 1
+            return None
         scan = load_scan(path)
         if scan is None:
-            return 1
+            return None
         scans.append(scan)
+    return scans
 
-    # Check for hostname collisions — error out to prevent data overwrite
-    hostnames = [s.hostname for s in scans]
+
+def _validate_unique_hostnames(hostnames: list[str]) -> bool:
     if len(set(hostnames)) != len(hostnames):
-        from collections import Counter
-
         dupes = [h for h, c in Counter(hostnames).items() if c > 1]
         print(
             f"ERROR: Duplicate hostnames detected: {dupes}. "
@@ -180,9 +216,11 @@ def main() -> int:
             f"Use different hostnames or import one scan at a time.",
             file=sys.stderr,
         )
-        return 1
+        return False
+    return True
 
-    driver = connect_from_args(args)
+
+def _import_scans(driver, scans: list[ScanResult]) -> None:
     print(f"Importing {len(scans)} scan(s)...")
 
     with driver.session() as session:
@@ -190,8 +228,6 @@ def main() -> int:
             import_scan(session, scan)
 
     driver.close()
-    print(f"\nMerged {len(scans)} scans from hosts: {', '.join(hostnames)}")
-    return 0
 
 
 if __name__ == "__main__":

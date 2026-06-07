@@ -56,12 +56,16 @@ public struct XPCDataSource: DataSource {
             path: entry.plistPath,
             program: entry.program,
             type: type,
-            user: entry.user,
-            runAtLoad: entry.runAtLoad,
-            keepAlive: entry.keepAlive,
-            machServices: entry.machServices,
-            entitlements: entitlementKeys,
-            hasClientVerification: entry.hasAuthorizedClients
+            launch: XPCService.LaunchBehavior(
+                user: entry.user,
+                runAtLoad: entry.runAtLoad,
+                keepAlive: entry.keepAlive
+            ),
+            exposure: XPCService.Exposure(
+                machServices: entry.machServices,
+                entitlements: entitlementKeys,
+                hasClientVerification: entry.hasAuthorizedClients
+            )
         )
     }
 

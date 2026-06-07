@@ -13,7 +13,7 @@ final class SystemExtensionTests: XCTestCase {
     func testSystemExtensionJSONEncoding() throws {
         let ext = SystemExtension(identifier: "com.example.ext", teamId: "TEAM123456", extensionType: .network, enabled: false)
         let data = try JSONEncoder().encode(ext)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertEqual(json["identifier"] as? String, "com.example.ext")
         XCTAssertEqual(json["extension_type"] as? String, "network")
         XCTAssertEqual(json["enabled"] as? Bool, false)

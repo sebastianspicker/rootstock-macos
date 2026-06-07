@@ -251,5 +251,9 @@ let package = Package(
             name: "QuarantineTests",
             dependencies: ["Quarantine", "Models"]
         ),
+        .testTarget(
+            name: "RootstockCLITests",
+            dependencies: ["RootstockCLI"]
+        ),
     ]
 )

@@ -240,6 +240,10 @@ canvas.grabbing{cursor:grabbing}
 .live-btn{background:#21262d;border:1px solid #30363d;border-radius:4px;color:#e6edf3;
   padding:5px 10px;font-size:11px;cursor:pointer;transition:all .15s;font-weight:500}
 .live-btn:hover{border-color:#58a6ff;color:#58a6ff;background:#30363d}
+.live-status{flex-basis:100%;min-height:16px;font-size:11px;color:#8b949e}
+.live-status.pending{color:#d29922}
+.live-status.ok{color:#3fb950}
+.live-status.error{color:#f85149}
 </style>
 </head>
 <body>
@@ -291,6 +295,7 @@ canvas.grabbing{cursor:grabbing}
     <button class="live-btn" onclick="liveRefresh()">Refresh</button>
     <button class="live-btn" onclick="liveTierClassify()">Classify Tiers</button>
     <button class="live-btn" onclick="liveShowOwned()">Show Owned</button>
+    <div id="live-status" class="live-status" role="status" aria-live="polite"></div>
   </div>
   <div id="keyboard-hints">
     <span><span class="kbd">P</span> Path</span>
@@ -2032,12 +2037,38 @@ function apiFetch(path, options = {}) {
   const headers = new Headers(options.headers || {});
   const token = getApiToken();
   if (token) headers.set('Authorization', 'Bearer ' + token);
-  return fetch(API_BASE + path, {...options, headers}).then(response => {
+  return fetch(API_BASE + path, {...options, headers}).then(async response => {
     if (response.status === 401) {
       sessionStorage.removeItem(API_TOKEN_KEY);
+    }
+    if (response.ok) {
+      return response;
+    }
+    let detail = '';
+    try {
+      const text = await response.text();
+      if (text) {
+        try {
+          const payload = JSON.parse(text);
+          if (typeof payload.detail === 'string') {
+            detail = payload.detail;
+          } else if (payload.detail) {
+            detail = JSON.stringify(payload.detail);
+          } else {
+            detail = text;
+          }
+        } catch (_err) {
+          detail = text;
+        }
+      }
+    } catch (_err) {
+      detail = '';
+    }
+    if (response.status === 401) {
       throw new Error('Unauthorized');
     }
-    return response;
+    const status = 'HTTP ' + response.status + (response.statusText ? ' ' + response.statusText : '');
+    throw new Error(detail ? status + ': ' + detail : status);
   });
 }
 
@@ -2094,6 +2125,9 @@ function runLiveQuery(q) {
   })
     .then(r => r.json())
     .then(data => {
+      if (!data || !Array.isArray(data.rows) || typeof data.count !== 'number') {
+        throw new Error('Malformed query response');
+      }
       meta.textContent = data.count + ' row(s) \u00b7 ' + q.category + ' \u00b7 ' + q.severity;
       if (!data.rows || data.rows.length === 0) {
         body.textContent = '';
@@ -2140,6 +2174,11 @@ function runLiveQuery(q) {
     })
     .catch(err => {
       meta.textContent = 'Error: ' + err.message;
+      body.textContent = '';
+      body.appendChild(el('div', {className: 'prop-row'}, [
+        el('strong', {textContent: 'Query failed'}),
+        el('span', {textContent: err.message})
+      ]));
     });
 }
 
@@ -2168,48 +2207,96 @@ function closeResults() {
   document.getElementById('results-panel').classList.remove('open');
 }
 
+function setLiveStatus(message, state = '') {
+  const status = document.getElementById('live-status');
+  if (!status) return;
+  status.textContent = message || '';
+  status.className = 'live-status' + (state ? ' ' + state : '');
+}
+
 function liveRefresh() {
   if (!isLive) return;
+  setLiveStatus('Refreshing graph...', 'pending');
   apiFetch('/api/graph')
     .then(r => r.json())
     .then(data => {
+      if (!data || !data.graph || !Array.isArray(data.graph.nodes) || !Array.isArray(data.graph.edges)) {
+        throw new Error('Malformed graph response');
+      }
       replaceGraphData(data);
       resetZoom();
+      setLiveStatus('Graph refreshed.', 'ok');
     })
-    .catch(err => console.warn('Refresh failed:', err));
+    .catch(err => {
+      setLiveStatus('Graph refresh failed: ' + err.message, 'error');
+    });
 }
 
 function liveTierClassify() {
   if (!isLive) return;
+  setLiveStatus('Classifying tiers...', 'pending');
   apiFetch('/api/tier-classify', {method: 'POST'})
     .then(r => r.json())
     .then(data => {
-      alert('Tier classification complete: T0=' + data.tier0 + ' T1=' + data.tier1 + ' T2=' + data.tier2);
+      if (!data || typeof data.tier0 !== 'number' || typeof data.tier1 !== 'number' ||
+          typeof data.tier2 !== 'number' || typeof data.total !== 'number') {
+        throw new Error('Malformed tier response');
+      }
+      if (data.total !== data.tier0 + data.tier1 + data.tier2) {
+        throw new Error('Malformed tier response');
+      }
+      const message = 'Tier classification complete: T0=' + data.tier0 + ' T1=' + data.tier1 + ' T2=' + data.tier2;
+      setLiveStatus(message, 'ok');
+      alert(message);
       liveRefresh();
     })
-    .catch(err => console.warn('Tier classify failed:', err));
+    .catch(err => {
+      setLiveStatus('Tier classification failed: ' + err.message, 'error');
+    });
 }
 
 function liveShowOwned() {
   if (!isLive) return;
+  setLiveStatus('Loading owned nodes...', 'pending');
   apiFetch('/api/owned')
     .then(r => r.json())
     .then(data => {
-      if (data.count === 0) { alert('No owned nodes.'); return; }
+      if (!data || !Array.isArray(data.owned) || typeof data.count !== 'number') {
+        throw new Error('Malformed owned response');
+      }
+      if (data.count !== data.owned.length) {
+        throw new Error('Malformed owned response');
+      }
+      if (data.count === 0) {
+        setLiveStatus('No owned nodes returned.', 'ok');
+        alert('No owned nodes.');
+        return;
+      }
       // Highlight owned nodes by selecting all matching
+      let highlighted = 0;
       data.owned.forEach(item => {
         const name = item.name;
+        let matched = false;
         nodes.forEach(n => {
           if (n.properties?.name === name || n.properties?.bundle_id === name) {
             if (!n.properties) n.properties = {};
             n.properties.owned = true;
+            matched = true;
           }
         });
+        if (matched) highlighted++;
       });
-      markDirty();
-      alert(data.count + ' owned node(s) highlighted.');
+      if (highlighted > 0) markDirty();
+      if (highlighted === data.count) {
+        setLiveStatus(data.count + ' owned node(s) highlighted.', 'ok');
+        alert(data.count + ' owned node(s) highlighted.');
+      } else {
+        setLiveStatus('Owned list loaded, but only ' + highlighted + ' of ' + data.count + ' matched the current graph.', 'error');
+      }
     })
-    .catch(err => console.warn('Show owned failed:', err));
+    .catch(err => {
+      setLiveStatus('Show owned failed: ' + err.message, 'error');
+    });
 }
 
 // ── Custom Cypher console ────────────────────────────────────────────────
@@ -2305,33 +2392,46 @@ document.getElementById('cypher-input')?.addEventListener('keydown', function(e)
 
 // Override toggleOwned in live mode to persist to API
 if (isLive) {
-  const _origToggleOwned = toggleOwned;
   toggleOwned = function(d) {
-    const wasOwned = d.properties?.owned;
-    _origToggleOwned(d);
-    if (wasOwned) {
-      // Clear owned
-      const body = {};
-      if (d.properties?.bundle_id) body.bundle_ids = [d.properties.bundle_id];
-      else if (d.properties?.name && d.kind === 'rs_User') body.usernames = [d.properties.name];
-      else { return; }
-      apiFetch('/api/clear-owned', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(body)
-      }).catch(err => console.warn('Clear owned failed:', err));
-    } else {
-      // Mark owned
-      const body = {};
-      if (d.properties?.bundle_id) body.bundle_ids = [d.properties.bundle_id];
-      else if (d.properties?.name && d.kind === 'rs_User') body.usernames = [d.properties.name];
-      else { return; }
-      apiFetch('/api/mark-owned', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(body)
-      }).catch(err => console.warn('Mark owned failed:', err));
+    const wasOwned = d.properties?.owned === true;
+    const body = {};
+    if (d.properties?.bundle_id) body.bundle_ids = [d.properties.bundle_id];
+    else if (d.properties?.name && d.kind === 'rs_User') body.usernames = [d.properties.name];
+    else {
+      setLiveStatus('Owned update failed: node has no supported identifier.', 'error');
+      return;
     }
+
+    const path = wasOwned ? '/api/clear-owned' : '/api/mark-owned';
+    const countKey = wasOwned ? 'cleared' : 'marked';
+    const action = wasOwned ? 'Clear owned' : 'Mark owned';
+    setLiveStatus(action + ' pending...', 'pending');
+    apiFetch(path, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data || typeof data[countKey] !== 'number') {
+          throw new Error('Malformed owned update response');
+        }
+        if (data[countKey] <= 0) {
+          throw new Error('No matching nodes changed');
+        }
+        if (!d.properties) d.properties = {};
+        d.properties.owned = !wasOwned;
+        markDirty();
+        if (selectedNode?.id === d.id) inspectNode(d);
+        setLiveStatus(action + ' saved for ' + data[countKey] + ' node(s).', 'ok');
+      })
+      .catch(err => {
+        if (!d.properties) d.properties = {};
+        d.properties.owned = wasOwned;
+        markDirty();
+        if (selectedNode?.id === d.id) inspectNode(d);
+        setLiveStatus(action + ' failed: ' + err.message, 'error');
+      });
   };
 }
 

@@ -92,7 +92,12 @@ final class FirewallTests: XCTestCase {
 
     func testParseALFPlistDisabled() {
         let source = FirewallDataSource()
-        let plist: [String: Any] = ["globalstate": 0]
+        let plist: [String: Any] = [
+            "globalstate": 0,
+            "stealthenabled": 0,
+            "allowsignedenabled": 0,
+            "allowdownloadsignedenabled": 0,
+        ]
         let status = source.parseALFPlist(plist)
         XCTAssertEqual(status.enabled, false)
         XCTAssertEqual(status.stealthMode, false)
@@ -109,10 +114,35 @@ final class FirewallTests: XCTestCase {
     func testParseALFPlistMissingKeys() {
         let source = FirewallDataSource()
         let plist: [String: Any] = [:]
-        let status = source.parseALFPlist(plist)
-        XCTAssertEqual(status.enabled, false)
-        XCTAssertEqual(status.stealthMode, false)
-        XCTAssertEqual(status.allowSigned, false)
+        let result = source.parseALFPlistWithDiagnostics(plist)
+        let status = result.status
+
+        XCTAssertNil(status.enabled)
+        XCTAssertNil(status.stealthMode)
+        XCTAssertNil(status.allowSigned)
+        XCTAssertNil(status.allowBuiltIn)
+        XCTAssertTrue(result.errors.contains { $0.message.contains("'globalstate' is missing") })
+        XCTAssertTrue(result.errors.contains { $0.message.contains("'stealthenabled' is missing") })
+        XCTAssertTrue(result.errors.contains { $0.message.contains("'allowsignedenabled' is missing") })
+        XCTAssertTrue(result.errors.contains { $0.message.contains("'allowdownloadsignedenabled' is missing") })
+    }
+
+    func testParseALFPlistMissingAppRuleStateIsUnknown() {
+        let source = FirewallDataSource()
+        let plist: [String: Any] = [
+            "globalstate": 1,
+            "stealthenabled": 0,
+            "allowsignedenabled": 1,
+            "allowdownloadsignedenabled": 1,
+            "applications": [
+                ["bundleid": "com.example.unknown"],
+            ],
+        ]
+        let result = source.parseALFPlistWithDiagnostics(plist)
+
+        XCTAssertEqual(result.status.appRules.first?.bundleId, "com.example.unknown")
+        XCTAssertNil(result.status.appRules.first?.allowIncoming)
+        XCTAssertTrue(result.errors.contains { $0.message.contains("missing 'state'") })
     }
 
     // MARK: - DataSource tests

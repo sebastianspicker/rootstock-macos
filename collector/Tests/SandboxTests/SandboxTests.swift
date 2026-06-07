@@ -18,14 +18,16 @@ final class SandboxTests: XCTestCase {
         let profile = SandboxProfile(
             bundleId: "com.example.app",
             profileSource: "entitlements",
-            fileReadRules: ["com.apple.security.files.user-selected.read-only"],
-            fileWriteRules: [],
-            machLookupRules: ["com.apple.security.temporary-exception.mach-lookup.global-name"],
-            networkRules: ["com.apple.security.network.client"],
-            iokitRules: [],
-            exceptionCount: 2,
-            hasUnconstrainedNetwork: true,
-            hasUnconstrainedFileRead: false
+            rules: SandboxProfile.Rules(
+                fileReadRules: ["com.apple.security.files.user-selected.read-only"],
+                machLookupRules: ["com.apple.security.temporary-exception.mach-lookup.global-name"],
+                networkRules: ["com.apple.security.network.client"]
+            ),
+            exposure: SandboxProfile.Exposure(
+                exceptionCount: 2,
+                hasUnconstrainedNetwork: true,
+                hasUnconstrainedFileRead: false
+            )
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
@@ -49,14 +51,15 @@ final class SandboxTests: XCTestCase {
         let original = SandboxProfile(
             bundleId: "com.example.app",
             profileSource: "system",
-            fileReadRules: ["rule1", "rule2"],
-            fileWriteRules: ["rule3"],
-            machLookupRules: [],
-            networkRules: [],
-            iokitRules: [],
-            exceptionCount: 3,
-            hasUnconstrainedNetwork: false,
-            hasUnconstrainedFileRead: true
+            rules: SandboxProfile.Rules(
+                fileReadRules: ["rule1", "rule2"],
+                fileWriteRules: ["rule3"]
+            ),
+            exposure: SandboxProfile.Exposure(
+                exceptionCount: 3,
+                hasUnconstrainedNetwork: false,
+                hasUnconstrainedFileRead: true
+            )
         )
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(SandboxProfile.self, from: data)
@@ -136,32 +139,39 @@ final class SandboxTests: XCTestCase {
     func testBuildProfileForSandboxedApp() {
         let source = SandboxDataSource(systemProfilesPath: "/nonexistent")
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.test",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: "TEST123",
-            hardenedRuntime: true,
-            libraryValidation: true,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
-            isSandboxed: true,
-            sandboxExceptions: ["com.apple.security.files.user-selected.read-write"],
-            entitlements: [
-                EntitlementInfo(
-                    name: "com.apple.security.network.client",
-                    isPrivate: false,
-                    category: "network",
-                    isSecurityCritical: false
-                ),
-                EntitlementInfo(
-                    name: "com.apple.security.files.user-selected.read-write",
-                    isPrivate: false,
-                    category: "sandbox",
-                    isSecurityCritical: false
-                ),
-            ]
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.test",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                teamId: "TEST123",
+                hardenedRuntime: true,
+                libraryValidation: true,
+                signed: true
+            ),
+            security: Application.Security(
+                isSandboxed: true,
+                sandboxExceptions: ["com.apple.security.files.user-selected.read-write"]
+            ),
+            entitlementState: Application.EntitlementState(
+                entitlements: [
+                    EntitlementInfo(
+                        name: "com.apple.security.network.client",
+                        isPrivate: false,
+                        category: "network",
+                        isSecurityCritical: false
+                    ),
+                    EntitlementInfo(
+                        name: "com.apple.security.files.user-selected.read-write",
+                        isPrivate: false,
+                        category: "sandbox",
+                        isSecurityCritical: false
+                    ),
+                ]
+            )
         )
         let profile = source.buildProfile(for: app)
         XCTAssertNotNil(profile)
@@ -178,17 +188,18 @@ final class SandboxTests: XCTestCase {
     func testBuildProfileReturnsNilForNonSandboxedApp() {
         let source = SandboxDataSource(systemProfilesPath: "/nonexistent")
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.test",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: nil,
-            hardenedRuntime: false,
-            libraryValidation: false,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
-            isSandboxed: false
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.test",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                hardenedRuntime: false,
+                libraryValidation: false,
+                signed: true
+            )
         )
         let profile = source.buildProfile(for: app)
         XCTAssertNil(profile)
@@ -197,25 +208,29 @@ final class SandboxTests: XCTestCase {
     func testBuildProfileDetectsUnconstrainedFileRead() {
         let source = SandboxDataSource(systemProfilesPath: "/nonexistent")
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.test",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: nil,
-            hardenedRuntime: false,
-            libraryValidation: false,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
-            isSandboxed: true,
-            entitlements: [
-                EntitlementInfo(
-                    name: "com.apple.security.files.all",
-                    isPrivate: false,
-                    category: "sandbox",
-                    isSecurityCritical: true
-                ),
-            ]
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.test",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                hardenedRuntime: false,
+                libraryValidation: false,
+                signed: true
+            ),
+            security: Application.Security(isSandboxed: true),
+            entitlementState: Application.EntitlementState(
+                entitlements: [
+                    EntitlementInfo(
+                        name: "com.apple.security.files.all",
+                        isPrivate: false,
+                        category: "sandbox",
+                        isSecurityCritical: true
+                    ),
+                ]
+            )
         )
         let profile = source.buildProfile(for: app)
         XCTAssertNotNil(profile)
@@ -226,38 +241,43 @@ final class SandboxTests: XCTestCase {
         let source = SandboxDataSource(systemProfilesPath: "/nonexistent")
         var apps = [
             Application(
-                name: "Sandboxed",
-                bundleId: "com.example.sandboxed",
-                path: "/Applications/Sandboxed.app",
-                version: "1.0",
-                teamId: nil,
-                hardenedRuntime: false,
-                libraryValidation: false,
-                isElectron: false,
-                isSystem: false,
-                signed: true,
-                isSandboxed: true,
-                entitlements: [
-                    EntitlementInfo(
-                        name: "com.apple.security.network.client",
-                        isPrivate: false,
-                        category: "network",
-                        isSecurityCritical: false
-                    ),
-                ]
+                identity: Application.Identity(
+                    name: "Sandboxed",
+                    bundleId: "com.example.sandboxed",
+                    path: "/Applications/Sandboxed.app",
+                    version: "1.0"
+                ),
+                flags: Application.Flags(isElectron: false, isSystem: false),
+                signing: Application.Signing(
+                    hardenedRuntime: false,
+                    libraryValidation: false,
+                    signed: true
+                ),
+                security: Application.Security(isSandboxed: true),
+                entitlementState: Application.EntitlementState(
+                    entitlements: [
+                        EntitlementInfo(
+                            name: "com.apple.security.network.client",
+                            isPrivate: false,
+                            category: "network",
+                            isSecurityCritical: false
+                        ),
+                    ]
+                )
             ),
             Application(
-                name: "NotSandboxed",
-                bundleId: "com.example.notsandboxed",
-                path: "/Applications/NotSandboxed.app",
-                version: "1.0",
-                teamId: nil,
-                hardenedRuntime: false,
-                libraryValidation: false,
-                isElectron: false,
-                isSystem: false,
-                signed: true,
-                isSandboxed: false
+                identity: Application.Identity(
+                    name: "NotSandboxed",
+                    bundleId: "com.example.notsandboxed",
+                    path: "/Applications/NotSandboxed.app",
+                    version: "1.0"
+                ),
+                flags: Application.Flags(isElectron: false, isSystem: false),
+                signing: Application.Signing(
+                    hardenedRuntime: false,
+                    libraryValidation: false,
+                    signed: true
+                )
             ),
         ]
         let count = source.enrich(applications: &apps)
@@ -313,21 +333,22 @@ final class SandboxTests: XCTestCase {
     func testApplicationWithSandboxProfileEncoding() throws {
         let profile = SandboxProfile(
             bundleId: "com.example.app",
-            profileSource: "entitlements",
-            exceptionCount: 0
+            profileSource: "entitlements"
         )
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.app",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: nil,
-            hardenedRuntime: true,
-            libraryValidation: true,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
-            isSandboxed: true,
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.app",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                hardenedRuntime: true,
+                libraryValidation: true,
+                signed: true
+            ),
+            security: Application.Security(isSandboxed: true),
             sandboxProfile: profile
         )
         let data = try JSONEncoder().encode(app)
@@ -337,17 +358,18 @@ final class SandboxTests: XCTestCase {
 
     func testApplicationWithoutSandboxProfileEncoding() throws {
         let app = Application(
-            name: "TestApp",
-            bundleId: "com.example.app",
-            path: "/Applications/TestApp.app",
-            version: "1.0",
-            teamId: nil,
-            hardenedRuntime: true,
-            libraryValidation: true,
-            isElectron: false,
-            isSystem: false,
-            signed: true,
-            isSandboxed: false
+            identity: Application.Identity(
+                name: "TestApp",
+                bundleId: "com.example.app",
+                path: "/Applications/TestApp.app",
+                version: "1.0"
+            ),
+            flags: Application.Flags(isElectron: false, isSystem: false),
+            signing: Application.Signing(
+                hardenedRuntime: true,
+                libraryValidation: true,
+                signed: true
+            )
         )
         let data = try JSONEncoder().encode(app)
         let decoded = try JSONDecoder().decode(Application.self, from: data)

@@ -27,7 +27,7 @@ final class KeychainTests: XCTestCase {
             trustedApps: ["com.apple.airport"]
         )
         let data = try JSONEncoder().encode(item)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertEqual(json["label"] as? String, "My WiFi")
         XCTAssertEqual(json["kind"] as? String, "internet_password")
@@ -58,11 +58,19 @@ final class KeychainTests: XCTestCase {
         XCTAssertTrue(item.trustedApps.isEmpty)
 
         let data = try JSONEncoder().encode(item)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         XCTAssertNil(json["service"])
         XCTAssertNil(json["access_group"])
         let apps = json["trusted_apps"] as? [String]
         XCTAssertEqual(apps, [])
+    }
+
+    func testScannerNeverQueriesSecretBearingPasswordClasses() {
+        let scannedKinds = Set(KeychainScanner.scannedItemClasses.map(\.kind))
+
+        XCTAssertFalse(scannedKinds.contains(.genericPassword))
+        XCTAssertFalse(scannedKinds.contains(.internetPassword))
+        XCTAssertEqual(scannedKinds, [.certificate, .key])
     }
 
     // MARK: - DataSource metadata
@@ -112,7 +120,7 @@ final class KeychainTests: XCTestCase {
 
         for item in items {
             let encoded = try JSONEncoder().encode(item)
-            let json = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+            let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
 
             // These keys must NEVER appear in output
             let forbidden = ["v_Data", "password", "secret", "key_data", "value_data"]
@@ -122,6 +130,18 @@ final class KeychainTests: XCTestCase {
                     "Secret key '\(key)' found in keychain item '\(item.label)'"
                 )
             }
+        }
+    }
+
+    func testKeychainScannerDoesNotCollectSecretBearingPasswordItems() {
+        let (items, _) = KeychainScanner().scan()
+        let secretBearingKinds: Set<KeychainItem.Kind> = [.genericPassword, .internetPassword]
+
+        for item in items {
+            XCTAssertFalse(
+                secretBearingKinds.contains(item.kind),
+                "Secret-bearing keychain item class collected: \(item.kind.rawValue)"
+            )
         }
     }
 

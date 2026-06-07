@@ -13,6 +13,7 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from unittest import TestCase
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,8 +27,12 @@ from bloodhound_import import (
     import_ad_users,
     import_all,
     import_same_identity_edges,
+    main,
     parse_sharphound_zip,
 )
+
+
+checks = TestCase()
 
 
 # ── Test data ────────────────────────────────────────────────────────────────
@@ -111,14 +116,20 @@ SAMPLE_GROUPS = {
 }
 
 
-def _create_test_zip(tmpdir: str, users=True, groups=True) -> str:
+def _create_test_zip(
+    tmpdir: str,
+    users=True,
+    groups=True,
+    users_data: dict | None = None,
+    groups_data: dict | None = None,
+) -> str:
     """Create a SharpHound-style ZIP archive in tmpdir."""
     zip_path = os.path.join(tmpdir, "sharphound_test.zip")
     with zipfile.ZipFile(zip_path, "w") as zf:
         if users:
-            zf.writestr("users.json", json.dumps(SAMPLE_USERS))
+            zf.writestr("users.json", json.dumps(users_data or SAMPLE_USERS))
         if groups:
-            zf.writestr("groups.json", json.dumps(SAMPLE_GROUPS))
+            zf.writestr("groups.json", json.dumps(groups_data or SAMPLE_GROUPS))
     return zip_path
 
 
@@ -132,10 +143,10 @@ class TestParseSharpHoundZip:
             zip_path = _create_test_zip(tmpdir)
             result = parse_sharphound_zip(zip_path)
 
-        assert "users" in result
-        assert "groups" in result
-        assert len(result["users"]) == 3
-        assert len(result["groups"]) == 2
+        checks.assertIn("users", result)
+        checks.assertIn("groups", result)
+        checks.assertEqual(len(result["users"]), 3)
+        checks.assertEqual(len(result["groups"]), 2)
 
     def test_parse_users_only_zip(self):
         """Parse a ZIP with only users.json."""
@@ -143,8 +154,9 @@ class TestParseSharpHoundZip:
             zip_path = _create_test_zip(tmpdir, users=True, groups=False)
             result = parse_sharphound_zip(zip_path)
 
-        assert len(result["users"]) == 3
-        assert len(result["groups"]) == 0
+        checks.assertEqual(len(result["users"]), 3)
+        checks.assertEqual(len(result["groups"]), 0)
+        checks.assertEqual(result["diagnostics"]["files_missing"], ["groups.json"])
 
     def test_parse_groups_only_zip(self):
         """Parse a ZIP with only groups.json."""
@@ -152,8 +164,9 @@ class TestParseSharpHoundZip:
             zip_path = _create_test_zip(tmpdir, users=False, groups=True)
             result = parse_sharphound_zip(zip_path)
 
-        assert len(result["users"]) == 0
-        assert len(result["groups"]) == 2
+        checks.assertEqual(len(result["users"]), 0)
+        checks.assertEqual(len(result["groups"]), 2)
+        checks.assertEqual(result["diagnostics"]["files_missing"], ["users.json"])
 
     def test_parse_empty_zip_raises(self):
         """ZIP without users.json or groups.json should raise ValueError."""
@@ -177,9 +190,9 @@ class TestParseSharpHoundZip:
 
         user = result["users"][0]
         props = user["Properties"]
-        assert props["name"] == "JOHN.DOE@CONTOSO.COM"
-        assert props["objectid"].startswith("S-1-5-21-")
-        assert props["enabled"] is True
+        checks.assertEqual(props["name"], "JOHN.DOE@CONTOSO.COM")
+        checks.assertTrue(props["objectid"].startswith("S-1-5-21-"))
+        checks.assertIs(props["enabled"], True)
 
     def test_group_members_extracted(self):
         """Verify group members are properly extracted from the data list."""
@@ -188,9 +201,11 @@ class TestParseSharpHoundZip:
             result = parse_sharphound_zip(zip_path)
 
         domain_admins = result["groups"][0]
-        assert domain_admins["Properties"]["name"] == "DOMAIN ADMINS@CONTOSO.COM"
-        assert len(domain_admins["Members"]) == 1
-        assert domain_admins["Members"][0]["ObjectType"] == "User"
+        checks.assertEqual(
+            domain_admins["Properties"]["name"], "DOMAIN ADMINS@CONTOSO.COM"
+        )
+        checks.assertEqual(len(domain_admins["Members"]), 1)
+        checks.assertEqual(domain_admins["Members"][0]["ObjectType"], "User")
 
 
 # ── Unit tests: username extraction ──────────────────────────────────────────
@@ -198,16 +213,16 @@ class TestParseSharpHoundZip:
 
 class TestExtractUsername:
     def test_standard_upn(self):
-        assert _extract_username("JOHN.DOE@CONTOSO.COM") == "JOHN.DOE"
+        checks.assertEqual(_extract_username("JOHN.DOE@CONTOSO.COM"), "JOHN.DOE")
 
     def test_no_at_sign(self):
-        assert _extract_username("johndoe") == "johndoe"
+        checks.assertEqual(_extract_username("johndoe"), "johndoe")
 
     def test_empty_string(self):
-        assert _extract_username("") == ""
+        checks.assertEqual(_extract_username(""), "")
 
     def test_multiple_at_signs(self):
-        assert _extract_username("user@sub@domain.com") == "user"
+        checks.assertEqual(_extract_username("user@sub@domain.com"), "user")
 
 
 # ── Unit tests: import functions with mock session ───────────────────────────
@@ -221,9 +236,9 @@ class TestImportADUsers:
         mock_session.run.return_value = mock_result
 
         count = import_ad_users(mock_session, SAMPLE_USERS["data"])
-        assert count == 3
+        checks.assertEqual(count, 3)
         # Batched UNWIND: single session.run call for all users
-        assert mock_session.run.call_count == 1
+        checks.assertEqual(mock_session.run.call_count, 1)
 
     def test_skips_users_without_objectid(self):
         mock_session = MagicMock()
@@ -233,8 +248,8 @@ class TestImportADUsers:
 
         data = [{"Properties": {"name": "NO_SID@CONTOSO.COM", "objectid": ""}}]
         count = import_ad_users(mock_session, data)
-        assert count == 0
-        assert mock_session.run.call_count == 0
+        checks.assertEqual(count, 0)
+        checks.assertEqual(mock_session.run.call_count, 0)
 
     def test_merge_cypher_contains_ad_user(self):
         mock_session = MagicMock()
@@ -244,8 +259,8 @@ class TestImportADUsers:
 
         import_ad_users(mock_session, [SAMPLE_USERS["data"][0]])
         call_args = mock_session.run.call_args
-        assert "MERGE" in call_args[0][0]
-        assert "ADUser" in call_args[0][0]
+        checks.assertIn("MERGE", call_args[0][0])
+        checks.assertIn("ADUser", call_args[0][0])
 
 
 class TestImportSameIdentityEdges:
@@ -256,7 +271,7 @@ class TestImportSameIdentityEdges:
         mock_session.run.return_value = mock_result
 
         count = import_same_identity_edges(mock_session)
-        assert count == 2
+        checks.assertEqual(count, 2)
 
     def test_cypher_uses_case_insensitive_match(self):
         mock_session = MagicMock()
@@ -267,8 +282,8 @@ class TestImportSameIdentityEdges:
         import_same_identity_edges(mock_session)
         call_args = mock_session.run.call_args
         cypher = call_args[0][0]
-        assert "toLower" in cypher
-        assert "SAME_IDENTITY" in cypher
+        checks.assertIn("toLower", cypher)
+        checks.assertIn("SAME_IDENTITY", cypher)
 
 
 class TestImportADMemberOfEdges:
@@ -283,11 +298,11 @@ class TestImportADMemberOfEdges:
         # Domain Admins has 1 User member
         # Domain Users has 3 User members + 1 Group member (skipped)
         # Total: 4 User members in the batch
-        assert count == 4
+        checks.assertEqual(count, 4)
         # Verify single batched call with UNWIND
-        assert mock_session.run.call_count == 1
+        checks.assertEqual(mock_session.run.call_count, 1)
         call_args = mock_session.run.call_args
-        assert "UNWIND" in call_args[0][0]
+        checks.assertIn("UNWIND", call_args[0][0])
 
     def test_skips_non_user_members(self):
         mock_session = MagicMock()
@@ -305,9 +320,9 @@ class TestImportADMemberOfEdges:
             }
         ]
         count = import_ad_member_of_edges(mock_session, groups)
-        assert count == 0
+        checks.assertEqual(count, 0)
         # No User members → empty batch → no session.run call
-        assert mock_session.run.call_count == 0
+        checks.assertEqual(mock_session.run.call_count, 0)
 
 
 class TestImportAll:
@@ -321,10 +336,77 @@ class TestImportAll:
             zip_path = _create_test_zip(tmpdir)
             counts = import_all(mock_session, zip_path)
 
-        assert "ad_users" in counts
-        assert "ad_groups" in counts
-        assert "same_identity_edges" in counts
-        assert "ad_member_of_edges" in counts
+        checks.assertIn("ad_users", counts)
+        checks.assertIn("ad_groups", counts)
+        checks.assertIn("same_identity_edges", counts)
+        checks.assertIn("ad_member_of_edges", counts)
+        checks.assertEqual(counts["diagnostics"]["status"], "complete")
+
+    def test_reports_missing_files_as_partial(self):
+        mock_session = MagicMock()
+        mock_result = MagicMock()
+        mock_result.single.return_value = {"n": 0}
+        mock_session.run.return_value = mock_result
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip_path = _create_test_zip(tmpdir, users=True, groups=False)
+            counts = import_all(mock_session, zip_path)
+
+        diagnostics = counts["diagnostics"]
+        checks.assertEqual(diagnostics["status"], "partial")
+        checks.assertEqual(diagnostics["files_missing"], ["groups.json"])
+        checks.assertEqual(diagnostics["parsed"], {"users": 3, "groups": 0})
+
+    def test_reports_skipped_malformed_records(self):
+        mock_session = MagicMock()
+        mock_result = MagicMock()
+        mock_result.single.return_value = {"n": 0}
+        mock_session.run.return_value = mock_result
+        users = {"data": [{"Properties": {"name": "NO_SID@CONTOSO.COM"}}]}
+        groups = {
+            "data": [
+                {
+                    "Properties": {"objectid": "", "name": ""},
+                    "Members": [{"ObjectType": "User", "ObjectIdentifier": ""}],
+                }
+            ]
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip_path = _create_test_zip(tmpdir, users_data=users, groups_data=groups)
+            counts = import_all(mock_session, zip_path)
+
+        skipped = counts["diagnostics"]["skipped"]
+        checks.assertEqual(counts["diagnostics"]["status"], "partial")
+        checks.assertEqual(skipped["users.missing_objectid"], 1)
+        checks.assertEqual(skipped["groups.missing_objectid"], 1)
+        checks.assertEqual(skipped["groups.missing_name"], 1)
+        checks.assertEqual(skipped["members.user_missing_objectid"], 1)
+
+    def test_cli_prints_partial_diagnostics(self, monkeypatch, capsys):
+        mock_session = MagicMock()
+        mock_result = MagicMock()
+        mock_result.single.return_value = {"n": 0}
+        mock_session.run.return_value = mock_result
+        mock_driver = MagicMock()
+        mock_driver.session.return_value.__enter__.return_value = mock_session
+        monkeypatch.setattr(
+            "bloodhound_import.connect_from_args", lambda args: mock_driver
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip_path = _create_test_zip(tmpdir, users=True, groups=False)
+            monkeypatch.setattr(
+                sys,
+                "argv",
+                ["bloodhound_import.py", "--zip", zip_path],
+            )
+            exit_code = main()
+
+        captured = capsys.readouterr()
+        checks.assertEqual(exit_code, 0)
+        checks.assertIn("Import status: partial", captured.out)
+        checks.assertIn("Missing files: groups.json", captured.out)
 
 
 # ── Integration tests (require Neo4j) ────────────────────────────────────────
@@ -353,11 +435,11 @@ class TestBloodHoundImportIntegration:
             with self.driver.session() as session:
                 counts = import_all(session, zip_path)
 
-        assert counts["ad_users"] == 3
+        checks.assertEqual(counts["ad_users"], 3)
 
         with self.driver.session() as session:
             result = session.run("MATCH (u:ADUser) RETURN count(u) AS n")
-            assert result.single()["n"] == 3
+            checks.assertEqual(result.single()["n"], 3)
 
     def test_same_identity_edge_created(self):
         """SAME_IDENTITY edges are created when matching User nodes exist."""
@@ -370,7 +452,7 @@ class TestBloodHoundImportIntegration:
             with self.driver.session() as session:
                 counts = import_all(session, zip_path)
 
-        assert counts["same_identity_edges"] >= 1
+        checks.assertGreaterEqual(counts["same_identity_edges"], 1)
 
         with self.driver.session() as session:
             result = session.run(
@@ -378,8 +460,8 @@ class TestBloodHoundImportIntegration:
                 "RETURN ad.name AS ad_name, u.name AS local_name"
             )
             row = result.single()
-            assert row is not None
-            assert row["local_name"] == "john.doe"
+            checks.assertIsNotNone(row)
+            checks.assertEqual(row["local_name"], "john.doe")
 
     def test_ad_member_of_edges_created(self):
         """AD_MEMBER_OF edges link ADUser to ADGroup."""
@@ -388,13 +470,13 @@ class TestBloodHoundImportIntegration:
             with self.driver.session() as session:
                 counts = import_all(session, zip_path)
 
-        assert counts["ad_member_of_edges"] >= 1
+        checks.assertGreaterEqual(counts["ad_member_of_edges"], 1)
 
         with self.driver.session() as session:
             result = session.run(
                 "MATCH (u:ADUser)-[:AD_MEMBER_OF]->(g:ADGroup) RETURN count(*) AS n"
             )
-            assert result.single()["n"] >= 1
+            checks.assertGreaterEqual(result.single()["n"], 1)
 
     def test_import_is_idempotent(self):
         """Running import twice should not create duplicate nodes."""
@@ -411,4 +493,4 @@ class TestBloodHoundImportIntegration:
                     "n"
                 ]
 
-        assert count1 == count2
+        checks.assertEqual(count1, count2)

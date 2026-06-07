@@ -69,8 +69,9 @@ This is I/O-bound (disk reads + XML parsing). The `Security.framework` calls in
 Entitlements and CodeSigning are already parallelized (TaskGroup, max 8 concurrent) and
 together take only ~0.46s for 184 apps.
 
-**Future optimization opportunity (TD-008):** XPC scanning can be parallelized using the
-same TaskGroup pattern applied to app entitlement scanning. Expected speedup: ~2–3x.
+**Future optimization opportunity:** XPC scanning can be parallelized using the
+same TaskGroup pattern applied to app entitlement scanning. Expected speedup:
+~2-3x.
 
 ### Parallelization Notes
 

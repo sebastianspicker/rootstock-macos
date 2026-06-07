@@ -1,0 +1,5 @@
+---
+exclude_paths:
+  - "deprecated/**"
+  - "docs/archive/**"
+  - "docs/deprecated/**"

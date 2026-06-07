@@ -34,36 +34,84 @@ public struct KerberosArtifact: Codable, Sendable, GraphNode {
     public let realmNames: [String]?
     public let isForwardable: Bool?
 
+    public struct FileMetadata: Codable, Sendable {
+        public let owner: String?
+        public let group: String?
+        public let mode: String?
+        public let modificationTime: String?
+        public let principalHint: String?
+
+        public init(
+            owner: String? = nil,
+            group: String? = nil,
+            mode: String? = nil,
+            modificationTime: String? = nil,
+            principalHint: String? = nil
+        ) {
+            self.owner = owner
+            self.group = group
+            self.mode = mode
+            self.modificationTime = modificationTime
+            self.principalHint = principalHint
+        }
+    }
+
+    public struct Readability: Codable, Sendable {
+        public let isReadable: Bool
+        public let isWorldReadable: Bool
+        public let isGroupReadable: Bool
+
+        public init(
+            isReadable: Bool = false,
+            isWorldReadable: Bool = false,
+            isGroupReadable: Bool = false
+        ) {
+            self.isReadable = isReadable
+            self.isWorldReadable = isWorldReadable
+            self.isGroupReadable = isGroupReadable
+        }
+    }
+
+    public struct ConfigFields: Codable, Sendable {
+        public let defaultRealm: String?
+        public let permittedEncTypes: [String]?
+        public let realmNames: [String]?
+        public let isForwardable: Bool?
+
+        public init(
+            defaultRealm: String? = nil,
+            permittedEncTypes: [String]? = nil,
+            realmNames: [String]? = nil,
+            isForwardable: Bool? = nil
+        ) {
+            self.defaultRealm = defaultRealm
+            self.permittedEncTypes = permittedEncTypes
+            self.realmNames = realmNames
+            self.isForwardable = isForwardable
+        }
+    }
+
     public init(
         path: String,
         artifactType: KerberosArtifactType,
-        owner: String? = nil,
-        group: String? = nil,
-        mode: String? = nil,
-        modificationTime: String? = nil,
-        principalHint: String? = nil,
-        isReadable: Bool = false,
-        isWorldReadable: Bool = false,
-        isGroupReadable: Bool = false,
-        defaultRealm: String? = nil,
-        permittedEncTypes: [String]? = nil,
-        realmNames: [String]? = nil,
-        isForwardable: Bool? = nil
+        metadata: FileMetadata = FileMetadata(),
+        readability: Readability = Readability(),
+        config: ConfigFields = ConfigFields()
     ) {
         self.path = path
         self.artifactType = artifactType
-        self.owner = owner
-        self.group = group
-        self.mode = mode
-        self.modificationTime = modificationTime
-        self.principalHint = principalHint
-        self.isReadable = isReadable
-        self.isWorldReadable = isWorldReadable
-        self.isGroupReadable = isGroupReadable
-        self.defaultRealm = defaultRealm
-        self.permittedEncTypes = permittedEncTypes
-        self.realmNames = realmNames
-        self.isForwardable = isForwardable
+        self.owner = metadata.owner
+        self.group = metadata.group
+        self.mode = metadata.mode
+        self.modificationTime = metadata.modificationTime
+        self.principalHint = metadata.principalHint
+        self.isReadable = readability.isReadable
+        self.isWorldReadable = readability.isWorldReadable
+        self.isGroupReadable = readability.isGroupReadable
+        self.defaultRealm = config.defaultRealm
+        self.permittedEncTypes = config.permittedEncTypes
+        self.realmNames = config.realmNames
+        self.isForwardable = config.isForwardable
     }
 
     enum CodingKeys: String, CodingKey {

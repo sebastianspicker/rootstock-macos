@@ -66,19 +66,38 @@ def validate_schema(data, schema):
 def validate_semantics(data):
     """Perform semantic checks beyond JSON Schema. Returns list of error strings."""
     errors = []
+    errors.extend(validate_timestamp(data))
+    errors.extend(validate_required_strings(data))
+    errors.extend(validate_application_identity(data))
+    errors.extend(validate_entitlement_categories(data))
+    return errors
 
+
+def validate_timestamp(data):
+    """Validate timestamp formatting."""
+    errors = []
     # timestamp must be parseable ISO 8601
     ts = data.get("timestamp", "")
     try:
         datetime.fromisoformat(ts.replace("Z", "+00:00"))
     except ValueError:
         errors.append(f"  Semantic: timestamp is not valid ISO 8601 UTC: {ts!r}")
+    return errors
 
+
+def validate_required_strings(data):
+    """Validate required top-level string fields."""
+    errors = []
     # No empty strings in required string fields
     for field in ("hostname", "macos_version", "collector_version"):
         if not data.get(field, "").strip():
             errors.append(f"  Semantic: required field '{field}' is empty")
+    return errors
 
+
+def validate_application_identity(data):
+    """Validate application identity uniqueness and required fields."""
+    errors = []
     # No duplicate application observations by (bundle_id, path)
     bundle_ids = [
         (a.get("bundle_id"), a.get("path")) for a in data.get("applications", [])
@@ -96,7 +115,12 @@ def validate_semantics(data):
                 errors.append(
                     f"  Semantic: application {app.get('bundle_id', '?')!r} has empty '{field}'"
                 )
+    return errors
 
+
+def validate_entitlement_categories(data):
+    """Validate entitlement category values."""
+    errors = []
     # Entitlement categories must be from known set
     known_categories = {
         "tcc",
@@ -115,7 +139,6 @@ def validate_semantics(data):
                     f"  Semantic: unknown entitlement category {ent.get('category')!r} "
                     f"in {app.get('bundle_id')!r}"
                 )
-
     return errors
 
 

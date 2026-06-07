@@ -13,7 +13,7 @@
 # Environment variables (override defaults):
 #     NEO4J_URI       bolt://localhost:7687
 #     NEO4J_USER      neo4j
-#     NEO4J_PASSWORD   (required — no default)
+#     NEO4J_PASSWORD   required unless NEO4J_AUTH=none
 #
 # For interactive visualization after pipeline completes (Canvas-based, pre-computed layout):
 #     python3 graph/opengraph_export.py -o graph.json && python3 graph/viewer.py -i graph.json -o viewer.html
@@ -83,7 +83,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$NEO4J_PASS" ]]; then
+if [[ -z "$NEO4J_PASS" && "${NEO4J_AUTH:-}" != "none" ]]; then
     echo "ERROR: Set NEO4J_PASSWORD or use --password" >&2
     exit 1
 fi
@@ -93,7 +93,9 @@ if [[ -n "$CVE_SCAN_EXPORT" && ! -f "$CVE_SCAN_EXPORT" ]]; then
     exit 1
 fi
 
-export NEO4J_PASSWORD="$NEO4J_PASS"
+if [[ -n "$NEO4J_PASS" ]]; then
+    export NEO4J_PASSWORD="$NEO4J_PASS"
+fi
 NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")
 
 echo "╔══════════════════════════════════════════════════╗"
@@ -113,11 +115,12 @@ echo "── Step 1/7: Setting up schema ──"
 python3 "$SCRIPT_DIR/setup_schema.py" "${NEO4J_ARGS[@]}"
 echo ""
 
-# ── Step 2/7: CVE Enrichment (offline-safe) ──────────────────────────────────
+# ── Step 2/7: CVE Enrichment ─────────────────────────────────────────────────
 
 echo "── Step 2/7: Enriching CVE data ──"
 if [[ "$REFRESH_CVE" = true ]]; then
-    python3 "$SCRIPT_DIR/cve_enrichment.py" --fetch || echo "  ⚠ CVE enrichment skipped (offline?)"
+    python3 "$SCRIPT_DIR/cve_enrichment.py" --fetch
+    echo "  CVE enrichment refreshed"
 else
     echo "  Using cached CVE enrichment and static registry (--refresh-cve to fetch)"
 fi
@@ -162,21 +165,25 @@ if [[ "$SKIP_REPORT" = true ]]; then
     echo "── Step 7/7: Report generation skipped ──"
 else
     echo "── Step 7/7: Generating report ──"
-    if [[ -f "$SCRIPT_DIR/report.py" ]]; then
-        # Default report output path if not specified
-        if [[ -z "$REPORT_FILE" ]]; then
-            REPORT_FILE="rootstock-report-$(date +%Y%m%d-%H%M%S).md"
-        fi
-        REPORT_ARGS=("${NEO4J_ARGS[@]}" --output "$REPORT_FILE" --scan-json "$SCAN_FILE")
-        python3 "$SCRIPT_DIR/report.py" "${REPORT_ARGS[@]}"
-    else
-        echo "  report.py not found — skipping report generation"
+    if [[ ! -f "$SCRIPT_DIR/report.py" ]]; then
+        echo "ERROR: report.py not found: $SCRIPT_DIR/report.py" >&2
+        exit 1
     fi
+    # Default report output path if not specified
+    if [[ -z "$REPORT_FILE" ]]; then
+        REPORT_FILE="rootstock-report-$(date +%Y%m%d-%H%M%S).md"
+    fi
+    REPORT_ARGS=("${NEO4J_ARGS[@]}" --output "$REPORT_FILE" --scan-json "$SCAN_FILE")
+    python3 "$SCRIPT_DIR/report.py" "${REPORT_ARGS[@]}"
 fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║          Pipeline complete                       ║"
+if [[ "$SKIP_REPORT" = true ]]; then
+    echo "║  Pipeline complete without report                ║"
+else
+    echo "║          Pipeline complete                       ║"
+fi
 echo "╚══════════════════════════════════════════════════╝"
 
 # ── Optional: Start API server ────────────────────────────────────────────

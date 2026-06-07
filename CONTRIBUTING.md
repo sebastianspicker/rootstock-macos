@@ -1,6 +1,11 @@
 # Contributing to Rootstock
 
-Thank you for your interest in contributing to Rootstock!
+Thank you for your interest in contributing to Rootstock.
+
+Rootstock is a passive macOS attack-path discovery tool. Keep collector changes
+local-only and read-only, and do not include real scan output, graph exports,
+reports, screenshots, package inventories, tokens, hostnames, usernames, or
+infrastructure details in issues or pull requests.
 
 ## Development Setup
 
@@ -24,11 +29,18 @@ swift test            # Run all tests
 
 ```bash
 cd graph
-docker compose up -d                    # Start Neo4j
-pip3 install -r requirements.txt        # Install Python deps
-python3 setup.py                        # Initialize schema
-python3 import.py --input scan.json     # Import collector output
-python3 infer.py                        # Compute inferred relationships
+NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d
+pip3 install -r requirements.txt
+cd ..
+NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh examples/demo-scan.json
+```
+
+For graph changes that affect import, inference, queries, reports, or the API,
+run the required Neo4j lane instead of relying only on fast unit tests:
+
+```bash
+(cd graph && ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME pytest tests -v --tb=short)
+NEO4J_PASSWORD=CHANGE_ME bash tests/integration/test_full_pipeline.sh
 ```
 
 ## Coding Style
@@ -52,10 +64,10 @@ python3 infer.py                        # Compute inferred relationships
 ## Pull Request Process
 
 1. Fork the repository and create a feature branch
-2. Write tests for new functionality (target: 80%+ coverage)
-3. Ensure `swift build` and `swift test` pass with zero warnings
-4. Update documentation if you're adding a new data source or query
-5. Submit a PR with a clear description of what and why
+2. Write tests that prove the intended behavior, including failure and boundary cases when relevant
+3. Run the narrowest relevant checks, then broader checks for high-risk changes
+4. Update documentation if you're adding a new data source, query, output contract, or operator workflow
+5. Submit a PR with a clear description of what changed, why it changed, and what was verified
 
 ## Adding a New Data Source
 
@@ -68,6 +80,7 @@ See `.github/ISSUE_TEMPLATE/new_data_source.md` for the template. The key steps:
 5. Update the JSON Schema
 6. Add tests
 7. Update graph import if the data source produces new node types
+8. Validate at least one synthetic fixture with `python3 scripts/validate-scan.py`
 
 ## Reporting Security Issues
 

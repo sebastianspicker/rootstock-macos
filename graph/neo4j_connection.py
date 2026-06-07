@@ -11,6 +11,7 @@ are installed, providing a friendly error message if not.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import sys
 
@@ -24,9 +25,7 @@ except ImportError:
     )
     sys.exit(1)
 
-try:
-    import pydantic  # noqa: F401
-except ImportError:
+if importlib.util.find_spec("pydantic") is None:
     print(
         "ERROR: pydantic not installed. Run: pip3 install -r graph/requirements.txt",
         file=sys.stderr,
@@ -44,7 +43,11 @@ def add_neo4j_args(parser: argparse.ArgumentParser) -> None:
                         help="Neo4j password (or set NEO4J_PASSWORD env var)")
 
 
-def connect(uri: str, username: str, password: str, *, quiet: bool = False):
+def auth_disabled() -> bool:
+    return os.environ.get("NEO4J_AUTH") == "none"
+
+
+def connect(uri: str, username: str, password: str | None, *, quiet: bool = False):
     """
     Create and verify a Neo4j driver connection.
 
@@ -53,7 +56,8 @@ def connect(uri: str, username: str, password: str, *, quiet: bool = False):
     if not quiet:
         print(f"Connecting to Neo4j at {uri}...")
     try:
-        driver = GraphDatabase.driver(uri, auth=(username, password))
+        auth = None if auth_disabled() else (username, password)
+        driver = GraphDatabase.driver(uri, auth=auth)
         driver.verify_connectivity()
     except ServiceUnavailable:
         print(f"ERROR: Cannot connect to Neo4j at {uri}", file=sys.stderr)
@@ -67,7 +71,7 @@ def connect(uri: str, username: str, password: str, *, quiet: bool = False):
 def connect_from_args(args):
     """Create a driver from parsed argparse namespace (expects .uri, .neo4j_user, .neo4j_password)."""
     password = args.neo4j_password or os.environ.get("NEO4J_PASSWORD")
-    if not password:
+    if not password and not auth_disabled():
         print("ERROR: Neo4j password required via --neo4j-password or NEO4J_PASSWORD env var",
               file=sys.stderr)
         sys.exit(1)

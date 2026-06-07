@@ -34,11 +34,19 @@ public struct RemoteAccessDataSource: DataSource {
         var config: [String: String] = [:]
         var port: Int? = nil
 
-        if let contents = try? String(contentsOfFile: sshdConfigPath, encoding: .utf8) {
-            let directives = parseSSHConfig(contents)
-            config = directives
-            if let portStr = directives["Port"], let p = Int(portStr) {
-                port = p
+        if FileManager.default.fileExists(atPath: sshdConfigPath) {
+            if let contents = try? String(contentsOfFile: sshdConfigPath, encoding: .utf8) {
+                let directives = parseSSHConfig(contents)
+                config = directives
+                if let portStr = directives["Port"], let p = Int(portStr) {
+                    port = p
+                }
+            } else {
+                errors.append(CollectionError(
+                    source: name,
+                    message: "Cannot read sshd_config at \(sshdConfigPath)",
+                    recoverable: true
+                ))
             }
         }
 
@@ -106,6 +114,9 @@ public struct RemoteAccessDataSource: DataSource {
             return true
         }
 
+        // We reached launchctl successfully, and the label was neither explicitly
+        // enabled nor loadable as a running service. Model that as not enabled
+        // for posture purposes; unknown is reserved for launchctl query failure.
         return false
     }
 

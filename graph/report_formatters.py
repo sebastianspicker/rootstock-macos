@@ -119,21 +119,15 @@ def format_tcc_overview_table(rows: list[dict]) -> str:
 
 def format_private_entitlement_table(rows: list[dict]) -> str:
     """Format Query 04 results: private entitlement audit."""
-    if not rows:
-        return format_no_findings()
-
-    table_rows = []
-    for r in rows:
-        ents = escape_report_value(r.get("private_entitlements", []))
-        injectable = "Yes" if r.get("is_injectable") else "No"
-        table_rows.append([
-            escape_report_value(r.get("app_name", "?")),
-            ents,
-            injectable,
-        ])
-
-    headers = ["App", "Private Entitlements", "Injectable?"]
-    return tabulate(table_rows, headers=headers, tablefmt="github")
+    formatted_rows = [
+        {**row, "is_injectable": "Yes" if row.get("is_injectable") else "No"}
+        for row in rows
+    ]
+    return _format_table(formatted_rows, [
+        ("App", "app_name", "?"),
+        ("Private Entitlements", "private_entitlements", "—"),
+        ("Injectable?", "is_injectable", "No"),
+    ])
 
 
 def _risk_bar(count: int, max_count: int = 20) -> str:
@@ -153,18 +147,8 @@ def format_executive_summary(
     certificate_risk_count: int = 0,
 ) -> str:
     """Format the Executive Summary section with severity indicators."""
-    total_findings = critical_count + high_count
-    if total_findings == 0:
-        overall = "LOW"
-    elif critical_count > 0:
-        overall = "CRITICAL"
-    elif high_count > 3:
-        overall = "HIGH"
-    else:
-        overall = "MEDIUM"
-
     lines = [
-        f"**Overall Risk: {overall}**",
+        f"**Overall Risk: {_overall_risk(critical_count, high_count)}**",
         "",
         "| Severity | Count | Indicator |",
         "|----------|------:|-----------|",
@@ -172,24 +156,59 @@ def format_executive_summary(
         f"| High     | {high_count} |{_risk_bar(high_count)} |",
     ]
 
-    if tier_counts:
-        t0 = tier_counts.get('Tier 0', 0)
-        t1 = tier_counts.get('Tier 1', 0)
-        t2 = tier_counts.get('Tier 2', 0)
-        lines.append("")
+    _append_tier_classification(lines, tier_counts)
+    _append_exposure_summary(lines, icloud_exposure_count, certificate_risk_count)
+    _append_top_attack_paths(lines, top_paths)
+    return "\n".join(lines)
+
+
+def _overall_risk(critical_count: int, high_count: int) -> str:
+    total_findings = critical_count + high_count
+    if total_findings == 0:
+        return "LOW"
+    if critical_count > 0:
+        return "CRITICAL"
+    if high_count > 3:
+        return "HIGH"
+    return "MEDIUM"
+
+
+def _append_tier_classification(
+    lines: list[str],
+    tier_counts: dict[str, int] | None,
+) -> None:
+    if not tier_counts:
+        return
+    t0 = tier_counts.get('Tier 0', 0)
+    t1 = tier_counts.get('Tier 1', 0)
+    t2 = tier_counts.get('Tier 2', 0)
+    lines.append("")
+    lines.append(
+        f"**Tier Classification:** "
+        f"**{t0}** Tier 0 (crown jewels) | "
+        f"**{t1}** Tier 1 (high value) | "
+        f"**{t2}** Tier 2 (standard)"
+    )
+
+
+def _append_exposure_summary(
+    lines: list[str],
+    icloud_exposure_count: int,
+    certificate_risk_count: int,
+) -> None:
+    if icloud_exposure_count:
         lines.append(
-            f"**Tier Classification:** "
-            f"**{t0}** Tier 0 (crown jewels) | "
-            f"**{t1}** Tier 1 (high value) | "
-            f"**{t2}** Tier 2 (standard)"
+            f"\n**iCloud Exposure:** {icloud_exposure_count} "
+            "injectable app(s) with iCloud entitlements"
+        )
+    if certificate_risk_count:
+        lines.append(
+            f"\n**Certificate Risk:** {certificate_risk_count} "
+            "app(s) with expired/ad-hoc/non-Apple CA certs"
         )
 
-    if icloud_exposure_count:
-        lines.append(f"\n**iCloud Exposure:** {icloud_exposure_count} injectable app(s) with iCloud entitlements")
 
-    if certificate_risk_count:
-        lines.append(f"\n**Certificate Risk:** {certificate_risk_count} app(s) with expired/ad-hoc/non-Apple CA certs")
-
+def _append_top_attack_paths(lines: list[str], top_paths: list[str]) -> None:
     lines.append("")
     lines.append("**Top Attack Paths:**")
 
@@ -198,8 +217,6 @@ def format_executive_summary(
             lines.append(f"{i}. {path}")
     else:
         lines.append("_No attack paths discovered._")
-
-    return "\n".join(lines)
 
 
 # ── Vulnerability & ATT&CK Summary ──────────────────────────────────────────
@@ -214,6 +231,146 @@ def _exploitation_icon(status: str) -> str:
     if status == "theoretical":
         return "[!] Theory"
     return ""
+
+
+def _load_cve_enrichment() -> tuple[dict, bool]:
+    """Load optional CVE enrichment data and report whether it is unavailable."""
+    try:
+        from cve_enrichment import enrich_registry
+        enriched_map = enrich_registry() or {}
+    except Exception as exc:
+        logger.warning("CVE enrichment unavailable, continuing without it: %s", exc)
+        return {}, True
+
+    if enriched_map:
+        return enriched_map, False
+
+    logger.warning(
+        "CVE enrichment data unavailable; EPSS/KEV report columns omitted. "
+        "Run with --refresh-cve to populate."
+    )
+    return {}, True
+
+
+def _context_cve_priorities(contexts: list) -> dict[str, str]:
+    cve_priority: dict[str, str] = {}
+    for ctx in contexts:
+        for cve in ctx.cves:
+            cve_priority.setdefault(cve.cve_id, ctx.remediation_priority)
+    return cve_priority
+
+
+def _unique_context_cves(contexts: list) -> list:
+    seen_cves: set[str] = set()
+    all_cves = []
+    for ctx in contexts:
+        for cve in ctx.cves:
+            if cve.cve_id in seen_cves:
+                continue
+            seen_cves.add(cve.cve_id)
+            all_cves.append(cve)
+    return all_cves
+
+
+def _cve_sort_key(cve, enriched_map: dict) -> tuple[float, float]:
+    enriched = enriched_map.get(cve.cve_id)
+    epss = getattr(enriched, "epss_score", None) if enriched else None
+    return (epss if epss is not None else -1, cve.cvss_score)
+
+
+def _cve_summary_rows(
+    cves: list,
+    cve_priority: dict[str, str],
+    enriched_map: dict,
+    enrichment_unavailable: bool,
+) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for cve in cves:
+        enriched = enriched_map.get(cve.cve_id)
+        row = [
+            cve.cve_id,
+            str(cve.cvss_score),
+            _exploitation_icon(getattr(cve, "exploitation_status", "theoretical")),
+            cve.title,
+            cve.patched_version or "—",
+            cve_priority.get(cve.cve_id, "—"),
+        ]
+        if not enrichment_unavailable:
+            epss_str = (
+                f"{enriched.epss_score:.2f}"
+                if enriched and enriched.epss_score is not None
+                else "—"
+            )
+            kev_str = "KEV" if enriched and enriched.in_kev else ""
+            row[2:2] = [epss_str, kev_str]
+        rows.append(row)
+    return rows
+
+
+def _cve_summary_headers(enrichment_unavailable: bool) -> list[str]:
+    headers = ["CVE ID", "CVSS", "Exploited", "Title", "Patched", "Priority"]
+    if not enrichment_unavailable:
+        headers[2:2] = ["EPSS", "KEV"]
+    return headers
+
+
+def _append_cve_summary(
+    parts: list[str],
+    cve_rows: list[list[str]],
+    enrichment_unavailable: bool,
+) -> None:
+    if not cve_rows:
+        return
+    parts.append("### CVE Reference")
+    if enrichment_unavailable:
+        parts.append(
+            "> CVE enrichment data unavailable -- EPSS/KEV columns omitted. "
+            "Run with --refresh-cve to populate."
+        )
+    parts.append(
+        tabulate(
+            cve_rows,
+            headers=_cve_summary_headers(enrichment_unavailable),
+            tablefmt="github",
+        )
+    )
+    parts.append("")
+
+
+def _technique_categories(contexts: list) -> dict[str, list[str]]:
+    categories: dict[str, list[str]] = {}
+    for ctx in contexts:
+        for tech in ctx.techniques:
+            categories.setdefault(tech.technique_id, []).append(ctx.category)
+    return categories
+
+
+def _technique_summary_rows(contexts: list) -> list[list[str]]:
+    seen_techniques: set[str] = set()
+    categories = _technique_categories(contexts)
+    rows: list[list[str]] = []
+    for ctx in contexts:
+        for tech in ctx.techniques:
+            if tech.technique_id in seen_techniques:
+                continue
+            seen_techniques.add(tech.technique_id)
+            rows.append([
+                tech.technique_id,
+                tech.name,
+                tech.tactic,
+                ", ".join(sorted(set(categories.get(tech.technique_id, [])))),
+            ])
+    return rows
+
+
+def _append_technique_summary(parts: list[str], technique_rows: list[list[str]]) -> None:
+    if not technique_rows:
+        return
+    tech_headers = ["ID", "Technique", "Tactic", "Relevant Findings"]
+    parts.append("### MITRE ATT&CK Techniques")
+    parts.append(tabulate(technique_rows, headers=tech_headers, tablefmt="github"))
+    parts.append("")
+
 
 def format_vulnerability_summary(contexts: list) -> str:
     """
@@ -230,91 +387,24 @@ def format_vulnerability_summary(contexts: list) -> str:
     if not contexts:
         return "_No CVE or ATT&CK references applicable to findings on this host._"
 
-    # Try to load enrichment data (graceful if unavailable)
-    enriched_map: dict = {}
-    try:
-        from cve_enrichment import enrich_registry
-        enriched_map = enrich_registry()
-    except Exception as exc:
-        logger.info("CVE enrichment unavailable, continuing without it: %s", exc)
-
-    # ── CVE table (deduplicated, sorted by EPSS desc then CVSS desc) ─────
-    seen_cves: set[str] = set()
-    cve_priority: dict[str, str] = {}
     for ctx in contexts:
-        assert isinstance(ctx, AttackContext)
-        for cve in ctx.cves:
-            if cve.cve_id not in cve_priority:
-                cve_priority[cve.cve_id] = ctx.remediation_priority
+        if not isinstance(ctx, AttackContext):
+            raise TypeError("contexts must contain AttackContext instances")
 
-    all_cves = []
-    for ctx in contexts:
-        for cve in ctx.cves:
-            if cve.cve_id not in seen_cves:
-                seen_cves.add(cve.cve_id)
-                all_cves.append(cve)
+    enriched_map, enrichment_unavailable = _load_cve_enrichment()
+    cve_priority = _context_cve_priorities(contexts)
+    all_cves = _unique_context_cves(contexts)
 
-    # Sort by EPSS descending (when available), then CVSS descending
-    def _sort_key(cve):
-        enriched = enriched_map.get(cve.cve_id)
-        epss = getattr(enriched, "epss_score", None) if enriched else None
-        return (epss if epss is not None else -1, cve.cvss_score)
-
-    all_cves.sort(key=_sort_key, reverse=True)
-
-    cve_rows: list[list[str]] = []
-
-    for cve in all_cves:
-        enriched = enriched_map.get(cve.cve_id)
-        epss_str = f"{enriched.epss_score:.2f}" if enriched and enriched.epss_score is not None else "—"
-        kev_str = "KEV" if enriched and enriched.in_kev else ""
-
-        cve_rows.append([
-            cve.cve_id,
-            str(cve.cvss_score),
-            epss_str,
-            kev_str,
-            _exploitation_icon(getattr(cve, "exploitation_status", "theoretical")),
-            cve.title,
-            cve.patched_version or "—",
-            cve_priority.get(cve.cve_id, "—"),
-        ])
+    all_cves.sort(key=lambda cve: _cve_sort_key(cve, enriched_map), reverse=True)
+    cve_rows = _cve_summary_rows(
+        all_cves,
+        cve_priority,
+        enriched_map,
+        enrichment_unavailable,
+    )
 
     parts: list[str] = []
-
-    if cve_rows:
-        cve_headers = ["CVE ID", "CVSS", "EPSS", "KEV", "Exploited", "Title", "Patched", "Priority"]
-        parts.append("### CVE Reference")
-        parts.append(tabulate(cve_rows, headers=cve_headers, tablefmt="github"))
-        parts.append("")
-
-    # ── ATT&CK techniques table (deduplicated) ──────────────────────────
-    seen_techniques: set[str] = set()
-    technique_rows: list[list[str]] = []
-    technique_categories: dict[str, list[str]] = {}
-
-    for ctx in contexts:
-        for tech in ctx.techniques:
-            if tech.technique_id not in technique_categories:
-                technique_categories[tech.technique_id] = []
-            technique_categories[tech.technique_id].append(ctx.category)
-
-    for ctx in contexts:
-        for tech in ctx.techniques:
-            if tech.technique_id not in seen_techniques:
-                seen_techniques.add(tech.technique_id)
-                categories = technique_categories.get(tech.technique_id, [])
-                technique_rows.append([
-                    tech.technique_id,
-                    tech.name,
-                    tech.tactic,
-                    ", ".join(sorted(set(categories))),
-                ])
-
-    if technique_rows:
-        tech_headers = ["ID", "Technique", "Tactic", "Relevant Findings"]
-        parts.append("### MITRE ATT&CK Techniques")
-        parts.append(tabulate(technique_rows, headers=tech_headers, tablefmt="github"))
-        parts.append("")
+    _append_cve_summary(parts, cve_rows, enrichment_unavailable)
+    _append_technique_summary(parts, _technique_summary_rows(contexts))
 
     return "\n".join(parts) if parts else "_No CVE or ATT&CK references applicable._"

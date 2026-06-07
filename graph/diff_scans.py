@@ -61,6 +61,87 @@ def _tcc_key(service: str, client: str, scope: str) -> str:
     return f"{client}|{service}|{scope}"
 
 
+def _tcc_grant_map(grants) -> dict[str, object]:
+    return {_tcc_key(g.service, g.client, g.scope): g for g in grants}
+
+
+def _tcc_grant_row(grant) -> dict:
+    return {
+        "client": grant.client,
+        "service": grant.service,
+        "scope": grant.scope,
+        "allowed": grant.allowed,
+    }
+
+
+def _changed_tcc_row(before_grant, after_grant) -> dict:
+    return {
+        "client": after_grant.client,
+        "service": after_grant.service,
+        "scope": after_grant.scope,
+        "before_auth_value": before_grant.auth_value,
+        "after_auth_value": after_grant.auth_value,
+        "before_allowed": before_grant.allowed,
+        "after_allowed": after_grant.allowed,
+    }
+
+
+def _injection_row(bundle_id: str, app, methods, *, reason: str) -> dict:
+    return {
+        "bundle_id": bundle_id,
+        "name": app.name,
+        "methods": list(methods),
+        "reason": reason,
+    }
+
+
+def _new_or_removed_injection_rows(
+    app_map: dict,
+    bundle_ids: set[str],
+    *,
+    reason: str,
+) -> list[dict]:
+    rows = []
+    for bundle_id in bundle_ids:
+        app = app_map[bundle_id]
+        if app.injection_methods:
+            rows.append(
+                _injection_row(
+                    bundle_id,
+                    app,
+                    app.injection_methods,
+                    reason=reason,
+                )
+            )
+    return rows
+
+
+def _changed_injection_rows(before_map: dict, after_map: dict, common: set[str]) -> tuple[list[dict], list[dict], list[dict]]:
+    new_injectable = []
+    no_longer = []
+    methods_changed = []
+    for bundle_id in common:
+        before_app = before_map[bundle_id]
+        after_app = after_map[bundle_id]
+        before_methods = set(before_app.injection_methods)
+        after_methods = set(after_app.injection_methods)
+
+        if not before_methods and after_methods:
+            new_injectable.append(
+                _injection_row(bundle_id, after_app, after_app.injection_methods, reason="became_injectable")
+            )
+        elif before_methods and not after_methods:
+            no_longer.append(_injection_row(bundle_id, after_app, before_app.injection_methods, reason="fixed"))
+        elif before_methods != after_methods:
+            methods_changed.append({
+                "bundle_id": bundle_id,
+                "name": after_app.name,
+                "before": sorted(before_methods),
+                "after": sorted(after_methods),
+            })
+    return new_injectable, no_longer, methods_changed
+
+
 def diff_apps(before: ScanResult, after: ScanResult) -> AppDiff:
     """Compare application inventories."""
     before_ids = {a.bundle_id for a in before.applications}
@@ -76,53 +157,26 @@ def diff_apps(before: ScanResult, after: ScanResult) -> AppDiff:
 
 def diff_tcc(before: ScanResult, after: ScanResult) -> TCCDiff:
     """Compare TCC grant changes."""
-    before_map = {}
-    for g in before.tcc_grants:
-        key = _tcc_key(g.service, g.client, g.scope)
-        before_map[key] = g
-
-    after_map = {}
-    for g in after.tcc_grants:
-        key = _tcc_key(g.service, g.client, g.scope)
-        after_map[key] = g
+    before_map = _tcc_grant_map(before.tcc_grants)
+    after_map = _tcc_grant_map(after.tcc_grants)
 
     before_keys = set(before_map)
     after_keys = set(after_map)
 
     added = []
     for key in sorted(after_keys - before_keys):
-        g = after_map[key]
-        added.append({
-            "client": g.client,
-            "service": g.service,
-            "scope": g.scope,
-            "allowed": g.allowed,
-        })
+        added.append(_tcc_grant_row(after_map[key]))
 
     removed = []
     for key in sorted(before_keys - after_keys):
-        g = before_map[key]
-        removed.append({
-            "client": g.client,
-            "service": g.service,
-            "scope": g.scope,
-            "allowed": g.allowed,
-        })
+        removed.append(_tcc_grant_row(before_map[key]))
 
     changed = []
     for key in sorted(before_keys & after_keys):
         bg = before_map[key]
         ag = after_map[key]
         if bg.auth_value != ag.auth_value:
-            changed.append({
-                "client": ag.client,
-                "service": ag.service,
-                "scope": ag.scope,
-                "before_auth_value": bg.auth_value,
-                "after_auth_value": ag.auth_value,
-                "before_allowed": bg.allowed,
-                "after_allowed": ag.allowed,
-            })
+            changed.append(_changed_tcc_row(bg, ag))
 
     return TCCDiff(added=added, removed=removed, changed=changed)
 
@@ -133,60 +187,23 @@ def diff_injection(before: ScanResult, after: ScanResult) -> InjectionDiff:
     after_map = {a.bundle_id: a for a in after.applications}
 
     common = set(before_map) & set(after_map)
-    new_injectable = []
-    no_longer = []
-    methods_changed = []
-
-    # New apps that are injectable
-    for bid in set(after_map) - set(before_map):
-        app = after_map[bid]
-        if app.injection_methods:
-            new_injectable.append({
-                "bundle_id": bid,
-                "name": app.name,
-                "methods": list(app.injection_methods),
-                "reason": "new_app",
-            })
-
-    # Removed apps that were injectable
-    for bid in set(before_map) - set(after_map):
-        app = before_map[bid]
-        if app.injection_methods:
-            no_longer.append({
-                "bundle_id": bid,
-                "name": app.name,
-                "methods": list(app.injection_methods),
-                "reason": "app_removed",
-            })
-
-    # Existing apps with changed injection surface
-    for bid in common:
-        ba = before_map[bid]
-        aa = after_map[bid]
-        before_methods = set(ba.injection_methods)
-        after_methods = set(aa.injection_methods)
-
-        if not before_methods and after_methods:
-            new_injectable.append({
-                "bundle_id": bid,
-                "name": aa.name,
-                "methods": list(aa.injection_methods),
-                "reason": "became_injectable",
-            })
-        elif before_methods and not after_methods:
-            no_longer.append({
-                "bundle_id": bid,
-                "name": aa.name,
-                "methods": list(ba.injection_methods),
-                "reason": "fixed",
-            })
-        elif before_methods != after_methods:
-            methods_changed.append({
-                "bundle_id": bid,
-                "name": aa.name,
-                "before": sorted(before_methods),
-                "after": sorted(after_methods),
-            })
+    new_injectable = _new_or_removed_injection_rows(
+        after_map,
+        set(after_map) - set(before_map),
+        reason="new_app",
+    )
+    no_longer = _new_or_removed_injection_rows(
+        before_map,
+        set(before_map) - set(after_map),
+        reason="app_removed",
+    )
+    changed_new, changed_fixed, methods_changed = _changed_injection_rows(
+        before_map,
+        after_map,
+        common,
+    )
+    new_injectable.extend(changed_new)
+    no_longer.extend(changed_fixed)
 
     return InjectionDiff(
         new_injectable=new_injectable,
@@ -276,29 +293,44 @@ def diff_remote_access(before: ScanResult, after: ScanResult) -> RemoteAccessDif
     before_keys = set(before_map)
     after_keys = set(after_map)
 
-    added = []
-    for key in sorted(after_keys - before_keys):
-        s = after_map[key]
-        added.append({"service": s.service, "enabled": s.enabled, "port": s.port})
+    return RemoteAccessDiff(
+        added=_remote_access_rows(after_map, after_keys - before_keys),
+        removed=_remote_access_rows(before_map, before_keys - after_keys),
+        changed=_changed_remote_access_rows(before_map, after_map, before_keys & after_keys),
+    )
 
-    removed = []
-    for key in sorted(before_keys - after_keys):
-        s = before_map[key]
-        removed.append({"service": s.service, "enabled": s.enabled, "port": s.port})
 
+def _remote_access_rows(service_map: dict, service_names: set[str]) -> list[dict]:
+    return [_remote_access_row(service_map[name]) for name in sorted(service_names)]
+
+
+def _remote_access_row(service) -> dict:
+    return {"service": service.service, "enabled": service.enabled, "port": service.port}
+
+
+def _changed_remote_access_rows(
+    before_map: dict,
+    after_map: dict,
+    service_names: set[str],
+) -> list[dict]:
     changed = []
-    for key in sorted(before_keys & after_keys):
-        bs = before_map[key]
-        a_s = after_map[key]
-        diffs: dict[str, dict] = {}
-        if bs.enabled != a_s.enabled:
-            diffs["enabled"] = {"before": bs.enabled, "after": a_s.enabled}
-        if bs.port != a_s.port:
-            diffs["port"] = {"before": bs.port, "after": a_s.port}
+    for name in sorted(service_names):
+        diffs = _changed_remote_access_fields(before_map[name], after_map[name])
         if diffs:
-            changed.append({"service": key, **diffs})
+            changed.append({"service": name, **diffs})
+    return changed
 
-    return RemoteAccessDiff(added=added, removed=removed, changed=changed)
+
+def _changed_remote_access_fields(before_service, after_service) -> dict[str, dict]:
+    diffs: dict[str, dict] = {}
+    if before_service.enabled != after_service.enabled:
+        diffs["enabled"] = {
+            "before": before_service.enabled,
+            "after": after_service.enabled,
+        }
+    if before_service.port != after_service.port:
+        diffs["port"] = {"before": before_service.port, "after": after_service.port}
+    return diffs
 
 
 def diff_icloud_posture(before: ScanResult, after: ScanResult) -> ICloudPostureDiff:
@@ -315,78 +347,106 @@ def diff_vulnerabilities(before: ScanResult, after: ScanResult) -> Vulnerability
     CVE associations based on changes in their injection surface, TCC grants,
     and other properties that drive category matching.
     """
-    try:
-        from cve_enrichment import enrich_registry
-        from cve_reference import _REGISTRY  # noqa: F401
-    except ImportError:
+    loaded = _load_vulnerability_diff_registry()
+    if loaded is None:
         return VulnerabilityDiff()
+    enriched, registry = loaded
 
-    enriched = enrich_registry()
-    if not enriched:
-        return VulnerabilityDiff()
-
-    # Build per-app injectable status for before/after
     before_injectable = {a.bundle_id for a in before.applications if a.injection_methods}
     after_injectable = {a.bundle_id for a in after.applications if a.injection_methods}
-
-    # Apps that became injectable gain CVE associations
-    newly_injectable = after_injectable - before_injectable
-    no_longer_injectable = before_injectable - after_injectable
 
     after_names = {a.bundle_id: a.name for a in after.applications}
     before_names = {a.bundle_id: a.name for a in before.applications}
 
-    new_associations: list[dict] = []
-    resolved_associations: list[dict] = []
-
-    # Build a set of CVE IDs relevant to injection-related categories
-    injection_related_categories = {
-        "injectable_fda", "dyld_injection", "tcc_bypass",
-        "blastpass_class", "running_processes",
-    }
-    injection_cve_ids: set[str] = set()
-    for cat, ctx in _REGISTRY.items():
-        if cat in injection_related_categories:
-            for cve in ctx.cves:
-                injection_cve_ids.add(cve.cve_id)
-
-    for bid in newly_injectable:
-        name = after_names.get(bid, bid)
-        for cve_id, entry in enriched.items():
-            # Only associate CVEs from injection-relevant categories
-            if cve_id not in injection_cve_ids:
-                continue
-            new_associations.append({
-                "app": name,
-                "bundle_id": bid,
-                "cve_id": entry.base.cve_id,
-                "cvss_score": entry.base.cvss_score,
-                "reason": "app_became_injectable",
-            })
-
-    for bid in no_longer_injectable:
-        name = before_names.get(bid, bid)
-        resolved_associations.append({
-            "app": name,
-            "bundle_id": bid,
-            "reason": "app_no_longer_injectable",
-        })
-
-    # Check for new KEV entries (CVEs added to KEV since last scan)
-    new_kev: list[dict] = []
-    for cve_id, entry in enriched.items():
-        if entry.in_kev and entry.kev_date_added:
-            new_kev.append({
-                "cve_id": cve_id,
-                "title": entry.base.title,
-                "kev_date_added": entry.kev_date_added,
-            })
-
     return VulnerabilityDiff(
-        new_cve_associations=new_associations[:50],  # Cap to avoid huge diffs
-        resolved_cve_associations=resolved_associations[:50],
-        new_kev_entries=new_kev,
+        new_cve_associations=_new_injection_cve_associations(
+            after_injectable - before_injectable,
+            after_names,
+            enriched,
+            _injection_cve_ids(registry),
+        )[:50],
+        resolved_cve_associations=_resolved_injection_cve_associations(
+            before_injectable - after_injectable,
+            before_names,
+        )[:50],
+        new_kev_entries=_new_kev_entries(enriched),
     )
+
+
+def _load_vulnerability_diff_registry() -> tuple[dict, dict] | None:
+    try:
+        from cve_enrichment import enrich_registry
+        from cve_reference import _REGISTRY
+    except ImportError:
+        return None
+
+    enriched = enrich_registry()
+    if not enriched:
+        return None
+    return enriched, _REGISTRY
+
+
+def _injection_cve_ids(registry: dict) -> set[str]:
+    injection_related_categories = {
+        "injectable_fda",
+        "dyld_injection",
+        "tcc_bypass",
+        "blastpass_class",
+        "running_processes",
+    }
+    return {
+        cve.cve_id
+        for category, context in registry.items()
+        if category in injection_related_categories
+        for cve in context.cves
+    }
+
+
+def _new_injection_cve_associations(
+    newly_injectable: set[str],
+    after_names: dict[str, str],
+    enriched: dict,
+    injection_cve_ids: set[str],
+) -> list[dict]:
+    associations: list[dict] = []
+    for bundle_id in newly_injectable:
+        name = after_names.get(bundle_id, bundle_id)
+        for cve_id, entry in enriched.items():
+            if cve_id in injection_cve_ids:
+                associations.append({
+                    "app": name,
+                    "bundle_id": bundle_id,
+                    "cve_id": entry.base.cve_id,
+                    "cvss_score": entry.base.cvss_score,
+                    "reason": "app_became_injectable",
+                })
+    return associations
+
+
+def _resolved_injection_cve_associations(
+    no_longer_injectable: set[str],
+    before_names: dict[str, str],
+) -> list[dict]:
+    return [
+        {
+            "app": before_names.get(bundle_id, bundle_id),
+            "bundle_id": bundle_id,
+            "reason": "app_no_longer_injectable",
+        }
+        for bundle_id in no_longer_injectable
+    ]
+
+
+def _new_kev_entries(enriched: dict) -> list[dict]:
+    return [
+        {
+            "cve_id": cve_id,
+            "title": entry.base.title,
+            "kev_date_added": entry.kev_date_added,
+        }
+        for cve_id, entry in enriched.items()
+        if entry.in_kev and entry.kev_date_added
+    ]
 
 
 def diff_scans(before: ScanResult, after: ScanResult) -> PostureDiff:
@@ -412,7 +472,7 @@ def diff_scans(before: ScanResult, after: ScanResult) -> PostureDiff:
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
-def main() -> int:
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare two Rootstock scans to track posture changes"
     )
@@ -421,25 +481,29 @@ def main() -> int:
     parser.add_argument("--format", choices=["text", "json"], default="text",
                         help="Output format (default: text)")
     parser.add_argument("--output", "-o", help="Write output to file (default: stdout)")
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def _load_diff_inputs(args: argparse.Namespace) -> tuple[ScanResult, ScanResult] | None:
     before_path = Path(args.before)
     after_path = Path(args.after)
 
     for p in (before_path, after_path):
         if not p.exists():
             print(f"ERROR: File not found: {p}", file=sys.stderr)
-            return 1
+            return None
 
     before = load_scan(before_path)
     if before is None:
-        return 1
+        return None
 
     after = load_scan(after_path)
     if after is None:
-        return 1
+        return None
+    return before, after
 
-    # Warn if hostnames differ
+
+def _warn_if_hostnames_differ(before: ScanResult, after: ScanResult) -> None:
     if before.hostname != after.hostname:
         print(
             f"WARNING: Hostnames differ: '{before.hostname}' vs '{after.hostname}'. "
@@ -447,6 +511,8 @@ def main() -> int:
             file=sys.stderr,
         )
 
+
+def _format_diff_output(args: argparse.Namespace, before: ScanResult, after: ScanResult) -> str:
     diff = diff_scans(before, after)
     summary = summarize(diff, before, after)
 
@@ -455,16 +521,27 @@ def main() -> int:
             "summary": summary,
             "diff": asdict(diff),
         }
-        output = json.dumps(output_data, indent=2) + "\n"
-    else:
-        output = format_text(diff, summary) + "\n"
+        return json.dumps(output_data, indent=2) + "\n"
+    return format_text(diff, summary) + "\n"
 
+
+def _write_diff_output(args: argparse.Namespace, output: str) -> None:
     if args.output:
         Path(args.output).write_text(output)
         print(f"Diff written to {args.output}")
     else:
         print(output, end="")
 
+
+def main() -> int:
+    args = _parse_args()
+    scans = _load_diff_inputs(args)
+    if scans is None:
+        return 1
+    before, after = scans
+    _warn_if_hostnames_differ(before, after)
+    output = _format_diff_output(args, before, after)
+    _write_diff_output(args, output)
     return 0
 
 

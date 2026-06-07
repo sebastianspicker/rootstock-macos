@@ -25,7 +25,7 @@ final class LoginSessionTests: XCTestCase {
             sessionType: .ssh
         )
         let data = try JSONEncoder().encode(session)
-        let json = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
         XCTAssertEqual(json["username"] as? String, "admin")
         XCTAssertEqual(json["terminal"] as? String, "ttys000")
