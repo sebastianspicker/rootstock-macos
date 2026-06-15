@@ -1,0 +1,6 @@
+scan:
+  skip-dirs:
+    - "**/.venv"
+    - collector/.build
+  skip-files:
+    - .env.example

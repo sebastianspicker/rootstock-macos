@@ -65,7 +65,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: graph
-        run: pip install -r requirements.txt pytest
+        run: python -m pip install --require-hashes -r requirements-ci.txt
 
       - name: Validate demo scan contract
         run: python3 scripts/validate-scan.py examples/demo-scan.json
@@ -100,7 +100,8 @@ jobs:
           python-version: "3.11"
 
       - name: Install ruff
-        run: pip install ruff
+        working-directory: graph
+        run: python -m pip install --require-hashes -r requirements-ci.txt
 
       - name: ruff check
         run: ruff check graph/ scripts/ examples/ docs/ --exclude deprecated --exclude docs/archive --exclude docs/deprecated
@@ -121,14 +122,18 @@ jobs:
 
       - name: Install dependencies
         working-directory: modules/cve-scan
-        run: python -m pip install -e '.[dev]'
+        run: python -m pip install --require-hashes -r requirements-dev.txt
 
       - name: ruff check
         working-directory: modules/cve-scan
+        env:
+          PYTHONPATH: src
         run: ruff check .
 
       - name: pytest
         working-directory: modules/cve-scan
+        env:
+          PYTHONPATH: src
         run: pytest
 
       - name: Install shellcheck

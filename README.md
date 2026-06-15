@@ -2,9 +2,9 @@
 
 [![Build](https://github.com/sebastianspicker/rootstock/actions/workflows/test.yml/badge.svg)](https://github.com/sebastianspicker/rootstock/actions)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8b8c55c173964e039f5b1e7629cca6b2)](https://app.codacy.com/gh/sebastianspicker/rootstock/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13235/badge)](https://www.bestpractices.dev/projects/13235)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sebastianspicker/rootstock/badge)](https://scorecard.dev/viewer/?uri=github.com/sebastianspicker/rootstock)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![macOS 14+](https://img.shields.io/badge/macOS-14%2B-brightgreen)](https://support.apple.com/macos)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](CHANGELOG.md)
 
 Attack path discovery for macOS that maps TCC grants, entitlements, Keychain ACLs, and XPC trust relationships as an exploitable graph.
 
@@ -25,11 +25,11 @@ Rootstock is a graph-based attack path discovery tool for macOS security boundar
 
 The current public project surface is the Swift collector, Python graph
 pipeline, `modules/cve-scan/`, synthetic examples, and the active docs in this
-README and `docs/`. Completed audit/remediation packets, one-off plans,
-ledgers, status files, investigation notes, announcements, paper drafts,
-deprecated notes, generated reports, and historical roadmaps are not part of the
-committed public documentation set. Keep local copies only in ignored paths such
-as `docs/archive/` or `archive/`.
+README and the [documentation index](docs/README.md). Completed
+audit/remediation packets, one-off plans, ledgers, status files, investigation
+notes, announcements, paper drafts, deprecated notes, generated reports, and
+historical roadmaps are not part of the committed public documentation set. Keep
+local copies only in ignored paths such as `docs/archive/` or `archive/`.
 
 The collector is passive and local-only. It writes a scan artifact; graph
 analysis, optional CVE feed refresh, and scoped cve-scan evidence collection are

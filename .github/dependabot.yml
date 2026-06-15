@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/graph"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/modules/cve-scan"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/graph"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "swift"
+    directory: "/collector"
+    schedule:
+      interval: "weekly"

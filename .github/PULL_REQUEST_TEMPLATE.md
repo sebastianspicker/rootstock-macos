@@ -26,4 +26,5 @@ Brief description of the change.
 - [ ] No real graph exports, generated viewers, reports, screenshots, package inventories, or CVE scan outputs included
 - [ ] No internal, superseded, deprecated, archive, generated, plan, ledger, or status artifacts included
 - [ ] Analysis and remediation scope excludes `deprecated/`, `docs/archive/`, and `docs/deprecated/`
+- [ ] Documentation index updated if active docs were added, moved, or removed
 - [ ] Documentation updated if needed

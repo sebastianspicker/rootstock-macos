@@ -5,6 +5,7 @@
 xcuserdata/
 DerivedData/
 .claude/
+.serena/
 .env
 .env.*
 !.env.example
@@ -47,6 +48,7 @@ SECURITY_REVIEW.md
 /archive/
 /screenshots/
 /reports/
+trivy-default.yaml
 /examples/generated/
 /graph/generated/
 /graph/runs/

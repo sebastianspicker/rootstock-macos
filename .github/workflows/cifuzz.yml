@@ -1,0 +1,57 @@
+name: CIFuzz
+
+on:
+  push:
+    branches: [main, dev]
+    paths-ignore:
+      - "deprecated/**"
+      - "docs/archive/**"
+      - "docs/deprecated/**"
+  pull_request:
+    branches: [main, dev]
+    paths-ignore:
+      - "deprecated/**"
+      - "docs/archive/**"
+      - "docs/deprecated/**"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  fuzz:
+    name: Fuzz scan contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Build fuzzers
+        id: build
+        uses: google/oss-fuzz/infra/cifuzz/external-actions/build_fuzzers@2dd789c49ecc2baa41fc0409a86928e61d85315f # HEAD 2026-06-15
+        with:
+          language: python
+
+      - name: Build and run fuzzers
+        uses: google/oss-fuzz/infra/cifuzz/external-actions/run_fuzzers@2dd789c49ecc2baa41fc0409a86928e61d85315f # HEAD 2026-06-15
+        with:
+          language: python
+          fuzz-seconds: 120
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          output-sarif: true
+
+      - name: Upload crash artifacts
+        if: failure() && steps.build.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cifuzz-artifacts
+          path: ./out/artifacts
+          retention-days: 5
+
+      - name: Upload CIFuzz SARIF
+        if: always() && steps.build.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
+        with:
+          sarif_file: cifuzz-sarif/results.sarif
+          checkout_path: cifuzz-sarif
