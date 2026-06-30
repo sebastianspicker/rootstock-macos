@@ -2,7 +2,7 @@
 // Purpose: Histogram of risk levels across all Application nodes
 // Category: Blue Team
 // Severity: Informational
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 MATCH (app:Application)
 WHERE app.risk_level IS NOT NULL
 RETURN app.risk_level AS risk_level,

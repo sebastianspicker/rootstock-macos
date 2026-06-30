@@ -8,13 +8,9 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from constants import ATTACKER_BUNDLE_ID
 from infer_esf import _CRITICAL_ESF_EVENTS, _ESF_ENTITLEMENT, infer

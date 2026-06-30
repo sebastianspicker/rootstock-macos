@@ -18,10 +18,9 @@ This directory contains the active public documentation for Rootstock.
 
 ## Archive Policy
 
-One-off plans, audit packets, remediation ledgers, status files, investigation
-notes, deprecated drafts, generated reports, and local agent handoff files are
-not active public documentation.
+One-off plans, audit packets, status files, investigation notes, deprecated
+drafts, and generated reports are not active public documentation.
 
-Keep those files in ignored archive paths such as `docs/archive/`,
-`docs/deprecated/`, `docs/agent/`, or `archive/`. Do not cite archived material
-as current behavior unless a fresh source or test verifies it.
+Keep local copies in ignored private, archive, deprecated, or generated artifact
+paths. Do not cite archived material as current behavior unless fresh source or
+test verifies it.

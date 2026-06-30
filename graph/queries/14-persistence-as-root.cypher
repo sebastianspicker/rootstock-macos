@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run; Phase 3.2 (Persistence) data required
+// Prerequisites: import_scan.py + infer.py must have run; Phase 3.2 (Persistence) data required
 //
 // Attack: Inject parent app → app controls root LaunchDaemon → persistent root code execution
 //

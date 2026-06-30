@@ -26,7 +26,7 @@ Rootstock is a graph-based attack path discovery tool for macOS security boundar
 The current public project surface is the Swift collector, Python graph
 pipeline, `modules/cve-scan/`, synthetic examples, and the active docs in this
 README and the [documentation index](docs/README.md). Completed
-audit/remediation packets, one-off plans, ledgers, status files, investigation
+audit/remediation packets, one-off plans, status files, investigation
 notes, announcements, paper drafts, deprecated notes, generated reports, and
 historical roadmaps are not part of the committed public documentation set. Keep
 local copies only in ignored paths such as `docs/archive/` or `archive/`.

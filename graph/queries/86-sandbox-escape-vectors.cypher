@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // Attack: Inject into sandboxed app → leverage mach-lookup exception → communicate with privileged XPC service → escalate
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // CVE: CVE-2023-32414, CVE-2023-38606
 // ATT&CK: T1559
 

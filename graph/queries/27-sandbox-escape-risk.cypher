@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Inject into unsandboxed app → unrestricted file/process/network access
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // CVE: CVE-2023-32414, CVE-2023-38606
 // ATT&CK: T1612
 

@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // Forensic: Prioritize keychain items by sensitivity tier — SSH keys and certificates are higher value than saved passwords
 // CVE: CVE-2024-44204
 // ATT&CK: T1555.001

@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // Attack: Multi-hop privilege escalation through injection + TCC inheritance
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // Note: shortestPath traverses any relationship type. Adjust [*..N] for depth limit.
 
 MATCH (attacker:Application {bundle_id: 'attacker.payload'}),

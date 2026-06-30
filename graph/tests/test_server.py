@@ -11,16 +11,12 @@ Usage:
 from __future__ import annotations
 
 import copy
-import sys
-from pathlib import Path
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from fastapi import HTTPException
+from neo4j.exceptions import ServiceUnavailable
 import pytest
-
-# Ensure graph/ is on the import path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 
 def _fixture_api_bearer_value() -> str:
     return "-".join(("fixture", "api", "bearer"))
@@ -125,6 +121,18 @@ class TestAuthAndBindGuards:
         response = raw_client.get("/api/queries", headers=AUTH_HEADERS)
         checks.assertEqual(response.status_code, 200)
 
+    def test_api_rejects_wrong_bearer_token(self, raw_client):
+        response = raw_client.get(
+            "/api/queries", headers={"Authorization": "Bearer wrong-token"}
+        )
+
+        checks.assertEqual(response.status_code, 401)
+
+    def test_openapi_schema_is_not_exposed(self, raw_client):
+        response = raw_client.get("/openapi.json")
+
+        checks.assertEqual(response.status_code, 404)
+
     def test_viewer_route_does_not_embed_live_graph(self, raw_client):
         response = raw_client.get("/")
         checks.assertEqual(response.status_code, 200)
@@ -171,11 +179,43 @@ class TestQueryEndpoints:
 
     def test_query_execution_failure_returns_error_detail_for_viewer(self, client):
         """The live viewer needs a non-OK response body it can render as failure."""
-        with patch("server.run_query", side_effect=RuntimeError("neo4j unavailable")):
+        with patch(
+            "server.run_query",
+            side_effect=ServiceUnavailable("neo4j unavailable"),
+        ):
             response = client.post("/api/queries/79/run", json={"params": {}})
 
         checks.assertEqual(response.status_code, 400)
         checks.assertEqual(response.json()["detail"], "Query execution failed")
+
+    def test_query_execution_preserves_explicit_http_errors(self, client):
+        """Explicit API errors should not be relabeled as query failures."""
+        with patch(
+            "server.run_query",
+            side_effect=HTTPException(status_code=503, detail="Neo4j unavailable"),
+        ):
+            response = client.post("/api/queries/79/run", json={"params": {}})
+
+        checks.assertEqual(response.status_code, 503)
+        checks.assertEqual(response.json()["detail"], "Neo4j unavailable")
+    def test_cypher_execution_failure_returns_error_detail(self, client):
+        from server import get_read_session
+
+        failing_session = MagicMock()
+        failing_session.run.side_effect = ServiceUnavailable("neo4j unavailable")
+
+        def failing_read_session():
+            yield failing_session
+
+        client.raw.app.dependency_overrides[get_read_session] = failing_read_session
+        try:
+            response = client.post("/api/cypher", json={"cypher": "MATCH (n) RETURN n"})
+        finally:
+            client.raw.app.dependency_overrides.pop(get_read_session, None)
+
+        checks.assertEqual(response.status_code, 400)
+        checks.assertEqual(response.json()["detail"], "Query execution failed")
+
 
 
 class TestStaticEndpoints:

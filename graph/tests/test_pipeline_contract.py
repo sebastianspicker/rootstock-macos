@@ -96,17 +96,17 @@ def test_pipeline_requires_password_before_steps() -> None:
 
 def test_pipeline_import_failure_stops_before_later_steps() -> None:
     source = _source()
-    import_line = _line(source, 'python3 "$SCRIPT_DIR/import.py"')
+    import_line = _line(source, 'python3 "$SCRIPT_DIR/import_scan.py"')
 
     checks.assertIn("set -euo pipefail", source)
     checks.assertEqual(
         import_line,
-        'python3 "$SCRIPT_DIR/import.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"',
+        'python3 "$SCRIPT_DIR/import_scan.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"',
     )
     _assert_in_order(
         source,
         'echo "── Step 3/7: Importing scan data ──"',
-        'python3 "$SCRIPT_DIR/import.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"',
+        'python3 "$SCRIPT_DIR/import_scan.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"',
         'echo "── Step 4/7: Running inference engine ──"',
     )
 

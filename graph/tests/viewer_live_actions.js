@@ -1,3 +1,7 @@
+/* global require:readonly, Response:readonly, setTimeout:readonly, document:readonly, console:readonly, process:readonly */
+/* global liveRefresh:readonly, liveTierClassify:readonly, liveShowOwned:readonly */
+/* global __GET_API_TOKEN__:readonly, __API_FETCH__:readonly, __SET_LIVE_STATUS__:readonly, __LIVE_REFRESH__:readonly, __LIVE_TIER__:readonly, __LIVE_SHOW_OWNED__:readonly, __TOGGLE_OVERRIDE__:readonly */
+
 const assert = require('node:assert/strict');
 
 const API_BASE = '';
@@ -89,6 +93,15 @@ function statusText() {
 function statusClass() {
   return document.getElementById('live-status').className;
 }
+
+void API_BASE;
+void isLive;
+void API_TOKEN_KEY;
+void DATA;
+void selectedNode;
+void replaceGraphData;
+void resetZoom;
+void inspectNode;
 
 async function assertRefreshFailurePreservesGraph() {
   installDocument();
@@ -188,7 +201,7 @@ __LIVE_SHOW_OWNED__
 
 __TOGGLE_OVERRIDE__
 
-(async () => {
+;(async () => {
   await assertRefreshFailurePreservesGraph();
   await assertMalformedRefreshFailure();
   await assertMalformedTierFailure();

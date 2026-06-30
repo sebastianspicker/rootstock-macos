@@ -51,7 +51,7 @@ def first_cypher_statement(cypher: str) -> str:
     Extract the first executable Cypher statement from a multi-statement file.
     Strips comment lines first, then splits on semicolons outside strings.
     """
-    cleaned = _strip_cypher_line_comments(cypher)
+    cleaned = _strip_cypher_comments(cypher)
     start = 0
     scanner = _CypherStatementScanner()
 
@@ -67,10 +67,25 @@ def first_cypher_statement(cypher: str) -> str:
     return cleaned[start:].strip()
 
 
-def _strip_cypher_line_comments(cypher: str) -> str:
-    return "\n".join(
+def _strip_cypher_comments(cypher: str) -> str:
+    no_line_comments = "\n".join(
         line for line in cypher.splitlines() if not line.strip().startswith("//")
     )
+    parts: list[str] = []
+    index = 0
+    while index < len(no_line_comments):
+        start = no_line_comments.find("/*", index)
+        if start == -1:
+            parts.append(no_line_comments[index:])
+            break
+        parts.append(no_line_comments[index:start])
+        end = no_line_comments.find("*/", start + 2)
+        if end == -1:
+            parts.append(no_line_comments[start:])
+            break
+        parts.append(" ")
+        index = end + 2
+    return "".join(parts)
 
 
 def run_query(session, cypher: str, params: dict | None = None) -> list[dict]:
@@ -114,12 +129,7 @@ def validate_read_only_cypher(cypher: str) -> str | None:
 
     Strips comments before checking.
     """
-    # Strip // comments
-    lines = [line for line in cypher.splitlines() if not line.strip().startswith("//")]
-    cleaned = " ".join(lines)
-
-    # Strip block comments /* ... */
-    cleaned = re.sub(r"/\*.*?\*/", " ", cleaned, flags=re.DOTALL)
+    cleaned = _strip_cypher_comments(cypher)
 
     # Strip string literals to avoid false positives
     # (e.g., "SET something" as a string value)

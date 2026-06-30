@@ -2,7 +2,7 @@
 neo4j_connection.py — Shared Neo4j connection helpers for Rootstock CLIs.
 
 Provides unified argparse arguments, driver creation, and error handling
-used by import.py, infer.py, report.py, and query_runner.py.
+used by import_scan.py, infer.py, report.py, and query_runner.py.
 
 Importing this module validates that required dependencies (neo4j, pydantic)
 are installed, providing a friendly error message if not.

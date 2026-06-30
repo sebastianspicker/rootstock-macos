@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // Attack: Injectable ESF clients can suppress or manipulate security events, blinding EDR solutions
 // CVE: CVE-2024-27842, CVE-2023-41990
 // ATT&CK: T1014, T1562.001

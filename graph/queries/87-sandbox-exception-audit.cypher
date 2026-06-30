@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Sandboxed apps with broad exceptions may bypass sandbox constraints for file exfiltration or C2
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // ATT&CK: T1071, T1005
 
 MATCH (a:Application)-[:HAS_SANDBOX_PROFILE]->(sp:SandboxProfile)

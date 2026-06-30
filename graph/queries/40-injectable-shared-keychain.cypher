@@ -6,7 +6,7 @@
 // Attack: Inject into app → read Keychain secrets shared with other apps in same access group
 // CVE: CVE-2024-44204
 // ATT&CK: T1555.001
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(a:Application)
 MATCH (a)-[skg:SHARES_KEYCHAIN_GROUP]-(b:Application)

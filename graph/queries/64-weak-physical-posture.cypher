@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // CVE: CVE-2023-42861
 // ATT&CK: T1200
 

@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Hijack active session context → inject into user's apps → inherit TCC grants
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // CVE: CVE-2025-24085
 // ATT&CK: T1574.006
 

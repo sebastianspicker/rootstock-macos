@@ -7,15 +7,10 @@ Integration tests for import functions use mock sessions.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-# Ensure graph/ is on sys.path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cve_reference import (
     ThreatGroup,

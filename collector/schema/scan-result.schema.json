@@ -782,7 +782,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["daemon", "agent", "login_item", "cron", "login_hook"],
+          "enum": ["daemon", "agent", "login_item", "cron"],
           "description": "Type of persistence mechanism."
         },
         "program": {

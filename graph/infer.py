@@ -150,7 +150,7 @@ def main() -> int:
     _print_completion_summary(counts, total)
     if total == 0:
         print("  Note: No inferred edges created.")
-        print("  Import scan data first: python3 graph/import.py")
+        print("  Import scan data first: python3 graph/import_scan.py")
         if not args.allow_empty:
             return 1
     return 0

@@ -6,14 +6,9 @@ Pure unit tests — no Neo4j or network calls required.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 
 import pytest
 from unittest import TestCase
-
-# Ensure graph/ is on sys.path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from version_matcher import (
     extract_app_max_version,
@@ -300,6 +295,14 @@ class TestIsAffected:
             app_version="27.1.0",
             affected_versions="Electron < 27.1.0",
             patched_version="Electron 27.1.0",
+        )
+
+    def test_inclusive_threshold_at_ceiling_is_affected(self):
+        check_affected(
+            True,
+            app_version="27.1.0",
+            affected_versions="Electron <= 27.1.0",
+            patched_version="Electron 27.1.1",
         )
 
     def test_dashed_prerelease_below_patched_version_is_affected(self):

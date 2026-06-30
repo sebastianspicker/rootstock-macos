@@ -4,7 +4,7 @@
 // Severity: Informational
 // Parameters: none
 // Use case: Enumerate the full TCC attack surface; identify anomalies and over-privileged apps
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 // ── Section 1: Grants per permission type ─────────────────────────────────
 // Run this block alone to see the distribution of TCC permissions.

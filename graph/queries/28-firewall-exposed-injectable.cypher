@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Network → inbound connection to app → inject code → TCC escalation
-// Prerequisites: import.py + infer.py must have run; firewall module collected
+// Prerequisites: import_scan.py + infer.py must have run; firewall module collected
 // ATT&CK: T1190
 
 MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(app:Application)

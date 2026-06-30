@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 //
 // Attack: Inject injectable FDA app → write /Library/Application Support/com.apple.TCC/TCC.db
 //         → grant arbitrary TCC permissions to any app → full TCC takeover

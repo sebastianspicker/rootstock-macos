@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: $scope (optional: 'user' or 'system', default: all)
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 //
 // Use case: Periodic security audit, baseline establishment, compliance reporting.
 // Compare output before/after software installs to detect new TCC grants.

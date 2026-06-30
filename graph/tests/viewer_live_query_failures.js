@@ -1,3 +1,6 @@
+/* global require:readonly, Response:readonly, setTimeout:readonly, console:readonly, process:readonly */
+/* global runLiveQuery:readonly, __GET_API_TOKEN__:readonly, __API_FETCH__:readonly, __RUN_LIVE_QUERY__:readonly */
+
 const assert = require('node:assert/strict');
 
 const API_BASE = '';
@@ -67,6 +70,11 @@ function textOf(node) {
   const childText = Array.isArray(node.children) ? node.children.map(textOf).join(' ') : '';
   return (own + ' ' + childText).trim();
 }
+
+void API_BASE;
+void isLive;
+void API_TOKEN_KEY;
+void el;
 
 __GET_API_TOKEN__
 

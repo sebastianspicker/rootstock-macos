@@ -2,7 +2,7 @@
 // Purpose: Applications affected by memory safety CWEs (buffer overflow, UAF, OOB write) with injection paths
 // Category: Red Team
 // Severity: Critical
-// Prerequisites: import.py + infer.py + import_vulnerabilities.py must have run
+// Prerequisites: import_scan.py + infer.py + import_vulnerabilities.py must have run
 MATCH (app:Application)-[:AFFECTED_BY]->(v:Vulnerability)-[:HAS_CWE]->(c:CWE)
 WHERE c.category = 'memory_safety'
   AND size(app.injection_methods) > 0

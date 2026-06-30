@@ -2,7 +2,7 @@
 // Purpose: Applications with graph-native risk_score >= 7.0 (critical level)
 // Category: Red Team
 // Severity: Critical
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 MATCH (app:Application)
 WHERE app.risk_score >= 7.0
 OPTIONAL MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(tcc:TCC_Permission)

@@ -217,7 +217,7 @@ final class PersistenceTests: XCTestCase {
         let result = await ds.collect()
         let items = result.nodes.compactMap { $0 as? LaunchItem }
 
-        let validTypes: Set<String> = ["daemon", "agent", "login_item", "cron", "login_hook"]
+        let validTypes: Set<String> = ["daemon", "agent", "login_item", "cron"]
         for item in items {
             XCTAssertTrue(
                 validTypes.contains(item.type.rawValue),

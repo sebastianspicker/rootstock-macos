@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 //
 // Use case: Identify immediate risks — apps that hold TCC permissions but have
 // no Hardened Runtime or are unsigned. These are trivially injectable and should

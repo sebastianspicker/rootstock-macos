@@ -37,7 +37,7 @@
 - Research docs cite sources with links and specify macOS version tested
 - README stays in sync with actual project state
 - Public docs describe only the active project surface.
-- One-off plans, ledgers, status files, audits, paper drafts, announcements,
+- One-off plans, status files, audits, paper drafts, announcements,
   investigation notes, deprecated notes, generated reports, remediation packets,
   and retired roadmaps stay out of the committed documentation set.
 - Current-status claims must distinguish fast non-Neo4j checks from the live

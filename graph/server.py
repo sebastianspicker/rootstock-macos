@@ -9,7 +9,7 @@ Usage:
     python3 graph/server.py --port 8000
     python3 graph/server.py --port 8000 --neo4j bolt://localhost:7687
 
-Opens at http://localhost:8000/ (viewer) and http://localhost:8000/docs (OpenAPI).
+Opens at http://localhost:8000/ (viewer).
 
 Exit code 0 on success, 1 on failure.
 """
@@ -17,6 +17,7 @@ Exit code 0 on success, 1 on failure.
 from __future__ import annotations
 
 import argparse
+import hmac
 import html as html_mod
 import ipaddress
 import json
@@ -35,24 +36,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from neo4j import GraphDatabase, Query, READ_ACCESS
-from neo4j.exceptions import ServiceUnavailable, AuthError
+from neo4j.exceptions import AuthError, DriverError, Neo4jError, ServiceUnavailable
 
 # ── Imports from existing Rootstock modules ─────────────────────────────────
 
-sys.path.insert(0, str(Path(__file__).parent))
 
 from query_runner import discover_queries, find_query
 from utils import first_cypher_statement, run_query, validate_read_only_cypher
 
-from opengraph_export import build_opengraph  # noqa: E402
-from mark_owned import (  # noqa: E402
+from opengraph_export import build_opengraph
+from mark_owned import (
     mark_by_bundle_id,
     mark_by_username,
     mark_by_label_key,
     list_owned,
 )
-from clear_owned import clear_all, clear_by_bundle_id, clear_by_username  # noqa: E402
-from tier_classification import classify  # noqa: E402
+from clear_owned import clear_all, clear_by_bundle_id, clear_by_username
+from tier_classification import classify
 
 
 # ── Request/Response models ─────────────────────────────────────────────────
@@ -112,6 +112,9 @@ app = FastAPI(
     description="REST API for Rootstock macOS attack graph",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
 app.add_middleware(
@@ -154,7 +157,13 @@ async def require_api_token(request: Request, call_next):
     if request.url.path.startswith("/api/"):
         token = getattr(request.app.state, "api_token", None)
         auth_header = request.headers.get("Authorization", "")
-        if not token or auth_header != f"Bearer {token}":
+        scheme, _, presented = auth_header.partition(" ")
+        authorized = (
+            bool(token)
+            and scheme == "Bearer"
+            and hmac.compare_digest(presented, token)
+        )
+        if not authorized:
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Missing or invalid bearer token"},
@@ -221,7 +230,9 @@ def run_query_endpoint(
     params = body.params if body else {}
     try:
         rows = run_query(session, cypher, params or {})
-    except Exception as err:
+    except HTTPException:
+        raise
+    except (DriverError, Neo4jError) as err:
         logger.warning("Query %s failed: %s", query_id, err)
         raise HTTPException(
             status_code=400, detail="Query execution failed"
@@ -353,7 +364,9 @@ def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
         records, truncated = _limited_records(result)
         columns = list(records[0].keys()) if records else []
         rows = [dict(r) for r in records]
-    except Exception as err:
+    except HTTPException:
+        raise
+    except (DriverError, Neo4jError) as err:
         logger.warning("Ad-hoc Cypher failed: %s", err)
         raise HTTPException(
             status_code=400, detail="Query execution failed"
@@ -504,7 +517,6 @@ def _run_server(args: argparse.Namespace) -> None:
 
     print(f"Starting Rootstock API server on {args.host}:{args.port}")
     print(f"  Viewer:  http://{args.host}:{args.port}/")
-    print(f"  OpenAPI: http://{args.host}:{args.port}/docs")
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
 
 

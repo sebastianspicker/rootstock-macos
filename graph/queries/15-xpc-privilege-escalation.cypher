@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run; Phase 3.1 (XPC) data required
+// Prerequisites: import_scan.py + infer.py must have run; Phase 3.1 (XPC) data required
 //
 // Attack: Injectable app → COMMUNICATES_WITH → XPC service with privileged entitlements
 //         → attacker inherits XPC service capabilities via compromised client

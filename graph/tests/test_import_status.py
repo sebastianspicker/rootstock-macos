@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 
 def test_import_status_is_complete_only_without_errors_or_skips():
-    importer = importlib.import_module("import")
+    importer = importlib.import_module("import_scan")
 
     checks.assertEqual(importer.classify_import_status(0, 0), "complete")
     checks.assertEqual(importer.classify_import_status(1, 0), "partial")
@@ -16,10 +16,10 @@ def test_import_status_is_complete_only_without_errors_or_skips():
 
 
 def test_partial_import_warns_but_keeps_success_exit(monkeypatch, tmp_path, capsys):
-    importer = importlib.import_module("import")
+    importer = importlib.import_module("import_scan")
     input_path = tmp_path / "scan.json"
     input_path.write_text("{}", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["import.py", "--input", str(input_path)])
+    monkeypatch.setattr(sys, "argv", ["import_scan.py", "--input", str(input_path)])
     monkeypatch.setattr(
         importer, "load_scan", lambda _path: _scan_with_collection_error()
     )

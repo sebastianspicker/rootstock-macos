@@ -4,13 +4,10 @@ All tested functions take query result dicts and return Markdown strings.
 """
 
 import sys
-import os
 import json
 from types import SimpleNamespace
 
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from report import (
     ScanMetadataError,

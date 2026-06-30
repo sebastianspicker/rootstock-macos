@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py + import_vulnerabilities.py must have run
+// Prerequisites: import_scan.py + import_vulnerabilities.py must have run
 
 MATCH (v:Vulnerability)
 WHERE v.temporal_priority IS NOT NULL

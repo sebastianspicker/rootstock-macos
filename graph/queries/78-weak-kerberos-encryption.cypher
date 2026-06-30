@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (ka:KerberosArtifact {artifact_type: 'config'})
 WHERE ka.permitted_enc_types IS NOT NULL

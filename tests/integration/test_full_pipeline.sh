@@ -128,7 +128,7 @@ python3 "$GRAPH_DIR/setup_schema.py" >/dev/null
 ok "schema applied"
 
 step "Import"
-python3 "$GRAPH_DIR/import.py" --input "$TEMP_SCAN_JSON" >/dev/null
+python3 "$GRAPH_DIR/import_scan.py" --input "$TEMP_SCAN_JSON" >/dev/null
 
 APP_COUNT="$(run_count "MATCH (a:Application {scan_id: '$TEST_SCAN_ID'}) RETURN count(a)")"
 if [[ "$APP_COUNT" -ge 3 ]]; then

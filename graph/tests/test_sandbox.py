@@ -298,7 +298,7 @@ class TestSandboxInference:
     def test_infer_idempotent(self, neo4j_session):
         from infer_sandbox import infer
 
-        _n1 = infer(neo4j_session)
+        infer(neo4j_session)
         n2 = infer(neo4j_session)
         # MERGE makes it idempotent; second run should return same count
         checks.assertGreaterEqual(n2, 1)

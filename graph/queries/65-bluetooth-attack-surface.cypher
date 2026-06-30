@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // Attack: Physical proximity → paired BT device → inject BT-TCC app → gain Bluetooth access
 // CVE: CVE-2023-45866
 // ATT&CK: T1200

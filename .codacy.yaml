@@ -1,7 +1,7 @@
 ---
 exclude_paths:
-  - "docs/agent/**"
   - "deprecated/**"
   - "docs/archive/**"
+  - "docs/private/**"
   - "docs/deprecated/**"
   - "docs/generated/**"

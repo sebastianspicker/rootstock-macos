@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (ka:KerberosArtifact {artifact_type: 'keytab'})
 WHERE ka.modification_time IS NOT NULL

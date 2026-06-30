@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py and infer.py must have run
+// Prerequisites: import_scan.py and infer.py must have run
 // CVE: CVE-2022-42821, CVE-2024-44175
 // ATT&CK: T1553.001
 

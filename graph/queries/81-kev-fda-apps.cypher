@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + import_vulnerabilities.py + tier_classification.py must have run
+// Prerequisites: import_scan.py + import_vulnerabilities.py + tier_classification.py must have run
 
 MATCH (app:Application)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
 MATCH (app)-[:AFFECTED_BY]->(v:Vulnerability {in_kev: true})

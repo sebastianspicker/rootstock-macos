@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Remote login via SSH/VNC → exploit injectable app → TCC privilege escalation
-// Prerequisites: import.py + infer.py must have run; remote access + groups modules collected
+// Prerequisites: import_scan.py + infer.py must have run; remote access + groups modules collected
 // ATT&CK: T1021.004, T1021.005
 
 MATCH (svc:RemoteAccessService)

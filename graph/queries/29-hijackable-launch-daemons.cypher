@@ -6,7 +6,7 @@
 // Attack: Replace writable daemon binary with attacker payload → code runs as root on next launchd restart
 // CVE: CVE-2024-44217
 // ATT&CK: T1547.011, T1543.004
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (l:LaunchItem)
 WHERE l.type = 'daemon'

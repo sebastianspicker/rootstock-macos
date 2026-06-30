@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: $target_service (default: kTCCServiceSystemPolicyAllFiles)
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // CVE: CVE-2025-31191, CVE-2024-44168
 // ATT&CK: T1574.006, T1059.002
 //

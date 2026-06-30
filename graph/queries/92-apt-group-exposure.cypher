@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // ATT&CK: T1574.006, T1068, T1059.007
-// Prerequisites: import.py + import_vulnerabilities.py must have run
+// Prerequisites: import_scan.py + import_vulnerabilities.py must have run
 
 MATCH (g:ThreatGroup)-[:USES_TECHNIQUE]->(t:AttackTechnique)<-[:MAPS_TO_TECHNIQUE]-(v:Vulnerability)<-[:AFFECTED_BY]-(app:Application)
 RETURN g.name AS group_name,

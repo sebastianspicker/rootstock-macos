@@ -3,12 +3,9 @@ from __future__ import annotations
 from unittest import TestCase
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from import_cve_scan import (
     CveScanImportError,

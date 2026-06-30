@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: $username (e.g. "admin")
 // Attack: Enumerate everything a compromised user account can reach through group membership, sessions, sudo, and app relationships
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (u:User {name: $username})
 

@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: $min_permissions (default: 3) — minimum number of TCC services to flag
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 //
 // Use case: Identify applications that have accumulated excessive TCC permissions
 // over time. Over-privileged apps violate least-privilege and represent a larger

@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (ad:ADUser)-[:SAME_IDENTITY]->(u:User)
 OPTIONAL MATCH (u)-[:MEMBER_OF]->(lg:LocalGroup)

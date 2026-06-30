@@ -3,7 +3,7 @@
 // Category: Forensic
 // Severity: Informational
 // Parameters: $app_name (optional) — filter to a specific app's trust relationships
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 //
 // Use case: Understand which apps implicitly trust each other. Trust boundaries
 // define the blast radius of a compromise — if App A trusts App B, compromising

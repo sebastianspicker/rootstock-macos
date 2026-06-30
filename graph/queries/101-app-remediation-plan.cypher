@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: $bundle_id
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 MATCH (app:Application {bundle_id: $bundle_id})-[:HAS_RECOMMENDATION]->(r:Recommendation)
 OPTIONAL MATCH (r)-[:MITIGATES]->(t:AttackTechnique)
 RETURN r.key AS recommendation_key,

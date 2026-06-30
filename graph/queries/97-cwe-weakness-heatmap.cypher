@@ -2,7 +2,7 @@
 // Purpose: CWE weakness classes ranked by number of affected applications
 // Category: Blue Team
 // Severity: High
-// Prerequisites: import.py + import_vulnerabilities.py must have run
+// Prerequisites: import_scan.py + import_vulnerabilities.py must have run
 MATCH (c:CWE)<-[:HAS_CWE]-(v:Vulnerability)<-[:AFFECTED_BY]-(app:Application)
 RETURN c.cwe_id AS cwe_id,
        c.name AS weakness_name,

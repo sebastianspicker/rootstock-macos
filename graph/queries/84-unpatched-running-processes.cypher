@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + import_vulnerabilities.py + tier_classification.py must have run
+// Prerequisites: import_scan.py + import_vulnerabilities.py + tier_classification.py must have run
 
 MATCH (app:Application)-[:AFFECTED_BY]->(v:Vulnerability)
 WHERE app.is_running = true

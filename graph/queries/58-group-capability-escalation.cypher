@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // Attack: Group membership grants implicit capabilities (_developer → debug, access_ssh → SSH)
 
 MATCH (u:User)-[:MEMBER_OF]->(g:LocalGroup)

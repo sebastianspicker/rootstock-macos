@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (ca:CertificateAuthority)
 OPTIONAL MATCH (ca)-[:ISSUED_BY]->(parent:CertificateAuthority)

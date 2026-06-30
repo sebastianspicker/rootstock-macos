@@ -6,7 +6,7 @@
 // Attack: Inject into app with AppleEvents grant → script Finder → read/write any file
 // CVE: CVE-2024-44206
 // ATT&CK: T1059.002
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (a:Application)-[r:HAS_TRANSITIVE_FDA]->(fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
 OPTIONAL MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(a)

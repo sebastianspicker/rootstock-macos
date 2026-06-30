@@ -3,7 +3,7 @@
 // Category: Forensic
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 //
 // Use case: Machine-readable export of the full attack surface for integration
 // with external tools, dashboards, or ticketing systems. Each row is one

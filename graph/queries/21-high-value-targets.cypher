@@ -3,7 +3,7 @@
 // Category: Forensic
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 //
 // Scoring formula:
 //   base_score    = number of allowed TCC grants (1 point each)

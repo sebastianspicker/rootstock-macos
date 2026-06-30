@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + import_vulnerabilities.py must have run
+// Prerequisites: import_scan.py + import_vulnerabilities.py must have run
 
 MATCH (app:Application)-[r:AFFECTED_BY {match_tier: 'precise'}]->(v:Vulnerability)
 OPTIONAL MATCH (v)-[:MAPS_TO_TECHNIQUE]->(t:AttackTechnique)

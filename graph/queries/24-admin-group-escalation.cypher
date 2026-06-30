@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Compromise injectable app owned by admin user → sudo -S → root escalation
-// Prerequisites: import.py + infer.py must have run; groups module must have collected data
+// Prerequisites: import_scan.py + infer.py must have run; groups module must have collected data
 // ATT&CK: T1068, T1548.003
 
 MATCH (u:User)-[:MEMBER_OF]->(g:LocalGroup {name: 'admin'})

@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 // CVE: CVE-2024-44301
 // ATT&CK: T1548.004
 

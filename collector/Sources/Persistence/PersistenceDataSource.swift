@@ -9,7 +9,6 @@ import XPCServices
 ///   • LaunchAgents:  /Library/LaunchAgents/, ~/Library/LaunchAgents/
 ///   • Login Items:   ~/Library/Application Support/com.apple.backgroundtaskmanagementagent/backgrounditems.btm
 ///   • Cron jobs:     /etc/crontab, /var/at/tabs/<user>
-///   • Login hooks:   /var/root/Library/Preferences/com.apple.loginwindow.plist
 public struct PersistenceDataSource: DataSource {
     public let name = "Persistence"
     public let requiresElevation = false
@@ -56,11 +55,6 @@ public struct PersistenceDataSource: DataSource {
         let (cronItems, cronErrors) = collectCronJobs()
         items += cronItems
         appendRecoverableErrors(cronErrors, to: &errors)
-
-        // 5. Login hooks (legacy)
-        let (hookItems, hookErrors) = collectLoginHooks()
-        items += hookItems
-        appendRecoverableErrors(hookErrors, to: &errors)
 
         return DataSourceResult(nodes: items, errors: errors)
     }
@@ -310,46 +304,4 @@ public struct PersistenceDataSource: DataSource {
         return (items, errors)
     }
 
-    // MARK: - Login hooks (legacy)
-
-    private func collectLoginHooks() -> ([LaunchItem], [String]) {
-        let paths = [
-            "/private/var/root/Library/Preferences/com.apple.loginwindow.plist",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.loginwindow.plist",
-        ]
-
-        var items: [LaunchItem] = []
-        var errors: [String] = []
-
-        for path in paths {
-            guard FileManager.default.fileExists(atPath: path) else { continue }
-            guard let data = FileManager.default.contents(atPath: path) else {
-                errors.append("Cannot read loginwindow plist (requires root): \(path)")
-                continue
-            }
-
-            var format = PropertyListSerialization.PropertyListFormat.xml
-            guard let plist = try? PropertyListSerialization.propertyList(
-                from: data, options: [], format: &format
-            ) as? [String: Any] else {
-                errors.append("Cannot parse loginwindow plist: \(path)")
-                continue
-            }
-
-            for hookKey in ["LoginHook", "LogoutHook"] {
-                if let script = plist[hookKey] as? String {
-                    items.append(LaunchItem(
-                        label: "loginwindow.\(hookKey)",
-                        path: path,
-                        type: .loginHook,
-                        program: script,
-                        runAtLoad: hookKey == "LoginHook",
-                        user: path.contains("/root/") ? "root" : nil
-                    ))
-                }
-            }
-        }
-
-        return (items, errors)
-    }
 }

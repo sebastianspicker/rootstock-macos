@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // Attack: Prioritized attack path — owned nodes to the most critical assets on the system
-// Prerequisites: import.py + infer.py + mark_owned.py + tier_classification.py must have run
+// Prerequisites: import_scan.py + infer.py + mark_owned.py + tier_classification.py must have run
 
 MATCH (src)
 WHERE src.owned = true

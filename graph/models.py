@@ -163,7 +163,7 @@ class KeychainItemData(BaseModel):
 class LaunchItemData(BaseModel):
     label: str = Field(min_length=1)
     path: str = Field(min_length=1)
-    type: Literal["daemon", "agent", "login_item", "cron", "login_hook"]
+    type: Literal["daemon", "agent", "login_item", "cron"]
     program: str | None = None
     run_at_load: bool = False
     user: str | None = None

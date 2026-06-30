@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // Attack: Mark compromised nodes as owned, then discover the shortest escalation path to FDA
-// Prerequisites: import.py + infer.py must have run; mark_owned.py to set owned nodes
+// Prerequisites: import_scan.py + infer.py must have run; mark_owned.py to set owned nodes
 
 MATCH (src)
 WHERE src.owned = true

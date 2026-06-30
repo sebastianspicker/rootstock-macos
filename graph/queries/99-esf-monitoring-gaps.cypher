@@ -2,7 +2,7 @@
 // Purpose: Detect critical ESF event types that have no active SystemExtension monitoring them
 // Category: Blue Team
 // Severity: High
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 MATCH (se:SystemExtension {extension_type: 'endpoint_security', enabled: true})
 WHERE se.subscribed_events IS NOT NULL
 WITH collect(se) AS esf_extensions,

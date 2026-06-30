@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py + infer.py + tier_classification.py must have run
+// Prerequisites: import_scan.py + infer.py + tier_classification.py must have run
 
 MATCH (app:Application)
 WHERE app.tier IS NOT NULL

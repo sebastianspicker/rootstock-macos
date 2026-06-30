@@ -2,7 +2,7 @@
 // Purpose: Recommendations ranked by the number of applications they apply to
 // Category: Blue Team
 // Severity: High
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 MATCH (app:Application)-[:HAS_RECOMMENDATION]->(r:Recommendation)
 OPTIONAL MATCH (r)-[:MITIGATES]->(t:AttackTechnique)
 RETURN r.key AS recommendation_key,

@@ -6,7 +6,7 @@
 // Attack: Inject dylib into FDA app → inherit Full Disk Access → read/modify TCC.db
 // CVE: CVE-2025-31191, CVE-2024-44168
 // ATT&CK: T1574.006
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (app:Application)-[:HAS_TCC_GRANT {allowed: true}]->
       (:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})

@@ -6,18 +6,21 @@ labels: bug
 ---
 
 ## Environment
+
 - macOS version:
-- Rootstock version:
-- Elevation level: (user / root / FDA)
-- Affected area: (collector / graph pipeline / cve-scan / docs / CI)
+- Rootstock version or commit:
+- Elevation level: user / root / Full Disk Access
+- Affected area: collector / graph pipeline / cve-scan / docs / CI
 
 ## Description
-A clear description of the bug.
 
-Scope note: remediation should target active source/docs, not `deprecated/`,
-`docs/archive/`, or `docs/deprecated/`.
+Describe the bug clearly.
+
+Scope note: remediation should target active source and docs, not private,
+archive, deprecated, or generated artifact folders.
 
 ## Steps to Reproduce
+
 1.
 2.
 3.
@@ -27,14 +30,16 @@ Scope note: remediation should target active source/docs, not `deprecated/`,
 ## Actual Behavior
 
 ## Diagnostics
-```
+
+```text
 Paste redacted logs, command output, or error messages here.
 Do not paste real scan JSON, graph exports, reports, generated viewers,
-screenshots, tokens, hostnames, usernames, paths, package inventories, or
+screenshots, tokens, hostnames, usernames, package inventories, or
 infrastructure details from a real environment.
 ```
 
 ## Verification Attempted
+
 - [ ] Collector command:
 - [ ] Graph command:
 - [ ] cve-scan command:

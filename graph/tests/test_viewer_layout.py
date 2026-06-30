@@ -1,8 +1,4 @@
-import os
-import sys
 from unittest import TestCase
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from viewer_layout import compute_layout
 

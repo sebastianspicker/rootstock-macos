@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // CVE: CVE-2023-42926
 // ATT&CK: T1537
 

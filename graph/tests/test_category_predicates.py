@@ -2,10 +2,6 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from category_predicates import (
     DIVERGENT_RISK_AND_VULNERABILITY_CATEGORIES,

@@ -5,7 +5,7 @@
 // Parameters: none
 // Attack: Private entitlements grant elevated privileges not available to normal apps.
 //         If the app is also injectable, an attacker inherits those privileges.
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (app:Application {is_system: false})-[:HAS_ENTITLEMENT]->(ent:Entitlement {is_private: true})
 WITH app, collect(DISTINCT ent.name) AS private_entitlements

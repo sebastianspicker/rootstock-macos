@@ -6,7 +6,7 @@
 // Attack: Connect to unprotected XPC service from attacker process → invoke privileged operations
 // CVE: CVE-2024-40781
 // ATT&CK: T1559.001
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (x:XPC_Service)
 WHERE coalesce(x.has_client_verification, false) = false

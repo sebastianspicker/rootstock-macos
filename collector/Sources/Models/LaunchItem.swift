@@ -1,6 +1,6 @@
 import Foundation
 
-/// A persistence mechanism: a launchd job, login item, cron job, or login hook.
+/// A persistence mechanism: launchd job, login item, or cron job.
 public struct LaunchItem: GraphNode {
     public var nodeType: String { "LaunchItem" }
 
@@ -39,7 +39,6 @@ public struct LaunchItem: GraphNode {
         case agent
         case loginItem = "login_item"
         case cron
-        case loginHook = "login_hook"
     }
 
     public struct Ownership: Codable, Sendable {

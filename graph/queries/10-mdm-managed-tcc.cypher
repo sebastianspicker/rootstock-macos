@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 //
 // Finds TCC permissions that are silently enforced via MDM configuration profiles.
 // MDM grants cannot be revoked by the user and take precedence over manual settings.

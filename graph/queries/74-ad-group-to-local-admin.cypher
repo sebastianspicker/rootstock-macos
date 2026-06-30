@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (ag:ADGroup)-[:MAPPED_TO]->(lg:LocalGroup {name: 'admin'})
 OPTIONAL MATCH (u:User)-[:MEMBER_OF]->(lg)

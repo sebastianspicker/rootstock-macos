@@ -16,6 +16,7 @@ import logging
 from typing import Any, cast
 
 from neo4j import Session
+from neo4j.exceptions import Neo4jError
 
 from category_predicates import RISK_CATEGORY_PREDICATES
 
@@ -209,7 +210,7 @@ def infer(session: Session) -> int:
     for rule in _RECOMMENDATIONS:
         try:
             total_edges += _create_recommendation_edges(session, rule)
-        except Exception as exc:
+        except Neo4jError as exc:
             edge_failures.append(f"{rule.key}: {exc}")
             logger.error(
                 "Recommendation edge creation failed for key=%s: %s",

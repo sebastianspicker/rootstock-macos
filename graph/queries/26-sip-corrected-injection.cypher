@@ -6,7 +6,7 @@
 // Use case: Audit which apps have been excluded from injection analysis by SIP protection
 // CVE: CVE-2024-44243, CVE-2024-44294
 // ATT&CK: T1562.001
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (app:Application)
 WHERE app.is_sip_protected = true

@@ -12,14 +12,10 @@ import os
 import sys
 import tempfile
 import zipfile
-from pathlib import Path
 from unittest import TestCase
 from unittest.mock import MagicMock
 
 import pytest
-
-# Ensure graph/ is on sys.path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from bloodhound_import import (
     _extract_username,

@@ -4,7 +4,7 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (u:User {is_ad_user: true})-[:MEMBER_OF]->(lg:LocalGroup)
 WHERE lg.name <> 'admin'

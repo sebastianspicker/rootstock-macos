@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 //
 // Finds Application nodes that are explicitly listed in a Keychain item's
 // ACL trusted-application list — meaning the app can read that credential

@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // ATT&CK: T1556.001
 
 MATCH (ap:AuthorizationPlugin)

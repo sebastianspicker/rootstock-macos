@@ -9,13 +9,9 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cve_reference import CWE_REGISTRY, CweReference
 from import_vulnerabilities import import_cwe_nodes, import_cwe_edges, import_all

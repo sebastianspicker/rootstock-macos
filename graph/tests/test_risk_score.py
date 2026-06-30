@@ -8,13 +8,9 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import infer_risk_score as risk_score
 from category_predicates import RISK_CATEGORY_PREDICATES

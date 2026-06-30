@@ -134,13 +134,11 @@ struct CodeSigningAnalyzer {
             validFrom: certificateDate(
                 from: values,
                 oid: kSecOIDX509V1ValidityNotBefore as String,
-                legacyOID: "2.5.4.47",
                 dateFormatter: dateFormatter
             ),
             validTo: certificateDate(
                 from: values,
                 oid: kSecOIDX509V1ValidityNotAfter as String,
-                legacyOID: "2.5.4.48",
                 dateFormatter: dateFormatter
             ),
             isRoot: index == chainCount - 1
@@ -156,18 +154,17 @@ struct CodeSigningAnalyzer {
     private func certificateDate(
         from values: [String: Any]?,
         oid: String,
-        legacyOID: String,
         dateFormatter: ISO8601DateFormatter
     ) -> String? {
-        guard let dateValue = certificateValue(from: values, oid: oid, legacyOID: legacyOID) as? NSNumber else {
+        guard let dateValue = certificateValue(from: values, oid: oid) as? NSNumber else {
             return nil
         }
         let date = Date(timeIntervalSinceReferenceDate: dateValue.doubleValue)
         return dateFormatter.string(from: date)
     }
 
-    private func certificateValue(from values: [String: Any]?, oid: String, legacyOID: String) -> Any? {
-        let property = values?[legacyOID] as? [String: Any] ?? values?[oid] as? [String: Any]
+    private func certificateValue(from values: [String: Any]?, oid: String) -> Any? {
+        let property = values?[oid] as? [String: Any]
         return property?[kSecPropertyKeyValue as String]
     }
 

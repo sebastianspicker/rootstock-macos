@@ -5,7 +5,7 @@
 // Parameters: none
 // Attack: Use NOPASSWD sudo rule to execute privileged commands without authentication
 // ATT&CK: T1548.003
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (u:User)-[:SUDO_NOPASSWD]->(sr:SudoersRule)
 RETURN u.name       AS username,

@@ -32,6 +32,12 @@ from tabulate import tabulate
 
 from utils import first_cypher_statement, list_or_str, run_query
 
+try:
+    from neo4j.exceptions import Neo4jError
+except ImportError:
+    class Neo4jError(Exception):
+        pass
+
 
 # ── Query Discovery ───────────────────────────────────────────────────────────
 
@@ -170,7 +176,7 @@ def graph_completeness(session) -> tuple[bool, str]:
     """Return whether the latest imported scan is complete enough for positive empty results."""
     try:
         row = _latest_import_metadata_row(session)
-    except Exception as exc:
+    except Neo4jError as exc:
         return False, f"metadata unavailable: {exc}"
 
     if row is None:
@@ -367,7 +373,7 @@ def _run_one_query(
     stmt = first_cypher_statement(query["cypher"])
     try:
         rows = run_query(session, stmt, params)
-    except Exception as exc:
+    except Neo4jError as exc:
         print(f"    ERROR: {exc}", file=sys.stderr)
         return False
     if rows:

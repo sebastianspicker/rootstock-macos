@@ -5,7 +5,7 @@
 // Parameters: none
 // Attack: Attacker → inject App1 → App1 has TCC → escalate to critical permission
 //         Or: Attacker → inject App1 → App1 can inject App2 (deeper chain)
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH path = (attacker:Application {bundle_id: 'attacker.payload'})
              -[:CAN_INJECT_INTO*1..3]->

@@ -9,14 +9,10 @@ from __future__ import annotations
 import re
 import sys
 import logging
-from pathlib import Path
 from unittest import TestCase
 from types import SimpleNamespace
 
 import pytest
-
-# Ensure graph/ is on sys.path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from cve_reference import (
     AttackContext,

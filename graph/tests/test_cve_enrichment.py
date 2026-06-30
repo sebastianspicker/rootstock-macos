@@ -201,7 +201,7 @@ class TestFetchKev:
         _write_cache(tmp_cache_dir / "kev.json", fresh_cache)
 
         with patch("cve_enrichment.requests") as mock_requests:
-            _result = fetch_kev(force=False)
+            fetch_kev(force=False)
             mock_requests.get.assert_not_called()
 
 
@@ -406,5 +406,5 @@ class TestEpssBatch:
         with patch("cve_enrichment.requests") as mock_requests:
             mock_requests.get.return_value = mock_resp
             # All registry CVEs fit in one batch (< 100), so just one call
-            _result = fetch_epss(force=True)
+            fetch_epss(force=True)
             checks.assertGreaterEqual(mock_requests.get.call_count, 1)

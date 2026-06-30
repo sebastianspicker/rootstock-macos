@@ -127,9 +127,9 @@ _MACOS_AND_EARLIER_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Matches patterns like "Electron < 27.1.0"
+# Matches patterns like "Electron < 27.1.0", "Electron <= 27.1.0"
 _LESS_THAN_RE = re.compile(
-    r"<\s*([\d.]+)",
+    r"<=?\s*([\d.]+)",
 )
 
 # Matches bare version ceiling when patched_version has the answer
@@ -167,6 +167,11 @@ def extract_app_max_version(affected_versions: str) -> str | None:
     if m:
         return m.group(1)
     return None
+
+
+def _app_ceiling_is_inclusive(affected_versions: str) -> bool:
+    match = re.search(r"<=\s*[\d.]+", affected_versions)
+    return match is not None
 
 
 def extract_patched_macos_version(patched_version: str | None) -> str | None:
@@ -254,7 +259,8 @@ def _is_app_affected(
 ) -> bool:
     app_ceiling = extract_app_max_version(affected_versions)
     if app_ceiling is not None:
-        return _conservative_compare(version_lt, app_version, app_ceiling)
+        compare = version_lte if _app_ceiling_is_inclusive(affected_versions) else version_lt
+        return _conservative_compare(compare, app_version, app_ceiling)
     max_ver = extract_macos_max_version(affected_versions)
     if max_ver is not None:
         return _conservative_compare(version_lte, app_version, max_ver)

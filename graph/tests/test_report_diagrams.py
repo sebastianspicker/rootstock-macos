@@ -1,10 +1,6 @@
 """Tests for report_diagrams.py — all pure functions, no Neo4j required."""
 
-import sys
 from unittest import TestCase
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from report_diagrams import (
     mermaid_attack_path,

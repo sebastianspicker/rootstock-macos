@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none
-// Prerequisites: import.py must have run; Phase 3.4 (MDM) data enhances results
+// Prerequisites: import_scan.py must have run; Phase 3.4 (MDM) data enhances results
 //
 // Use case: Enterprise compliance — verify that expected apps are MDM-managed
 // and that no unexpected user-granted permissions have been added outside policy.

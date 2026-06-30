@@ -47,7 +47,7 @@ NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh examples/demo-scan.json
 
 # Or step by step:
 python3 graph/setup_schema.py
-python3 graph/import.py --input examples/demo-scan.json
+python3 graph/import_scan.py --input examples/demo-scan.json
 python3 graph/infer.py
 python3 graph/import_vulnerabilities.py
 python3 graph/tier_classification.py

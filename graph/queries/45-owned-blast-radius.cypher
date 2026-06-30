@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // Attack: Prioritize which owned nodes to pivot from by ranking their downstream impact
-// Prerequisites: import.py + infer.py must have run; mark_owned.py to set owned nodes
+// Prerequisites: import_scan.py + infer.py must have run; mark_owned.py to set owned nodes
 
 MATCH (src)
 WHERE src.owned = true

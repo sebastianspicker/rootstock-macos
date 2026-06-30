@@ -4,7 +4,7 @@
 // Severity: Critical
 // Parameters: none
 // Attack: Apps without launch constraints (macOS 13+) can be freely injected via DYLD_INSERT_LIBRARIES
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (attacker:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(target:Application)
 WHERE coalesce(target.launch_constraint_category, 'unconstrained') = 'unconstrained'

@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (ka:KerberosArtifact {artifact_type: 'keytab'})
 OPTIONAL MATCH (a:Application)-[r:CAN_READ_KERBEROS]->(ka)

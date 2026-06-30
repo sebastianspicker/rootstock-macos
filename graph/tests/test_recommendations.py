@@ -9,13 +9,10 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock
 
+from neo4j.exceptions import Neo4jError
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from infer_recommendations import _RECOMMENDATIONS, RecommendationRule, infer
 
@@ -89,7 +86,7 @@ class TestInferFunction:
         )
         mock_session = MagicMock()
         mock_result = MagicMock()
-        mock_session.run.side_effect = [mock_result, RuntimeError("write failed")]
+        mock_session.run.side_effect = [mock_result, Neo4jError("write failed")]
 
         with pytest.raises(RuntimeError, match="fixture: write failed"):
             infer(mock_session)

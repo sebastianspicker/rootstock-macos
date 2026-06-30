@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run
+// Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (c:Computer {ad_bound: true})
 MATCH (a:Application)-[:INSTALLED_ON]->(c)

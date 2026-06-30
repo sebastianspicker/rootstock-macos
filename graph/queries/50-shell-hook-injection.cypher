@@ -4,7 +4,7 @@
 // Severity: High
 // Parameters: none
 // Attack: Writable .zshrc/.bashrc enables injecting keyloggers, credential harvesters, or SSH agent hijacking
-// Prerequisites: import.py + infer.py must have run (with shell hook data)
+// Prerequisites: import_scan.py + infer.py must have run (with shell hook data)
 // CVE: CVE-2023-32364
 // ATT&CK: T1546.004
 

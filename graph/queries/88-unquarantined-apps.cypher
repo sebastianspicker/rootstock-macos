@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run with quarantine data
+// Prerequisites: import_scan.py must have run with quarantine data
 // CVE: CVE-2022-42821, CVE-2024-44175
 // ATT&CK: T1553.001
 

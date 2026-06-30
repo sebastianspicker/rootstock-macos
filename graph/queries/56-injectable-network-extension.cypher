@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 // Attack: Injectable network extension apps can intercept, modify, or redirect all network traffic
 // CVE: CVE-2024-27842
 // ATT&CK: T1014

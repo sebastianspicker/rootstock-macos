@@ -38,6 +38,20 @@ class FakeDriver:
         return FakeSession(self.metadata)
 
 
+class RaisingSession:
+    def __init__(self, exc):
+        self.exc = exc
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def run(self, *_args, **_kwargs):
+        raise self.exc
+
+
 def critical_query():
     return {
         "id": "01",
@@ -84,6 +98,67 @@ def test_graph_completeness_reports_partial_reasons():
     checks.assertIn("import_status=partial", reason)
     checks.assertIn("collection_errors=2", reason)
     checks.assertIn("tcc_grants_skipped=1", reason)
+
+
+def test_graph_completeness_does_not_hide_internal_errors():
+    with checks.assertRaises(RuntimeError):
+        graph_completeness(RaisingSession(RuntimeError("broken metadata helper")))
+
+
+def test_cmd_run_does_not_hide_internal_query_errors(monkeypatch):
+    def broken_run_query(*_args, **_kwargs):
+        raise RuntimeError("broken export")
+
+    monkeypatch.setattr("query_runner.run_query", broken_run_query)
+
+    with checks.assertRaises(RuntimeError):
+        cmd_run(
+            FakeDriver(
+                {
+                    "import_status": "complete",
+                    "collection_error_count": 0,
+                    "tcc_grants_skipped": 0,
+                }
+            ),
+            [critical_query()],
+            "01",
+            {},
+            "table",
+        )
+
+
+def test_graph_completeness_handles_neo4j_metadata_errors():
+    from neo4j.exceptions import Neo4jError
+
+    complete, reason = graph_completeness(RaisingSession(Neo4jError("metadata down")))
+
+    checks.assertIs(complete, False)
+    checks.assertIn("metadata unavailable", reason)
+
+
+def test_cmd_run_handles_neo4j_query_errors(monkeypatch):
+    from neo4j.exceptions import Neo4jError
+
+    def failing_run_query(*_args, **_kwargs):
+        raise Neo4jError("query down")
+
+    monkeypatch.setattr("query_runner.run_query", failing_run_query)
+
+    exit_code = cmd_run(
+        FakeDriver(
+            {
+                "import_status": "complete",
+                "collection_error_count": 0,
+                "tcc_grants_skipped": 0,
+            }
+        ),
+        [critical_query()],
+        "01",
+        {},
+        "table",
+    )
+
+    checks.assertEqual(exit_code, 1)
 
 
 def test_empty_critical_query_is_not_positive_when_import_is_partial(

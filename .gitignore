@@ -4,7 +4,6 @@
 *.xcodeproj/
 xcuserdata/
 DerivedData/
-.claude/
 .serena/
 .env
 .env.*
@@ -29,20 +28,16 @@ htmlcov/
 .superpowers/
 .worktrees/
 .codacy/
-.codex/
-.agents/
 ralph-prompts/
 AUDIT.md
 ANALYSIS.md
-CLAUDE.md
-AGENTS.md
 REVIEW.md
 SECURITY_REVIEW.md
 .kilo/
-/docs/agent/
 /docs/superpowers/
 /docs/archive/
 /docs/deprecated/
+/docs/private/
 /docs/generated/
 /deprecated/
 /archive/
@@ -58,18 +53,16 @@ trivy-default.yaml
 *.log
 *.tmp
 
-# One-off/internal agent planning artifacts (keep out of public docs)
+# One-off/internal planning artifacts (keep out of public docs)
 /plan.md
 /*-plan.md
-/*-ledger.md
 /*-status.md
 /*-audit.md
 /*-investigations.md
 /*-remediation*.md
 /overengineering-index.md
 /docs/*-plan.md
-/docs/*-ledger.md
-/docs/*-status.md
+/docs/docs/*-status.md
 /docs/*-audit.md
 /docs/*-investigations.md
 /docs/*-remediation*.md

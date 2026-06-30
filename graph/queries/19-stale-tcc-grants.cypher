@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 //
 // Use case: TCC.db retains grant entries when an app is uninstalled. If the same
 // bundle_id is later re-used by a malicious app (bundle_id squatting), it would

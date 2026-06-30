@@ -129,7 +129,7 @@ echo ""
 # ── Step 3/7: Import ─────────────────────────────────────────────────────────
 
 echo "── Step 3/7: Importing scan data ──"
-python3 "$SCRIPT_DIR/import.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"
+python3 "$SCRIPT_DIR/import_scan.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Optional: cve-scan artifact import ───────────────────────────────────────

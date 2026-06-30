@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py must have run
+// Prerequisites: import_scan.py must have run
 
 MATCH (c:Computer)
 WHERE (c.lockdown_mode_enabled IS NULL OR c.lockdown_mode_enabled = false)

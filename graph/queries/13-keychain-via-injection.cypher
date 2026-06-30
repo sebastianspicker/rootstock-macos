@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run; Phase 3.3 (Keychain) data required
+// Prerequisites: import_scan.py + infer.py must have run; Phase 3.3 (Keychain) data required
 //
 // Attack: Inject app → inherit ACL-trusted access → read credentials silently
 //

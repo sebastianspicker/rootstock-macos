@@ -3,7 +3,7 @@
 // Category: Blue Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import.py + infer.py must have run (with file_acls data)
+// Prerequisites: import_scan.py + infer.py must have run (with file_acls data)
 // CVE: CVE-2024-23296, CVE-2023-40404
 // ATT&CK: T1098
 
