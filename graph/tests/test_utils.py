@@ -88,6 +88,13 @@ def test_first_cypher_strips_block_comments_before_splitting():
 
     checks.assertEqual(first_cypher_statement(cypher), "MATCH (n) RETURN n")
 
+
+def test_first_cypher_preserves_unterminated_block_comment():
+    cypher = "MATCH (n) RETURN n /*" + "a/*" * 10_000
+
+    checks.assertEqual(first_cypher_statement(cypher), cypher)
+
+
 def test_first_cypher_returns_first_nonempty():
     cypher = "  ;  ; MATCH (n) RETURN n"
     checks.assertEqual(first_cypher_statement(cypher), "MATCH (n) RETURN n")

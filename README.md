@@ -6,463 +6,243 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sebastianspicker/rootstock/badge)](https://scorecard.dev/viewer/?uri=github.com/sebastianspicker/rootstock)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Attack path discovery for macOS that maps TCC grants, entitlements, Keychain ACLs, and XPC trust relationships as an exploitable graph.
+Rootstock is a passive macOS attack-path discovery tool. It maps local security
+boundaries such as TCC grants, entitlements, code signing, Keychain ACLs, XPC
+trust, persistence, and enterprise identity artifacts into an analyzable graph.
 
-## What is Rootstock?
+Think BloodHound-style graph analysis for macOS-native trust relationships, with
+a collector that stays local and read-only.
 
-Rootstock is a graph-based attack path discovery tool for macOS security boundaries — think BloodHound for macOS-native trust relationships. It maps:
+## What It Maps
 
-- **TCC grants** — which apps have camera, microphone, full disk access, etc.
-- **Entitlements** — code-signing privileges that weaken security boundaries
-- **Code signing** — hardened runtime, library validation, team identifiers, certificate chain analysis
-- **Injection vectors** — per-app assessment of DYLD injection viability
-- **Vulnerability correlation** — CVE/EPSS/KEV enrichment with ATT&CK technique mapping
-- **Risk scoring** — composite 0-100 risk score per application with tier classification
-- **Enterprise integration** — Active Directory binding, Kerberos artifacts, BloodHound interop
-- **ESF monitoring** — Endpoint Security Framework event coverage gap analysis
+- **TCC grants** - camera, microphone, Full Disk Access, Apple Events, and other privacy permissions
+- **Entitlements** - code-signing privileges that weaken or bypass macOS security boundaries
+- **Code signing** - hardened runtime, library validation, team identifiers, and certificate metadata
+- **Injection paths** - per-app assessment of DYLD, Electron, and related injection viability
+- **Persistence** - LaunchAgents, LaunchDaemons, login items, shell hooks, and related startup paths
+- **Keychain and XPC trust** - ACL metadata, service relationships, and trust edges
+- **Enterprise context** - Active Directory binding, Kerberos artifacts, MDM profiles, and BloodHound interop
+- **Vulnerability context** - CVE/EPSS/KEV enrichment and ATT&CK technique mapping
 
-## Current Status
+## Current Public Surface
 
-The current public project surface is the Swift collector, Python graph
-pipeline, `modules/cve-scan/`, synthetic examples, and the active docs in this
-README and the [documentation index](docs/README.md). Completed
-audit/remediation packets, one-off plans, status files, investigation
-notes, announcements, paper drafts, deprecated notes, generated reports, and
-historical roadmaps are not part of the committed public documentation set. Keep
-local copies only in ignored paths such as `docs/archive/` or `archive/`.
+The maintained public surface is the Swift collector, Python/Neo4j graph
+pipeline, `modules/cve-scan/`, synthetic examples, this README, and the
+[documentation index](docs/README.md).
 
-The collector is passive and local-only. It writes a scan artifact; graph
-analysis, optional CVE feed refresh, and scoped cve-scan evidence collection are
-separate operator actions. Full graph behavior verification requires Neo4j. The
-non-Neo4j pytest suite is useful for fast local checks, but it does not prove
-import, inference, query, report, or API semantics end to end.
+Completed audit packets, one-off plans, status files, investigation notes,
+deprecated drafts, generated reports, generated viewers, real scan outputs,
+and historical roadmaps are not part of public documentation set. Keep local
+copies in ignored private or archive paths.
 
-## Project Map
+The repository intentionally tracks synthetic fixtures, synthetic screenshots,
+the public `.env.example`, and analyzer scope in `.codacy.yaml`. Local analyzer
+state, benchmark results, release binaries, databases, real host inventories,
+and security reports are ignored.
 
-Rootstock has three deliberate parts plus one checked-in demo fixture:
+## Architecture
 
-1. `collector/` is the endpoint-side Swift package. It reads local macOS
-   security metadata and emits one portable scan JSON. It should stay passive:
-   no network calls, no secrets, and recoverable per-module errors instead of
-   aborting the whole scan.
-2. `modules/cve-scan/` is the Rootstock CVE evidence module. It is a
-   dependency-light Python CLI for scoped infrastructure/package/web evidence
-   and writes `scan.json` plus `rootstock-export.json` artifacts for graph
-   import. It is not a competing vulnerability-management platform.
-3. `graph/` is the workstation-side Python package. `graph/pipeline.sh` is the
-   normal orchestration path: apply Neo4j schema, optionally refresh cached CVE
-   data, import the scan, run inference, classify tiers, and write a report or
-   start the API server. It can also import a prebuilt cve-scan artifact with
-   `--cve-scan-export`.
-4. `examples/demo-scan.json` is the demo fixture source of truth.
-   `examples/regenerate.sh` rebuilds local generated report/viewer artifacts
-   from that fixture; it does not modify the fixture.
+Rootstock has three active components:
 
-The contract between the halves is the scan JSON. When changing collector
-output, keep `collector/schema/scan-result.schema.json`, `graph/models.py`, and
-the importer code in sync, then validate with:
+1. `collector/` - a SwiftPM package that runs on the Mac being assessed and
+   emits one portable scan JSON file.
+2. `graph/` - a Python Neo4j pipeline that imports scan JSON, creates graph
+   relationships, classifies risk, runs queries, writes reports, and can serve
+   an authenticated viewer API.
+3. `modules/cve-scan/` - a scoped Python evidence module that writes local CVE
+   artifacts and a `rootstock-export.json` bridge for graph import.
+
+`examples/demo-scan.json` is the synthetic demo fixture source of truth.
+Generated demo reports and viewers are local artifacts.
+
+The scan JSON is the main contract. When collector output changes, keep
+`collector/schema/scan-result.schema.json`, `graph/models.py`, importer code,
+and at least one synthetic fixture in sync:
 
 ```bash
-python3 scripts/validate-scan.py <scan.json>
+python3 scripts/validate-scan.py examples/demo-scan.json
 ```
-
-## Screenshots
-
-The static screenshots below use synthetic demo data from [demo-scan.json](examples/demo-scan.json).
-
-### Interactive Graph Viewer
-
-| | |
-|---|---|
-| ![Full Graph](docs/screenshots/01-full-graph.png) | ![Attack Path](docs/screenshots/02-attack-path.png) |
-| *Full attack graph — node types color-coded by kind* | *Shortest path from attacker to Full Disk Access (2 hops)* |
-| ![Node Inspector](docs/screenshots/03-node-inspector.png) | ![Electron TCC](docs/screenshots/04-electron-inheritance.png) |
-| *iTerm2 property inspector with risk score, tier, and entitlements* | *Slack's inherited TCC permissions via focus mode* |
-
-### Security Report
-
-| | |
-|---|---|
-| ![Summary](docs/screenshots/05-report-summary.png) | ![Attack Diagram](docs/screenshots/06-attack-path-diagram.png) |
-| *Executive summary with critical findings and scan metadata* | *Mermaid attack path flowcharts (injectable FDA + Apple Events)* |
-| ![CVE Table](docs/screenshots/07-cve-table.png) | ![Tier Classification](docs/screenshots/08-tier-pie.png) |
-| *CVE reference with CVSS/EPSS scores and ATT&CK mapping* | *Tier classification — Tier 0 through Tier 3 with risk scores* |
-
-### Collector CLI
-
-![CLI Output](docs/screenshots/09-cli-output.png)
-
-*Collector module timing output*
-
-### Demo Outputs
-
-| Output | Description |
-|--------|-------------|
-| [`demo-scan.json`](examples/demo-scan.json) | Synthetic scan data used by the docs and demo pipeline |
-
-> To generate report and viewer outputs (requires Neo4j): `bash examples/regenerate.sh`
-> This produces `examples/generated/demo-report.md` and `examples/generated/demo-viewer.html` locally.
-
-The synthetic cve-scan graph fixture is [examples/cve-scan-export.json](examples/cve-scan-export.json).
-See [the cve-scan module guide](docs/guides/cve-scan-module.md) and the module
-[example outcome](modules/cve-scan/docs/example-outcome.md) for the artifact
-shape without publishing real infrastructure data.
-
-<details>
-<summary>Mermaid diagrams (GitHub-rendered fallback)</summary>
-
-#### Injectable App to Full Disk Access
-
-```mermaid
-graph LR
-    A["Attacker<br/>(local user)"] -->|DYLD_INSERT_LIBRARIES| B["iTerm2<br/>injectable, no lib validation"]
-    B -->|inherits TCC grant| C["Full Disk Access<br/>kTCCServiceSystemPolicyAllFiles"]
-    C -->|read/write| D["TCC.db<br/>system + user databases"]
-    C -->|read| E["Keychain metadata<br/>ACLs, trusted apps"]
-
-    style A fill:#e74c3c,color:#fff
-    style B fill:#e67e22,color:#fff
-    style C fill:#c0392b,color:#fff
-    style D fill:#8e44ad,color:#fff
-    style E fill:#8e44ad,color:#fff
-```
-
-#### Electron TCC Inheritance
-
-```mermaid
-graph LR
-    A["Attacker"] -->|ELECTRON_RUN_AS_NODE| B["Slack<br/>Electron, injectable"]
-    B -->|inherits| C["Camera"]
-    B -->|inherits| D["Microphone"]
-    B -->|inherits| E["Screen Recording"]
-
-    style A fill:#e74c3c,color:#fff
-    style B fill:#e67e22,color:#fff
-    style C fill:#2ecc71,color:#fff
-    style D fill:#2ecc71,color:#fff
-    style E fill:#2ecc71,color:#fff
-```
-
-#### Transitive FDA via Finder Automation
-
-```mermaid
-graph LR
-    A["OmniGraffle<br/>injectable, Apple Events TCC"] -->|automates| B["Finder<br/>SIP-protected, implicit FDA"]
-    B -->|has| C["Full Disk Access"]
-
-    style A fill:#e67e22,color:#fff
-    style B fill:#3498db,color:#fff
-    style C fill:#c0392b,color:#fff
-```
-
-#### Asset Tier Classification
-
-```mermaid
-pie title Asset Tier Distribution
-    "Tier 0 — Crown Jewels" : 3
-    "Tier 1 — High Value" : 4
-    "Tier 2 — Standard" : 5
-    "Tier 3 — Low Privilege" : 3
-```
-
-</details>
 
 ## Quick Start
 
 ### Requirements
 
-**Collector** (runs on the Mac being scanned):
-- macOS 14 (Sonoma) or later
-- Swift 5.9+ (Xcode 15+)
+Collector:
 
-**Graph pipeline** (runs on analysis workstation):
+- macOS 14 Sonoma or later
+- Swift 5.9+ / Xcode 15+
+
+Graph pipeline:
+
 - Python 3.10+
-- Neo4j 5.0+ (Docker recommended: `docker run -p7474:7474 -p7687:7687 neo4j:5`)
+- Neo4j 5.x, Docker recommended
 
-### Build
+### Build the Collector
 
 ```bash
 cd collector
 swift build -c release
 ```
 
-### Run
+### Run a Scan
 
 ```bash
-# Full scan (TCC + entitlements + code signing)
-.build/release/RootstockCLI --output scan.json
-
-# Verbose progress output
-.build/release/RootstockCLI --output scan.json --verbose
-
-# TCC grants only
-.build/release/RootstockCLI --output scan.json --modules tcc
-
-# Entitlements + code signing only (no TCC)
-.build/release/RootstockCLI --output scan.json --modules entitlements,codesigning
-
-# With Full Disk Access (reads system TCC.db)
-sudo .build/release/RootstockCLI --output scan.json
+collector/.build/release/RootstockCLI --output scan.json
 ```
+
+Useful variants:
+
+```bash
+collector/.build/release/RootstockCLI --output scan.json --verbose
+collector/.build/release/RootstockCLI --output scan.json --modules tcc
+collector/.build/release/RootstockCLI --output scan.json --modules entitlements,codesigning
+sudo collector/.build/release/RootstockCLI --output scan.json
+```
+
+macOS 15+ can require Full Disk Access for TCC database reads. Grant FDA to the
+terminal or run the collector with the required privileges when you need TCC
+grants.
 
 ### Validate Output
 
 ```bash
-pip3 install -r graph/requirements.txt
 python3 scripts/validate-scan.py scan.json
-# ✓ Valid: scan.json (184 apps, 12 TCC grants, 3841 entitlements, 0 collection errors)
 ```
 
-### Example Output
-
-```json
-{
-  "scan_id": "7D7DFA2B-...",
-  "timestamp": "2026-03-18T08:00:00Z",
-  "hostname": "my-mac.local",
-  "macos_version": "Version 15.0 (Build 26A...",
-  "collector_version": "0.1.0",
-  "elevation": {
-    "is_root": false,
-    "has_fda": false
-  },
-  "applications": [
-    {
-      "name": "1Password",
-      "bundle_id": "com.1password.1password",
-      "path": "/Applications/1Password.app",
-      "version": "8.10.56",
-      "team_id": "2BUA8C4S2C",
-      "hardened_runtime": true,
-      "library_validation": true,
-      "is_electron": true,
-      "is_system": false,
-      "signed": true,
-      "entitlements": [
-        {
-          "name": "com.apple.security.cs.allow-jit",
-          "is_private": false,
-          "category": "injection",
-          "is_security_critical": true
-        }
-      ],
-      "injection_methods": ["electron_env_var"]
-    }
-  ],
-  "tcc_grants": [],
-  "errors": []
-}
-```
-
-### Graph Pipeline
+### Run the Graph Pipeline
 
 ```bash
-# Install Python dependencies
-pip3 install -r graph/requirements.txt
-
-# Start Neo4j with the bundled local compose file
-cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d && cd ..
-
-# Run the full pipeline (schema -> import -> infer -> classify -> report)
+python3 -m pip install -r graph/requirements.txt
+(cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d)
 NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json
-
-# Import a prebuilt cve-scan Rootstock artifact during the same pipeline run
-NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json \
-  --cve-scan-export modules/cve-scan/runs/local/rootstock-export.json
-
-# Or start the API server with interactive viewer
-ROOTSTOCK_API_TOKEN=CHANGE_ME_API_TOKEN NEO4J_PASSWORD=CHANGE_ME \
-  bash graph/pipeline.sh scan.json --serve 8000
-# Open http://localhost:8000 for the interactive graph viewer
 ```
 
-Environment variables for Neo4j connection: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`.
-The live API additionally requires `ROOTSTOCK_API_TOKEN`. CVE network refresh is
-opt-in with `--refresh-cve`; the default pipeline uses cached/static enrichment.
+Import a prebuilt cve-scan artifact in the same run:
 
-## Local Verification
+```bash
+NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh scan.json \
+  --cve-scan-export modules/cve-scan/runs/local/rootstock-export.json
+```
+
+Start the authenticated API/viewer:
+
+```bash
+ROOTSTOCK_API_TOKEN=CHANGE_ME_API_TOKEN NEO4J_PASSWORD=CHANGE_ME \
+  bash graph/pipeline.sh scan.json --serve 8000
+```
+
+Environment variables:
+
+- `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD` - Neo4j connection
+- `ROOTSTOCK_API_TOKEN` - required for `/api/*` routes
+
+CVE network refresh is opt-in with `--refresh-cve`; the default pipeline uses
+cached/static enrichment.
+
+## Demo Outputs
+
+| Output | Description |
+|--------|-------------|
+| [`examples/demo-scan.json`](examples/demo-scan.json) | Synthetic collector scan fixture |
+| [`examples/cve-scan-export.json`](examples/cve-scan-export.json) | Synthetic cve-scan graph fixture |
+| [`modules/cve-scan/docs/example-outcome.md`](modules/cve-scan/docs/example-outcome.md) | Example cve-scan artifact shape |
+
+Generate local demo report/viewer artifacts with:
+
+```bash
+bash examples/regenerate.sh
+```
+
+The generated files are written under `examples/generated/` and ignored by git.
+
+## Screenshots
+
+Screenshots use synthetic demo data from `examples/demo-scan.json`.
+
+| | |
+|---|---|
+| ![Full graph](docs/screenshots/01-full-graph.png) | ![Attack path](docs/screenshots/02-attack-path.png) |
+| ![Node inspector](docs/screenshots/03-node-inspector.png) | ![Electron inheritance](docs/screenshots/04-electron-inheritance.png) |
+| ![Report summary](docs/screenshots/05-report-summary.png) | ![Attack path diagram](docs/screenshots/06-attack-path-diagram.png) |
+| ![CVE table](docs/screenshots/07-cve-table.png) | ![Tier pie chart](docs/screenshots/08-tier-pie.png) |
+
+![Collector CLI output](docs/screenshots/09-cli-output.png)
+
+## Verification
 
 ```bash
 # Swift collector
 (cd collector && swift test --parallel)
 
-# Python graph pipeline
+# Python graph
 ruff check graph/ scripts/ examples/ docs/
 (cd graph && pytest tests)
 
-# Required graph Neo4j behavior lane for release/high-risk graph changes
-(cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d)
-(cd graph && ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME pytest tests -v --tb=short)
-NEO4J_PASSWORD=CHANGE_ME bash tests/integration/test_full_pipeline.sh
+# Contract fixture
+python3 scripts/validate-scan.py examples/demo-scan.json
 
 # cve-scan module
 (cd modules/cve-scan && ruff check . && pytest)
-shellcheck modules/cve-scan/scripts/perf-smoke.sh
 
 # Shell entry points
 shellcheck examples/regenerate.sh graph/pipeline.sh scripts/*.sh tests/integration/*.sh
-
-# Cross-language scan contract
-python3 scripts/validate-scan.py examples/demo-scan.json
+shellcheck modules/cve-scan/scripts/perf-smoke.sh
+bash tests/integration/test_benchmark_script.sh
 ```
 
-Runtime smoke tests need Neo4j. With `graph/docker-compose.yml`, set
-`NEO4J_AUTH=neo4j/CHANGE_ME` and use the matching `NEO4J_PASSWORD`. The
-required graph Neo4j lane fails instead of skipping when Neo4j is unavailable.
-Do not claim graph import, inference, query, report, or API semantics verified
-unless that lane has run against a reachable Neo4j test database.
+Graph behavior that depends on import, inference, query, report, or API
+semantics needs a reachable Neo4j test database:
 
-## Feature Matrix
-
-| Category | Scope | Details |
-|----------|-------|---------|
-| Collector modules | Swift data-source modules | TCC, entitlements, code signing, XPC, persistence, keychain, MDM, groups, remote access, firewall, login sessions, authorization DB/plugins, system extensions, sudoers, processes, file ACLs, shell hooks, physical security, AD, Kerberos, sandbox, quarantine |
-| Graph node types | Typed graph model | Application, TCC_Permission, Entitlement, User, XPC_Service, LaunchItem, Keychain_Item, MDM_Profile, Computer, Vulnerability, CWE, AttackTechnique, ThreatGroup, ADUser, Recommendation, and more |
-| Inference engines | Inference pipeline | Injection assessment, TCC inheritance, Apple Events, accessibility, Kerberos, automation, Finder FDA, ESF monitoring, risk scoring, recommendations, and more |
-| Cypher queries | Query library | Red Team, Blue Team, and forensic workflows |
-| Python tests | pytest suite | Unit tests, integration tests, edge case coverage |
-| API surface | REST API | OpenAPI docs, interactive viewer, Cypher console |
-| CVE registry | Curated static registry | macOS-focused CVEs with EPSS/KEV/NVD live enrichment |
-
-## Performance
-
-Benchmarked on macOS 26.3 Tahoe (arm64), 184 apps, release build:
-
-| Metric | Value |
-|--------|-------|
-| Total scan time | 5.6 seconds (average of 3 runs) |
-| Apps scanned | 184 |
-| Entitlements extracted | 3,841 |
-| XPC services enumerated | 440 |
-| Keychain items | 234 |
-| Peak memory | ~45 MB |
-| JSON output size | ~1 MB |
-
-Per-module timing (via `--verbose`):
-
-```
-[TCC]          0.00s   [Entitlements] 0.15s   [CodeSigning]  0.21s
-[XPC]          4.83s   [Persistence]  0.01s   [Keychain]     0.06s
-[MDM]          0.02s   Total: 5.28s
+```bash
+(cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d)
+(cd graph && ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME pytest tests -v --tb=short)
+NEO4J_PASSWORD=CHANGE_ME bash tests/integration/test_full_pipeline.sh
 ```
 
-See `docs/benchmarks/baseline.md` for full benchmark methodology and results.
+Do not claim graph runtime behavior verified unless the Neo4j lane ran.
+
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Threat model](docs/THREAT_MODEL.md)
+- [FAQ](docs/FAQ.md)
+- [Neo4j Browser quickstart](docs/guides/neo4j-browser-quickstart.md)
+- [cve-scan module guide](docs/guides/cve-scan-module.md)
+- [Quality gates](docs/QUALITY.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
 ## macOS Compatibility
 
 | macOS Version | Collector | User TCC.db | System TCC.db | Notes |
 |---|---|---|---|---|
-| 14 Sonoma | ✅ Full | ✅ Normal read | ✅ Requires FDA | Primary development target |
-| 15 Sequoia | ✅ Full | ⚠️ Requires FDA | ✅ Requires FDA | Kernel-enforced; grant FDA or use sudo |
-| 26 Tahoe | ✅ Full | ⚠️ Requires FDA | ✅ Requires FDA | Year-based versioning (2025 release) — tested on 26.3 |
-| < 14 | ❌ | ❌ | ❌ | Not supported |
-
-> **Apple switched to year-based macOS versioning in 2025.** macOS 26 ("Tahoe") was formerly planned as "macOS 16". `ProcessInfo.majorVersion` returns 26 on Tahoe.
-
-## Notes on TCC Collection
-
-macOS 15+ requires Full Disk Access to read TCC databases. Without FDA:
-- User TCC.db: blocked at kernel level (`SQLITE_AUTH`)
-- System TCC.db: blocked at kernel level
-
-Run with `sudo` or grant FDA to the binary to collect TCC grants. See
-`docs/research/tcc-version-diffs.md` for current TCC version notes.
-
-## Project Structure
-
-```
-collector/                 Swift CLI collector
-├── Sources/
-│   ├── Models/            Shared data models + MacOSVersion detection
-│   ├── TCC/               TCC database parser with PRAGMA schema validation
-│   ├── Entitlements/      App discovery + entitlement extraction (parallelized)
-│   ├── CodeSigning/       Code signing analysis + injection assessment
-│   ├── XPCServices/       XPC service enumeration
-│   ├── Keychain/          Keychain ACL metadata reader
-│   ├── Persistence/       LaunchDaemons/Agents/crontab scanner
-│   ├── MDM/               MDM configuration profile parser
-│   ├── Groups/            Local groups + user details
-│   ├── RemoteAccess/      SSH, VNC, ARD service detection
-│   ├── Firewall/          Application firewall policy
-│   ├── LoginSession/      Active login sessions
-│   ├── AuthorizationDB/   Authorization rights database
-│   ├── AuthorizationPlugins/ Security agent plugins
-│   ├── SystemExtensions/  System/network extensions
-│   ├── Sudoers/           Sudoers NOPASSWD rules
-│   ├── ProcessSnapshot/   Running process enumeration
-│   ├── FileACLs/          Critical file ACL auditing
-│   ├── ShellHooks/        Shell config injection points
-│   ├── PhysicalSecurity/  Bluetooth, screen lock, Thunderbolt posture
-│   ├── ActiveDirectory/   AD binding + user/group discovery
-│   ├── KerberosArtifacts/ ccache, keytab, krb5.conf
-│   ├── Sandbox/           Sandbox profile deep parsing (SBPL rules)
-│   ├── Quarantine/        Gatekeeper quarantine xattr reader
-│   ├── Export/            JSON serialization
-│   └── RootstockCLI/      CLI entry point + scan orchestration
-├── Tests/                 Unit tests
-└── schema/                JSON Schema for output validation
-
-graph/                     Neo4j import, inference, query engine & API
-├── import.py              Scan JSON → Neo4j importer (orchestrator)
-├── import_cve_scan.py     cve-scan rootstock-export.json → Neo4j importer
-├── import_nodes_core.py   Core node imports (apps, TCC, entitlements, certs)
-├── import_nodes_services.py   Services (XPC, persistence, keychain)
-├── import_nodes_security.py   Security nodes (groups, firewall, auth, sudoers)
-├── import_nodes_security_enterprise.py  Enterprise (AD, Kerberos, process, file ACL)
-├── import_nodes_enrichment.py Enrichment (physical, iCloud, bluetooth)
-├── import_vulnerabilities.py  CVE/ATT&CK/ThreatGroup import + version matching
-├── infer.py               Inference engine orchestrator
-├── infer_esf.py           ESF event enrichment + monitoring gap analysis
-├── infer_risk_score.py    Composite risk scoring engine (0-100 scale)
-├── infer_recommendations.py  Automated remediation recommendations
-├── server.py              FastAPI REST API server
-├── models.py              Pydantic v2 graph node/edge type definitions
-├── setup_schema.py        Neo4j schema constraints and indices
-├── constants.py           Shared constants and configuration
-├── tier_classification.py Asset tier classification engine
-├── cve_reference.py       CVE + ATT&CK + ThreatGroup registry
-├── cve_enrichment.py      Live EPSS + KEV + NVD enrichment with caching
-├── version_matcher.py     Version-aware CVE matching
-├── bloodhound_import.py   SharpHound ZIP → ADUser/SAME_IDENTITY import
-├── opengraph_export.py    BloodHound OpenGraph JSON export
-├── report.py              Markdown report generator
-├── report_assembly.py     Report section assembly + orchestration
-├── report_formatters.py   Report output formatters (MD, HTML, JSON)
-├── viewer_template.html   Interactive Canvas-based graph viewer
-├── pipeline.sh            One-command pipeline (schema → import → infer → classify → report)
-├── queries/               Pre-built Cypher queries
-└── tests/                 Python tests
-
-scripts/
-├── validate-scan.py       Output validation script
-└── benchmark.sh           Performance benchmark runner
-
-modules/
-└── cve-scan/              Scoped CVE evidence CLI and Rootstock export bridge
-
-docs/
-├── THREAT_MODEL.md        Assumptions, limitations, ethical framework
-├── design-docs/           Architecture decisions (AD/Kerberos, risk scoring, vuln intel, etc.)
-├── references/            Entitlement categories, macOS security reference
-├── benchmarks/            Performance measurements
-├── research/              macOS security research notes
-└── screenshots/           README and report screenshots
-```
+| 14 Sonoma | Full | Normal read | Requires FDA | Primary supported baseline |
+| 15 Sequoia | Full | Requires FDA | Requires FDA | Kernel-enforced TCC access |
+| 26 Tahoe | Full | Requires FDA | Requires FDA | Year-based macOS versioning |
+| < 14 | Not supported | Not supported | Not supported | Out of scope |
 
 ## Threat Model
 
-Rootstock is a passive, read-only analysis tool. It does not extract secrets, make network
-calls, or execute attacks. See [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) for the full
-threat model, including assumptions, limitations, BloodHound comparison, and ethical framework.
+Rootstock is passive and local-first. The collector reads macOS metadata and
+writes a local scan artifact. It must not upload scans, collect telemetry, or
+perform active exploitation. See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
+
+Treat real scan JSON, graph exports, generated viewers, reports, Neo4j volumes,
+screenshots, package inventories, and cve-scan outputs as confidential local
+data.
+
+## License
+
+Rootstock is licensed under GPLv3. See [LICENSE](LICENSE).
 
 ## Citing Rootstock
 
 ```bibtex
 @software{rootstock2026,
-  title   = {Rootstock: Graph-Based Attack Path Discovery for macOS Security Boundaries},
-  author  = {Sebastian J. Spicker},
-  year    = {2026},
-  url     = {https://github.com/sebastianspicker/rootstock},
-  note    = {Open-source research tool, Cologne University of Music}
+  title = {Rootstock: Graph-Based Attack Path Discovery for macOS Security Boundaries},
+  author = {Sebastian J. Spicker},
+  year = {2026},
+  url = {https://github.com/sebastianspicker/rootstock},
+  note = {Open-source research tool, Cologne University of Music}
 }
 ```

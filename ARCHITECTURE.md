@@ -417,50 +417,36 @@ These relationships don't exist in the raw collector JSON but are derived:
 }
 ```
 
-See `collector/schema/scan-result.schema.json` for the full JSON Schema definition (1400+ lines, Draft 2020-12).
+See `collector/schema/scan-result.schema.json` for the complete Draft 2020-12
+JSON Schema definition.
 
 ---
 
-## Real-World Example
+## Synthetic Demonstration Fixture
 
-A scan on a typical developer Mac (macOS 26.3 Tahoe, arm64) produces the following graph:
+The committed `examples/demo-scan.json` is synthetic and safe to publish. It
+exercises the collector-to-graph contract without describing a maintainer's
+machine, installed applications, permissions, or performance.
 
-### Scan Statistics
+### Fixture Contents
 
 | Metric | Value |
 |---|---|
-| Applications discovered | 184 |
-| Signed applications | 180 (98%) |
-| Hardened runtime enabled | 123 (67%) |
-| Electron apps | 10 (5%) |
-| Entitlements extracted | 3,841 |
-| XPC services enumerated | 440 |
-| Keychain items (metadata) | 234 |
-| Launch items (daemons/agents) | 440 |
+| Applications | 15 |
+| Entitlement assignments | 37 |
+| TCC grants | 15 |
+| XPC services | 5 |
+| Keychain ACL records | 4 |
+| Launch items | 6 |
 | MDM profiles | 1 |
-| Injectable applications | 89 (48%) |
-| TCC grants | 0 (no FDA — see Note) |
-| JSON output size | ~1 MB |
-| Scan time | 5.3 seconds |
-| Peak memory | ~45 MB |
+| Deliberate recoverable errors | 1 |
 
-> **Note:** TCC grants require Full Disk Access on macOS 15+. Without FDA, the TCC module
-> returns zero grants. With FDA or root, a typical Mac shows 10–50 TCC grants.
+These are fixture-shape counts, not performance or prevalence claims. Validate
+the fixture against the current schema with:
 
-### Graph Size (Estimated with TCC)
-
-A typical graph produced from a 184-app scan with TCC grants would contain:
-
-- **~190 Application nodes** (one per discovered app)
-- **~20 TCC_Permission nodes** (unique services like FDA, Camera, Microphone)
-- **~200 Entitlement nodes** (unique entitlement names from 3,841 app→entitlement pairs)
-- **~440 XPC_Service nodes**
-- **~234 Keychain_Item nodes**
-- **~440 LaunchItem nodes**
-- **~3,841 HAS_ENTITLEMENT edges** (app → entitlement)
-- **~30–100 CAN_INJECT_INTO edges** (inferred from missing hardened runtime / library validation)
-- **~10 CHILD_INHERITS_TCC edges** (Electron apps with TCC grants)
-- **~50 COMMUNICATES_WITH edges** (apps referencing XPC mach services via entitlements)
+```bash
+python3 scripts/validate-scan.py examples/demo-scan.json
+```
 
 ### Example Attack Path
 
@@ -478,8 +464,9 @@ A typical graph produced from a 184-app scan with TCC grants would contain:
   # If Slack has microphone access, an injected dylib inherits it
 ```
 
-This three-hop path shows how a DYLD injection into Slack could inherit its TCC microphone
-grant — a real attack pattern that Rootstock surfaces automatically.
+This synthetic path illustrates the relationship shape that Rootstock's
+inference layer is designed to surface. It is not evidence about an installed
+application or a specific host.
 
 ---
 

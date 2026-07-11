@@ -11,7 +11,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$TMP_DIR/scripts" "$TMP_DIR/docs/benchmarks"
+mkdir -p "$TMP_DIR/scripts" "$TMP_DIR/docs/private"
 cp "$REPO_ROOT/scripts/benchmark.sh" "$TMP_DIR/scripts/benchmark.sh"
 chmod +x "$TMP_DIR/scripts/benchmark.sh"
 
@@ -69,7 +69,7 @@ FAKE_COLLECTOR="$TMP_DIR/fake-collector"
 } >"$FAKE_COLLECTOR"
 chmod +x "$FAKE_COLLECTOR"
 
-BASELINE="$TMP_DIR/docs/benchmarks/baseline.md"
+BASELINE="$TMP_DIR/docs/private/benchmark-results.md"
 
 if FAKE_MODE=fail "$TMP_DIR/scripts/benchmark.sh" "$FAKE_COLLECTOR" >"$TMP_DIR/fail.out" 2>"$TMP_DIR/fail.err"; then
 	echo "expected nonzero collector run to fail benchmark" >&2

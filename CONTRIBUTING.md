@@ -7,6 +7,10 @@ local-only and read-only. Do not include real scan output, graph exports,
 reports, screenshots, package inventories, tokens, hostnames, usernames, or
 infrastructure details in issues or pull requests.
 
+Benchmark results default to ignored `docs/private/` storage, and release
+binaries default to the ignored root `release/` directory. Do not move either
+into the public documentation tree.
+
 ## Development Setup
 
 ### Prerequisites

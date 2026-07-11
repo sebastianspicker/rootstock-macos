@@ -13,14 +13,16 @@ This directory contains the active public documentation for Rootstock.
 - [Design docs](design-docs/) - durable architecture and modeling decisions.
 - [References](references/) - stable macOS security reference material.
 - [Research](research/) - background notes that support active behavior.
-- [Benchmarks](benchmarks/) - benchmark notes and baselines.
-- [Screenshots](screenshots/) - synthetic demo screenshots used by README docs.
+- [Benchmarks](benchmarks/) - public benchmark method and acceptance targets;
+  machine-derived results stay local.
+- [Screenshots](screenshots/) - synthetic demo screenshots used by public docs.
 
 ## Archive Policy
 
 One-off plans, audit packets, status files, investigation notes, deprecated
-drafts, and generated reports are not active public documentation.
+drafts, generated reports, and local agent handoff files are
+not active public documentation.
 
 Keep local copies in ignored private, archive, deprecated, or generated artifact
-paths. Do not cite archived material as current behavior unless fresh source or
-test verifies it.
+paths. Do not cite archived material as current behavior unless source code or
+tests verify it.

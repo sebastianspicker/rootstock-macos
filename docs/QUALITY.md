@@ -37,12 +37,15 @@
 - Research docs cite sources with links and specify macOS version tested
 - README stays in sync with actual project state
 - Public docs describe only the active project surface.
+- Public benchmark docs contain methods and targets only; machine-derived
+  results stay under ignored `docs/private/` paths.
 - One-off plans, status files, audits, paper drafts, announcements,
   investigation notes, deprecated notes, generated reports, remediation packets,
   and retired roadmaps stay out of the committed documentation set.
 - Current-status claims must distinguish fast non-Neo4j checks from the live
   Neo4j lane required for graph import, inference, query, report, and API
   semantics.
+- Generated release binaries stay under the ignored root `release/` directory.
 
 ## Security Quality
 

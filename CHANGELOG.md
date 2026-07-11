@@ -1,19 +1,28 @@
 # Changelog
 
+## [Unreleased]
+
+- Consolidated graph import through `graph/import_scan.py` and removed obsolete
+  importer facades.
+- Simplified cve-scan reporting, supply-chain, and web facade boundaries while
+  preserving the active CLI and export contracts.
+- Aligned collector persistence metadata with the scan schema.
+- Hardened public/private artifact boundaries for docs, benchmarks, analyzer
+  output, local databases, and release builds.
+- Updated the active verification commands in `README.md` and
+  `docs/QUALITY.md`; current results belong in local evidence, not release
+  history.
+
 ## v1.0.0 — Stable Release
 
-First stable release. All 7 development phases complete. Collector, graph pipeline,
-inference engines, REST API, and documentation are production-ready.
+First stable release. The figures below are the release snapshot, not current
+checkout counts.
 
 - 26 Swift modules (23 data source modules) in the collector
 - 17 inference engines, 101 Cypher queries, 31 Neo4j node types
 - 506 Python tests + 279 Swift tests (785 total)
 - Full go-live review: .gitignore hardened, Package.resolved committed for reproducibility,
   documentation inconsistencies resolved, collector version bumped to 1.0.0
-
-## [Unreleased]
-- Community file integration (LICENSE, CONTRIBUTING, templates)
-- Conference submission preparation
 
 ## v0.8.0 — Hardening & Release Alignment
 

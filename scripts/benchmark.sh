@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# benchmark.sh — Measure rootstock-collector performance across 3 runs.
+# benchmark.sh — Measure RootstockCLI performance across 3 runs.
 #
 # Usage:
 #   cd collector
 #   swift build -c release 2>/dev/null
 #   ../scripts/benchmark.sh [binary_path]
 #
-# Outputs results to stdout and appends a Markdown table to
-# docs/benchmarks/baseline.md (creates the file if absent).
+# Outputs results to stdout and appends a Markdown table to the ignored local
+# benchmark record under docs/private/ unless BENCHMARK_OUTPUT is set.
 
 set -euo pipefail
 
-BINARY="${1:-$(dirname "$0")/../collector/.build/release/rootstock-collector}"
+BINARY="${1:-$(dirname "$0")/../collector/.build/release/RootstockCLI}"
 OUTFILE_PREFIX="/tmp/rootstock-bench"
-DOCS_DIR="$(dirname "$0")/../docs/benchmarks"
+BENCHMARK_OUTPUT="${BENCHMARK_OUTPUT:-$(dirname "$0")/../docs/private/benchmark-results.md}"
 
 if [[ ! -x "$BINARY" ]]; then
 	echo "ERROR: binary not found or not executable: $BINARY" >&2
@@ -89,9 +89,9 @@ echo ""
 echo "Per-module timing (verbose run):"
 "$BINARY" --output "${OUTFILE_PREFIX}-verbose.json" --verbose 2>&1 | grep -E "^\s+\[|Total:" || true
 
-# Append results to docs/benchmarks/baseline.md
-mkdir -p "$DOCS_DIR"
-BASELINE="$DOCS_DIR/baseline.md"
+# Append results to the ignored local benchmark record. Public benchmark docs
+# describe the method and targets, not a maintainer's host inventory.
+mkdir -p "$(dirname "$BENCHMARK_OUTPUT")"
 DATE=$(date -u +"%Y-%m-%d")
 HOSTNAME=$(hostname -s)
 MACOS=$(sw_vers -productVersion)
@@ -106,7 +106,7 @@ MACOS=$(sw_vers -productVersion)
 	echo "| Apps scanned     | ${APPS[0]} | ${APPS[1]} | ${APPS[2]} | — |"
 	echo "| TCC grants       | ${GRANTS[0]} | ${GRANTS[1]} | ${GRANTS[2]} | — |"
 	echo "| JSON size (KB)   | ${SIZES[0]} | ${SIZES[1]} | ${SIZES[2]} | ${AVG_SIZE} |"
-} >>"$BASELINE"
+} >>"$BENCHMARK_OUTPUT"
 
 echo ""
-echo "Results appended to $BASELINE"
+echo "Results appended to $BENCHMARK_OUTPUT"

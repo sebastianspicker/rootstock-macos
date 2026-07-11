@@ -2,7 +2,6 @@
 report_graphviz.py — Graphviz DOT format export for Rootstock graphs.
 
 CLI: python3 report_graphviz.py --neo4j bolt://localhost:7687 --output graph.dot
-     python3 report_graphviz.py --neo4j bolt://localhost:7687 --output graph.dot --render png
 
 Color coding (security dashboard palette for dark backgrounds):
   Application    = #4a90d9  (steel blue — primary entities)
@@ -259,19 +258,6 @@ def _edge_color(rel: str, *, is_inferred: bool) -> str:
     return "#58a6ff"
 
 
-# ── Rendering ─────────────────────────────────────────────────────────────────
-
-def render_dot(dot_path: Path, output_format: str = "png") -> Path:
-    """Reject automatic Graphviz rendering from Rootstock runtime paths."""
-    if output_format not in {"png", "svg"}:
-        raise ValueError(f"Unsupported Graphviz output format: {output_format}")
-    output_path = dot_path.with_suffix(f".{output_format}")
-    raise RuntimeError(
-        "Automatic Graphviz rendering is disabled. Render the DOT file with a "
-        "trusted local Graphviz command, for example: "
-        f"dot -T{output_format} {dot_path} -o {output_path}"
-    )
-
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
@@ -283,11 +269,6 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--username", default="neo4j", help="Neo4j username")
     parser.add_argument("--password", default=None, help="Neo4j password (or set NEO4J_PASSWORD)")
     parser.add_argument("--output", required=True, help="Output .dot file path")
-    parser.add_argument(
-        "--render",
-        choices=["png", "svg"],
-        help="Auto-render to image using `dot` command (requires Graphviz)",
-    )
     parser.add_argument(
         "--node-limit", type=int, default=DEFAULT_NODE_LIMIT,
         help=f"Max nodes to fetch (default: {DEFAULT_NODE_LIMIT})",
@@ -321,8 +302,6 @@ def _write_graphviz_output(args: argparse.Namespace, nodes: list[dict], edges: l
     out_path = Path(args.output)
     out_path.write_text(dot_content, encoding="utf-8")
     print(f"DOT file written to {out_path}", file=sys.stderr)
-    if args.render:
-        render_dot(out_path, args.render)
 
 
 def main() -> int:

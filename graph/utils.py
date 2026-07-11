@@ -72,19 +72,15 @@ def _strip_cypher_comments(cypher: str) -> str:
         line for line in cypher.splitlines() if not line.strip().startswith("//")
     )
     parts: list[str] = []
-    index = 0
-    while index < len(no_line_comments):
-        start = no_line_comments.find("/*", index)
-        if start == -1:
-            parts.append(no_line_comments[index:])
+    cursor = 0
+    while (comment_start := no_line_comments.find("/*", cursor)) >= 0:
+        comment_end = no_line_comments.find("*/", comment_start + 2)
+        if comment_end < 0:
             break
-        parts.append(no_line_comments[index:start])
-        end = no_line_comments.find("*/", start + 2)
-        if end == -1:
-            parts.append(no_line_comments[start:])
-            break
+        parts.append(no_line_comments[cursor:comment_start])
         parts.append(" ")
-        index = end + 2
+        cursor = comment_end + 2
+    parts.append(no_line_comments[cursor:])
     return "".join(parts)
 
 

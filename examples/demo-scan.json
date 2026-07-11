@@ -3,7 +3,7 @@
   "timestamp": "2026-03-20T10:00:00Z",
   "hostname": "acme-macbook-pro",
   "macos_version": "macOS 15.3 (Build 24D60)",
-  "collector_version": "0.1.0",
+  "collector_version": "1.0.0",
   "elevation": {
     "is_root": true,
     "has_fda": true

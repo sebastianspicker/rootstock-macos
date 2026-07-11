@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="${1:-0.1.0}"
+VERSION="${1:-1.0.0}"
 OUTPUT_DIR="release"
 BINARY_NAME="rootstock-collector-v${VERSION}"
+PRODUCT_NAME="RootstockCLI"
 
 echo "Building Rootstock Collector v${VERSION} (Universal Binary)..."
 
@@ -11,10 +12,11 @@ cd "$(dirname "$0")/../collector"
 
 # Build for both architectures
 swift build -c release --arch arm64 --arch x86_64
+BIN_DIR="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
 
 # Copy binary
 mkdir -p "../${OUTPUT_DIR}"
-cp ".build/apple/Products/Release/rootstock-collector" "../${OUTPUT_DIR}/${BINARY_NAME}"
+cp "${BIN_DIR}/${PRODUCT_NAME}" "../${OUTPUT_DIR}/${BINARY_NAME}"
 
 # Verify
 echo ""
