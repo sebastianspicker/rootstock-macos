@@ -24,9 +24,11 @@ Areas where community contributions would be valuable.
 
 ## Visualization
 
-- Web-based dashboard (alternative to Neo4j Browser)
-- Attack path visualization with D3.js
-- PDF report generation (in addition to Markdown)
+- Additional keyboard and VoiceOver usability testing with large real-world
+  graph shapes represented by synthetic fixtures
+- Saved-query organization and result export improvements that preserve the
+  current local, framework-free viewer
+- First-class PDF export built on the existing semantic print report
 - Integration with existing SIEM/SOAR platforms
 
 ## Testing & Quality

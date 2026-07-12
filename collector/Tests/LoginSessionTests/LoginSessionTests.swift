@@ -51,19 +51,19 @@ final class LoginSessionTests: XCTestCase {
 
     func testParseWhoOutputBasic() {
         let output = """
-        sebastian  console  Mar 18 09:15
-        sebastian  ttys000  Mar 18 09:30
+        analyst  console  Mar 18 09:15
+        analyst  ttys000  Mar 18 09:30
         """
         let sessions = LoginSessionDataSource.parseWhoOutput(output)
         XCTAssertEqual(sessions.count, 2)
-        XCTAssertEqual(sessions[0].username, "sebastian")
+        XCTAssertEqual(sessions[0].username, "analyst")
         XCTAssertEqual(sessions[0].terminal, "console")
         XCTAssertEqual(sessions[0].sessionType, .console)
         XCTAssertEqual(sessions[1].terminal, "ttys000")
     }
 
     func testParseWhoOutputWithHost() {
-        let output = "admin  ttys001  Mar 18 10:00 (192.168.1.5)"
+        let output = "admin  ttys001  Mar 18 10:00 (192.0.2.10)"
         let sessions = LoginSessionDataSource.parseWhoOutput(output)
         XCTAssertEqual(sessions.count, 1)
         XCTAssertEqual(sessions[0].sessionType, .ssh)

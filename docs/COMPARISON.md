@@ -14,7 +14,7 @@ that are invisible when examining individual components in isolation.**
 | **Graph DB** | Neo4j | Neo4j (CE), custom (BHE) |
 | **Query Language** | Cypher | Cypher |
 | **Collector** | Swift CLI (local only) | SharpHound (C#), AzureHound (Go) |
-| **Visualization** | Neo4j Browser / custom | BloodHound GUI (Electron) |
+| **Visualization** | Local Canvas workbench + Neo4j Browser | BloodHound GUI (Electron) |
 | **License** | GPLv3 | GPLv3 (CE), Commercial (BHE) |
 
 ## Philosophical Similarities
@@ -39,7 +39,7 @@ analysis phase (running on the analyst's workstation):
 | Collection | Rootstock Swift collector (`RootstockCLI`) runs on macOS endpoint | SharpHound runs on domain-joined Windows |
 | Transport | JSON file (manual transfer) | JSON/ZIP files (manual transfer) |
 | Import | Python script -> Neo4j | BloodHound GUI / API -> Neo4j |
-| Analysis | Cypher queries + Neo4j Browser | BloodHound GUI + pre-built queries |
+| Analysis | Local workbench, Cypher query library, and Neo4j Browser | BloodHound GUI + pre-built queries |
 
 ### 3. Inferred Relationships
 

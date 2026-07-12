@@ -22,8 +22,8 @@ public struct LoginSessionDataSource: DataSource {
 
     /// Parse `who` output into LoginSession objects.
     /// Format: `username  terminal  login_date login_time  (host)`
-    /// Example: `sebastian  console  Mar 18 09:15`
-    /// Example: `sebastian  ttys000  Mar 18 09:30 (192.168.1.5)`
+    /// Example: `analyst  console  Mar 18 09:15`
+    /// Example: `analyst  ttys000  Mar 18 09:30 (192.0.2.10)`
     internal static func parseWhoOutput(_ output: String) -> [LoginSession] {
         var sessions: [LoginSession] = []
 

@@ -194,10 +194,10 @@ For AD-joined Macs, Rootstock detects AD binding status and Kerberos artifacts (
 
 | BloodHound Feature | macOS Analog | Rootstock Status |
 |---|---|---|
-| **Interactive graph UI** (Sigma.js) | Neo4j Browser + HTML viewer | ✅ `viewer.py` generates Canvas-based HTML with pre-computed layout, progressive disclosure, and semantic zoom; Neo4j Browser for ad-hoc queries |
+| **Interactive graph UI** (Sigma.js) | Local workbench + Neo4j Browser | ✅ Shared live/offline Canvas workbench with a synchronized semantic node list, path workflow, filters, and detail dock |
 | **Shortest path finding** | Cypher `shortestPath()` | ✅ Queries 02, 41, 44, 47 |
-| **Pre-built queries** (170+ in library) | Pre-built Cypher library | ✅ **76 queries** (red team, blue team, forensic) |
-| **Custom Cypher editor** | Neo4j Browser Cypher console | ✅ Via Neo4j Browser |
+| **Pre-built queries** (170+ in library) | Pre-built Cypher library | ✅ **103 queries** (59 red team, 41 blue team, 3 forensic; see [`graph/queries/README.md`](../../graph/queries/README.md)) |
+| **Custom Cypher editor** | Workbench + Neo4j Browser Cypher console | ✅ Read-only editor in the live workbench; Neo4j Browser remains available for direct analysis |
 | **Tier Zero / High Value marking** | Tier 0/1/2 classification | ✅ `tier_classification.py` + queries 46-47 |
 | **"Owned" node marking** | Mark compromised nodes for pathfinding | ✅ `mark_owned.py` + `clear_owned.py` + queries 41-47 |
 | **Blast radius analysis** | Reachability from owned nodes | ✅ Queries 42, 45 |
@@ -217,7 +217,7 @@ For AD-joined Macs, Rootstock detects AD binding status and Kerberos artifacts (
 
 ## 6. Inference Engine Comparison
 
-BloodHound CE performs minimal post-collection inference (mostly during SharpHound collection itself). Rootstock runs a dedicated inference engine with **13 modules**:
+BloodHound CE performs minimal post-collection inference (mostly during SharpHound collection itself). Rootstock runs a dedicated inference engine with **17 modules**:
 
 | Module | Edge Created | Attack Vector |
 |---|---|---|
@@ -234,6 +234,10 @@ BloodHound CE performs minimal post-collection inference (mostly during SharpHou
 | `infer_group_capabilities.py` | `CAN_DEBUG` | _developer group debugger attachment |
 | `infer_password.py` | `CAN_CHANGE_PASSWORD` | Admin/sudo password change (ForceChangePassword analog) |
 | `infer_kerberos.py` | `CAN_READ_KERBEROS` | Injectable app → Kerberos artifact access (FDA, same-user, world-readable) |
+| `infer_sandbox.py` | `CAN_ESCAPE_SANDBOX`, `CAN_ACCESS_MACH_SERVICE` | Broad sandbox exceptions and privileged Mach service access |
+| `infer_quarantine.py` | `BYPASSED_GATEKEEPER` | Missing notarization and quarantine enforcement |
+| `infer_risk_score.py` | Application risk properties | Graph-native risk score, level, category, and finding counts |
+| `infer_recommendations.py` | `HAS_RECOMMENDATION`, `MITIGATES` | Evidence-linked remediation and ATT&CK technique mapping |
 
 All modules are idempotent (MERGE-based), carry `{inferred: true}` on edges, and run in dependency order.
 
@@ -250,10 +254,10 @@ All modules are idempotent (MERGE-based), carry `{inferred: true}` on edges, and
 | **macOS Edge Types** | 0 | **30** | Rootstock-only |
 | **Attack Path Categories (AD)** | ~15 | 0 | Out of scope |
 | **Attack Path Categories (macOS)** | 0 | **28+** | Rootstock-only |
-| **Pre-built Queries** | 170+ | **71** | Different domains |
+| **Pre-built Queries** | 170+ | **103** | Different domains |
 | **Collector Data Sources** | 12+ (AD/Azure) | **20+** (macOS-native) | Different domains |
-| **Inference Modules** | Minimal | **12** | Rootstock advantage |
-| **Interactive UI** | Full web UI | `viewer.py` Canvas HTML + Neo4j Browser | ✅ Implemented |
+| **Inference Modules** | Minimal | **17** | Rootstock advantage |
+| **Interactive UI** | Full web UI | Shared live/offline Canvas workbench + Neo4j Browser | ✅ Implemented |
 | **REST API** | Full RBAC API | `server.py` (FastAPI) | ✅ Implemented |
 | **Report Generation** | None built-in | **Markdown + HTML + Graphviz** | ✅ Rootstock advantage |
 | **Posture Trending** | BH Enterprise only | `diff_scans.py` | ✅ Implemented |

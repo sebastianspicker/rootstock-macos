@@ -55,6 +55,11 @@ Rootstock has three active components:
 `examples/demo-scan.json` is the synthetic demo fixture source of truth.
 Generated demo reports and viewers are local artifacts.
 
+The viewer source is maintained as `graph/viewer_template.html`,
+`graph/viewer.css`, and `graph/viewer.js`. Both `graph/viewer.py` and the live
+server assemble those files into the same dependency-free interface; generated
+offline viewers remain single HTML files.
+
 The scan JSON is the main contract. When collector output changes, keep
 `collector/schema/scan-result.schema.json`, `graph/models.py`, importer code,
 and at least one synthetic fixture in sync:
@@ -155,19 +160,6 @@ bash examples/regenerate.sh
 
 The generated files are written under `examples/generated/` and ignored by git.
 
-## Screenshots
-
-Screenshots use synthetic demo data from `examples/demo-scan.json`.
-
-| | |
-|---|---|
-| ![Full graph](docs/screenshots/01-full-graph.png) | ![Attack path](docs/screenshots/02-attack-path.png) |
-| ![Node inspector](docs/screenshots/03-node-inspector.png) | ![Electron inheritance](docs/screenshots/04-electron-inheritance.png) |
-| ![Report summary](docs/screenshots/05-report-summary.png) | ![Attack path diagram](docs/screenshots/06-attack-path-diagram.png) |
-| ![CVE table](docs/screenshots/07-cve-table.png) | ![Tier pie chart](docs/screenshots/08-tier-pie.png) |
-
-![Collector CLI output](docs/screenshots/09-cli-output.png)
-
 ## Verification
 
 ```bash
@@ -204,6 +196,9 @@ Do not claim graph runtime behavior verified unless the Neo4j lane ran.
 ## Documentation
 
 - [Documentation index](docs/README.md)
+- [Product contract](PRODUCT.md)
+- [Interface design system](DESIGN.md)
+- [Frontend and report interface](docs/frontend.md)
 - [Threat model](docs/THREAT_MODEL.md)
 - [FAQ](docs/FAQ.md)
 - [Neo4j Browser quickstart](docs/guides/neo4j-browser-quickstart.md)

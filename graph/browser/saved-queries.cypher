@@ -11,7 +11,7 @@
 // ============================================================
 
 
-// ── ★ KILLER QUERY 1 — Injectable FDA Apps ───────────────────────────────
+// ── ★ ANALYSIS QUERY 1 — Injectable FDA Apps ─────────────────────────────
 // Severity: Critical
 // Find all apps with Full Disk Access that can be code-injected by an attacker.
 // Attack: Inject dylib → inherit Full Disk Access → read TCC.db, SSH keys, Mail.
@@ -30,7 +30,7 @@ RETURN app.name            AS app_name,
 ORDER BY method_count DESC, app.name ASC;
 
 
-// ── ★ KILLER QUERY 2 — Shortest Path to Full Disk Access ─────────────────
+// ── ★ ANALYSIS QUERY 2 — Shortest Path to Full Disk Access ───────────────
 // Severity: Critical
 // Find the minimum-hop chain from attacker payload to Full Disk Access.
 
@@ -45,7 +45,7 @@ ORDER BY path_length ASC
 LIMIT 10;
 
 
-// ── ★ KILLER QUERY 3 — Electron TCC Inheritance ──────────────────────────
+// ── ★ ANALYSIS QUERY 3 — Electron TCC Inheritance ────────────────────────
 // Severity: High
 // Which Electron apps pass TCC permissions to child processes via ELECTRON_RUN_AS_NODE?
 
@@ -59,7 +59,7 @@ RETURN app.name              AS app_name,
 ORDER BY permission_count DESC, app.name ASC;
 
 
-// ── ★ KILLER QUERY 4 — Private Entitlement Audit ─────────────────────────
+// ── ★ ANALYSIS QUERY 4 — Private Entitlement Audit ───────────────────────
 // Severity: High
 // Third-party apps with private Apple entitlements — high-value injection targets.
 
@@ -76,7 +76,7 @@ RETURN app.name                          AS app_name,
 ORDER BY private_ent_count DESC, app.name ASC;
 
 
-// ── ★ KILLER QUERY 5 — Apple Event TCC Cascade ───────────────────────────
+// ── ★ ANALYSIS QUERY 5 — Apple Event TCC Cascade ─────────────────────────
 // Severity: High
 // Apps that gain TCC access transitively via Apple Event automation.
 
@@ -94,7 +94,7 @@ RETURN source.name                           AS source_app,
 ORDER BY source.name ASC, perm.display_name ASC;
 
 
-// ── ★ KILLER QUERY 6 — Multi-hop Injection Chain ─────────────────────────
+// ── ★ ANALYSIS QUERY 6 — Multi-hop Injection Chain ───────────────────────
 // Severity: Critical
 // Chains of injectable apps leading to high-value TCC permissions.
 
@@ -116,7 +116,7 @@ ORDER BY hops ASC, perm.display_name ASC
 LIMIT 20;
 
 
-// ── ★ KILLER QUERY 7 — TCC Grant Overview ────────────────────────────────
+// ── ★ ANALYSIS QUERY 7 — TCC Grant Overview ──────────────────────────────
 // Severity: Informational / Blue Team
 // Full distribution of TCC grants across all services.
 
@@ -130,7 +130,7 @@ RETURN permission, service, allowed_count, denied_count, total_grants
 ORDER BY total_grants DESC;
 
 
-// ── ★ KILLER QUERY 8 — Persistence Audit ─────────────────────────────────
+// ── ★ ANALYSIS QUERY 8 — Persistence Audit ───────────────────────────────
 // Severity: High
 // Third-party LaunchDaemons/Agents that run as root or are linked to injectable apps.
 
@@ -151,7 +151,7 @@ ORDER BY runs_as_root DESC, app_is_injectable DESC, l.label
 LIMIT 50;
 
 
-// ── ★ KILLER QUERY 9 — Keychain ACL Audit ────────────────────────────────
+// ── ★ ANALYSIS QUERY 9 — Keychain ACL Audit ──────────────────────────────
 // Severity: High
 // Applications with direct Keychain read access (no user prompt required).
 
@@ -164,7 +164,7 @@ ORDER BY app_is_injectable DESC, a.name, k.kind, k.label
 LIMIT 100;
 
 
-// ── ★ KILLER QUERY 10 — MDM-Managed TCC ─────────────────────────────────
+// ── ★ ANALYSIS QUERY 10 — MDM-Managed TCC ───────────────────────────────
 // Severity: High
 // TCC permissions silently enforced via MDM (cannot be revoked by user).
 

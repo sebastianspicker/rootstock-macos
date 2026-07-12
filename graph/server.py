@@ -53,6 +53,7 @@ from mark_owned import (
 )
 from clear_owned import clear_all, clear_by_bundle_id, clear_by_username
 from tier_classification import classify
+from viewer import viewer_script_source
 
 
 # ── Request/Response models ─────────────────────────────────────────────────
@@ -178,7 +179,8 @@ async def require_api_token(request: Request, call_next):
 @app.get("/", response_class=HTMLResponse)
 def serve_viewer(request: Request):
     """Serve the live interactive viewer without embedding graph data."""
-    template_path = Path(__file__).parent / "viewer_template.html"
+    asset_dir = Path(__file__).parent
+    template_path = asset_dir / "viewer_template.html"
     template = template_path.read_text()
 
     data = _empty_graph_payload()
@@ -188,8 +190,10 @@ def serve_viewer(request: Request):
     # Inject live mode flag and replace template placeholders
     live_inject = "const __ROOTSTOCK_LIVE__ = true;\nconst API_BASE = '';\n"
     html = template.replace("{{VIEWER_TITLE}}", html_mod.escape(title))
+    html = html.replace("{{VIEWER_CSS}}", (asset_dir / "viewer.css").read_text())
+    html = html.replace("{{VIEWER_JS}}", viewer_script_source(asset_dir))
     html = html.replace(
-        "let DATA = {{VIEWER_DATA}};",
+        "let DATA = null /* VIEWER_DATA */;",
         live_inject + "let DATA = " + safe_json + ";",
     )
 

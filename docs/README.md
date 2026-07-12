@@ -4,9 +4,15 @@ This directory contains the active public documentation for Rootstock.
 
 ## Active Docs
 
+- [Product contract](../PRODUCT.md) - audience, purpose, interaction principles,
+  and accessibility target.
+- [Interface design system](../DESIGN.md) - themes, tokens, layout, components,
+  and content rules.
 - [FAQ](FAQ.md) - usage notes, scope boundaries, and common troubleshooting.
 - [Quality](QUALITY.md) - verification expectations and quality gates.
 - [Threat model](THREAT_MODEL.md) - security assumptions and trust boundaries.
+- [Frontend and report interface](frontend.md) - viewer workflows, storage,
+  accessibility, responsive behavior, and release checks.
 - [Comparison](COMPARISON.md) - positioning against adjacent tools.
 - [Contributing ideas](CONTRIBUTING_IDEAS.md) - scoped areas for future work.
 - [Guides](guides/) - operator and module guides.
@@ -15,7 +21,6 @@ This directory contains the active public documentation for Rootstock.
 - [Research](research/) - background notes that support active behavior.
 - [Benchmarks](benchmarks/) - public benchmark method and acceptance targets;
   machine-derived results stay local.
-- [Screenshots](screenshots/) - synthetic demo screenshots used by public docs.
 
 ## Archive Policy
 

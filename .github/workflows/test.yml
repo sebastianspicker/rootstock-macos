@@ -59,6 +59,9 @@ jobs:
         run: pip install -r requirements.txt pytest
       - name: Validate demo scan contract
         run: python3 scripts/validate-scan.py examples/demo-scan.json
+      - name: Viewer performance contract
+        working-directory: graph
+        run: timeout 30s node tests/viewer_performance.js
       - name: pytest graph required Neo4j lane
         working-directory: graph
         env:

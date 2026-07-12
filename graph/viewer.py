@@ -26,6 +26,21 @@ from pathlib import Path
 
 from viewer_layout import compute_layout
 
+VIEWER_SCRIPT_FILES = (
+    "viewer.js",
+    "viewer_spatial.js",
+    "viewer_render.js",
+    "viewer_analysis.js",
+    "viewer_controls.js",
+    "viewer_live.js",
+    "viewer_shell.js",
+)
+
+
+def viewer_script_source(asset_dir: Path) -> str:
+    """Return viewer modules in browser execution order."""
+    return "\n".join((asset_dir / name).read_text() for name in VIEWER_SCRIPT_FILES)
+
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
@@ -83,9 +98,13 @@ def _viewer_html(data: dict) -> str:
     title = f"{hostname} Attack Graph"
     safe_title = html_mod.escape(title)
     safe_json = json.dumps(data).replace("</", "<\\/")
-    template = (Path(__file__).parent / "viewer_template.html").read_text()
-    return template.replace("{{VIEWER_TITLE}}", safe_title).replace(
-        "{{VIEWER_DATA}}", safe_json
+    asset_dir = Path(__file__).parent
+    template = (asset_dir / "viewer_template.html").read_text()
+    return (
+        template.replace("{{VIEWER_TITLE}}", safe_title)
+        .replace("{{VIEWER_CSS}}", (asset_dir / "viewer.css").read_text())
+        .replace("{{VIEWER_JS}}", viewer_script_source(asset_dir))
+        .replace("null /* VIEWER_DATA */", safe_json)
     )
 
 
