@@ -1,0 +1,27 @@
+{
+  "version": 13,
+  "items": [
+    {
+      "name": "Evil Agent",
+      "url": "file:///Users/alice/Library/LaunchAgents/com.evil.agent.plist",
+      "executable_path": "/tmp/evil_payload",
+      "type": 8,
+      "disposition": 3,
+      "developer": "Unknown",
+      "container": "user",
+      "uid": "501",
+      "user": "alice"
+    },
+    {
+      "name": "Safari",
+      "url": "file:///System/Applications/Safari.app",
+      "executable_path": "/System/Applications/Safari.app/Contents/MacOS/Safari",
+      "type": 6,
+      "disposition": 3,
+      "developer": "Apple Inc.",
+      "container": "user",
+      "uid": "501",
+      "user": "alice"
+    }
+  ]
+}

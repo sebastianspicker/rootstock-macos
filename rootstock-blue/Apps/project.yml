@@ -1,0 +1,82 @@
+# XcodeGen specification - run: make xcode
+# Generates Apps/RootstockBlue.xcodeproj when xcodegen is installed.
+name: RootstockBlue
+options:
+  bundleIdPrefix: dev.rootstock.blue
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+packages:
+  RootstockBlue:
+    path: ..
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+targets:
+  RootstockBlue:
+    type: application
+    platform: macOS
+    sources:
+      - path: RootstockBlue
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.rootstock.blue.app
+      INFOPLIST_FILE: RootstockBlue/Info.plist
+      LD_RUNPATH_SEARCH_PATHS: ["$(inherited)", "@executable_path/../Frameworks"]
+    dependencies:
+      - package: RootstockBlue
+        product: RootstockBlueCore
+      - package: RootstockBlue
+        product: RootstockBlueCase
+      - package: RootstockBlue
+        product: RootstockBlueESKit
+      - package: RootstockBlue
+        product: RootstockBlueFX
+      - package: RootstockBlue
+        product: RootstockBlueDetect
+      - package: RootstockBlue
+        product: RootstockBlueCollect
+      - package: RootstockBlue
+        product: RootstockBlueExport
+  RootstockBlueES:
+    type: tool
+    platform: macOS
+    sources:
+      - path: RootstockBlueES
+        excludes:
+          - "*.entitlements"
+          - "Info.plist"
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.rootstock.blue.es
+      PRODUCT_NAME: RootstockBlueES
+    dependencies:
+      - package: RootstockBlue
+        product: RootstockBlueCore
+      - package: RootstockBlue
+        product: RootstockBlueESKit
+  rootstock-blued:
+    type: tool
+    platform: macOS
+    sources:
+      - path: rootstock-blued
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.rootstock.blue.daemon
+    dependencies:
+      - package: RootstockBlue
+        product: RootstockBlueCore
+      - package: RootstockBlue
+        product: RootstockBlueESKit
+      - package: RootstockBlue
+        product: RootstockBlueXPC
+  RootstockBlueHelper:
+    type: tool
+    platform: macOS
+    sources:
+      - path: RootstockBlueHelper
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.rootstock.blue.helper
+    dependencies:
+      - package: RootstockBlue
+        product: RootstockBlueCore
+      - package: RootstockBlue
+        product: RootstockBlueXPC

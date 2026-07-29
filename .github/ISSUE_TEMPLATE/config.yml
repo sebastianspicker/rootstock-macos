@@ -3,6 +3,12 @@ contact_links:
   - name: Security vulnerability
     url: https://github.com/sebastianspicker/rootstock/security/advisories/new
     about: Report vulnerabilities in Rootstock privately. Do not open public issues for security reports.
+  - name: Contributing guide
+    url: https://github.com/sebastianspicker/rootstock/blob/main/CONTRIBUTING.md
+    about: Setup, coding style, PR expectations, and what not to paste from real scans.
+  - name: Product family map
+    url: https://github.com/sebastianspicker/rootstock/blob/main/docs/FAMILY.md
+    about: Core, Red, Blue, and shared-package roles, artifacts, and boundaries.
   - name: Documentation and usage question
     url: https://github.com/sebastianspicker/rootstock/blob/main/docs/FAQ.md
     about: Check usage guidance before filing an issue, and do not attach real scan artifacts.

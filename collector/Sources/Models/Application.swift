@@ -18,8 +18,6 @@ public struct Application: Codable, Sendable, GraphNode {
     public let sandboxExceptions: [String]
     public let entitlementsAvailable: Bool
     public let entitlementExtractionError: String?
-    public let isNotarized: Bool?
-    public let isAdhocSigned: Bool
     public let signingCertificateCN: String?
     public let signingCertificateSHA256: String?
     public let certificateExpires: String?
@@ -27,6 +25,8 @@ public struct Application: Codable, Sendable, GraphNode {
     public let certificateChainLength: Int?
     public let certificateTrustValid: Bool?
     public let certificateChain: [CertificateDetail]
+    public let isNotarized: Bool?
+    public let isAdhocSigned: Bool
     public let entitlements: [EntitlementInfo]
     public let injectionMethods: [InjectionMethod]
     public let launchConstraintCategory: String?
@@ -207,8 +207,6 @@ public struct Application: Codable, Sendable, GraphNode {
         self.sandboxExceptions = security.sandboxExceptions
         self.entitlementsAvailable = entitlementState.entitlementsAvailable
         self.entitlementExtractionError = entitlementState.entitlementExtractionError
-        self.isNotarized = signing.isNotarized
-        self.isAdhocSigned = signing.isAdhocSigned
         self.signingCertificateCN = signing.signingCertificateCN
         self.signingCertificateSHA256 = signing.signingCertificateSHA256
         self.certificateExpires = signing.certificateExpires
@@ -216,6 +214,8 @@ public struct Application: Codable, Sendable, GraphNode {
         self.certificateChainLength = signing.certificateChainLength
         self.certificateTrustValid = signing.certificateTrustValid
         self.certificateChain = signing.certificateChain
+        self.isNotarized = signing.isNotarized
+        self.isAdhocSigned = signing.isAdhocSigned
         self.entitlements = entitlementState.entitlements
         self.injectionMethods = entitlementState.injectionMethods
         self.launchConstraintCategory = entitlementState.launchConstraintCategory
@@ -260,6 +260,23 @@ public struct Application: Codable, Sendable, GraphNode {
 // MARK: - Builder methods for single-field enrichment
 
 extension Application {
+    /// Returns a copy with the supplied analysis states, preserving identity and enrichments.
+    public func replacing(
+        signing: Signing,
+        security: Security,
+        entitlementState: EntitlementState
+    ) -> Application {
+        Application(
+            identity: identity,
+            flags: flags,
+            signing: signing,
+            security: security,
+            entitlementState: entitlementState,
+            sandboxProfile: sandboxProfile,
+            quarantineInfo: quarantineInfo
+        )
+    }
+
     /// Returns a copy with a different sandboxProfile, preserving all other fields.
     public func with(sandboxProfile newProfile: SandboxProfile?) -> Application {
         Application(

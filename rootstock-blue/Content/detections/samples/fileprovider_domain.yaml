@@ -1,0 +1,13 @@
+id: sample.fileprovider_domain
+title: File Provider domain residual surface surface present
+severity: high
+description: File Provider domain markers indicate IR surface.
+attack_techniques:
+  - T1080
+  - T1530
+  - T1005
+match:
+  event_type: fileprovider.domain
+  field_contains:
+    fpdom.risk_tags: "fileprovider_surface"
+fixture: fileprovider_domain.jsonl

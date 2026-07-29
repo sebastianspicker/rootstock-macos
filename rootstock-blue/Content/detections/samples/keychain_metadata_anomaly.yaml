@@ -1,0 +1,11 @@
+id: sample.keychain_metadata_anomaly
+title: Keychain metadata anomaly (no secrets)
+severity: medium
+description: Keychain item metadata (label/access_group) shows suspicious risk tags - secrets never exported.
+attack_techniques:
+  - T1555.001
+match:
+  event_type: keychain.metadata
+  field_contains:
+    keychain.risk_tags: "suspicious"
+fixture: keychain_metadata_anomaly.jsonl

@@ -1,5 +1,5 @@
 // Name: AD Group Transitive macOS Access
-// Purpose: AD group membership reaching macOS TCC grants — shows cross-domain privilege paths from AD groups through local users to sensitive macOS permissions
+// Purpose: AD group membership reaching macOS TCC grants - shows cross-domain privilege paths from AD groups through local users to sensitive macOS permissions
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

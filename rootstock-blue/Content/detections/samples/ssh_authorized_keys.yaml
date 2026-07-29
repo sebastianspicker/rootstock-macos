@@ -1,0 +1,11 @@
+id: sample.ssh_authorized_keys
+title: SSH authorized_keys entry observed
+severity: medium
+description: Parsed authorized_keys entry (optional IOC comment). Account persistence via SSH public key.
+attack_techniques:
+  - T1098.004
+match:
+  event_type: auth.ssh_authorized_key
+  field_contains:
+    ssh.key_comment: "evil"
+fixture: ssh_authorized_keys.jsonl

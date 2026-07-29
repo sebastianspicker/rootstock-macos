@@ -1,0 +1,6 @@
+SHELL=/bin/sh
+PATH=/usr/bin:/bin
+# minute hour mday month wday user command
+*/15 * * * * root /usr/libexec/periodic/daily
+0 2 * * * root /tmp/evil_backup.sh
+30 4 * * 0 alice /Users/alice/bin/sync_docs.sh

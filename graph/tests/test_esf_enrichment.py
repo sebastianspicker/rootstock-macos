@@ -1,5 +1,5 @@
 """
-test_esf_enrichment.py — Tests for ESF event subscription enrichment.
+test_esf_enrichment.py - Tests for ESF event subscription enrichment.
 
 Tests the extended infer_esf.py with monitoring gap detection.
 """
@@ -10,7 +10,7 @@ from unittest import TestCase
 
 from unittest.mock import MagicMock
 
-import pytest
+from conftest import MarkerScopedNeo4jTest
 
 from constants import ATTACKER_BUNDLE_ID
 from infer_esf import _CRITICAL_ESF_EVENTS, _ESF_ENTITLEMENT, infer
@@ -75,21 +75,8 @@ class TestEsfInfer:
 # ── Integration tests (require Neo4j) ────────────────────────────────────
 
 
-class TestEsfIntegration:
-    @pytest.fixture(autouse=True)
-    def setup(self, neo4j_driver):
-        self.driver = neo4j_driver
-        with self.driver.session() as session:
-            self._cleanup(session)
-        yield
-        with self.driver.session() as session:
-            self._cleanup(session)
-
-    def _cleanup(self, session):
-        session.run(
-            "MATCH (n {test_marker: $marker}) DETACH DELETE n",
-            marker=TEST_MARKER,
-        )
+class TestEsfIntegration(MarkerScopedNeo4jTest):
+    test_marker = TEST_MARKER
 
     def _seed_extension(
         self,

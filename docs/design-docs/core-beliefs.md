@@ -1,46 +1,45 @@
-# Core Beliefs — Design Principles
+# Core Design Principles
 
-> These principles guide every decision in Rootstock.
-> When in doubt, refer back to these.
+These principles document current architectural constraints and review
+criteria.
 
-## 1. Metadata, Never Secrets
+## 1. Collect metadata, not secret values
 
-Rootstock discovers *relationships* between security boundaries — not the secrets they
+Rootstock discovers relationships between security boundaries - not the secrets they
 protect. We read ACLs, not passwords. We read entitlements, not tokens. This is not just
 policy; it's an architectural invariant enforced at the data model level.
 
-**Test:** If you removed all Keychain passwords from the system, Rootstock's output would
-be identical.
+Test: Changing a Keychain secret value without changing item or ACL metadata
+does not change Rootstock's output.
 
-## 2. Graceful Degradation Over Hard Failure
+## 2. Preserve partial evidence on recoverable failures
 
-The collector runs in diverse environments — some with FDA, some without; some with SIP
-disabled, most with it enabled. Every data source module must produce partial results
-rather than failing the entire scan.
+The collector runs with different permissions and host configurations. A
+recoverable module error is recorded in the scan while other selected modules
+continue. Non-recoverable errors remain visible as failed scan status.
 
-**Test:** Running the collector as a normal user (no elevation, no FDA) should still
-produce a useful graph — just with fewer nodes.
+Test: Running without elevation or Full Disk Access still writes a parseable
+artifact that records unavailable evidence and collection errors.
 
-## 3. Static Artifacts Over Live State
+## 3. Use replayable artifacts between collection and analysis
 
-Rootstock produces JSON files that can be stored, diffed, shared, and replayed. The
-collector doesn't maintain persistent state or require a running service. This makes
-results reproducible and auditable — critical for both red team reports and academic papers.
+The collector writes JSON that can be stored, diffed, and replayed through the
+analysis pipeline. The collection itself observes live host state and is not
+reproducible unless the relevant host evidence is unchanged.
 
-## 4. Offense Informs Defense
+## 4. Pair modeled paths with defensive context
 
-Every attack path Rootstock discovers should have an actionable defensive recommendation.
-The graph model is designed for both red teams ("how do I get to FDA?") and blue teams
-("which apps with FDA are injectable?").
+Modeled paths should identify their assumptions and relevant defensive review
+steps. A graph relationship is not evidence that exploitation occurred.
 
-## 5. Apple Changes Things
+## 5. Isolate operating-system-specific behavior
 
 macOS security mechanisms evolve significantly with each annual release. The architecture
-must isolate version-specific logic behind stable interfaces. Hard-coded paths, service
-names, and database schemas are technical debt with a one-year half-life.
+must isolate version-specific logic behind narrow interfaces. Paths, service
+names, and database schemas require fixture and compatibility review.
 
-## 6. The Graph Is the Product
+## 6. Treat graph contracts as the primary integration surface
 
-The collector is a means to an end. The real value is in the graph model, the relationships,
-and the queries. When prioritizing work, always ask: "Does this make the graph more
+The collector feeds the graph model, relationships, and queries. When
+prioritizing work, ask: "Does this make the graph more
 accurate or more queryable?"

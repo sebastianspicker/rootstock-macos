@@ -1,4 +1,4 @@
-# Security-Critical Entitlements — Reference
+# Security-Critical Entitlements - Reference
 
 > Reference for the Collector Engineer when classifying entitlements by security impact.
 > These entitlements represent the highest-value targets for attack path analysis.
@@ -11,16 +11,17 @@ These make an app a viable injection target:
 |---|---|---|
 | `com.apple.security.cs.allow-dyld-environment-variables` | Allows DYLD_* env vars | Enables DYLD_INSERT_LIBRARIES injection even with hardened runtime |
 | `com.apple.security.cs.disable-library-validation` | Disables library validation | Allows loading unsigned/differently-signed dylibs |
-| `com.apple.security.cs.allow-unsigned-executable-memory` | Allows JIT | Enables runtime code generation, potential for code injection |
+| `com.apple.security.cs.allow-unsigned-executable-memory` | Allows JIT | Enables writable executable memory, with potential for code injection |
 | `com.apple.security.cs.disable-executable-page-protection` | Disables W^X | Allows writable+executable memory pages |
 
 ## TCC-Related Private Entitlements
 
-These grant TCC access without user consent:
+These private entitlements are associated with TCC authorization behavior.
+Effective access depends on the signed value and runtime context.
 
 | Entitlement | Effect | Attack Relevance |
 |---|---|---|
-| `com.apple.private.tcc.allow` | Bypass TCC for listed services | App silently gets TCC access — if injectable, attacker inherits |
+| `com.apple.private.tcc.allow` | Bypass TCC for listed services | Review listed services and validate behavior; modeled injection does not prove inheritance |
 | `com.apple.private.tcc.manager` | Can modify TCC database | Can grant TCC permissions to other apps |
 | `com.apple.private.tcc.manager.check-by-audit-token` | TCC check bypass | Can check TCC without standard validation |
 

@@ -1,0 +1,13 @@
+id: sample.font_validation_dualuse
+title: Font validation / ATS dual-use surface surface present
+severity: high
+description: Font validation dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1204
+  - T1189
+  - T1059
+match:
+  event_type: font.validation
+  field_contains:
+    fontval.risk_tags: "font_surface"
+fixture: font_validation_dualuse.jsonl

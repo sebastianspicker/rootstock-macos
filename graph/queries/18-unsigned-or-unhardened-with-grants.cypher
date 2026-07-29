@@ -5,11 +5,11 @@
 // Parameters: none
 // Prerequisites: import_scan.py must have run
 //
-// Use case: Identify immediate risks — apps that hold TCC permissions but have
-// no Hardened Runtime or are unsigned. These are trivially injectable and should
-// either be remediated or have their TCC grants revoked.
+// Use case: Review apps that hold TCC permissions and are unsigned or lack
+// selected runtime protections. Validate injection conditions and provenance
+// before deciding whether to remediate the app or revoke a grant.
 //
-// Findings here require no inference engine — the raw data itself shows the risk.
+// This query reports collected properties and does not prove exploitability.
 
 MATCH (app:Application {is_system: false})-[r:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
 WHERE app.signed = false

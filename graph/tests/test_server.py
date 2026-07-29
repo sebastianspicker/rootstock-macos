@@ -1,5 +1,5 @@
 """
-test_server.py — Tests for the Rootstock REST API server.
+test_server.py - Tests for the Rootstock REST API server.
 
 Uses FastAPI's TestClient for synchronous HTTP testing without
 requiring a running Neo4j instance (tests mock the Neo4j session).
@@ -19,7 +19,7 @@ from neo4j.exceptions import ServiceUnavailable
 import pytest
 
 def _fixture_api_bearer_value() -> str:
-    return "-".join(("fixture", "api", "bearer"))
+    return "-".join(("fixture", "api", "bearer", "x" * 32))
 
 
 def _fixture_neo4j_credential() -> str:
@@ -117,6 +117,15 @@ class TestAuthAndBindGuards:
         checks.assertEqual(response.status_code, 401)
         checks.assertEqual(response.headers["www-authenticate"], "Bearer")
 
+    def test_responses_include_browser_security_headers(self, raw_client):
+        response = raw_client.get("/")
+
+        checks.assertEqual(response.headers["cache-control"], "no-store")
+        checks.assertIn("frame-ancestors 'none'", response.headers["content-security-policy"])
+        checks.assertEqual(response.headers["referrer-policy"], "no-referrer")
+        checks.assertEqual(response.headers["x-content-type-options"], "nosniff")
+        checks.assertEqual(response.headers["x-frame-options"], "DENY")
+
     def test_api_accepts_valid_bearer_token(self, raw_client):
         response = raw_client.get("/api/queries", headers=AUTH_HEADERS)
         checks.assertEqual(response.status_code, 200)
@@ -128,6 +137,14 @@ class TestAuthAndBindGuards:
 
         checks.assertEqual(response.status_code, 401)
 
+    def test_token_comparison_handles_non_ascii_input(self):
+        from server import _matches_api_token
+
+        checks.assertIs(
+            _matches_api_token("Bearer ü", _fixture_api_bearer_value()),
+            False,
+        )
+
     def test_openapi_schema_is_not_exposed(self, raw_client):
         response = raw_client.get("/openapi.json")
 
@@ -138,15 +155,47 @@ class TestAuthAndBindGuards:
         checks.assertEqual(response.status_code, 200)
         checks.assertIn('"nodes": []', response.text)
         checks.assertIn('"edges": []', response.text)
+        checks.assertIn('"mode": "live"', response.text)
+        checks.assertIn("RootstockViewer.mount(", response.text)
+        checks.assertNotIn("{{VIEWER_", response.text)
 
-    def test_non_loopback_bind_requires_explicit_remote_flag(self):
+    def test_alpha_bind_is_loopback_only(self):
         from server import _validate_bind_host
 
-        _validate_bind_host("127.0.0.1", allow_remote=False)
-        _validate_bind_host("::1", allow_remote=False)
-        _validate_bind_host(NON_LOOPBACK_BIND_HOST, allow_remote=True)
+        _validate_bind_host("127.0.0.1")
+        _validate_bind_host("::1")
+        _validate_bind_host("localhost")
         with pytest.raises(ValueError):
-            _validate_bind_host(NON_LOOPBACK_BIND_HOST, allow_remote=False)
+            _validate_bind_host(NON_LOOPBACK_BIND_HOST)
+
+    def test_parser_rejects_removed_remote_override(self):
+        from server import _build_parser
+
+        with pytest.raises(SystemExit):
+            _build_parser().parse_args(["--allow-remote"])
+
+    def test_parser_rejects_password_argument(self):
+        from server import _build_parser
+
+        with pytest.raises(SystemExit):
+            _build_parser().parse_args(["--neo4j-password", "secret"])
+
+    def test_alpha_neo4j_uri_is_loopback_only_and_has_no_userinfo(self):
+        from server import _validate_neo4j_uri
+
+        _validate_neo4j_uri("bolt://localhost:7687")
+        _validate_neo4j_uri("neo4j://[::1]:7687")
+        with pytest.raises(ValueError):
+            _validate_neo4j_uri("bolt://192.0.2.10:7687")
+        with pytest.raises(ValueError):
+            _validate_neo4j_uri("bolt://user:password@localhost:7687")
+
+    def test_api_token_has_a_minimum_length(self):
+        from server import _validate_api_token
+
+        _validate_api_token("x" * 32)
+        with pytest.raises(ValueError):
+            _validate_api_token("too-short")
 
 
 class TestQueryEndpoints:
@@ -198,6 +247,54 @@ class TestQueryEndpoints:
 
         checks.assertEqual(response.status_code, 503)
         checks.assertEqual(response.json()["detail"], "Neo4j unavailable")
+
+    def test_saved_query_rows_are_limited(self, client):
+        rows = [{"n": index} for index in range(1005)]
+        with patch("server.run_query", return_value=rows):
+            response = client.post("/api/queries/79/run", json={"params": {}})
+
+        checks.assertEqual(response.status_code, 200)
+        checks.assertEqual(response.json()["count"], 1000)
+        checks.assertIs(response.json()["truncated"], True)
+
+    def test_configured_query_must_be_read_only(self, client):
+        with patch(
+            "server.find_query",
+            return_value={
+                "id": "fixture",
+                "name": "Unsafe fixture",
+                "category": "Test",
+                "severity": "Informational",
+                "cypher": "MATCH (n) DELETE n",
+            },
+        ):
+            response = client.post("/api/queries/fixture/run", json={"params": {}})
+
+        checks.assertEqual(response.status_code, 500)
+        checks.assertEqual(
+            response.json()["detail"],
+            "Configured query is not read-only",
+        )
+
+    def test_configured_query_must_not_call_procedures(self, client):
+        with patch(
+            "server.find_query",
+            return_value={
+                "id": "fixture",
+                "name": "Procedure fixture",
+                "category": "Test",
+                "severity": "Informational",
+                "cypher": "CALL db.labels()",
+            },
+        ):
+            response = client.post("/api/queries/fixture/run", json={"params": {}})
+
+        checks.assertEqual(response.status_code, 500)
+        checks.assertEqual(
+            response.json()["detail"],
+            "Configured query is not read-only",
+        )
+
     def test_cypher_execution_failure_returns_error_detail(self, client):
         from server import get_read_session
 
@@ -267,6 +364,25 @@ class TestStaticEndpoints:
             first.json()["graph"]["nodes"], second.json()["graph"]["nodes"]
         )
 
+    def test_live_graph_rejects_payload_beyond_interactive_limit(self, client):
+        oversized = {
+            "graph": {
+                "nodes": [
+                    {"id": f"n{index}", "kind": "rs_Application"}
+                    for index in range(10_001)
+                ],
+                "edges": [],
+            }
+        }
+        with (
+            patch("server._get_hostname", return_value="cached-host"),
+            patch("server.build_opengraph", return_value=oversized),
+        ):
+            response = client.get("/api/graph")
+
+        checks.assertEqual(response.status_code, 413)
+        checks.assertIn("interactive limit", response.json()["detail"])
+
 
 class TestOwnedEndpoints:
     def test_mark_owned_no_match(self, client):
@@ -309,6 +425,25 @@ class TestCypherEndpoint:
         response = client.post("/api/cypher", json={"cypher": "CALL dbms.listConfig()"})
         checks.assertEqual(response.status_code, 403)
 
+    def test_all_procedures_are_rejected(self, client):
+        response = client.post("/api/cypher", json={"cypher": "CALL db.labels()"})
+        checks.assertEqual(response.status_code, 403)
+
+    @pytest.mark.parametrize(
+        "cypher",
+        [
+            "START // split clause\nDATABASE neo4j",
+            "STOP // split clause\nDATABASE neo4j",
+            'LOAD // split clause\nCSV FROM "https://example.test/data" AS row RETURN row',
+            "ENABLE // split clause\nSERVER 'fixture-id'",
+            "DEALLOCATE // split clause\nDATABASES FROM SERVER 'fixture-id'",
+            "REALLOCATE // split clause\nDATABASES",
+        ],
+    )
+    def test_inline_comments_cannot_split_blocked_clauses(self, client, cypher):
+        response = client.post("/api/cypher", json={"cypher": cypher})
+        checks.assertEqual(response.status_code, 403)
+
     def test_oversized_query_rejected(self, client):
         response = client.post(
             "/api/cypher", json={"cypher": "MATCH (n) RETURN n // " + ("x" * 10000)}
@@ -343,6 +478,13 @@ class TestCypherEndpoint:
         """POST /api/cypher with CREATE should return 403."""
         response = client.post(
             "/api/cypher", json={"cypher": "CREATE (n:Test {name: 'bad'})"}
+        )
+        checks.assertEqual(response.status_code, 403)
+
+    def test_write_query_rejected_insert(self, client):
+        """POST /api/cypher with the GQL INSERT synonym should return 403."""
+        response = client.post(
+            "/api/cypher", json={"cypher": "INSERT (n:Test {name: 'bad'})"}
         )
         checks.assertEqual(response.status_code, 403)
 

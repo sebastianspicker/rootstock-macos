@@ -1,0 +1,13 @@
+id: sample.wallet_pass_path
+title: Wallet / pass residual path plane surface present
+severity: high
+description: Wallet pass path markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1555
+  - T1083
+match:
+  event_type: wallet.pass
+  field_contains:
+    wltpass.risk_tags: "wallet_surface"
+fixture: wallet_pass_path.jsonl

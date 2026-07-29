@@ -9,7 +9,7 @@ from cve_reference_models import CveEntry
 
 _CVE_2023_41064 = CveEntry(
     cve_id="CVE-2023-41064",
-    title="BLASTPASS — ImageIO Buffer Overflow",
+    title="BLASTPASS - ImageIO Buffer Overflow",
     cvss_score=7.8,
     affected_versions="macOS 13.5 and earlier, iOS 16.6 and earlier",
     patched_version="macOS 13.5.2, iOS 16.6.1",
@@ -26,7 +26,7 @@ _CVE_2023_41064 = CveEntry(
 
 _CVE_2023_41061 = CveEntry(
     cve_id="CVE-2023-41061",
-    title="BLASTPASS — Wallet Validation Issue",
+    title="BLASTPASS - Wallet Validation Issue",
     cvss_score=7.8,
     affected_versions="macOS 13.5 and earlier, iOS 16.6 and earlier",
     patched_version="macOS 13.5.2, iOS 16.6.1",

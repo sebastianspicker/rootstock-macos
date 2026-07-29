@@ -1,0 +1,11 @@
+{
+  "assessments": [
+    {
+      "path": "/tmp/evil_payload",
+      "result": "override",
+      "policy": "user_override",
+      "override": true,
+      "timestamp": "2026-03-01T12:30:00Z"
+    }
+  ]
+}

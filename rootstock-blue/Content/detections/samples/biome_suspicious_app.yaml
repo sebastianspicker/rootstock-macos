@@ -1,0 +1,11 @@
+id: sample.biome_suspicious_app
+title: Biome app launch for suspicious bundle
+severity: low
+description: Pattern-of-life Biome stream shows launch of known-suspicious bundle id.
+attack_techniques:
+  - T1204
+match:
+  event_type: pol.biome_app_launch
+  field_contains:
+    pol.value: "com.evil"
+fixture: biome_suspicious_app.jsonl

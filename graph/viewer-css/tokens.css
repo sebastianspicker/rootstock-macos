@@ -1,0 +1,118 @@
+/* Graphite Laboratory v2 — design tokens
+   Variable NAMES preserved for JS / inline styles.
+   Dark --muted/--subtle meet WCAG AA ≥4.5:1 on --ink and --pane. */
+
+:root {
+  color-scheme: dark;
+  --ink: #090b0f;
+  --ink-deep: #0c0e13;
+  --pane: #10131a;
+  --pane-raised: #151922;
+  --pane-selected: #1a2434;
+  --rule: rgba(255, 255, 255, 0.06);
+  --rule-strong: rgba(255, 255, 255, 0.12);
+  --text: #eceef2;
+  --muted: #a4adbf;
+  --subtle: #8b93a7;
+  --action: #6aafff;
+  --action-strong: #4a92e8;
+  --critical: #f07178;
+  --high: #d9a04a;
+  --medium: #c9b44a;
+  --low: #6a9fd8;
+  --verified: #5cbc80;
+  --path: #6ecfbc;
+  --overlay: rgba(9, 11, 15, 0.94);
+  --focus-ring: #6aafff;
+  --radius: 8px;
+  --font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --z-toolbar: 10;
+  --z-sticky: 20;
+  --z-backdrop: 30;
+  --z-drawer: 40;
+  --z-status: 50;
+  --z-tooltip: 60;
+  --signal-dim: rgba(106, 175, 255, 0.12);
+  --path-dim: rgba(110, 207, 188, 0.14);
+}
+
+:root[data-theme="light"], body[data-theme="light"] {
+  color-scheme: light;
+  --ink: #eef0f4;
+  --ink-deep: #f7f8fa;
+  --pane: #ffffff;
+  --pane-raised: #e8ebf0;
+  --pane-selected: #dce8f6;
+  --rule: rgba(18, 24, 38, 0.08);
+  --rule-strong: rgba(18, 24, 38, 0.14);
+  --text: #12141a;
+  --muted: #4a5266;
+  --subtle: #5c6478;
+  --action: #2563c7;
+  --action-strong: #1a4fa3;
+  --critical: #c23b45;
+  --high: #a86b12;
+  --medium: #8a7820;
+  --low: #2a6aa8;
+  --verified: #1f7a48;
+  --path: #2a9a84;
+  --overlay: rgba(247, 248, 250, 0.96);
+  --focus-ring: #2563c7;
+  --signal-dim: rgba(37, 99, 199, 0.1);
+  --path-dim: rgba(42, 154, 132, 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ink: #eef0f4;
+    --ink-deep: #f7f8fa;
+    --pane: #ffffff;
+    --pane-raised: #e8ebf0;
+    --pane-selected: #dce8f6;
+    --rule: rgba(18, 24, 38, 0.08);
+    --rule-strong: rgba(18, 24, 38, 0.14);
+    --text: #12141a;
+    --muted: #4a5266;
+    --subtle: #5c6478;
+    --action: #2563c7;
+    --action-strong: #1a4fa3;
+    --critical: #c23b45;
+    --high: #a86b12;
+    --medium: #8a7820;
+    --low: #2a6aa8;
+    --verified: #1f7a48;
+    --path: #2a9a84;
+    --overlay: rgba(247, 248, 250, 0.96);
+    --focus-ring: #2563c7;
+    --signal-dim: rgba(37, 99, 199, 0.1);
+    --path-dim: rgba(42, 154, 132, 0.12);
+  }
+}
+
+:root[data-theme="dark"], body[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #090b0f;
+  --ink-deep: #0c0e13;
+  --pane: #10131a;
+  --pane-raised: #151922;
+  --pane-selected: #1a2434;
+  --rule: rgba(255, 255, 255, 0.06);
+  --rule-strong: rgba(255, 255, 255, 0.12);
+  --text: #eceef2;
+  --muted: #a4adbf;
+  --subtle: #8b93a7;
+  --action: #6aafff;
+  --action-strong: #4a92e8;
+  --critical: #f07178;
+  --high: #d9a04a;
+  --medium: #c9b44a;
+  --low: #6a9fd8;
+  --verified: #5cbc80;
+  --path: #6ecfbc;
+  --overlay: rgba(9, 11, 15, 0.94);
+  --focus-ring: #6aafff;
+  --signal-dim: rgba(106, 175, 255, 0.12);
+  --path-dim: rgba(110, 207, 188, 0.14);
+}

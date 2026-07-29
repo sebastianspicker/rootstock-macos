@@ -1,0 +1,13 @@
+id: sample.sshd_permit_root
+title: sshd PermitRootLogin enabled
+severity: high
+description: sshd_config permits root login (yes/without-password variants via contains).
+attack_techniques:
+  - T1021.004
+match:
+  event_type: auth.sshd_config
+  field_equals:
+    ssh.directive: PermitRootLogin
+  field_contains:
+    ssh.value: "yes"
+fixture: sshd_permit_root.jsonl

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from collections import defaultdict
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -74,6 +75,8 @@ class CveScanImportError(ValueError):
 
 @dataclass(frozen=True)
 class CveScanExport:
+    """Validated, immutable boundary object for a cve-scan graph export."""
+
     schema_version: int
     scope_name: str
     generated_at: str
@@ -133,6 +136,7 @@ def validate_export(raw: object) -> CveScanExport:
 
 
 def _export_metadata(raw: dict[object, object]) -> _ExportMetadata:
+    """Validate schema and declared vocabularies before accepting payload records."""
     schema_version = _required_int(raw, "schema_version")
     if schema_version != SUPPORTED_SCHEMA_VERSION:
         raise CveScanImportError(
@@ -163,6 +167,7 @@ def _validated_nodes(
     raw_nodes: list[object],
     node_types: frozenset[str],
 ) -> tuple[list[dict[str, object]], set[str]]:
+    """Validate unique node identities and labels against the declared vocabulary."""
     nodes: list[dict[str, object]] = []
     node_ids: set[str] = set()
     for index, raw_node in enumerate(raw_nodes):
@@ -172,11 +177,20 @@ def _validated_nodes(
         label = _node_label(raw_node, f"nodes[{index}]")
         if label not in node_types:
             raise CveScanImportError(f"node {node_id!r} label {label!r} missing from node_types")
-        if node_id in node_ids:
-            raise CveScanImportError(f"duplicate node id: {node_id}")
-        node_ids.add(node_id)
-        nodes.append(dict(raw_node))
+        _append_unique_node(nodes, node_ids, raw_node, node_id)
     return nodes, node_ids
+
+
+def _append_unique_node(
+    nodes: list[dict[str, object]],
+    node_ids: set[str],
+    raw_node: dict[object, object],
+    node_id: str,
+) -> None:
+    if node_id in node_ids:
+        raise CveScanImportError(f"duplicate node id: {node_id}")
+    node_ids.add(node_id)
+    nodes.append(dict(raw_node))
 
 
 def _validated_edges(
@@ -184,6 +198,7 @@ def _validated_edges(
     edge_vocabulary: frozenset[str],
     node_ids: set[str],
 ) -> list[dict[str, str]]:
+    """Validate relationships only after every referenced node ID is known."""
     edges: list[dict[str, str]] = []
     for index, raw_edge in enumerate(raw_edges):
         if not isinstance(raw_edge, dict):
@@ -204,7 +219,7 @@ def _validated_edges(
 
 
 def import_cve_scan_export(session, export: CveScanExport) -> dict[str, int]:
-    """Import a validated cve-scan export into Neo4j and return import counts."""
+    """MERGE validated nodes before edges, making repeated imports idempotent."""
     node_counts = _import_nodes(session, export)
     edge_count = _import_edges(session, export)
     alias_count = _import_affected_by_aliases(session, export)
@@ -230,12 +245,12 @@ def build_node_records(export: CveScanExport) -> dict[str, list[dict[str, object
 
 def build_edge_records(export: CveScanExport) -> dict[str, list[dict[str, str]]]:
     """Build grouped relationship MERGE records. Exposed for unit tests."""
-    grouped: dict[str, list[dict[str, str]]] = {}
+    grouped: defaultdict[str, list[dict[str, str]]] = defaultdict(list)
     for edge in export.edges:
-        grouped.setdefault(edge["type"], []).append(
+        grouped[edge["type"]].append(
             {"source_id": edge["from"], "target_id": edge["to"]}
         )
-    return grouped
+    return dict(grouped)
 
 
 def build_affected_by_alias_records(export: CveScanExport) -> list[dict[str, str]]:
@@ -392,21 +407,21 @@ def _extract_cve_id(node: dict[str, object]) -> str | None:
     return None
 
 
-def _required_int(raw: dict[str, object], key: str) -> int:
+def _required_int(raw: dict[object, object], key: str) -> int:
     value = raw.get(key)
     if not isinstance(value, int):
         raise CveScanImportError(f"{key} must be an integer")
     return value
 
 
-def _required_string(raw: dict[str, object], key: str) -> str:
+def _required_string(raw: dict[object, object], key: str) -> str:
     value = raw.get(key)
     if not isinstance(value, str):
         raise CveScanImportError(f"{key} must be a string")
     return value
 
 
-def _required_string_list(raw: dict[str, object], key: str) -> list[str]:
+def _required_string_list(raw: dict[object, object], key: str) -> list[str]:
     return _string_list(raw.get(key), key, required=True)
 
 

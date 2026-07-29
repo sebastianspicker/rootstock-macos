@@ -3,7 +3,7 @@ import Models
 
 /// Result of the physical security collection pass. Custom struct because a single
 /// `system_profiler` call yields both Bluetooth device nodes and host posture properties.
-public struct PhysicalSecurityResult {
+public struct PhysicalSecurityResult: Sendable {
     public let bluetoothDevices: [BluetoothDevice]
     public let bluetoothEnabled: Bool?
     public let bluetoothDiscoverable: Bool?
@@ -36,7 +36,7 @@ public struct PhysicalSecurityDataSource {
     public func collectAll() async -> PhysicalSecurityResult {
         var errors: [CollectionError] = []
 
-        // Bluetooth — single system_profiler call for devices + posture
+        // Bluetooth - single system_profiler call for devices + posture
         let bluetooth = collectBluetooth()
         errors.append(contentsOf: bluetooth.errors)
 
@@ -52,7 +52,7 @@ public struct PhysicalSecurityDataSource {
         // Thunderbolt security
         let thunderbolt = collectThunderboltSecurity()
 
-        // Secure boot (requires root — degrades gracefully)
+        // Secure boot (requires root - degrades gracefully)
         let (secureBoot, externalBoot) = collectSecureBoot()
 
         return PhysicalSecurityResult(

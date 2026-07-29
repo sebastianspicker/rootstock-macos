@@ -1,0 +1,122 @@
+# Offline parsers registered in RootstockBlueFX default engine
+parsers:
+  - id: TCC
+    tier: 1
+  - id: QUARANTINE
+    tier: 1
+  - id: AUTOSTART
+    tier: 1
+  - id: USERS
+    tier: 1
+  - id: FSEVENTS
+    tier: 1
+  - id: TERMSESSIONS
+    tier: 1
+  - id: XPROTECT
+    tier: 1
+  - id: BASICINFO
+    tier: 1
+  - id: CRON
+    tier: 1
+  - id: LOGINITEMS
+    tier: 1
+  - id: SYSTEMEXTENSIONS
+    tier: 1
+  - id: UTMPX
+    tier: 1
+  - id: SAFARI
+    tier: 2
+  - id: CHROMIUM
+    tier: 2
+  - id: KNOWLEDGEC
+    tier: 2
+  - id: RECENTITEMS
+    tier: 2
+  - id: INSTALLHISTORY
+    tier: 2
+  - id: DOCK
+    tier: 2
+  - id: BTM
+    tier: 1
+  - id: WIFI
+    tier: 2
+  - id: CONFIGPROFILES
+    tier: 1
+  - id: SSH
+    tier: 2
+  - id: BIOME
+    tier: 2
+  - id: BROWSER_EXTENSIONS
+    tier: 2
+  - id: GATEKEEPER
+    tier: 2
+  - id: NETLOCATION
+    tier: 2
+  - id: SHELLPROFILES
+    tier: 1
+  - id: EMOND
+    tier: 1
+  - id: SUDOERS
+    tier: 1
+  - id: LAUNCHDOVERRIDES
+    tier: 1
+  - id: PRIVHELPERS
+    tier: 1
+  - id: FOLDERACTIONS
+    tier: 1
+  - id: LOGINHOOKS
+    tier: 1
+  - id: AUTHPLUGINS
+    tier: 1
+  - id: NETUSAGE
+    tier: 2
+  - id: USBHISTORY
+    tier: 2
+  - id: KEYCHAINMETA
+    tier: 2
+  - id: CODESIGN
+    tier: 1
+  - id: ARD
+    tier: 1
+  - id: SPOTLIGHT
+    tier: 2
+  - id: TRASH
+    tier: 2
+  - id: DOCREVISIONS
+    tier: 2
+  - id: SAVEDSTATE
+    tier: 2
+  - id: FIREFOX
+    tier: 2
+  - id: NOTIFICATIONS
+    tier: 2
+  - id: QUICKLOOK
+    tier: 2
+  - id: SCREENTIME
+    tier: 2
+  - id: ICLOUD
+    tier: 2
+  - id: COOKIES
+    tier: 2
+  - id: BOOKMARKS
+    tier: 2
+  - id: OFFICEMRU
+    tier: 2
+  - id: PRINTJOBS
+    tier: 2
+  - id: NOTES
+    tier: 2
+  - id: IDEVICEBACKUP
+    tier: 2
+  - id: MSRDC
+    tier: 2
+  - id: CLOUDSYNC
+    tier: 2
+  - id: PACKAGEKITDESIGN
+    tier: 2
+  - id: ARCHIVEEXTRACTOR
+    tier: 2
+  - id: INFOSTEALERPATH
+    tier: 2
+  - id: TCCESFVISIBILITY
+    tier: 2

@@ -1,63 +1,95 @@
-# QUALITY.md — Quality Standards
+# Quality gates
 
-## Code Quality
+This document lists the maintained candidate gates. A subset does not establish
+that the complete repository is ready for release.
 
-### Swift (Collector)
-- No force-unwraps (`!`) except in tests with known fixtures
-- All public APIs have doc comments
-- Error handling via `Result` or `throws` — no silent failures
-- Each data source module has at least one unit test with fixture data
-- `swift build` completes with zero warnings
+## Core collector
 
-### Python (Graph)
-- Type hints on all function signatures
-- Pydantic models for JSON validation
-- Docstrings on all public functions
-- `ruff check` passes with zero violations
+- Build and test with the Swift toolchain required by `collector/Package.swift`.
+- Enable complete strict concurrency and warnings as errors.
+- Keep JSON schema, Swift coding keys, and graph models aligned.
+- Treat incomplete access, including missing Full Disk Access, as an explicit
+  result rather than silent success.
 
-### Python (cve-scan Module)
-- Runtime dependency list stays intentionally small
-- `rootstock-export.json` schema changes keep `modules/cve-scan/src/cve_scan/rootstock.py`, `graph/import_cve_scan.py`, and importer tests in sync
-- Real scan outputs and caches remain ignored; only synthetic fixtures are committed
-- `ruff check .`, `pytest`, and `shellcheck scripts/perf-smoke.sh` pass from `modules/cve-scan/`
+```bash
+(cd collector && \
+  swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors && \
+  swift test --parallel \
+    -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors)
+python3 scripts/check-scan-contract-fields.py
+```
 
-### Cypher (Queries)
-- Each `.cypher` file starts with a comment block:
-  ```cypher
-  // Name: [human readable name]
-  // Purpose: [what attack path this discovers]
-  // Prerequisites: [what data must be in the graph]
-  ```
-- Queries must return meaningful column aliases, not raw node objects
-- Queries should be parameterized where applicable (`$param` syntax)
+## Graph and cve-scan
 
-## Documentation Quality
+```bash
+uv run --project graph --locked ruff check graph/ scripts/ examples/ docs/ \
+  --exclude docs/archive --exclude docs/private
+uv run --project graph --locked pytest graph/tests
+uv run --project graph --locked \
+  python scripts/validate-scan.py examples/demo-scan.json
 
-- Every design decision has a rationale ("why", not just "what")
-- Research docs cite sources with links and specify macOS version tested
-- README stays in sync with actual project state
-- Public docs describe only the active project surface.
-- Public benchmark docs contain methods and targets only; machine-derived
-  results stay under ignored `docs/private/` paths.
-- One-off plans, status files, audits, paper drafts, announcements,
-  investigation notes, deprecated notes, generated reports, remediation packets,
-  and retired roadmaps stay out of the committed documentation set.
-- Current-status claims must distinguish fast non-Neo4j checks from the live
-  Neo4j lane required for graph import, inference, query, report, and API
-  semantics.
-- Generated release binaries stay under the ignored root `release/` directory.
+(cd modules/cve-scan && \
+  uv run --locked ruff check . && \
+  uv run --locked pytest)
+```
 
-## Security Quality
+Real Neo4j behavior is a separate required lane:
 
-- [ ] No secrets in code, config, or test fixtures
-- [ ] Collector JSON output contains no passwords, keys, or tokens
-- [ ] Test fixtures use synthetic/anonymized data
-- [ ] All dependencies reviewed for security implications
-- [ ] Collector makes zero network connections (verified via test)
+```bash
+(cd graph && ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME \
+  uv run --locked pytest tests -v --tb=short)
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  bash tests/integration/test_full_pipeline.sh
+```
 
-## Academic Quality
+## Family packages
 
-- [ ] All code is original or properly attributed
-- [ ] Referenced research includes proper citations
-- [ ] Results are reproducible from the repository alone
-- [ ] Methodology is documented well enough for peer review
+```bash
+(cd packages/RootstockMacFacts && swift build && swift test)
+(cd rootstock-red && swift build --product rootstock-red && swift test)
+(cd rootstock-blue && \
+  swift build --product rootstock-blue && swift test && \
+  make content-validate && make check-non-goals)
+python3 scripts/check-technique-catalog.py
+```
+
+Shared macOS vocabulary belongs in `packages/RootstockMacFacts`. Artifact
+serializers remain in the component that owns the artifact.
+
+## Viewer
+
+```bash
+npm run typecheck
+npm run bundle
+npm run test:viewer:unit
+npm run test:viewer:bundle
+npm run test:viewer:performance
+npm run test:browser
+bash tests/scripts/test_benchmark.sh
+```
+
+The bundle must be a deterministic product of `graph/viewer-src/`. Browser
+tests cover desktop, compact, and 320 CSS-pixel Chromium layouts. Public images
+are Playwright captures produced by `npm run screenshots:release` from the
+synthetic release fixture. Static substitutes are not accepted.
+
+## Public repository checks
+
+- Public commands must match implemented entry points.
+- The release check verifies index-level Markdown image targets. Check ordinary
+  relative documentation links separately before publication.
+- Real scans, findings, cases, reports, tokens, local database state, and
+  machine-specific benchmark results must remain untracked.
+- Public fixtures and images must contain only synthetic identifiers.
+- Only maintained documentation and intentional synthetic fixtures belong in
+  the public repository.
+- License ownership must be explicit for every distributed source scope.
+
+```bash
+python3 scripts/check-release.py
+git diff --check
+```
+
+Immediately before an approved tag, `python3 scripts/check-release.py
+--require-clean` must also pass. No release artifact, checksum, tag, or GitHub
+release may be claimed before it exists and has been verified.

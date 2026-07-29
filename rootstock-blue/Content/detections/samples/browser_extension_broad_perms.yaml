@@ -1,0 +1,11 @@
+id: sample.browser_extension_broad_perms
+title: Browser extension with broad permissions
+severity: medium
+description: Browser extension requests <all_urls> or equivalent broad web access.
+attack_techniques:
+  - T1176
+match:
+  event_type: browser.extension
+  field_equals:
+    extension.broad_permissions: "true"
+fixture: browser_extension_broad_perms.jsonl

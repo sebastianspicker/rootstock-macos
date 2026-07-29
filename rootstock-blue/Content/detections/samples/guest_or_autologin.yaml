@@ -1,0 +1,12 @@
+id: sample.guest_or_autologin
+title: Guest account or automatic login enabled
+severity: high
+description: Console identity bypass - Guest User or auto-login with possible kcpassword material.
+attack_techniques:
+  - T1078
+match:
+  event_type: harden.finding
+  field_equals:
+    harden.control: "auto_login"
+    harden.status: "fail"
+fixture: guest_or_autologin.jsonl

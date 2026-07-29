@@ -1,0 +1,13 @@
+id: sample.icloud_drive_path
+title: iCloud Drive / Mobile Documents path plane surface present
+severity: high
+description: iCloud Drive path plane markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1530
+  - T1005
+  - T1567
+match:
+  event_type: icloud.drive_path
+  field_contains:
+    icldrv.risk_tags: "icloud_path_surface"
+fixture: icloud_drive_path.jsonl

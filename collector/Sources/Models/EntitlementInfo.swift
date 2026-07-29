@@ -1,5 +1,10 @@
 import Foundation
 
+/// A normalized entitlement key and its heuristic security classification.
+///
+/// This node records the entitlement name, not its value or effective runtime
+/// permission. Category and criticality come from `EntitlementClassifier`, while
+/// `isPrivate` reflects name-prefix detection.
 public struct EntitlementInfo: Codable, Sendable, GraphNode {
     public let name: String
     public let isPrivate: Bool

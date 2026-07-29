@@ -1,0 +1,13 @@
+id: sample.airplay_receiver_surface
+title: AirPlay receiver dual-use residual surface present
+severity: high
+description: AirPlay receiver dual-use markers indicate IR surface.
+attack_techniques:
+  - T1040
+  - T1021
+  - T1200
+match:
+  event_type: airplay.receiver
+  field_contains:
+    airplayrx.risk_tags: "airplay_surface"
+fixture: airplay_receiver_surface.jsonl

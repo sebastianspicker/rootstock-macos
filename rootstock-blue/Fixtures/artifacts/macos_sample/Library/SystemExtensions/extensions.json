@@ -1,0 +1,11 @@
+{
+  "extensions": [
+    {
+      "bundle_id": "com.evil.sysext",
+      "team_id": "EVILTEAM1",
+      "state": "activated",
+      "category": "EndpointSecurity",
+      "path": "/Library/SystemExtensions/com.evil.sysext.systemextension"
+    }
+  ]
+}

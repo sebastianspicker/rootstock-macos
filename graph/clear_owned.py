@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-clear_owned.py — Reset ownership markers from graph nodes.
+clear_owned.py - Reset ownership markers from graph nodes.
 
 Removes `owned` and `owned_at` properties. Can target specific nodes or clear all.
 

@@ -1,0 +1,2 @@
+# Synthetic SecurityAgent plugin marker for offline forensics fixtures.
+# Not a real Mach-O. ATT&CK T1556.001 authorization plugin path.

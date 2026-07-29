@@ -1,0 +1,13 @@
+id: sample.findmy_path_plane
+title: Find My residual path plane surface present
+severity: high
+description: Find My path plane markers indicate IR surface.
+attack_techniques:
+  - T1011
+  - T1083
+  - T1005
+match:
+  event_type: findmy.path
+  field_contains:
+    fmpath.risk_tags: "findmy_surface"
+fixture: findmy_path_plane.jsonl

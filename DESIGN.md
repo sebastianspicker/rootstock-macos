@@ -2,84 +2,86 @@
 
 ## Overview
 
-Rootstock uses a restrained forensic-workstation language for an authorized
-analyst working on a 13–16-inch MacBook in mixed office light. The system follows
-the operating-system theme by default and permits a persistent light or dark
-override. It favors compact, familiar controls and flat tonal hierarchy.
+Rootstock uses the Graphite Laboratory visual language: a forensic
+instrument for authorized analysts on a 13–16-inch MacBook. Design serves the
+investigation task: modeled attack paths, evidence, and provenance. The system
+follows the OS theme by default and allows a persistent
+light or dark override.
 
 ## Theme
 
-- Color strategy: restrained neutral surfaces with semantic color reserved for
-  action, selection, severity, success, and graph meaning.
-- Modes: system, light, and dark. Store only the preference as
-  `rootstock.theme`; tokens and scan evidence remain outside persistent storage.
-- Motion: 120–180ms state transitions; instant under `prefers-reduced-motion`.
-- Elevation: tonal layers by default and one restrained overlay shadow.
+- Color strategy: restrained mineral neutrals; semantic color only for action,
+  selection, path focus, severity, and success.
+- Modes: system, light, and dark. Persist only `rootstock.theme`.
+- Motion: 120–180ms state changes; instant under `prefers-reduced-motion`.
+- Elevation: tonal layers and hairline rules; avoid large soft shadows.
 
-## Color Tokens
+## Color Tokens (Graphite Lab)
 
-| Role | Dark | Light |
-|---|---|---|
-| Canvas | `#0b1016` | `#f4f7fa` |
-| Surface | `#131a22` | `#ffffff` |
-| Raised surface | `#1b2430` | `#eaf0f5` |
-| Border | `#344253` | `#c4ced8` |
-| Primary text | `#f3f6f9` | `#17212b` |
-| Muted text | `#aeb8c4` | `#526273` |
-| Subtle text | `#8c99a8` | `#66788a` |
-| Action | `#6aafff` | `#0a61c9` |
-| Brand | `#e05260` | `#b72f3f` |
-| Critical | `#ff6b72` | `#bd2432` |
-| Warning/high | `#f2b84b` | `#8a5a00` |
-| Success/low | `#59c77a` | `#116b36` |
+| Role | Dark | Light | CSS variable |
+|---|---|---|---|
+| Void / canvas | `#090b0f` / `#0c0e13` | cool off-white | `--ink` / `--ink-deep` |
+| Surface | `#10131a` | `#ffffff` | `--pane` |
+| Raised | `#151922` | raised cool gray | `--pane-raised` |
+| Border | `rgba(255,255,255,0.06)` | cool rule | `--rule` |
+| Text | `#eceef2` | near-ink | `--text` |
+| Muted / faint | `#8b93a7` / `#5c6478` | muted cool | `--muted` / `--subtle` |
+| Signal (action) | `#6aafff` | deep blue | `--action` |
+| Path | `#6ecfbc` | teal | `--path` |
+| Brand / critical | rootstock red / `#f07178` | deep red | brand / `--critical` |
+| High / success | `#d9a04a` / `#5cbc80` | amber / green | `--high` / `--verified` |
 
-Use translucent semantic fills only with a text or icon label. Graph categories
-may use six color/shape families, but exact type labels remain visible.
+Severity never relies on color alone. Path focus uses mint edges and dimmed
+non-path nodes.
 
 ## Typography
 
-- UI: `-apple-system`, `BlinkMacSystemFont`, `SF Pro Text`, `Helvetica Neue`, sans-serif.
-- Technical values: `SF Mono`, Menlo, Consolas, monospace.
-- Body and controls: 13–14px; metadata: 12px; headings: 16–20px.
-- Do not use essential text below 12px or repeated uppercase tracked headings.
-- Prose lines remain within 65–75 characters; tables and technical data may run wider.
+- UI: `"IBM Plex Sans"`, system UI stack.
+- Mono: `"IBM Plex Mono"`, SF Mono, Menlo, Consolas.
+- Body ~13px; technical values in mono; display titles reserved for the dossier
+  heading (~20–22px). Letter-spacing on the wordmark only.
 
 ## Spacing and Shape
 
-- Spacing scale: 4, 8, 12, 16, 24, 32px.
-- Radius: 4px controls and 8px panels/overlays; pills only for true tags.
-- Controls: 32px compact desktop, 40px default, 44px narrow or touch mode.
-- Breakpoints: 1024px compact desktop and 768px narrow mode.
-- Z-index order: toolbar, sticky header, drawer backdrop, drawer, status, tooltip.
+- Spacing: 4, 8, 12, 16, 24, 32px.
+- Radius: 8px panels/controls; pills for nav and tags.
+- Quiet density: more space in chrome, denser only in data lists.
 
-## Layout
+## Layout (viewer)
 
-- Top status bar: identity, provenance, connection, counts, and theme.
-- Left rail: Explore and Queries tabs, filters/list or query tools.
-- Main workspace: Canvas, grouped toolbar, path instruction, graph summary.
-- Right dock: a single contextual surface for Node, Path, and Query results.
-- Narrow mode: collapsible rail and full-width detail drawer; semantic list-first
-  exploration is primary while Canvas remains available.
-- Reports: responsive reading column, semantic sections, scroll-wrapped tables,
-  captions, and a print theme.
+```
+Header 52px: brand, host, navigation, session, export
+Workspace: 248px index | fluid stage | 320px evidence
+  Stage: risk and path metadata | canvas
+Footer 40px: provenance line
+```
 
-## Components and States
+- Secondary chrome uses `.chrome-secondary` (de-emphasized or hidden).
+- Path investigation is the hero state; graph tools stay available but quiet.
+- Narrow &lt;768px: list-first stack; canvas remains reachable.
 
-Buttons, fields, tabs, filter rows, status chips, inline feedback, the detail
-dock, and data tables share default, hover, focus, active/selected, disabled,
-loading, success, warning, and error states. Use native elements and ARIA only
-where native semantics do not express the state. Focus rings use the action color
-with at least 2px visible separation.
+## Components
 
-Canvas exposes an accessible description and points to the synchronized node
-list. Selection, path steps, results, and mutations announce through polite or
-assertive live regions as appropriate. Low-risk owned/tier toggles remain
-reversible and do not require confirmation.
+Buttons, fields, tabs, filters, dossier rows, and path banners share default,
+hover, focus, active, disabled, and error states. Focus rings use `--action`.
+The dossier is title-first: kicker, title, short subtitle, severity, evidence
+tabs, plain model note, single primary action.
 
 ## Content
 
-Use direct analyst language: “Run query,” “No nodes match these filters,” and
-“Session expired; enter the token again.” Distinguish empty data, filtered-empty,
-malformed response, timeout, permission failure, and stale data. Preserve Cypher,
-node types, relationship names, and provenance rather than translating them into
-consumer terminology.
+Analyst language: “Run query,” “Modeled path,” “Modeled preconditions do not
+prove exploitation.” Distinguish empty, filtered-empty, error, and partial
+evidence. Do not claim confirmed exploit.
+
+## Authoring CSS
+
+Source modules live in `graph/viewer-css/`. Assemble with:
+
+```bash
+npm run bundle:css
+# or
+npm run bundle   # CSS + JS
+```
+
+Do not hand-edit assembled `graph/viewer.css` for feature work. Edit the source
+modules.

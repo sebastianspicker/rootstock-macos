@@ -1,0 +1,11 @@
+id: sample.spotlight_sensitive_index
+title: Sensitive path in Spotlight inventory
+severity: medium
+description: Spotlight indexed path with credential-like or sensitive filename markers.
+attack_techniques:
+  - T1005
+match:
+  event_type: filesystem.spotlight
+  field_contains:
+    spotlight.risk_tags: "credential_filename"
+fixture: spotlight_sensitive_index.jsonl

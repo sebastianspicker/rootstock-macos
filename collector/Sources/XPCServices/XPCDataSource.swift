@@ -16,6 +16,7 @@ public struct XPCDataSource: DataSource {
     public let requiresElevation = false
 
     private let parser = LaunchdPlistParser()
+    private let runCommand: ShellCommand
 
     private static let directories: [(path: String, type: XPCService.ServiceType)] = [
         ("/System/Library/LaunchDaemons", .daemon),
@@ -24,7 +25,17 @@ public struct XPCDataSource: DataSource {
         (NSHomeDirectory() + "/Library/LaunchAgents", .agent),
     ]
 
-    public init() { }
+    public init() {
+        runCommand = { path, arguments, timeout in
+            ShellCommandRunner.run(path, arguments, timeout)
+        }
+    }
+
+    init(
+        runCommand: @escaping ShellCommand
+    ) {
+        self.runCommand = runCommand
+    }
 
     public func collect() async -> DataSourceResult {
         var services: [XPCService] = []
@@ -36,7 +47,11 @@ public struct XPCDataSource: DataSource {
                 errors.append(CollectionError(source: name, message: msg, recoverable: true))
             }
             for entry in entries {
-                services.append(buildService(from: entry, type: serviceType))
+                let built = buildService(from: entry, type: serviceType)
+                services.append(built.service)
+                if let error = built.error {
+                    errors.append(error)
+                }
             }
         }
 
@@ -48,10 +63,11 @@ public struct XPCDataSource: DataSource {
     private func buildService(
         from entry: LaunchdPlistParser.ParsedEntry,
         type: XPCService.ServiceType
-    ) -> XPCService {
-        let entitlementKeys = entry.program.map(extractEntitlementKeys) ?? []
+    ) -> (service: XPCService, error: CollectionError?) {
+        let entitlementResult = entry.program.map(extractEntitlementKeys)
+            ?? (keys: [], error: nil)
 
-        return XPCService(
+        return (XPCService(
             label: entry.label,
             path: entry.plistPath,
             program: entry.program,
@@ -63,31 +79,51 @@ public struct XPCDataSource: DataSource {
             ),
             exposure: XPCService.Exposure(
                 machServices: entry.machServices,
-                entitlements: entitlementKeys,
+                entitlements: entitlementResult.keys,
                 hasClientVerification: entry.hasAuthorizedClients
             )
-        )
+        ), entitlementResult.error)
     }
 
     /// Extract entitlement keys from a signed binary via `codesign -d --entitlements`.
-    /// Returns an empty array if the binary is unsigned, inaccessible, or has no entitlements.
-    private func extractEntitlementKeys(from path: String) -> [String] {
-        guard let result = Shell.runProcess(
+    /// A nonzero codesign exit means unsigned/no entitlements; infrastructure
+    /// failures preserve unknown evidence with a recoverable diagnostic.
+    func extractEntitlementKeys(
+        from path: String
+    ) -> (keys: [String], error: CollectionError?) {
+        let outcome = runCommand(
             "/usr/bin/codesign",
             ["-d", "--entitlements", ":-", path],
-            timeoutSeconds: 10
-        ), result.terminationStatus == 0, !result.timedOut else {
-            return []
+            10
+        )
+        let result: ShellResult
+        switch outcome {
+        case .success(let successfulResult):
+            result = successfulResult
+        case .nonZeroExit:
+            return ([], nil)
+        case .admissionTimedOut, .launchFailed, .executionTimedOut:
+            return ([], CollectionError(
+                source: name,
+                message: "Entitlements unknown for \(path): \(outcome.failureDescription ?? "command failure")",
+                recoverable: true
+            ))
         }
 
         let data = Data(result.stdout.utf8)
-        guard !data.isEmpty else { return [] }
+        guard !data.isEmpty else { return ([], nil) }
 
         var format = PropertyListSerialization.PropertyListFormat.xml
         guard let plist = try? PropertyListSerialization.propertyList(
             from: data, options: [], format: &format
-        ) as? [String: Any] else { return [] }
+        ) as? [String: Any] else {
+            return ([], CollectionError(
+                source: name,
+                message: "Entitlements unknown for \(path): codesign returned an unreadable plist",
+                recoverable: true
+            ))
+        }
 
-        return Array(plist.keys).sorted()
+        return (Array(plist.keys).sorted(), nil)
     }
 }

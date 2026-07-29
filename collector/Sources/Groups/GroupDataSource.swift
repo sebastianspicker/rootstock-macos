@@ -116,8 +116,6 @@ public struct GroupDataSource: DataSource {
         }
 
         // Output format: "GroupMembership: user1 user2 user3"
-        guard let colonIndex = output.firstIndex(of: ":") else { return [] }
-        let membersStr = output[output.index(after: colonIndex)...]
-        return membersStr.split(whereSeparator: \.isWhitespace).map(String.init)
+        return LocalGroup.members(inDirectoryServiceOutput: output)
     }
 }

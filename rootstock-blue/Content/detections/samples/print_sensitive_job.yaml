@@ -1,0 +1,11 @@
+id: sample.print_sensitive_job
+title: Sensitive document in print job history
+severity: medium
+description: CUPS print job history includes credential-like or sensitive document names.
+attack_techniques:
+  - T1113
+match:
+  event_type: print.job
+  field_contains:
+    print.risk_tags: "sensitive"
+fixture: print_sensitive_job.jsonl

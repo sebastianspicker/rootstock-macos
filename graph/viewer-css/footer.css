@@ -1,0 +1,129 @@
+/* Provenance timeline (thin line) + live status toast */
+
+/* Thin single-line provenance — no big numbered bubbles */
+#provenance-timeline {
+  grid-column: 1 / 4;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 20px;
+  border-top: 1px solid var(--rule);
+  background: var(--ink);
+}
+#provenance-timeline ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  flex: 1;
+}
+#provenance-timeline li {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  color: var(--subtle);
+  font-size: 11.5px;
+}
+#provenance-timeline li:not(:last-child)::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 1px;
+  margin: 0 10px;
+  background: var(--rule-strong);
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+}
+.timeline-marker {
+  position: relative;
+  z-index: 1;
+  display: none;
+  place-items: center;
+  width: 0;
+  height: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: transparent;
+  font: 0 var(--font-mono);
+}
+.timeline-marker.active { background: transparent; color: transparent; }
+#provenance-timeline li strong {
+  position: relative;
+  z-index: 1;
+  padding-right: 0;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--subtle);
+}
+#provenance-timeline li:has(.timeline-marker.active) strong,
+#provenance-timeline li strong:has(+ .timeline-marker.active) {
+  color: var(--muted);
+  font-weight: 500;
+}
+/* Active step via marker sibling patterns — keep muted default, emphasize with .active parent if present */
+#provenance-timeline li:has(.active) strong { color: var(--muted); font-weight: 500; }
+#provenance-timeline li > span:last-child {
+  display: none;
+  grid-column: auto;
+  color: var(--subtle);
+  font: 9px var(--font-mono);
+}
+#provenance-timeline > p {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  max-width: 280px;
+  padding: 0;
+  border-left: 0;
+  color: var(--subtle);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#provenance-timeline > p strong {
+  overflow: hidden;
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inline-status.error, .live-status.error { color: var(--critical); }
+.live-status.pending { color: var(--high); }
+.live-status.ok { color: var(--verified); }
+#live-status {
+  position: fixed;
+  z-index: var(--z-status);
+  right: 16px;
+  bottom: 52px;
+  max-width: min(440px, calc(100vw - 32px));
+  min-height: 0;
+  padding: 0;
+}
+#live-status:not(:empty) {
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+}

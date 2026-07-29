@@ -1,0 +1,11 @@
+id: sample.cookie_evil_domain
+title: Browser cookies for evil or suspicious domains
+severity: high
+description: Cookie domain inventory shows evil/suspicious domain session markers (values not exported).
+attack_techniques:
+  - T1539
+match:
+  event_type: browser.cookie
+  field_contains:
+    cookie.risk_tags: "evil_domain"
+fixture: cookie_evil_domain.jsonl

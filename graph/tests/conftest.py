@@ -1,5 +1,5 @@
 """
-conftest.py — Shared pytest fixtures for Rootstock graph tests.
+conftest.py - Shared pytest fixtures for Rootstock graph tests.
 
 Provides:
   - Neo4j connection env vars (NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
@@ -9,9 +9,66 @@ Provides:
 
 from __future__ import annotations
 
+import contextlib
 import os
 
 import pytest
+
+
+def clone_clean_application(application: dict, **identity: object) -> dict:
+    """Create a non-injectable application fixture with independent collections."""
+    cloned = dict(application)
+    cloned.update(
+        identity,
+        version="1.0",
+        hardened_runtime=True,
+        library_validation=True,
+        entitlements=[],
+        signing_certificate_cn=None,
+        signing_certificate_sha256=None,
+        certificate_expires=None,
+        certificate_chain_length=None,
+        certificate_trust_valid=None,
+        certificate_chain=[],
+        injection_methods=[],
+    )
+    return cloned
+
+
+@contextlib.contextmanager
+def cleaned_neo4j_driver(driver, cleanup):
+    """Run a test-specific cleanup callback before and after an integration test."""
+    with driver.session() as session:
+        cleanup(session)
+    try:
+        yield driver
+    finally:
+        with driver.session() as session:
+            cleanup(session)
+
+
+def cleanup_test_marker(session, marker: str) -> None:
+    """Delete only nodes owned by one integration-test marker."""
+    session.run(
+        "MATCH (n {test_marker: $marker}) DETACH DELETE n",
+        marker=marker,
+    )
+
+
+class MarkerScopedNeo4jTest:
+    """Base class for integration tests that isolate rows by ``test_marker``."""
+
+    test_marker: str
+
+    @pytest.fixture(autouse=True)
+    def setup(self, neo4j_driver):
+        self.driver = neo4j_driver
+        with cleaned_neo4j_driver(
+            self.driver,
+            lambda session: cleanup_test_marker(session, self.test_marker),
+        ):
+            yield
+
 
 # ── Shared constants ─────────────────────────────────────────────────────────
 
@@ -64,7 +121,7 @@ def neo4j_driver():
     except (ServiceUnavailable, ConnectionRefusedError):
         unavailable_reason = f"Neo4j not available at {NEO4J_URI}"
     except AuthError:
-        unavailable_reason = "Neo4j auth failed — check NEO4J_USER / NEO4J_PASSWORD"
+        unavailable_reason = "Neo4j auth failed - check NEO4J_USER / NEO4J_PASSWORD"
 
     if unavailable_reason:
         _skip_or_fail_neo4j_unavailable(unavailable_reason)

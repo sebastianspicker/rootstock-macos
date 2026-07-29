@@ -1,4 +1,4 @@
-"""diff_models.py — Dataclasses for Rootstock posture diff results."""
+"""diff_models.py - Dataclasses for Rootstock posture diff results."""
 
 from __future__ import annotations
 

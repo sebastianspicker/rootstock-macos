@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "path": "/Users/alice/Documents/secrets/passwords.txt",
+      "display_name": "passwords.txt",
+      "content_type": "public.plain-text",
+      "kMDItemFSName": "passwords.txt",
+      "mtime": "2024-06-01T12:00:00Z",
+      "risk_tags": "sensitive_path,credential_filename"
+    },
+    {
+      "path": "/Users/alice/Downloads/evil-payload.dmg",
+      "display_name": "evil-payload.dmg",
+      "content_type": "com.apple.disk-image",
+      "mtime": "2024-06-02T08:30:00Z",
+      "risk_tags": "tmp_download,suspicious_name"
+    },
+    {
+      "path": "/Users/alice/Documents/notes.md",
+      "display_name": "notes.md",
+      "content_type": "net.daringfireball.markdown",
+      "mtime": "2024-05-01T10:00:00Z"
+    }
+  ]
+}

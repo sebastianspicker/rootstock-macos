@@ -1,0 +1,13 @@
+id: sample.screencapture_privacy_dualuse
+title: ScreenCapture / screenshot privacy dual-use depth surface present
+severity: high
+description: ScreenCapture privacy dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1113
+  - T1125
+  - T1005
+match:
+  event_type: screencapture.privacy
+  field_contains:
+    scpriv.risk_tags: "capture_surface"
+fixture: screencapture_privacy_dualuse.jsonl

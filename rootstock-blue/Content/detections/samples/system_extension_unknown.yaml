@@ -1,0 +1,11 @@
+id: sample.system_extension_unknown
+title: Non-Apple system extension observed
+severity: medium
+description: System Extension with non-Apple team identifier present on host.
+attack_techniques:
+  - T1547
+match:
+  event_type: defense.system_extension
+  field_contains:
+    extension.team_id: "EVIL"
+fixture: system_extension_unknown.jsonl

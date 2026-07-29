@@ -1,4 +1,4 @@
-"""test_scan_loader.py — Tests for scan_loader.py and duplicate bundle_id logging."""
+"""test_scan_loader.py - Tests for scan_loader.py and duplicate bundle_id logging."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 from scan_loader import load_scan
 from models import ScanResult
 
-FIXTURE = Path(__file__).parent / "fixture_minimal.json"
+FIXTURE = Path(__file__).parent / "fixtures" / "minimal_scan.json"
 
 
 checks = TestCase()
@@ -79,8 +79,7 @@ def test_same_bundle_id_with_different_path_is_preserved(caplog):
         for app in result.applications
         if app.bundle_id == data["applications"][0]["bundle_id"]
     ]
-    checks.assertGreaterEqual(
-        {app.path for app in matching},
-        {data["applications"][0]["path"], duplicate_path},
-    )
+    matching_paths = {app.path for app in matching}
+    expected_paths = {data["applications"][0]["path"], duplicate_path}
+    checks.assertGreaterEqual(matching_paths, expected_paths)
     checks.assertFalse(caplog.messages)

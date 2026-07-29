@@ -21,17 +21,26 @@ Rootstock is for authorized security assessment and research. The collector
 reads local metadata and does not modify the system. See
 [THREAT_MODEL.md](THREAT_MODEL.md).
 
+### What about rootstock-red and rootstock-blue?
+
+They are sibling products in this monorepo with separate pipelines and
+artifacts. Core Rootstock remains the collector + graph path. See
+[FAMILY.md](FAMILY.md) for roles, depth tiers, and optional interop.
+
 ## Collector
 
 ### Why does the TCC scanner return 0 grants?
 
 On macOS Sequoia 15 and Tahoe 26, even user-level `TCC.db` reads can require
-Full Disk Access. Grant FDA to the terminal app, then run the built collector
-with the needed privileges:
+Full Disk Access. Grant Full Disk Access to the terminal application, then run
+the built collector as the user whose TCC database you intend to inspect:
 
 ```bash
-sudo collector/.build/release/RootstockCLI --output scan.json
+collector/.build/release/RootstockCLI --output scan.json
 ```
+
+Other modules may report that elevation is required. Review the output
+`errors` array before deciding whether a separate elevated scan is necessary.
 
 ### Why are some apps missing entitlements?
 
@@ -57,22 +66,24 @@ writes local reports plus `rootstock-export.json` for graph import.
 No. Run cve-scan separately, then import the prebuilt artifact:
 
 ```bash
-python3 graph/import_cve_scan.py --input <rootstock-export.json>
-NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh <scan.json> --cve-scan-export <rootstock-export.json>
+uv run --project graph --locked \
+  python graph/import_cve_scan.py --input <rootstock-export.json>
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  bash graph/pipeline.sh <scan.json> --cve-scan-export <rootstock-export.json>
 ```
 
 ### Can I commit cve-scan outputs?
 
-No. Real `scan.json`, `rootstock-export.json`, reports, caches, generated
+No. Real `scan.json`, `rootstock-export.json`, reports, caches, rendered
 viewers, screenshots, package inventories, and CVE scan outputs can contain
 infrastructure data. Keep them local. The checked-in
 `examples/cve-scan-export.json` file is synthetic.
 
-### Can I commit archived plans, audits, or status files?
+### Which local artifacts belong in commits?
 
-No. Retired planning, audit, status, deprecated-note, generated-report,
-investigation, announcement, and remediation material is not part public
-documentation set. Keep local copies in ignored private or archive paths.
+Commit only files required to build, test, operate, maintain, or understand the
+project. Keep private data, machine-specific state, and reproducible output in
+the ignored paths defined by `.gitignore`.
 
 ## Graph Pipeline
 

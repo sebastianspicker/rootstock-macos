@@ -1,0 +1,58 @@
+name: post-incident-ir
+description: Expanded post-incident IR pack (persistence BTM/cron/loginitems + network + SSH + sessions + posture + host)
+requires_fda: true
+requires_es: false
+artifacts:
+  - tcc
+  - quarantine
+  - autostart
+  - btm
+  - cron
+  - loginitems
+  - wifi
+  - configprofiles
+  - ssh
+  - security_posture
+  - alf
+  - users
+  - basicinfo
+  - xprotect
+  - installhistory
+  - systemextensions
+  - utmpx
+  - gatekeeper
+  - netlocation
+  - biome
+  - browser_extensions
+  - shell_profiles
+  - emond
+  - sudoers
+  - launchd_overrides
+  - privhelpers
+  - folder_actions
+  - login_hooks
+  - software_update
+  - file_sharing
+  - auth_plugins
+  - netusage
+  - usb_history
+  - keychain_meta
+  - codesign
+  - ard
+  - spotlight
+  - trash
+  - doc_revisions
+  - saved_state
+  - firefox
+  - notifications
+  - quicklook
+  - screentime
+  - icloud
+  - cookies
+  - bookmarks
+  - office_mru
+  - print_jobs
+  - notes
+  - idevice_backup
+  - msrdc
+  - cloud_sync

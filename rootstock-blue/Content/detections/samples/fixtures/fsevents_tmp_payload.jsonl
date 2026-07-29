@@ -1,0 +1,1 @@
+{"id":"00000000-0000-4000-8000-000000000026","eventTime":"2026-01-15T12:00:00Z","collectedAt":"2026-01-15T12:00:01Z","source":"parser","sourcePlugin":"FSEVENTS","eventType":"fsevents.entry","entityRefs":[{"kind":"file","value":"/tmp/payload.dmg"}],"fields":{"file.path":"/tmp/payload.dmg","fsevents.flags":"Created","event.type":"fsevents.entry"},"rawRef":null,"confidence":1}

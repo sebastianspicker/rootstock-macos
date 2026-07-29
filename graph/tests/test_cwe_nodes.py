@@ -1,5 +1,5 @@
 """
-test_cwe_nodes.py — Tests for CWE weakness-class node import.
+test_cwe_nodes.py - Tests for CWE weakness-class node import.
 
 Unit tests validate the CWE registry and import functions.
 Integration tests verify CWE nodes and HAS_CWE edges in Neo4j.
@@ -12,6 +12,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import pytest
+from conftest import cleaned_neo4j_driver
 
 from cve_reference import CWE_REGISTRY, CweReference
 from import_vulnerabilities import import_cwe_nodes, import_cwe_edges, import_all
@@ -94,9 +95,7 @@ class TestCweImportFunctions:
     def test_import_all_includes_cwe(self):
         """import_all should include cwe_nodes and has_cwe_edges in result."""
         mock_session = MagicMock()
-        mock_result = MagicMock()
-        mock_result.single.return_value = {"n": 0}
-        mock_session.run.return_value = mock_result
+        mock_session.run.return_value.single.return_value = {"n": 0}
 
         with patch("import_vulnerabilities.enrich_registry") as mock_enrich:
             mock_enrich.return_value = {}
@@ -113,11 +112,8 @@ class TestCweIntegration:
     @pytest.fixture(autouse=True)
     def setup(self, neo4j_driver):
         self.driver = neo4j_driver
-        with self.driver.session() as session:
-            self._cleanup(session)
-        yield
-        with self.driver.session() as session:
-            self._cleanup(session)
+        with cleaned_neo4j_driver(self.driver, self._cleanup):
+            yield
 
     def _cleanup(self, session):
         session.run(

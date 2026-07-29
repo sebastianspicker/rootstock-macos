@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-server.py — Rootstock REST API server.
+server.py - Rootstock REST API server.
 
 Thin HTTP wrapper over existing Rootstock functions: query execution,
 owned-node marking, tier classification, and live graph data for the viewer.
@@ -18,9 +18,7 @@ from __future__ import annotations
 
 import argparse
 import hmac
-import html as html_mod
 import ipaddress
-import json
 import logging
 import math
 import os
@@ -28,8 +26,8 @@ import re
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
+from urllib.parse import SplitResult, urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,9 +40,15 @@ from neo4j.exceptions import AuthError, DriverError, Neo4jError, ServiceUnavaila
 
 
 from query_runner import discover_queries, find_query
-from utils import first_cypher_statement, run_query, validate_read_only_cypher
+from utils import (
+    cypher_code_only,
+    first_cypher_statement,
+    run_query,
+    validate_read_only_cypher,
+)
 
 from opengraph_export import build_opengraph
+from constants import INTERACTIVE_GRAPH_MAX_EDGES, INTERACTIVE_GRAPH_MAX_NODES
 from mark_owned import (
     mark_by_bundle_id,
     mark_by_username,
@@ -53,7 +57,7 @@ from mark_owned import (
 )
 from clear_owned import clear_all, clear_by_bundle_id, clear_by_username
 from tier_classification import classify
-from viewer import viewer_script_source
+from viewer import render_viewer_html
 
 
 # ── Request/Response models ─────────────────────────────────────────────────
@@ -95,14 +99,14 @@ async def lifespan(app: FastAPI):
         driver = GraphDatabase.driver(uri, auth=(user, password))
         driver.verify_connectivity()
     except ServiceUnavailable:
-        print(f"ERROR: Cannot connect to Neo4j at {uri}", file=sys.stderr)
+        print("ERROR: Cannot connect to Neo4j.", file=sys.stderr)
         sys.exit(1)
     except AuthError:
         print("ERROR: Neo4j authentication failed.", file=sys.stderr)
         sys.exit(1)
 
     app.state.driver = driver
-    print(f"Connected to Neo4j at {uri}")
+    print("Connected to Neo4j.")
     yield
     driver.close()
     print("Neo4j connection closed.")
@@ -111,7 +115,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Rootstock API",
     description="REST API for Rootstock macOS attack graph",
-    version="1.0.0",
+    version="0.1.0-alpha.1",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -133,7 +137,8 @@ logger = logging.getLogger("rootstock.api")
 MAX_ADHOC_CYPHER_LENGTH = 10_000
 MAX_ADHOC_CYPHER_ROWS = 1_000
 ADHOC_CYPHER_TIMEOUT_SECONDS = 5.0
-_DBMS_CALL_RE = re.compile(r"\bCALL\s+dbms\.", re.IGNORECASE)
+MIN_API_TOKEN_BYTES = 32
+_CALL_RE = re.compile(r"\bCALL\b", re.IGNORECASE)
 
 
 def get_session(request: Request):
@@ -143,7 +148,7 @@ def get_session(request: Request):
 
 
 def get_read_session(request: Request):
-    """Yield a read-only Neo4j session — Neo4j rejects writes at the driver level."""
+    """Request Neo4j read routing; database privileges remain authoritative."""
     with request.app.state.driver.session(default_access_mode=READ_ACCESS) as session:
         yield session
 
@@ -158,19 +163,36 @@ async def require_api_token(request: Request, call_next):
     if request.url.path.startswith("/api/"):
         token = getattr(request.app.state, "api_token", None)
         auth_header = request.headers.get("Authorization", "")
-        scheme, _, presented = auth_header.partition(" ")
-        authorized = (
-            bool(token)
-            and scheme == "Bearer"
-            and hmac.compare_digest(presented, token)
-        )
-        if not authorized:
-            return JSONResponse(
+        if not _matches_api_token(auth_header, token):
+            response = JSONResponse(
                 status_code=401,
                 content={"detail": "Missing or invalid bearer token"},
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    return await call_next(request)
+        else:
+            response = await call_next(request)
+    else:
+        response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'none'; script-src 'unsafe-inline'; "
+        "style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; "
+        "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    )
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    return response
+
+
+def _matches_api_token(auth_header: str, token: str | None) -> bool:
+    scheme, separator, presented = auth_header.partition(" ")
+    return (
+        bool(token)
+        and separator == " "
+        and scheme == "Bearer"
+        and hmac.compare_digest(presented.encode(), token.encode())
+    )
 
 
 # ── Routes ──────────────────────────────────────────────────────────────────
@@ -179,25 +201,8 @@ async def require_api_token(request: Request, call_next):
 @app.get("/", response_class=HTMLResponse)
 def serve_viewer(request: Request):
     """Serve the live interactive viewer without embedding graph data."""
-    asset_dir = Path(__file__).parent
-    template_path = asset_dir / "viewer_template.html"
-    template = template_path.read_text()
-
     data = _empty_graph_payload()
-    safe_json = json.dumps(data, ensure_ascii=True).replace("</", "<\\/")
-    title = "Live Attack Graph"
-
-    # Inject live mode flag and replace template placeholders
-    live_inject = "const __ROOTSTOCK_LIVE__ = true;\nconst API_BASE = '';\n"
-    html = template.replace("{{VIEWER_TITLE}}", html_mod.escape(title))
-    html = html.replace("{{VIEWER_CSS}}", (asset_dir / "viewer.css").read_text())
-    html = html.replace("{{VIEWER_JS}}", viewer_script_source(asset_dir))
-    html = html.replace(
-        "let DATA = null /* VIEWER_DATA */;",
-        live_inject + "let DATA = " + safe_json + ";",
-    )
-
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=render_viewer_html(data, title="Live Attack Graph", mode="live"))
 
 
 @app.get("/api/queries")
@@ -231,9 +236,20 @@ def run_query_endpoint(
         raise HTTPException(status_code=404, detail=f"Query '{query_id}' not found")
 
     cypher = first_cypher_statement(q["cypher"])
+    if _validate_api_cypher(cypher):
+        logger.error("Configured query %s is not read-only", query_id)
+        raise HTTPException(
+            status_code=500,
+            detail="Configured query is not read-only",
+        )
     params = body.params if body else {}
     try:
-        rows = run_query(session, cypher, params or {})
+        rows = run_query(
+            session,
+            Query(cypher, timeout=ADHOC_CYPHER_TIMEOUT_SECONDS),
+            params or {},
+            maximum_rows=MAX_ADHOC_CYPHER_ROWS + 1,
+        )
     except HTTPException:
         raise
     except (DriverError, Neo4jError) as err:
@@ -242,6 +258,8 @@ def run_query_endpoint(
             status_code=400, detail="Query execution failed"
         ) from err
 
+    truncated = len(rows) > MAX_ADHOC_CYPHER_ROWS
+    rows = rows[:MAX_ADHOC_CYPHER_ROWS]
     return {
         "query": {
             "id": q["id"],
@@ -251,11 +269,12 @@ def run_query_endpoint(
         },
         "rows": rows,
         "count": len(rows),
+        "truncated": truncated,
     }
 
 
 @app.get("/api/graph")
-def get_graph(session=SESSION_DEPENDENCY):
+def get_graph(session=READ_SESSION_DEPENDENCY):
     """Return the full OpenGraph JSON for viewer refresh."""
     _hostname, data = _build_live_graph(session)
     return data
@@ -300,7 +319,7 @@ def clear_owned_endpoint(body: ClearOwnedRequest, session=SESSION_DEPENDENCY):
 
 
 @app.get("/api/owned")
-def get_owned(session=SESSION_DEPENDENCY):
+def get_owned(session=READ_SESSION_DEPENDENCY):
     """List all currently owned nodes."""
     owned = list_owned(session)
     results = []
@@ -412,9 +431,28 @@ def _build_live_graph(session) -> tuple[str, dict[str, Any]]:
     spiral coordinates that are stable enough for refreshes and tests.
     """
     hostname = _get_hostname(session)
-    data = build_opengraph(session, hostname)
+    data = build_opengraph(
+        session,
+        hostname,
+        maximum_nodes=INTERACTIVE_GRAPH_MAX_NODES + 1,
+        maximum_edges=INTERACTIVE_GRAPH_MAX_EDGES + 1,
+    )
     graph = data.get("graph", {})
-    for index, node in enumerate(graph.get("nodes", [])):
+    nodes = graph.get("nodes", [])
+    edges = graph.get("edges", [])
+    if (
+        len(nodes) > INTERACTIVE_GRAPH_MAX_NODES
+        or len(edges) > INTERACTIVE_GRAPH_MAX_EDGES
+    ):
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                "Live graph exceeds the interactive limit of "
+                f"{INTERACTIVE_GRAPH_MAX_NODES} nodes and "
+                f"{INTERACTIVE_GRAPH_MAX_EDGES} edges"
+            ),
+        )
+    for index, node in enumerate(nodes):
         if isinstance(node.get("x"), int | float) and isinstance(
             node.get("y"), int | float
         ):
@@ -437,14 +475,14 @@ def _empty_graph_payload() -> dict[str, Any]:
 
 
 def _validate_adhoc_cypher(cypher: str) -> str | None:
-    cleaned = re.sub(r"/\*.*?\*/", " ", cypher, flags=re.DOTALL)
-    cleaned = "\n".join(
-        line for line in cleaned.splitlines() if not line.strip().startswith("//")
-    )
-    cleaned = re.sub(r"'(?:[^'\\]|\\.)*'", "''", cleaned)
-    cleaned = re.sub(r'"(?:[^"\\]|\\.)*"', '""', cleaned)
-    if _DBMS_CALL_RE.search(cleaned):
-        return "dbms procedures are not allowed in ad-hoc Cypher"
+    return _validate_api_cypher(cypher)
+
+
+def _validate_api_cypher(cypher: str) -> str | None:
+    """Apply the viewer API's stricter no-procedure read-only policy."""
+    cleaned = cypher_code_only(cypher)
+    if _CALL_RE.search(cleaned):
+        return "Procedures are not allowed through the viewer API"
     return validate_read_only_cypher(cypher)
 
 
@@ -457,10 +495,47 @@ def _is_loopback_host(host: str) -> bool:
         return False
 
 
-def _validate_bind_host(host: str, allow_remote: bool) -> None:
-    if allow_remote or _is_loopback_host(host):
+def _validate_bind_host(host: str) -> None:
+    """Reject every non-loopback bind for the alpha release surface."""
+    if _is_loopback_host(host):
         return
-    raise ValueError("Refusing non-loopback bind without --allow-remote")
+    raise ValueError("Refusing non-loopback bind; alpha is loopback-only")
+
+
+def _is_supported_neo4j_scheme(scheme: str) -> bool:
+    return scheme in {"bolt", "neo4j", "bolt+s", "neo4j+s"}
+
+
+def _has_neo4j_uri_credentials(parsed: SplitResult) -> bool:
+    return bool(parsed.username or parsed.password)
+
+
+def _has_loopback_neo4j_host(parsed: SplitResult) -> bool:
+    return bool(parsed.hostname and _is_loopback_host(parsed.hostname))
+
+
+def _has_neo4j_uri_suffix(parsed: SplitResult) -> bool:
+    return bool(parsed.path not in {"", "/"} or parsed.query or parsed.fragment)
+
+
+def _validate_neo4j_uri(uri: str) -> None:
+    """Keep the alpha server's outbound database connection on loopback."""
+    parsed = urlsplit(uri)
+    if not _is_supported_neo4j_scheme(parsed.scheme):
+        raise ValueError("Neo4j URI must use a supported Bolt/Neo4j scheme")
+    if _has_neo4j_uri_credentials(parsed):
+        raise ValueError("Neo4j URI must not contain credentials")
+    if not _has_loopback_neo4j_host(parsed):
+        raise ValueError("Refusing non-loopback Neo4j URI; alpha is local-only")
+    if _has_neo4j_uri_suffix(parsed):
+        raise ValueError("Neo4j URI must not contain a path, query, or fragment")
+
+
+def _validate_api_token(token: str) -> None:
+    if len(token.encode("utf-8")) < MIN_API_TOKEN_BYTES:
+        raise ValueError(
+            f"ROOTSTOCK_API_TOKEN must be at least {MIN_API_TOKEN_BYTES} bytes"
+        )
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
@@ -475,31 +550,30 @@ def _build_parser() -> argparse.ArgumentParser:
         "--host", default="127.0.0.1", help="Host to bind to (default: 127.0.0.1)"
     )
     parser.add_argument(
-        "--allow-remote",
-        action="store_true",
-        help="Allow binding to a non-loopback host",
-    )
-    parser.add_argument(
         "--neo4j", default="bolt://localhost:7687", help="Neo4j bolt URI"
     )
     parser.add_argument("--neo4j-user", default="neo4j", help="Neo4j username")
-    parser.add_argument(
-        "--neo4j-password", default=None, help="Neo4j password (or set NEO4J_PASSWORD)"
-    )
     return parser
 
 
 def _configure_app_state(args: argparse.Namespace) -> bool:
+    """Validate local-only startup inputs before exposing credentials in app state."""
     try:
-        _validate_bind_host(args.host, args.allow_remote)
+        _validate_bind_host(args.host)
     except ValueError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return False
 
-    password = args.neo4j_password or os.environ.get("NEO4J_PASSWORD")
+    try:
+        _validate_neo4j_uri(args.neo4j)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return False
+
+    password = os.environ.get("NEO4J_PASSWORD")
     if not password:
         print(
-            "ERROR: Neo4j password required via --neo4j-password or NEO4J_PASSWORD env var",
+            "ERROR: NEO4J_PASSWORD is required",
             file=sys.stderr,
         )
         return False
@@ -507,6 +581,11 @@ def _configure_app_state(args: argparse.Namespace) -> bool:
     api_token = os.environ.get("ROOTSTOCK_API_TOKEN")
     if not api_token:
         print("ERROR: ROOTSTOCK_API_TOKEN is required for /api/* routes", file=sys.stderr)
+        return False
+    try:
+        _validate_api_token(api_token)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
         return False
 
     app.state.neo4j_uri = args.neo4j

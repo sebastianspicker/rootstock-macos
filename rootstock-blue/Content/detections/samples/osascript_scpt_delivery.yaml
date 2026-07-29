@@ -1,0 +1,13 @@
+id: sample.osascript_scpt_delivery
+title: Compiled AppleScript / OSA delivery residual surface present
+severity: high
+description: OSA/scpt delivery markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1059.002
+  - T1204
+  - T1027
+match:
+  event_type: osascript.scpt
+  field_contains:
+    osa.risk_tags: "scpt_surface"
+fixture: osascript_scpt_delivery.jsonl

@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Library/CoreServices/RemoteManagement/AppleVNCServer.bundle",
+      "name": "screen",
+      "risk_tags": "ard_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "Screen Sharing ARD depth markers \u2014 never enables Screen Sharing or ARD, never connects to remote desktops"
+    }
+  ]
+}

@@ -1,12 +1,11 @@
 // Name: Full TCC Grant Inventory
-// Purpose: Complete audit of all TCC grants — service, app, grant method, age
+// Purpose: List imported TCC grants with service, app, grant method, and timestamp metadata
 // Category: Blue Team
 // Severity: Informational
 // Parameters: $scope (optional: 'user' or 'system', default: all)
 // Prerequisites: import_scan.py must have run
 //
-// Use case: Periodic security audit, baseline establishment, compliance reporting.
-// Compare output before/after software installs to detect new TCC grants.
+// Use case: Review one imported snapshot or compare separately captured snapshots.
 
 MATCH (app:Application)-[r:HAS_TCC_GRANT]->(perm:TCC_Permission)
 WHERE $scope IS NULL OR r.scope = $scope

@@ -1,0 +1,17 @@
+{
+  "name": "quiet",
+  "description": "Quiet: process + persistence + XProtect only",
+  "eventTypes": [
+    "NOTIFY_EXEC",
+    "NOTIFY_EXIT",
+    "NOTIFY_BTM_LAUNCH_ITEM_ADD",
+    "NOTIFY_XP_MALWARE_DETECTED"
+  ],
+  "authMode": false,
+  "defaultMutePrefixes": [
+    "/System/",
+    "/usr/",
+    "/bin/",
+    "/sbin/"
+  ]
+}

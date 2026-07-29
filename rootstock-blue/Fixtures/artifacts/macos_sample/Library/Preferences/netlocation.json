@@ -1,0 +1,13 @@
+{
+  "locations": [
+    {
+      "name": "Automatic",
+      "active": true
+    },
+    {
+      "name": "Evil VPN",
+      "active": false,
+      "type": "vpn"
+    }
+  ]
+}

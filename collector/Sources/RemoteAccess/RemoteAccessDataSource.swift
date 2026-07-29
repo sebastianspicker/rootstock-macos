@@ -10,14 +10,36 @@ public struct RemoteAccessDataSource: DataSource {
     public let requiresElevation = false
 
     private let sshdConfigPath: String
-    private let launchctlRunner: ([String]) -> String?
+    private let launchctlRunner: @Sendable ([String]) -> ShellOutcome
+
+    public init(sshdConfigPath: String = "/etc/ssh/sshd_config") {
+        self.sshdConfigPath = sshdConfigPath
+        launchctlRunner = { arguments in
+            Shell.execute("/bin/launchctl", arguments)
+        }
+    }
 
     public init(
         sshdConfigPath: String = "/etc/ssh/sshd_config",
-        launchctlRunner: @escaping ([String]) -> String? = { args in Shell.run("/bin/launchctl", args) }
+        launchctlRunner: @escaping @Sendable ([String]) -> String?
     ) {
         self.sshdConfigPath = sshdConfigPath
-        self.launchctlRunner = launchctlRunner
+        self.launchctlRunner = { arguments in
+            if let output = launchctlRunner(arguments) {
+                return .success(ShellResult(
+                    stdout: output,
+                    stderr: "",
+                    terminationStatus: 0,
+                    timedOut: false
+                ))
+            }
+            return .nonZeroExit(ShellResult(
+                stdout: "",
+                stderr: "",
+                terminationStatus: 1,
+                timedOut: false
+            ))
+        }
     }
 
     public func collect() async -> DataSourceResult {
@@ -97,27 +119,35 @@ public struct RemoteAccessDataSource: DataSource {
     }
 
     func detectServiceEnabled(label: String, errors: inout [CollectionError]) -> Bool? {
-        guard let disabledOutput = launchctlRunner(["print-disabled", "system"]) else {
+        let disabledOutcome = launchctlRunner(["print-disabled", "system"])
+        guard case .success(let disabledResult) = disabledOutcome else {
             errors.append(CollectionError(
                 source: name,
-                message: "Failed to query launchctl disabled state for \(label)",
+                message: "Failed to query launchctl disabled state for \(label): \(disabledOutcome.failureDescription ?? "command failure")",
                 recoverable: true
             ))
             return nil
         }
+        let disabledOutput = disabledResult.stdout
 
         if let disabled = Self.parseDisabledServices(output: disabledOutput)[label] {
             return !disabled
         }
 
-        if launchctlRunner(["print", "system/\(label)"]) != nil {
+        let serviceOutcome = launchctlRunner(["print", "system/\(label)"])
+        if case .success = serviceOutcome {
             return true
         }
+        if case .nonZeroExit = serviceOutcome {
+            return false
+        }
 
-        // We reached launchctl successfully, and the label was neither explicitly
-        // enabled nor loadable as a running service. Model that as not enabled
-        // for posture purposes; unknown is reserved for launchctl query failure.
-        return false
+        errors.append(CollectionError(
+            source: name,
+            message: "Failed to query launchctl service state for \(label): \(serviceOutcome.failureDescription ?? "command failure")",
+            recoverable: true
+        ))
+        return nil
     }
 
     static func parseDisabledServices(output: String) -> [String: Bool] {

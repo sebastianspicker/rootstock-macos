@@ -1,0 +1,11 @@
+id: sample.unsigned_persistence_codesign
+title: Unsigned persistence binary (codesign assessment)
+severity: high
+description: Codesign assessment of a persistence-linked path reports unsigned or not_notarized risk.
+attack_techniques:
+  - T1204.002
+match:
+  event_type: codesign.assessment
+  field_contains:
+    codesign.risk_tags: "unsigned"
+fixture: unsigned_persistence_codesign.jsonl

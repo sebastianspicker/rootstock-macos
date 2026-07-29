@@ -1,9 +1,9 @@
 // Name: Reachable High-Value Assets from Owned Nodes
-// Purpose: Show all TCC permissions, keychain items, and XPC services reachable from owned nodes within N hops
+// Purpose: Show modeled TCC, Keychain, and XPC reachability from owned nodes within N hops
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Attack: After initial compromise, enumerate everything reachable without further exploitation
+// Attack model: traverse configured relationships from nodes marked as owned
 // Prerequisites: import_scan.py + infer.py must have run; mark_owned.py to set owned nodes
 
 MATCH (src)

@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "handler_path": "/Users/alice/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist",
+      "scheme": "rootstock-lab",
+      "handler_kind": "launch_services",
+      "handler_surface": true,
+      "third_party_handler": true,
+      "risk_tags": "handler_surface,third_party_handler,custom_scheme",
+      "notes": "URL scheme handler path presence only - never registers schemes",
+      "user": "alice",
+      "timestamp": "2026-04-01T12:00:00Z"
+    },
+    {
+      "handler_path": "/usr/bin/open",
+      "scheme": "",
+      "handler_kind": "opener",
+      "handler_surface": true,
+      "risk_tags": "handler_surface",
+      "user": "alice",
+      "timestamp": "2026-04-01T12:00:00Z"
+    }
+  ]
+}

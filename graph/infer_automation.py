@@ -1,5 +1,5 @@
 """
-infer_automation.py — Infer CAN_SEND_APPLE_EVENT relationships.
+infer_automation.py - Infer CAN_SEND_APPLE_EVENT relationships.
 
 Apps with an allowed TCC grant for kTCCServiceAppleEvents can automate other apps
 that have valuable (allowed) TCC grants. Apple Events allow cross-process control,
@@ -24,7 +24,7 @@ def infer(session: Session) -> int:
     Idempotent.
     """
     ensure_attacker_node(session)
-    # NOTE: Known approximation — this creates a Cartesian product between all
+    # NOTE: Known approximation - this creates a Cartesian product between all
     # apps with Automation TCC grants and all apps with any TCC grant. The real
     # Apple Events automation scope is per-target (kTCCServiceAppleEvents records
     # include an indirect_object_identifier), but the collector does not yet

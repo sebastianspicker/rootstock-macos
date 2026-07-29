@@ -1,0 +1,11 @@
+id: sample.netusage_anomalous_egress
+title: Anomalous process network egress
+severity: high
+description: Process network-usage inventory reports anomalous_egress or suspicious destination domain.
+attack_techniques:
+  - T1071.001
+match:
+  event_type: network.usage
+  field_contains:
+    net.risk_tags: "anomalous_egress"
+fixture: netusage_anomalous_egress.jsonl

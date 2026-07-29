@@ -77,7 +77,7 @@ public struct LoginSessionDataSource: DataSource {
             // Remote connection via SSH or screen sharing
             return .ssh
         }
-        // Local terminal session — could be tmux but default to console
+        // Local terminal session - could be tmux but default to console
         return .console
     }
 }

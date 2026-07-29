@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Dropbox",
+    "path": "/Applications/Dropbox.app",
+    "hidden": false
+  },
+  {
+    "name": "Evil Login Helper",
+    "path": "/tmp/EvilLoginHelper.app",
+    "hidden": true
+  },
+  {
+    "name": "iTerm",
+    "path": "/Applications/iTerm.app",
+    "hidden": false
+  }
+]

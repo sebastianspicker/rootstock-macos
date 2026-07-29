@@ -1,0 +1,12 @@
+id: sample.url_scheme_handler
+title: URL scheme / document-handler surface present
+severity: high
+description: URL scheme or document-handler markers indicate delivery IR surface (LaunchServices / custom schemes).
+attack_techniques:
+  - T1204
+  - T1546
+match:
+  event_type: url_scheme.handler
+  field_contains:
+    url_scheme.risk_tags: "handler_surface"
+fixture: url_scheme_handler.jsonl

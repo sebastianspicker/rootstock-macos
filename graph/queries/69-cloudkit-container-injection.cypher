@@ -1,5 +1,5 @@
 // Name: CloudKit Container Injection
-// Purpose: Apps with CloudKit container entitlements and injection vectors — injectable cloud-connected apps can read/write shared CloudKit data
+// Purpose: Apps with CloudKit container entitlements and injection vectors - injectable cloud-connected apps can read/write shared CloudKit data
 // Category: Red Team
 // Severity: High
 // Parameters: none

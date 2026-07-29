@@ -1,0 +1,13 @@
+id: sample.pam_auth_module
+title: PAM authentication module residual surface surface present
+severity: high
+description: PAM auth module surface markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1556
+  - T1543
+  - T1078
+match:
+  event_type: pam.module
+  field_contains:
+    pammod.risk_tags: "pam_surface"
+fixture: pam_auth_module.jsonl

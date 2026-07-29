@@ -12,7 +12,7 @@ RETURN ap.name    AS plugin_name,
        ap.path    AS path,
        ap.team_id AS team_id,
        CASE
-         WHEN ap.team_id IS NULL THEN 'Unsigned — Critical'
-         ELSE 'Third-party — Review'
+         WHEN ap.team_id IS NULL THEN 'Unsigned - Critical'
+         ELSE 'Third-party - Review'
        END AS risk_assessment
 ORDER BY ap.team_id IS NULL DESC, ap.name ASC

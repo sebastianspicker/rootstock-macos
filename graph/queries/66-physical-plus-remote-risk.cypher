@@ -1,5 +1,5 @@
 // Name: Physical + Remote Combined Risk
-// Purpose: Hosts with weak physical posture AND enabled remote access — maximum exposure
+// Purpose: Hosts with weak physical posture and enabled remote access
 // Category: Blue Team
 // Severity: Critical
 // Parameters: none

@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "label": "com.google.santa",
+      "override_path": "/var/db/com.apple.xpc.launchd/disabled.plist",
+      "security_product_hint": true,
+      "override_surface": true,
+      "risk_tags": "override_depth,security_product_disabled",
+      "notes": "Launchd override depth marker - never disables jobs",
+      "user": "root",
+      "timestamp": "2026-04-01T12:05:00Z"
+    },
+    {
+      "label": "com.crowdstrike.falcon.Agent",
+      "override_path": "/var/db/com.apple.xpc.launchd/disabled.plist",
+      "security_product_hint": true,
+      "override_surface": true,
+      "risk_tags": "override_depth,security_product_disabled",
+      "user": "root",
+      "timestamp": "2026-04-01T12:05:00Z"
+    }
+  ]
+}

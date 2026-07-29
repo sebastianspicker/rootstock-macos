@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import Models
 
 /// Represents a discovered .app bundle before entitlement extraction.
@@ -12,15 +13,68 @@ struct DiscoveredApp {
     let isSystem: Bool
 }
 
+/// Discovered applications plus recoverable traversal or budget failures.
 struct AppDiscoveryResult {
     let applications: [DiscoveredApp]
     let errors: [CollectionError]
+}
+
+/// Finite scan budgets for untrusted application-directory contents.
+struct AppDiscoveryLimits {
+    let maximumEntries: Int
+    let maximumInfoPlistBytes: Int
+    let maximumInfoPlistBytesPerFile: Int
+
+    init(
+        maximumEntries: Int,
+        maximumInfoPlistBytes: Int,
+        maximumInfoPlistBytesPerFile: Int? = nil
+    ) {
+        self.maximumEntries = maximumEntries
+        self.maximumInfoPlistBytes = maximumInfoPlistBytes
+        self.maximumInfoPlistBytesPerFile = maximumInfoPlistBytesPerFile
+            ?? maximumInfoPlistBytes
+    }
+
+    static let `default` = AppDiscoveryLimits(
+        maximumEntries: 10_000,
+        maximumInfoPlistBytes: 16 * 1024 * 1024,
+        maximumInfoPlistBytesPerFile: 1024 * 1024
+    )
+}
+
+private final class AppDiscoveryBudget {
+    private var remainingEntries: Int
+    private var remainingInfoPlistBytes: Int
+
+    init(limits: AppDiscoveryLimits) {
+        remainingEntries = limits.maximumEntries
+        remainingInfoPlistBytes = limits.maximumInfoPlistBytes
+    }
+
+    func consumeEntry() -> Bool {
+        guard remainingEntries > 0 else { return false }
+        remainingEntries -= 1
+        return true
+    }
+
+    func consumeAcceptedInfoPlistBytes(_ count: Int) -> Bool {
+        guard count >= 0, count <= remainingInfoPlistBytes else { return false }
+        remainingInfoPlistBytes -= count
+        return true
+    }
+}
+
+private enum InfoPlistOpenResult {
+    case success(Int32)
+    case failure(CollectionError)
 }
 
 /// Scans configured directories for installed .app bundles.
 struct AppDiscovery {
     private let fileManager = FileManager.default
     private let directories: [URL]
+    private let limits: AppDiscoveryLimits
 
     private static var defaultDirectories: [URL] {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
@@ -32,14 +86,22 @@ struct AppDiscovery {
         ]
     }
 
-    /// Default initializer — scans the standard macOS application directories.
+    /// Default initializer - scans the standard macOS application directories.
     init() {
         directories = Self.defaultDirectories
+        limits = .default
     }
 
     /// Testable initializer with injectable directory list.
     init(additionalDirectories: [URL]) {
         directories = Self.defaultDirectories + additionalDirectories
+        limits = .default
+    }
+
+    /// Test-only initializer that isolates discovery and its finite budgets.
+    init(directories: [URL], limits: AppDiscoveryLimits) {
+        self.directories = directories
+        self.limits = limits
     }
 
     /// Discover all .app bundles across configured directories.
@@ -48,9 +110,10 @@ struct AppDiscovery {
         var apps: [DiscoveredApp] = []
         var errors: [CollectionError] = []
         var seen = Set<String>()
+        let budget = AppDiscoveryBudget(limits: limits)
 
-        for dir in directories {
-            let result = scanDirectory(dir)
+        for dir in directories.sorted(by: { $0.path < $1.path }) {
+            let result = scanDirectory(dir, budget: budget)
             errors.append(contentsOf: result.errors)
             for app in result.applications where seen.insert(app.path).inserted {
                 apps.append(app)
@@ -62,7 +125,7 @@ struct AppDiscovery {
 
     // MARK: - Private
 
-    private func scanDirectory(_ dir: URL) -> AppDiscoveryResult {
+    private func scanDirectory(_ dir: URL, budget: AppDiscoveryBudget) -> AppDiscoveryResult {
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: dir.path, isDirectory: &isDirectory) else {
             return AppDiscoveryResult(applications: [], errors: [])
@@ -78,71 +141,83 @@ struct AppDiscovery {
             )
         }
 
-        let contents: [URL]
-        do {
-            contents = try fileManager.contentsOfDirectory(
-                at: dir,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
-            )
-        } catch {
+        var traversalErrors: [CollectionError] = []
+        guard let enumerator = fileManager.enumerator(
+            at: dir,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles],
+            errorHandler: { url, error in
+                traversalErrors.append(CollectionError(
+                    source: "Entitlements",
+                    message: "Failed to scan application subdirectory \(url.path): \(error.localizedDescription)",
+                    recoverable: true
+                ))
+                return true
+            }
+        ) else {
             return AppDiscoveryResult(
                 applications: [],
                 errors: [CollectionError(
                     source: "Entitlements",
-                    message: "Failed to scan application directory \(dir.path): \(error.localizedDescription)",
+                    message: "Failed to scan application directory \(dir.path)",
                     recoverable: true
                 )]
             )
         }
 
-        var found: [DiscoveredApp] = []
-        var errors: [CollectionError] = []
+        var scanErrors: [CollectionError] = []
+        let found = scanItems(from: enumerator, budget: budget, errors: &scanErrors)
+        return AppDiscoveryResult(
+            applications: found,
+            errors: traversalErrors + scanErrors
+        )
+    }
 
-        for item in contents {
+    private func scanItems(
+        from enumerator: FileManager.DirectoryEnumerator,
+        budget: AppDiscoveryBudget,
+        errors: inout [CollectionError]
+    ) -> [DiscoveredApp] {
+        var candidates: [URL] = []
+        while let item = enumerator.nextObject() as? URL {
+            guard budget.consumeEntry() else {
+                errors.append(CollectionError(
+                    source: "Entitlements",
+                    message: "Stopped application discovery after reaching the \(limits.maximumEntries)-entry scan limit",
+                    recoverable: true
+                ))
+                break
+            }
+
             if item.pathExtension == "app" {
-                appendDiscoveredApp(at: item, to: &found, errors: &errors)
-            } else {
-                scanNestedApps(in: item, found: &found, errors: &errors)
+                enumerator.skipDescendants()
+                candidates.append(item)
+            } else if enumerator.level >= 2 {
+                // Direct children are level 1. Descend through those containers,
+                // then stop so discovery remains bounded to exactly one nested level.
+                enumerator.skipDescendants()
             }
         }
 
-        return AppDiscoveryResult(applications: found, errors: errors)
-    }
-
-    private func scanNestedApps(in directory: URL, found: inout [DiscoveredApp], errors: inout [CollectionError]) {
-        // One level deeper into subdirectories.
-        guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
-            return
-        }
-
-        let subContents: [URL]
-        do {
-            subContents = try fileManager.contentsOfDirectory(
-                at: directory,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
+        var found: [DiscoveredApp] = []
+        for candidate in candidates.sorted(by: { $0.path < $1.path }) {
+            appendDiscoveredApp(
+                at: candidate,
+                budget: budget,
+                to: &found,
+                errors: &errors
             )
-        } catch {
-            errors.append(CollectionError(
-                source: "Entitlements",
-                message: "Failed to scan application subdirectory \(directory.path): \(error.localizedDescription)",
-                recoverable: true
-            ))
-            return
         }
-
-        for subItem in subContents where subItem.pathExtension == "app" {
-            appendDiscoveredApp(at: subItem, to: &found, errors: &errors)
-        }
+        return found
     }
 
     private func appendDiscoveredApp(
         at url: URL,
+        budget: AppDiscoveryBudget,
         to found: inout [DiscoveredApp],
         errors: inout [CollectionError]
     ) {
-        let result = makeDiscoveredApp(at: url)
+        let result = makeDiscoveredApp(at: url, budget: budget)
         if let app = result.application {
             found.append(app)
         }
@@ -151,12 +226,15 @@ struct AppDiscovery {
         }
     }
 
-    private func makeDiscoveredApp(at url: URL) -> (application: DiscoveredApp?, error: CollectionError?) {
+    private func makeDiscoveredApp(
+        at url: URL,
+        budget: AppDiscoveryBudget
+    ) -> (application: DiscoveredApp?, error: CollectionError?) {
         // Resolve symlinks (e.g. Homebrew Cask apps) before reading any file content.
         let resolvedURL = url.resolvingSymlinksInPath()
 
         let contentsURL = resolvedURL.appendingPathComponent("Contents")
-        let plistResult = readInfoPlist(for: url, contentsURL: contentsURL)
+        let plistResult = readInfoPlist(for: url, contentsURL: contentsURL, budget: budget)
         guard let plist = plistResult.plist else {
             return (nil, plistResult.error)
         }
@@ -193,13 +271,39 @@ struct AppDiscovery {
 
     private func readInfoPlist(
         for originalURL: URL,
-        contentsURL: URL
+        contentsURL: URL,
+        budget: AppDiscoveryBudget
     ) -> (plist: [String: Any]?, error: CollectionError?) {
         let plistURL = contentsURL.appendingPathComponent("Info.plist")
+        let descriptor: Int32
+        switch openRegularInfoPlist(at: plistURL, for: originalURL) {
+        case .success(let openedDescriptor):
+            descriptor = openedDescriptor
+        case .failure(let error):
+            return (nil, error)
+        }
+        defer { Darwin.close(descriptor) }
 
         let plistData: Data
         do {
-            plistData = try Data(contentsOf: plistURL)
+            guard let data = try readBoundedInfoPlistData(
+                descriptor: descriptor,
+                maximumBytes: limits.maximumInfoPlistBytesPerFile
+            ) else {
+                return (nil, CollectionError(
+                    source: "Entitlements",
+                    message: "Skipping \(originalURL.path): Info.plist exceeds the \(limits.maximumInfoPlistBytesPerFile)-byte per-file discovery budget",
+                    recoverable: true
+                ))
+            }
+            guard budget.consumeAcceptedInfoPlistBytes(data.count) else {
+                return (nil, CollectionError(
+                    source: "Entitlements",
+                    message: "Skipping \(originalURL.path): Info.plist exceeds the remaining aggregate \(limits.maximumInfoPlistBytes)-byte discovery budget",
+                    recoverable: true
+                ))
+            }
+            plistData = data
         } catch {
             return (nil, CollectionError(
                 source: "Entitlements",
@@ -208,9 +312,77 @@ struct AppDiscovery {
             ))
         }
 
+        return parseInfoPlist(plistData, for: originalURL)
+    }
+
+    private func openRegularInfoPlist(
+        at plistURL: URL,
+        for originalURL: URL
+    ) -> InfoPlistOpenResult {
+        let descriptor = plistURL.path.withCString {
+            Darwin.open($0, O_RDONLY | O_NONBLOCK | O_CLOEXEC)
+        }
+        guard descriptor >= 0 else {
+            let detail = String(cString: strerror(errno))
+            return .failure(CollectionError(
+                source: "Entitlements",
+                message: "Skipping \(originalURL.path): Info.plist missing or unreadable (\(detail))",
+                recoverable: true
+            ))
+        }
+
+        var fileStatus = stat()
+        guard Darwin.fstat(descriptor, &fileStatus) == 0 else {
+            let detail = String(cString: strerror(errno))
+            Darwin.close(descriptor)
+            return .failure(CollectionError(
+                source: "Entitlements",
+                message: "Skipping \(originalURL.path): Info.plist missing or unreadable (\(detail))",
+                recoverable: true
+            ))
+        }
+        guard fileStatus.st_mode & S_IFMT == S_IFREG else {
+            Darwin.close(descriptor)
+            return .failure(CollectionError(
+                source: "Entitlements",
+                message: "Skipping \(originalURL.path): Info.plist is not a regular file",
+                recoverable: true
+            ))
+        }
+        return .success(descriptor)
+    }
+
+    /// Reads from one already-validated descriptor so pathname replacement cannot
+    /// bypass the independent per-file limit. A nil result means that limit was exceeded.
+    private func readBoundedInfoPlistData(
+        descriptor: Int32,
+        maximumBytes: Int
+    ) throws -> Data? {
+        let file = FileHandle(fileDescriptor: descriptor, closeOnDealloc: false)
+        var data = Data()
+        let boundedMaximum = max(0, maximumBytes)
+
+        while true {
+            let remaining = boundedMaximum - data.count
+            let budgetProbeSize = remaining == Int.max ? Int.max : remaining + 1
+            let readSize = min(64 * 1024, budgetProbeSize)
+            guard let chunk = try file.read(upToCount: readSize), !chunk.isEmpty else {
+                return data
+            }
+            guard chunk.count <= remaining else {
+                return nil
+            }
+            data.append(chunk)
+        }
+    }
+
+    private func parseInfoPlist(
+        _ data: Data,
+        for originalURL: URL
+    ) -> (plist: [String: Any]?, error: CollectionError?) {
         do {
             guard let parsed = try PropertyListSerialization.propertyList(
-                from: plistData, options: [], format: nil
+                from: data, options: [], format: nil
             ) as? [String: Any] else {
                 return (nil, CollectionError(
                     source: "Entitlements",

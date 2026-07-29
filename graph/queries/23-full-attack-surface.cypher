@@ -1,18 +1,17 @@
 // Name: Full Attack Surface Map
-// Purpose: Return every inferred attack edge — the complete enumeration of attack paths
+// Purpose: Return the three relationship patterns implemented by this query.
 // Category: Forensic
 // Severity: Informational
 // Parameters: none
 // Prerequisites: import_scan.py + infer.py must have run
 //
-// Use case: Machine-readable export of the full attack surface for integration
-// with external tools, dashboards, or ticketing systems. Each row is one
-// potential attack vector that needs to be triaged or remediated.
+// Use case: Export modeled injection, Electron inheritance, and Apple Event
+// relationship candidates for triage or external analysis.
 //
 // Edge types included:
-//   CAN_INJECT_INTO      — code injection opportunities
-//   CHILD_INHERITS_TCC   — Electron TCC inheritance
-//   CAN_SEND_APPLE_EVENT — Apple Event automation abuse
+//   CAN_INJECT_INTO: modeled code-injection preconditions
+//   CHILD_INHERITS_TCC: modeled Electron TCC-inheritance preconditions
+//   CAN_SEND_APPLE_EVENT: modeled Apple Event automation preconditions
 
 MATCH (attacker:Application {bundle_id: 'attacker.payload'})-[r:CAN_INJECT_INTO]->(target:Application)
 OPTIONAL MATCH (target)-[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)

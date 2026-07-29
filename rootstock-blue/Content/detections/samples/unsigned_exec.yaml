@@ -1,0 +1,12 @@
+id: sample.unsigned_exec
+title: Unsigned process execution
+severity: high
+description: Process execution reported as unsigned.
+attack_techniques:
+  - T1204.002
+match:
+  event_type: NOTIFY_EXEC
+  field_equals:
+    process.code_signature.signed: "false"
+fixture: unsigned_exec.jsonl
+atomic_mapping: T1204.002

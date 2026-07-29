@@ -1,0 +1,62 @@
+[
+  {
+    "name": "osascript",
+    "path": "/usr/bin/osascript",
+    "tactics": ["Execution", "Defense Evasion"],
+    "description": "AppleScript/JXA execution"
+  },
+  {
+    "name": "launchctl",
+    "path": "/bin/launchctl",
+    "tactics": ["Persistence", "Execution"],
+    "description": "Launchd job control"
+  },
+  {
+    "name": "security",
+    "path": "/usr/bin/security",
+    "tactics": ["Credential Access"],
+    "description": "Keychain and codesign CLI"
+  },
+  {
+    "name": "screencapture",
+    "path": "/usr/sbin/screencapture",
+    "tactics": ["Collection"],
+    "description": "Screen capture utility"
+  },
+  {
+    "name": "mdfind",
+    "path": "/usr/bin/mdfind",
+    "tactics": ["Discovery"],
+    "description": "Spotlight search CLI"
+  },
+  {
+    "name": "system_profiler",
+    "path": "/usr/sbin/system_profiler",
+    "tactics": ["Discovery"],
+    "description": "System inventory"
+  },
+  {
+    "name": "profiles",
+    "path": "/usr/bin/profiles",
+    "tactics": ["Discovery", "Persistence"],
+    "description": "Configuration profile management"
+  },
+  {
+    "name": "xattr",
+    "path": "/usr/bin/xattr",
+    "tactics": ["Defense Evasion"],
+    "description": "Extended attributes (quarantine)"
+  },
+  {
+    "name": "codesign",
+    "path": "/usr/bin/codesign",
+    "tactics": ["Defense Evasion", "Discovery"],
+    "description": "Code signing inspection"
+  },
+  {
+    "name": "sqlite3",
+    "path": "/usr/bin/sqlite3",
+    "tactics": ["Collection", "Credential Access"],
+    "description": "SQLite database access"
+  }
+]

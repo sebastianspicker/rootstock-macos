@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <array><string>alice</string></array>
+  <key>uid</key>
+  <array><string>501</string></array>
+  <key>home</key>
+  <array><string>/Users/alice</string></array>
+  <key>shell</key>
+  <array><string>/bin/zsh</string></array>
+  <key>realname</key>
+  <array><string>Alice User</string></array>
+</dict>
+</plist>

@@ -1,0 +1,13 @@
+id: sample.shell_curl_pipe
+title: Shell history curl-to-shell pipeline
+severity: high
+description: Shell history contains curl|bash or curl|sh style remote execution.
+attack_techniques:
+  - T1059.004
+  - T1105
+match:
+  event_type: shell.history
+  field_contains:
+    shell.command: "curl"
+fixture: shell_curl_pipe.jsonl
+atomic_mapping: T1059.004

@@ -1,0 +1,13 @@
+id: sample.vpn_config_dualuse
+title: VPN configuration dual-use residual surface surface present
+severity: high
+description: VPN config dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1133
+  - T1572
+  - T1048
+match:
+  event_type: vpn.config
+  field_contains:
+    vpncfg.risk_tags: "vpn_surface"
+fixture: vpn_config_dualuse.jsonl

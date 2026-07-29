@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/sbin/emond",
+      "name": "emond",
+      "risk_tags": "emond_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "Emond legacy depth markers \u2014 never installs emond rules or enables the legacy event monitor daemon"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-"""import_nodes_services.py — XPC, launch items, MDM, and keychain imports."""
+"""import_nodes_services.py - XPC, launch items, MDM, and keychain imports."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def import_xpc_services(
     MERGE XPC_Service nodes and COMMUNICATES_WITH edges.
 
     COMMUNICATES_WITH edges are created when an Application has an Entitlement
-    whose name exactly matches one of the service's mach_service names — indicating
+    whose name exactly matches one of the service's mach_service names - indicating
     the application explicitly references that service by name.
 
     Returns (xpc_nodes, communicates_with_edges).

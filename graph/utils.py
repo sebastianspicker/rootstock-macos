@@ -1,5 +1,5 @@
 """
-utils.py — Shared utilities for Rootstock graph tools.
+utils.py - Shared utilities for Rootstock graph tools.
 
 Common helpers used by report.py, query_runner.py, report_diagrams.py,
 and report_graphviz.py to avoid duplication.
@@ -8,7 +8,10 @@ and report_graphviz.py to avoid duplication.
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from neo4j import Query
 
 
 class _CypherStatementScanner:
@@ -37,7 +40,7 @@ class _CypherStatementScanner:
         return False
 
 
-def list_or_str(value: Any, none_placeholder: str = "—") -> str:
+def list_or_str(value: Any, none_placeholder: str = " - ") -> str:
     """Convert list values from Neo4j to a comma-separated string."""
     if isinstance(value, list):
         return ", ".join(str(v) for v in value)
@@ -67,27 +70,97 @@ def first_cypher_statement(cypher: str) -> str:
     return cleaned[start:].strip()
 
 
-def _strip_cypher_comments(cypher: str) -> str:
-    no_line_comments = "\n".join(
-        line for line in cypher.splitlines() if not line.strip().startswith("//")
-    )
-    parts: list[str] = []
-    cursor = 0
-    while (comment_start := no_line_comments.find("/*", cursor)) >= 0:
-        comment_end = no_line_comments.find("*/", comment_start + 2)
+class _CypherCommentStripper:
+    def __init__(self) -> None:
+        self.output: list[str] = []
+        self.quote: str | None = None
+        self.escaped = False
+
+    def consume(self, cypher: str, index: int) -> int:
+        char = cypher[index]
+        if self.quote is not None:
+            return self.consume_quoted(cypher, index)
+        if char in ("'", '"', "`"):
+            self.quote = char
+            self.output.append(char)
+            return index + 1
+        if cypher.startswith("//", index):
+            return self.consume_line_comment(cypher, index)
+        if cypher.startswith("/*", index):
+            return self.consume_block_comment(cypher, index)
+        self.output.append(char)
+        return index + 1
+
+    def consume_quoted(self, cypher: str, index: int) -> int:
+        char = cypher[index]
+        following = cypher[index + 1] if index + 1 < len(cypher) else ""
+        self.output.append(char)
+        if self._continues_escaped_backtick(char, following):
+            self.output.append(following)
+            return index + 2
+        self._update_quoted_state(char)
+        return index + 1
+
+    def _continues_escaped_backtick(self, char: str, following: str) -> bool:
+        return self.quote == "`" and char == "`" and following == "`"
+
+    def _update_quoted_state(self, char: str) -> None:
+        if self.escaped:
+            self.escaped = False
+        elif char == "\\" and self.quote != "`":
+            self.escaped = True
+        elif char == self.quote:
+            self.quote = None
+
+    def consume_line_comment(self, cypher: str, index: int) -> int:
+        line_end = index + 2
+        while line_end < len(cypher) and cypher[line_end] not in "\r\n":
+            line_end += 1
+        self.output.append(" ")
+        return line_end
+
+    def consume_block_comment(self, cypher: str, index: int) -> int:
+        comment_end = cypher.find("*/", index + 2)
         if comment_end < 0:
-            break
-        parts.append(no_line_comments[cursor:comment_start])
-        parts.append(" ")
-        cursor = comment_end + 2
-    parts.append(no_line_comments[cursor:])
-    return "".join(parts)
+            self.output.append(cypher[index:])
+            return len(cypher)
+        self.output.append(" ")
+        self.output.extend(char for char in cypher[index + 2 : comment_end] if char in "\r\n")
+        return comment_end + 2
 
 
-def run_query(session, cypher: str, params: dict | None = None) -> list[dict]:
-    """Run a single Cypher statement, return list of record dicts."""
+def _strip_cypher_comments(cypher: str) -> str:
+    """Remove comments without changing quoted text or statement line structure."""
+    stripper = _CypherCommentStripper()
+    index = 0
+    while index < len(cypher):
+        index = stripper.consume(cypher, index)
+    return "".join(stripper.output)
+
+
+def cypher_code_only(cypher: str) -> str:
+    """Remove comments, quoted strings, and escaped identifiers for policy checks."""
+    cleaned = _strip_cypher_comments(cypher)
+    cleaned = re.sub(r"'(?:[^'\\]|\\.)*'", "''", cleaned)
+    cleaned = re.sub(r'"(?:[^"\\]|\\.)*"', '""', cleaned)
+    return re.sub(r"`(?:[^`]|``)*`", "``", cleaned)
+
+
+def run_query(
+    session,
+    cypher: str | Query,
+    params: dict | None = None,
+    *,
+    maximum_rows: int | None = None,
+) -> list[dict]:
+    """Run one Cypher statement with an optional client-side row bound."""
     result = session.run(cypher, params or {})
-    return [dict(r) for r in result]
+    rows = []
+    for record in result:
+        if maximum_rows is not None and len(rows) >= maximum_rows:
+            break
+        rows.append(dict(record))
+    return rows
 
 
 def sanitize_id(text: str, fallback: str = "node") -> str:
@@ -106,7 +179,10 @@ def truncate(text: str, max_len: int = 30) -> str:
 
 _WRITE_KEYWORDS = re.compile(
     r"\b("
-    r"CREATE|MERGE|SET|DELETE|REMOVE|DROP|DETACH"
+    r"CREATE|INSERT|MERGE|SET|DELETE|REMOVE|DROP|DETACH"
+    r"|ALTER|RENAME|GRANT|DENY|REVOKE|TERMINATE"
+    r"|START\s+DATABASE|STOP\s+DATABASE"
+    r"|ENABLE\s+SERVER|DEALLOCATE\s+DATABASES?|REALLOCATE\s+DATABASES?"
     r"|LOAD\s+CSV"
     r"|FOREACH"
     r"|CALL\s*\{"
@@ -125,15 +201,7 @@ def validate_read_only_cypher(cypher: str) -> str | None:
 
     Strips comments before checking.
     """
-    cleaned = _strip_cypher_comments(cypher)
-
-    # Strip string literals to avoid false positives
-    # (e.g., "SET something" as a string value)
-    # Handle backslash-escaped quotes to prevent bypass via e.g. 'a\'' CREATE ...'
-    no_strings = re.sub(r"'(?:[^'\\]|\\.)*'", "''", cleaned)
-    no_strings = re.sub(r'"(?:[^"\\]|\\.)*"', '""', no_strings)
-
-    match = _WRITE_KEYWORDS.search(no_strings)
+    match = _WRITE_KEYWORDS.search(cypher_code_only(cypher))
     if match:
         return f"Write operation not allowed: {match.group(0).strip()}"
     return None

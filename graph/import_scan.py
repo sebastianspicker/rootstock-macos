@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-import_scan.py — Import a Rootstock collector scan JSON into Neo4j.
+import_scan.py - Import a Rootstock collector scan JSON into Neo4j.
 
 Usage:
     python3 graph/import_scan.py --input scan.json
@@ -22,7 +22,7 @@ from pathlib import Path
 from neo4j_connection import add_neo4j_args, connect_from_args
 from scan_loader import load_scan
 from import_nodes_core import (
-    ComputerImportContext,
+    computer_import_context,
     import_applications,
     import_tcc_grants,
     import_entitlements,
@@ -255,6 +255,7 @@ def _load_input_scan(input_arg: str):
 
 
 def _import_core_inventory(session, scan) -> tuple[int, int, str]:
+    """Import identity-bearing core nodes first so later relationships can resolve."""
     n_apps = import_applications(session, scan.applications, scan.scan_id)
     print(f"  Applications:  {n_apps}")
 
@@ -292,6 +293,7 @@ def _import_core_inventory(session, scan) -> tuple[int, int, str]:
 
 
 def _import_security_inventory(session, scan) -> None:
+    """Import security and persistence records that depend on the core identities."""
     n_groups, n_member = import_local_groups(session, scan.local_groups, scan.scan_id)
     print(f"  Local groups:  {n_groups} nodes, {n_member} MEMBER_OF edges")
 
@@ -337,26 +339,10 @@ def _import_enrichment_inventory(session, scan) -> None:
 
 
 def _computer_context(scan, grants_linked: int, grants_skipped: int, import_status: str):
-    return ComputerImportContext(
-        gatekeeper_enabled=scan.gatekeeper_enabled,
-        sip_enabled=scan.sip_enabled,
-        filevault_enabled=scan.filevault_enabled,
-        lockdown_mode_enabled=scan.lockdown_mode_enabled,
-        bluetooth_enabled=scan.bluetooth_enabled,
-        bluetooth_discoverable=scan.bluetooth_discoverable,
-        screen_lock_enabled=scan.screen_lock_enabled,
-        screen_lock_delay=scan.screen_lock_delay,
-        display_sleep_timeout=scan.display_sleep_timeout,
-        thunderbolt_security_level=scan.thunderbolt_security_level,
-        secure_boot_level=scan.secure_boot_level,
-        external_boot_allowed=scan.external_boot_allowed,
-        icloud_signed_in=scan.icloud_signed_in,
-        icloud_drive_enabled=scan.icloud_drive_enabled,
-        icloud_keychain_enabled=scan.icloud_keychain_enabled,
-        collection_error_count=len(scan.errors),
-        collection_error_sources=[e.source for e in scan.errors] if scan.errors else [],
-        tcc_grants_linked=grants_linked,
-        tcc_grants_skipped=grants_skipped,
+    return computer_import_context(
+        scan,
+        grants_linked=grants_linked,
+        grants_skipped=grants_skipped,
         import_status=import_status,
     )
 
@@ -412,6 +398,7 @@ def _import_device_identity_inventory(session, scan) -> None:
 
 
 def _run_import(driver, scan) -> ImportSummary:
+    """Run import phases in dependency order and summarize the committed graph."""
     print(f"--- Importing to Neo4j {'─' * 38}")
     with driver.session() as session:
         grants_linked, grants_skipped, import_status = _import_core_inventory(

@@ -1,0 +1,13 @@
+id: sample.login_item_tmp
+title: Login item pointing at /tmp
+severity: high
+description: User Login Item resolves to a path under /tmp.
+attack_techniques:
+  - T1547.015
+match:
+  event_type: persistence.item
+  field_equals:
+    persistence.kind: login_item
+  field_contains:
+    persistence.path: "/tmp/"
+fixture: login_item_tmp.jsonl

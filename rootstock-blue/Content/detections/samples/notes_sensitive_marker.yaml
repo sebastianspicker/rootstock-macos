@@ -1,0 +1,11 @@
+id: sample.notes_sensitive_marker
+title: Sensitive title marker in Apple Notes metadata
+severity: medium
+description: Notes metadata title markers suggest stored credentials (body not exported).
+attack_techniques:
+  - T1552.001
+match:
+  event_type: notes.metadata
+  field_contains:
+    notes.risk_tags: "sensitive"
+fixture: notes_sensitive_marker.jsonl

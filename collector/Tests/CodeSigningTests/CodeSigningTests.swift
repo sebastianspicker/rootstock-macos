@@ -2,6 +2,7 @@ import XCTest
 import Security
 @testable import CodeSigning
 import Models
+import TestSupport
 
 final class CodeSigningTests: XCTestCase {
 
@@ -15,7 +16,7 @@ final class CodeSigningTests: XCTestCase {
         // It has CS_REQUIRE_LV (0x2000) set.
         let safariPath = "/Applications/Safari.app"
         guard FileManager.default.fileExists(atPath: safariPath) else {
-            throw XCTSkip("Safari.app not found — skipping")
+            throw XCTSkip("Safari.app not found - skipping")
         }
         let info = analyzer.analyze(appPath: safariPath)
         XCTAssertTrue(info.signed, "Safari should be signed")
@@ -26,11 +27,11 @@ final class CodeSigningTests: XCTestCase {
     }
 
     func testHardenedRuntimeAppIfPresent() throws {
-        // 1Password uses hardened runtime — a reliable real-world example.
+        // 1Password uses hardened runtime - a reliable real-world example.
         // Skip gracefully if not installed.
         let path = "/Applications/1Password.app"
         guard FileManager.default.fileExists(atPath: path) else {
-            throw XCTSkip("1Password.app not found — skipping hardened runtime test")
+            throw XCTSkip("1Password.app not found - skipping hardened runtime test")
         }
         let info = analyzer.analyze(appPath: path)
         XCTAssertTrue(info.signed)
@@ -50,7 +51,7 @@ final class CodeSigningTests: XCTestCase {
             throw XCTSkip("Terminal.app not found")
         }
         let info = analyzer.analyze(appPath: terminalPath)
-        // Terminal is a platform binary — signed but with flags=0x0 (none)
+        // Terminal is a platform binary - signed but with flags=0x0 (none)
         XCTAssertFalse(info.analysisError)
         // Platform binaries with flags=0x0 report signingIdentifier as nil in some OS versions;
         // just verify analysis doesn't error out.
@@ -153,19 +154,16 @@ final class CodeSigningTests: XCTestCase {
             throw XCTSkip("Safari.app not found")
         }
 
-        var apps = [Application(
-            identity: Application.Identity(
-                name: "Safari",
-                bundleId: "com.apple.Safari",
-                path: safariPath,
-                version: nil
-            ),
-            flags: Application.Flags(isElectron: false, isSystem: false),
-            signing: Application.Signing(
+        var apps = [ApplicationTestFactory.make(
+            name: "Safari",
+            bundleId: "com.apple.Safari",
+            path: safariPath,
+            version: nil,
+            options: .init(signing: Application.Signing(
                 hardenedRuntime: false,
                 libraryValidation: false,
                 signed: false
-            )
+            ))
         )]
         let source = CodeSigningDataSource()
         source.enrich(applications: &apps)
@@ -175,20 +173,7 @@ final class CodeSigningTests: XCTestCase {
     }
 
     func testEnrichmentFailureRecordsError() {
-        var apps = [Application(
-            identity: Application.Identity(
-                name: "Fake",
-                bundleId: "com.fake.app",
-                path: "/nonexistent/Fake.app",
-                version: nil
-            ),
-            flags: Application.Flags(isElectron: false, isSystem: false),
-            signing: Application.Signing(
-                hardenedRuntime: false,
-                libraryValidation: false,
-                signed: false
-            )
-        )]
+        var apps = [unanalyzableApplication()]
         let source = CodeSigningDataSource()
         let errors = source.enrich(applications: &apps)
 
@@ -202,20 +187,7 @@ final class CodeSigningTests: XCTestCase {
     }
 
     func testEnrichedReturnsCopyAndLeavesInputUntouched() {
-        let apps = [Application(
-            identity: Application.Identity(
-                name: "Fake",
-                bundleId: "com.fake.app",
-                path: "/nonexistent/Fake.app",
-                version: nil
-            ),
-            flags: Application.Flags(isElectron: false, isSystem: false),
-            signing: Application.Signing(
-                hardenedRuntime: false,
-                libraryValidation: false,
-                signed: false
-            )
-        )]
+        let apps = [unanalyzableApplication()]
         let source = CodeSigningDataSource()
 
         let (enrichedApps, errors) = source.enriched(applications: apps)
@@ -225,6 +197,50 @@ final class CodeSigningTests: XCTestCase {
         XCTAssertFalse(apps[0].codeSigningAnalysisError, "Input application should not be mutated")
         XCTAssertNil(enrichedApps[0].signed, "Output signing state should be unknown after failed analysis")
         XCTAssertTrue(enrichedApps[0].codeSigningAnalysisError)
+    }
+
+    func testNotarizationInfrastructureFailureStaysUnknown() {
+        let assessment = CodeSigningDataSource.notarizationStatus(
+            from: .admissionTimedOut,
+            appPath: "/Applications/Example.app"
+        )
+
+        XCTAssertNil(assessment.value)
+        XCTAssertTrue(assessment.error?.message.contains("admission timed out") == true)
+    }
+
+    private func unanalyzableApplication() -> Application {
+        ApplicationTestFactory.make(
+            name: "Fake",
+            bundleId: "com.fake.app",
+            path: "/nonexistent/Fake.app",
+            version: nil,
+            options: .init(signing: Application.Signing(
+                hardenedRuntime: false,
+                libraryValidation: false,
+                signed: false
+            ))
+        )
+    }
+
+    func testNotarizationExecutionTimeoutStaysUnknown() {
+        let assessment = CodeSigningDataSource.notarizationStatus(
+            from: .executionTimedOut(shellResult(timedOut: true)),
+            appPath: "/Applications/Example.app"
+        )
+
+        XCTAssertNil(assessment.value)
+        XCTAssertTrue(assessment.error?.message.contains("execution timed out") == true)
+    }
+
+    func testNotarizationNonzeroExitIsDefinitiveRejection() {
+        let assessment = CodeSigningDataSource.notarizationStatus(
+            from: .nonZeroExit(shellResult(status: 3, stderr: "rejected")),
+            appPath: "/Applications/Example.app"
+        )
+
+        XCTAssertEqual(assessment.value, false)
+        XCTAssertNil(assessment.error)
     }
 
     func testMissingEntitlementsSuppressesEntitlementDependentInjectionFacts() throws {
@@ -259,10 +275,10 @@ final class CodeSigningTests: XCTestCase {
     // MARK: - Certificate chain tests
 
     func testCertificateChainExtraction() throws {
-        // Safari.app is a platform binary — should be analyzable.
+        // Safari.app is a platform binary - should be analyzable.
         let safariPath = "/Applications/Safari.app"
         guard FileManager.default.fileExists(atPath: safariPath) else {
-            throw XCTSkip("Safari.app not found — skipping cert chain test")
+            throw XCTSkip("Safari.app not found - skipping cert chain test")
         }
         let info = analyzer.analyze(appPath: safariPath)
         XCTAssertFalse(info.analysisError)
@@ -445,6 +461,19 @@ final class CodeSigningTests: XCTestCase {
             throw XCTSkip("Could not determine native architecture: \(result.stderr)")
         }
         return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func shellResult(
+        status: Int32 = 0,
+        stderr: String = "",
+        timedOut: Bool = false
+    ) -> ShellResult {
+        ShellResult(
+            stdout: "",
+            stderr: stderr,
+            terminationStatus: status,
+            timedOut: timedOut
+        )
     }
 
     private func runFixtureCommand(

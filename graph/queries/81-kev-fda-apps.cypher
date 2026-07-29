@@ -1,5 +1,5 @@
 // Name: CISA KEV + Full Disk Access Applications
-// Purpose: FDA apps associated with CISA Known Exploited Vulnerabilities — highest-priority remediation targets
+// Purpose: FDA apps associated with CISA Known Exploited Vulnerabilities - highest-priority remediation targets
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

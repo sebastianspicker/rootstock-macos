@@ -1,11 +1,13 @@
-// Name: Kerberos Ticket Theft via Injectable Apps
-// Purpose: Injectable app can read ccache and impersonate AD user — the concrete path from macOS app compromise to AD user impersonation
+// Name: Kerberos Ticket Access via Injectable Apps
+// Purpose: Find modeled app-to-ccache read relationships for validation
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
 // Prerequisites: import_scan.py + infer.py must have run
 // CVE: CVE-2024-44245
 // ATT&CK: T1558
+// Validate process access, ticket contents, validity, and principal scope before
+// concluding that a usable ticket can be obtained.
 
 MATCH (a:Application)-[r:CAN_READ_KERBEROS]->(ka:KerberosArtifact {artifact_type: 'ccache'})
 MATCH (u:User)-[:HAS_KERBEROS_CACHE]->(ka)

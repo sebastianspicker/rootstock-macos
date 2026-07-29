@@ -1,5 +1,5 @@
 // Name: Firewall-Exposed Injectable Apps
-// Purpose: Injectable apps with firewall allowing inbound connections — network-reachable targets
+// Purpose: Injectable apps with firewall allowing inbound connections - network-reachable targets
 // Category: Red Team
 // Severity: High
 // Parameters: none

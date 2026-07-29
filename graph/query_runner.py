@@ -1,5 +1,5 @@
 """
-query_runner.py — Rootstock Interactive Query Runner
+query_runner.py - Rootstock Interactive Query Runner
 
 CLI:
   python3 query_runner.py --neo4j bolt://... --list
@@ -263,7 +263,7 @@ def cmd_list(queries: list[dict], use_colour: bool = True) -> None:
                 q["name"],
                 f"{cat_colour}{q['category']}{reset}",
                 f"{sev_colour}{q['severity']}{reset}",
-                q["parameters"] if q["parameters"] != "none" else "—",
+                q["parameters"] if q["parameters"] != "none" else " - ",
             ]
         )
 
@@ -353,7 +353,7 @@ def _print_empty_query_result(
     if query["severity"] not in ("Critical", "High"):
         return
     if completeness_verified:
-        print("    ✓ No findings — this is a positive security result.")
+        print("    ✓ No findings - this is a positive security result.")
     else:
         print(
             "    No rows returned; graph completeness not verified"
@@ -388,7 +388,7 @@ def _run_one_query(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Rootstock Query Runner — execute Cypher queries against a Neo4j graph",
+        description="Rootstock Query Runner - execute Cypher queries against a Neo4j graph",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 examples:

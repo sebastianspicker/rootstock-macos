@@ -1,0 +1,26 @@
+{
+  "name": "research",
+  "description": "Research: broader ES for detonation sessions",
+  "eventTypes": [
+    "NOTIFY_EXEC",
+    "NOTIFY_FORK",
+    "NOTIFY_EXIT",
+    "NOTIFY_CREATE",
+    "NOTIFY_OPEN",
+    "NOTIFY_WRITE",
+    "NOTIFY_CLOSE",
+    "NOTIFY_RENAME",
+    "NOTIFY_UNLINK",
+    "NOTIFY_LINK",
+    "NOTIFY_AUTHENTICATION",
+    "NOTIFY_BTM_LAUNCH_ITEM_ADD",
+    "NOTIFY_XPC_CONNECT",
+    "NOTIFY_TCC_MODIFY",
+    "NOTIFY_XP_MALWARE_DETECTED",
+    "NOTIFY_GATEKEEPER_USER_OVERRIDE",
+    "NOTIFY_REMOTE_THREAD_CREATE",
+    "NOTIFY_CS_INVALIDATED"
+  ],
+  "authMode": false,
+  "defaultMutePrefixes": []
+}

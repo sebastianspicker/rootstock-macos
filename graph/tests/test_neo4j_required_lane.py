@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 import conftest as graph_conftest
+import neo4j_connection
 
 
 def test_required_neo4j_lane_fails_instead_of_skipping(monkeypatch):
@@ -19,3 +20,18 @@ def test_default_neo4j_lane_keeps_local_skip(monkeypatch):
 
     with pytest.raises(pytest.skip.Exception, match="missing password"):
         graph_conftest._skip_or_fail_neo4j_unavailable("missing password")
+
+
+def test_connect_reports_service_unavailable(monkeypatch, capsys):
+    class UnavailableDriver:
+        def verify_connectivity(self):
+            raise neo4j_connection.ServiceUnavailable("offline")
+
+    monkeypatch.setattr(neo4j_connection.GraphDatabase, "driver", lambda *_args, **_kwargs: UnavailableDriver())
+
+    with pytest.raises(SystemExit) as exc:
+        neo4j_connection.connect("bolt://unavailable:7687", "neo4j", "password", quiet=True)
+
+    captured = capsys.readouterr()
+    assert exc.value.code == 1
+    assert "ERROR: Cannot connect to Neo4j at bolt://unavailable:7687" in captured.err

@@ -1,0 +1,11 @@
+id: sample.cron_tmp_payload
+title: Cron job executing from /tmp
+severity: high
+description: Cron/at/periodic persistence pointing at /tmp payload path.
+attack_techniques:
+  - T1053.003
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.command: "/tmp/"
+fixture: cron_tmp_payload.jsonl

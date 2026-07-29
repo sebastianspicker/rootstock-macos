@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Applications/Music.app",
+      "name": "music",
+      "risk_tags": "music_surface,wave16,dual_use",
+      "user": "alice",
+      "timestamp": "2026-08-01T12:00:00Z",
+      "notes": "Music library path markers \u2014 never exports Music library media or DRM material"
+    }
+  ]
+}

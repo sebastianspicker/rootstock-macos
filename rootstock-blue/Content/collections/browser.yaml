@@ -1,0 +1,11 @@
+name: browser
+description: Browser history and download provenance
+requires_fda: true
+requires_es: false
+artifacts:
+  - safari
+  - chromium
+  - firefox
+  - quarantine
+  - cookies
+  - bookmarks

@@ -1,45 +1,88 @@
 <!--
   Rootstock Neo4j Browser Guide
   Load with: :play http://localhost:8001/rootstock-guide.html
-  Or host on GitHub and use: :play https://raw.githubusercontent.com/<org>/rootstock/main/graph/browser/rootstock-guide.html
-
   To serve locally:
     cd graph/browser && python3 -m http.server 8001
     Then in Neo4j Browser: :play http://localhost:8001/rootstock-guide.html
 -->
+<style>
+  .guide {
+    --rs-ink: #061521;
+    --rs-pane: #091b28;
+    --rs-rule: #294353;
+    --rs-rule-strong: #3f5b6b;
+    --rs-text: #f3f6f7;
+    --rs-muted: #a9b7c3;
+    --rs-action: #3988ff;
+    color: var(--rs-text);
+    background: var(--rs-ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  }
+  .guide slide {
+    min-height: 100%;
+    padding: 24px;
+    background: var(--rs-ink);
+  }
+  .guide h3 {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rs-rule-strong);
+    color: var(--rs-text);
+    font-size: 28px;
+    font-weight: 620;
+    letter-spacing: -.025em;
+  }
+  .guide h4, .guide h5 { color: var(--rs-text); font-weight: 650; }
+  .guide .lead, .guide .hint { color: var(--rs-muted); }
+  .guide hr { border-color: var(--rs-rule); }
+  .guide code, .guide pre {
+    border-color: var(--rs-rule);
+    border-radius: 4px;
+    background: var(--rs-pane);
+    color: var(--rs-action);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .guide pre.runnable { border-left: 3px solid var(--rs-action); }
+  .guide table { border: 1px solid var(--rs-rule); }
+  .guide table th, .guide table td { border-color: var(--rs-rule); }
+  .guide table th { background: var(--rs-pane); color: var(--rs-muted); }
+  .guide a { color: var(--rs-action); }
+  .guide :focus-visible { outline: 2px solid var(--rs-action); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .guide *, .guide *::before, .guide *::after { scroll-behavior: auto !important; }
+  }
+</style>
 <article class="guide">
-  <carousel class="deck container-fluid">
+  <carousel class="deck container-fluid" aria-label="Rootstock investigation guide">
 
     <!-- ── Slide 1: Welcome ───────────────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
         <h3>Welcome to Rootstock</h3>
-        <p class="lead">Graph-based attack path discovery for macOS security boundaries.</p>
+        <p class="lead">Inspect macOS security evidence and modeled relationships.</p>
         <p>
-          Rootstock maps <strong>TCC grants</strong>, <strong>entitlements</strong>,
+          Rootstock represents collected <strong>TCC grants</strong>, entitlements,
           <strong>Keychain ACLs</strong>, code signing metadata, and XPC services as a
-          directed property graph — enabling automated discovery of privilege escalation
-          paths that would be impossible to find manually.
+          directed property graph. Inference steps add relationships used by the query
+          library. Results depend on collector permissions and the selected modules.
         </p>
-        <p>Think: <em>BloodHound for macOS-native security boundaries.</em></p>
         <hr>
         <h4>Graph Contents</h4>
         <ul>
-          <li><strong>Application</strong> — all installed apps with signing metadata</li>
-          <li><strong>TCC_Permission</strong> — every TCC service (FDA, Camera, Mic, …)</li>
-          <li><strong>Entitlement</strong> — code signing entitlements per app</li>
-          <li><strong>XPC_Service</strong> — LaunchDaemons and LaunchAgents</li>
-          <li><strong>Keychain_Item</strong> — Keychain ACL metadata (no secrets)</li>
-          <li><strong>MDM_Profile</strong> — installed configuration profiles</li>
-          <li><strong>User</strong> — local user accounts</li>
-          <li><strong>Computer</strong> — scanned host with posture properties</li>
-          <li><strong>CriticalFile</strong> — security-critical file ACL metadata</li>
-          <li><strong>BluetoothDevice</strong> — paired Bluetooth peripherals</li>
-          <li><strong>CertificateAuthority</strong> — signing certificate chain CAs</li>
-          <li><strong>AuthorizationRight</strong> — macOS authorization DB rights</li>
-          <li><strong>SystemExtension</strong> — network/endpoint security/driver extensions</li>
-          <li><strong>SudoersRule</strong> — sudoers file entries</li>
-          <li><strong>LoginSession</strong> — active login sessions</li>
+          <li>Application - applications present in the imported scan</li>
+          <li>TCC_Permission - services referenced by imported TCC grants</li>
+          <li>Entitlement - code signing entitlements per app</li>
+          <li>XPC_Service - LaunchDaemons and LaunchAgents</li>
+          <li>Keychain_Item - Keychain ACL metadata (no secrets)</li>
+          <li>MDM_Profile - installed configuration profiles</li>
+          <li>User - local user accounts</li>
+          <li>Computer - scanned host with posture properties</li>
+          <li>CriticalFile - security-critical file ACL metadata</li>
+          <li>BluetoothDevice - paired Bluetooth peripherals</li>
+          <li>CertificateAuthority - signing certificate chain CAs</li>
+          <li>AuthorizationRight - macOS authorization DB rights</li>
+          <li>SystemExtension - network/endpoint security/driver extensions</li>
+          <li>SudoersRule - sudoers file entries</li>
+          <li>LoginSession - active login sessions</li>
         </ul>
       </div>
       <div class="col-sm-8">
@@ -50,31 +93,32 @@ MATCH (n)
 RETURN labels(n)[0] AS node_type, count(n) AS count
 ORDER BY count DESC
         </pre>
-        <p class="hint">Expected output: rows for Application, TCC_Permission, Entitlement, Computer, CriticalFile, etc.</p>
+        <p class="hint">A populated graph returns the node labels present in the imported scan.</p>
         <hr>
         <h4>Key Relationships</h4>
         <table class="table table-condensed">
           <thead><tr><th>Relationship</th><th>Meaning</th><th>Type</th></tr></thead>
           <tbody>
             <tr><td><code>HAS_TCC_GRANT</code></td><td>App holds a TCC permission</td><td>Explicit</td></tr>
-            <tr><td><code>CAN_INJECT_INTO</code></td><td>Attacker can inject code into app</td><td>Inferred</td></tr>
-            <tr><td><code>CHILD_INHERITS_TCC</code></td><td>Electron app passes TCC to child</td><td>Inferred</td></tr>
-            <tr><td><code>CAN_SEND_APPLE_EVENT</code></td><td>App can automate another app</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_INJECT_INTO</code></td><td>Modeled injection condition</td><td>Inferred</td></tr>
+            <tr><td><code>CHILD_INHERITS_TCC</code></td><td>Modeled Electron child-process inheritance</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_SEND_APPLE_EVENT</code></td><td>Modeled Apple Event automation relationship</td><td>Inferred</td></tr>
             <tr><td><code>HAS_ENTITLEMENT</code></td><td>App has a signing entitlement</td><td>Explicit</td></tr>
             <tr><td><code>PERSISTS_VIA</code></td><td>App persists via LaunchAgent/Daemon</td><td>Explicit</td></tr>
-            <tr><td><code>CAN_WRITE</code></td><td>User can write to a critical file</td><td>Inferred</td></tr>
-            <tr><td><code>CAN_INJECT_SHELL</code></td><td>Writable shell hook enables injection</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_WRITE</code></td><td>Modeled write relationship to a critical file</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_INJECT_SHELL</code></td><td>Modeled writable shell-hook condition</td><td>Inferred</td></tr>
             <tr><td><code>SUDO_NOPASSWD</code></td><td>User has passwordless sudo for a command</td><td>Explicit</td></tr>
-            <tr><td><code>CAN_CONTROL_VIA_A11Y</code></td><td>App can control UI via Accessibility</td><td>Inferred</td></tr>
-            <tr><td><code>CAN_CHANGE_PASSWORD</code></td><td>User can change another user's password</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_CONTROL_VIA_A11Y</code></td><td>Modeled Accessibility control relationship</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_CHANGE_PASSWORD</code></td><td>Modeled password-change relationship</td><td>Inferred</td></tr>
             <tr><td><code>PAIRED_WITH</code></td><td>Bluetooth device paired with host</td><td>Explicit</td></tr>
             <tr><td><code>MAPPED_TO</code></td><td>AD group mapped to local group</td><td>Explicit</td></tr>
             <tr><td><code>FOUND_ON</code></td><td>Kerberos artifact found on host</td><td>Explicit</td></tr>
             <tr><td><code>HAS_KERBEROS_CACHE</code></td><td>User owns Kerberos credential cache</td><td>Explicit</td></tr>
             <tr><td><code>HAS_KEYTAB</code></td><td>Computer has machine keytab</td><td>Explicit</td></tr>
-            <tr><td><code>CAN_READ_KERBEROS</code></td><td>Injectable app can read Kerberos artifact</td><td>Inferred</td></tr>
+            <tr><td><code>CAN_READ_KERBEROS</code></td><td>Modeled read relationship to Kerberos metadata</td><td>Inferred</td></tr>
           </tbody>
         </table>
+        <p class="hint">Inferred relationships record rule matches. Validate the relevant host behavior before treating one as an exercised capability.</p>
       </div>
     </slide>
 
@@ -89,19 +133,20 @@ ORDER BY count DESC
           Contacts, and more.
         </p>
         <p>
-          Every TCC grant is a potential attack vector — if an app with Full Disk Access
-          can be injected with attacker code, that code inherits the FDA grant silently.
+          Each imported grant describes authorization state observed in the scan. A
+          modeled injection relationship to an app with Full Disk Access is a candidate
+          for manual validation, not proof that access can be inherited.
         </p>
         <hr>
         <h4>Try These First</h4>
         <ul>
-          <li>Run the query on the right to see all active TCC grants</li>
-          <li>Look for apps with multiple grants — they're the richest targets</li>
+          <li>Run the query on the right to list up to 50 active TCC grants</li>
+          <li>Review apps with multiple grants against their documented purpose</li>
           <li>Check which apps hold <code>kTCCServiceSystemPolicyAllFiles</code> (FDA)</li>
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>All Active TCC Grants</h4>
+        <h4>Active TCC Grants (up to 50)</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application)-[r:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
 RETURN app.name         AS app,
@@ -131,27 +176,28 @@ LIMIT 20
     <slide class="row-fluid">
       <div class="col-sm-4">
         <h3>Find Injectable Apps</h3>
-        <p class="lead">Critical: apps with Full Disk Access that can be code-injected.</p>
+        <p class="lead">Review apps with Full Disk Access and modeled injection conditions.</p>
         <p>
-          An app is <strong>injectable</strong> if it lacks Hardened Runtime or Library
-          Validation — meaning an attacker can load arbitrary code into the process via
-          <code>DYLD_INSERT_LIBRARIES</code> or an unsigned dylib placed on the load path.
+          Rootstock derives injection relationships from collected runtime, signing, and
+          entitlement properties. These relationships identify conditions to verify on
+          the relevant app and macOS version.
         </p>
         <p>
-          If that app also holds Full Disk Access, the injected code inherits FDA —
-          enabling silent read/write of TCC.db, SSH keys, Mail, and all user files.
+          If the same app also holds Full Disk Access, the query reports a modeled path
+          to that permission. It does not demonstrate successful code loading or access
+          to protected files.
         </p>
         <hr>
         <h4>Injection Methods</h4>
         <ul>
-          <li><code>dyld_insert</code> — missing Hardened Runtime</li>
-          <li><code>missing_library_validation</code> — accepts unsigned dylibs</li>
-          <li><code>dyld_insert_via_entitlement</code> — has allow-dyld entitlement</li>
-          <li><code>electron_env_var</code> — ELECTRON_RUN_AS_NODE abuse</li>
+          <li><code>dyld_insert</code> - missing Hardened Runtime</li>
+          <li><code>missing_library_validation</code> - accepts unsigned dylibs</li>
+          <li><code>dyld_insert_via_entitlement</code> - has allow-dyld entitlement</li>
+          <li><code>electron_env_var</code> - ELECTRON_RUN_AS_NODE abuse</li>
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 1 — Injectable FDA Apps</h4>
+        <h4>Analysis Query 1 - Injectable FDA Apps</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application)
       -[:HAS_TCC_GRANT {allowed: true}]->
@@ -184,19 +230,20 @@ LIMIT 25
     <slide class="row-fluid">
       <div class="col-sm-4">
         <h3>Attack Paths</h3>
-        <p class="lead">Discover multi-hop privilege escalation chains.</p>
+        <p class="lead">Inspect multi-hop relationships in the imported graph.</p>
         <p>
           The <code>shortestPath</code> algorithm finds the minimum number of hops
-          from the attacker node to Full Disk Access. A 2-hop path means:
+          from the synthetic attacker node to Full Disk Access within the modeled
+          relationships. A two-hop result can contain:
         </p>
         <ol>
           <li>Attacker injects into App A</li>
           <li>App A has Full Disk Access</li>
         </ol>
-        <p>A 3-hop path might involve Apple Event automation or injection chaining.</p>
+        <p>Longer results can include Apple Event or injection relationships.</p>
         <hr>
         <p class="hint">
-          <strong>Tip:</strong> Click a path node in the graph to see its full
+          Tip: Click a path node in the graph to see its full
           properties. Right-click → "Expand" to explore neighbours.
         </p>
         <p class="hint">
@@ -205,7 +252,7 @@ LIMIT 25
         </p>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 2 — Shortest Path to Full Disk Access</h4>
+        <h4>Analysis Query 2 - Shortest Path to Full Disk Access</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (attacker:Application {bundle_id: 'attacker.payload'}),
       (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
@@ -238,27 +285,27 @@ ORDER BY hops ASC LIMIT 15
     <slide class="row-fluid">
       <div class="col-sm-4">
         <h3>Electron Risks</h3>
-        <p class="lead">Electron apps inherit TCC permissions in child processes.</p>
+        <p class="lead">Review modeled Electron child-process permission inheritance.</p>
         <p>
-          When the <code>ELECTRON_RUN_AS_NODE</code> environment variable is set,
-          an Electron app spawns a Node.js REPL that inherits the parent process's
-          TCC grants — including Full Disk Access, Camera, and Microphone.
+          Rootstock records Electron-related properties and can derive child-process
+          inheritance relationships from them. The result depends on the app build,
+          its runtime configuration, and the macOS version.
         </p>
         <p>
-          An attacker with local code execution can exploit this to access protected
-          resources silently, without any user prompt.
+          Treat a returned relationship as a validation candidate. It does not prove
+          that a child process can be started or that a permission can be exercised.
         </p>
         <hr>
-        <h4>Why This Matters</h4>
+        <h4>Properties to verify</h4>
         <ul>
-          <li>Many popular apps use Electron: Slack, VS Code, Discord, 1Password</li>
-          <li>No special privileges required — any user can set env vars</li>
-          <li>TCC grants are inherited by the child Node.js process</li>
-          <li>The OS does not prompt the user when this happens</li>
+          <li>The identified application is an Electron build</li>
+          <li>The modeled process-start condition is feasible for that build</li>
+          <li>The parent application holds the reported TCC grant</li>
+          <li>The behavior reproduces on the relevant macOS version</li>
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 3 — Electron TCC Inheritance</h4>
+        <h4>Analysis Query 3 - Electron TCC Inheritance</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application {is_electron: true})
       -[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
@@ -292,16 +339,16 @@ ORDER BY is_injectable DESC, size(permissions) DESC
         <h3>Blue Team Audit</h3>
         <p class="lead">Establish a TCC baseline and detect anomalies.</p>
         <p>
-          Defenders use Rootstock to audit TCC grants at scale — identifying
-          over-privileged apps, MDM-managed permissions, and unusual entitlements
-          that indicate a supply-chain compromise or malware installation.
+          The graph can be used to review TCC grants, MDM-managed permissions, and
+          uncommon entitlements in one or more imported scans. These properties provide
+          investigation leads and do not by themselves establish compromise.
         </p>
         <hr>
         <h4>Key Questions for Blue Teams</h4>
         <ul>
           <li>Which non-system apps have Full Disk Access?</li>
           <li>Are there apps with private Apple entitlements?</li>
-          <li>Are any TCC grants MDM-managed (cannot be revoked by user)?</li>
+          <li>Which TCC grants are represented as MDM-managed?</li>
           <li>Which apps can send Apple Events to privileged apps?</li>
           <li>Are there unknown LaunchDaemons running as root?</li>
         </ul>
@@ -310,7 +357,7 @@ ORDER BY is_injectable DESC, size(permissions) DESC
           install to detect new TCC grants introduced by the installer.</p>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 7 — TCC Grant Overview (Blue Team)</h4>
+        <h4>Analysis Query 7 - TCC Grant Overview (Blue Team)</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application)-[r:HAS_TCC_GRANT]->(perm:TCC_Permission)
 WITH perm.display_name AS permission,
@@ -343,48 +390,48 @@ ORDER BY source.name, perm.display_name
         <p class="lead">Extend your analysis with the full query library.</p>
         <h4>Query Library (103 queries)</h4>
         <p>
-          All queries are in <code>graph/queries/</code>. Run them via
+          Query files are in <code>graph/queries/</code>. Run them via
           <code>query_runner.py</code> or paste into Neo4j Browser.
         </p>
         <h5>Core (01-10)</h5>
         <ul>
-          <li><code>01</code> — Injectable FDA Apps</li>
-          <li><code>02</code> — Shortest Path to FDA</li>
-          <li><code>03</code> — Electron Inheritance</li>
-          <li><code>04</code> — Private Entitlements</li>
-          <li><code>05</code> — Apple Event Cascade</li>
-          <li><code>06</code> — Injection Chain</li>
-          <li><code>07</code> — TCC Grant Overview</li>
-          <li><code>08</code> — Persistence Audit</li>
-          <li><code>09</code> — Keychain ACL Audit</li>
-          <li><code>10</code> — MDM-Managed TCC</li>
+          <li><code>01</code> - Injectable FDA Apps</li>
+          <li><code>02</code> - Shortest Path to FDA</li>
+          <li><code>03</code> - Electron Inheritance</li>
+          <li><code>04</code> - Private Entitlements</li>
+          <li><code>05</code> - Apple Event Cascade</li>
+          <li><code>06</code> - Injection Chain</li>
+          <li><code>07</code> - TCC Grant Overview</li>
+          <li><code>08</code> - Persistence Audit</li>
+          <li><code>09</code> - Keychain ACL Audit</li>
+          <li><code>10</code> - MDM-Managed TCC</li>
         </ul>
         <h5>Advanced (11-23)</h5>
         <ul>
-          <li><code>11-15</code> — Multi-hop chains, XPC, sandbox</li>
-          <li><code>16-23</code> — TCC forensics, signing audit</li>
+          <li><code>11-15</code> - Multi-hop chains, XPC, sandbox</li>
+          <li><code>16-23</code> - TCC forensics, signing audit</li>
         </ul>
         <h5>Extended (24-103)</h5>
         <ul>
-          <li><code>24-36</code> — Auth, groups, firewall, sudoers</li>
-          <li><code>37-45</code> — Certs, MDM, keychain, ownership</li>
-          <li><code>46-58</code> — Tiers, ACLs, shell hooks, cross-host</li>
-          <li><code>59-71</code> — Keychain, certs, physical, BT, iCloud, password change</li>
-          <li><code>72-79</code> — AD binding, Kerberos, keytabs, and identity capabilities</li>
-          <li><code>80-91</code> — CVEs, sandbox, quarantine, and AD-to-macOS paths</li>
-          <li><code>92-103</code> — APT coverage, risk, CWE, ESF, and remediation</li>
+          <li><code>24-36</code> - Auth, groups, firewall, sudoers</li>
+          <li><code>37-45</code> - Certs, MDM, keychain, ownership</li>
+          <li><code>46-58</code> - Tiers, ACLs, shell hooks, cross-host</li>
+          <li><code>59-71</code> - Keychain, certs, physical, BT, iCloud, password change</li>
+          <li><code>72-79</code> - AD binding, Kerberos, keytabs, and identity capabilities</li>
+          <li><code>80-91</code> - CVEs, sandbox, quarantine, and AD-to-macOS paths</li>
+          <li><code>92-103</code> - APT coverage, risk, CWE, ESF, and remediation</li>
         </ul>
       </div>
       <div class="col-sm-8">
         <h4>Generate a Security Report</h4>
         <pre class="pre-scrollable code">
-# Markdown report (runs all 103 queries):
-python3 graph/report.py \
+# Markdown report:
+uv run --project graph --locked python graph/report.py \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.md
 
 # HTML report with richer metadata:
-python3 graph/report.py \
+uv run --project graph --locked python graph/report.py \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.html \
   --format html \
@@ -419,26 +466,23 @@ LIMIT 20
         <h3>Tier Classification & Ownership</h3>
         <p class="lead">Prioritise findings by asset criticality.</p>
         <p>
-          Rootstock classifies applications into tiers based on their
-          security impact:
+          Rootstock assigns application tiers from graph properties and inference rules:
         </p>
         <ul>
-          <li><strong>Tier 0</strong> — Crown jewels: injectable apps with FDA,
-            Accessibility, or Screen Recording. Compromise = full control.</li>
-          <li><strong>Tier 1</strong> — High value: apps with moderate TCC grants
-            or injection paths to Tier 0.</li>
-          <li><strong>Tier 2</strong> — Everything else.</li>
+          <li><strong>Tier 0</strong> - applications assigned the highest modeled impact.</li>
+          <li><strong>Tier 1</strong> - applications assigned intermediate modeled impact.</li>
+          <li><strong>Tier 2</strong> - other applications classified by the current rules.</li>
         </ul>
         <hr>
         <h4>Ownership Workflow</h4>
         <p>
-          Use <code>mark_owned.py</code> to mark apps you control (e.g., after
-          achieving code execution). Then run blast-radius queries to see what
-          Tier 0/1 assets are reachable from your owned nodes.
+          Use <code>mark_owned.py</code> to mark nodes under authorized control for an
+          analysis exercise. Reachability queries then return modeled paths from those
+          nodes to classified assets.
         </p>
       </div>
       <div class="col-sm-8">
-        <h4>Query 46 — Tier Classification Summary</h4>
+        <h4>Query 46 - Tier Classification Summary</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application)
 WHERE app.tier IS NOT NULL
@@ -459,7 +503,7 @@ RETURN app.tier              AS tier,
 ORDER BY app.tier ASC, app.name
         </pre>
         <hr>
-        <h4>Query 41 — Owned to Full Disk Access</h4>
+        <h4>Query 41 - Owned to Full Disk Access</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (src)
 WHERE src.owned = true
@@ -482,21 +526,20 @@ LIMIT 10
         <h3>Physical Security & iCloud</h3>
         <p class="lead">Assess physical and cloud attack surface.</p>
         <p>
-          The <strong>Computer</strong> node stores physical security posture:
+          The Computer node stores physical security posture:
           Lockdown Mode, screen lock, FileVault, Thunderbolt security,
           Bluetooth discoverability, and Secure Boot level.
         </p>
         <hr>
         <h4>iCloud Sync Risks</h4>
         <p>
-          Injectable apps with iCloud container entitlements can exfiltrate
-          data via iCloud sync. If the host has iCloud signed in, injected
-          code can access synced files, keychain items, and CloudKit
-          containers across all enrolled Apple devices.
+          The query lists apps with iCloud entitlements, modeled injection methods, and
+          host iCloud state. It does not establish access to remote device data or prove
+          that exfiltration is possible.
         </p>
       </div>
       <div class="col-sm-8">
-        <h4>Query 64 — Weak Physical Posture</h4>
+        <h4>Query 64 - Weak Physical Posture</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (c:Computer)
 WITH c,
@@ -520,7 +563,7 @@ RETURN c.hostname              AS hostname,
 ORDER BY weakness_score DESC
         </pre>
         <hr>
-        <h4>Query 68 — Injectable iCloud Sync</h4>
+        <h4>Query 68 - Injectable iCloud Sync</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (a:Application)-[:HAS_ENTITLEMENT]->(e:Entitlement {category: 'icloud'})
 WHERE size(a.injection_methods) > 0
@@ -543,24 +586,25 @@ ORDER BY size(a.injection_methods) DESC, a.name
         <h3>Advanced Attack Paths</h3>
         <p class="lead">File ACLs, shell hooks, and cross-host correlation.</p>
         <p>
-          Beyond TCC injection, attackers can escalate via:
+          The graph also models relationships derived from file ACLs, shell hooks, and
+          cross-host identity data:
         </p>
         <ul>
-          <li><strong>File ACL abuse</strong> — writable TCC.db, sudoers, or
-            LaunchDaemon directories enable direct privilege escalation.</li>
-          <li><strong>Shell hook injection</strong> — writable .zshrc, .bashrc,
-            or .zprofile files allow persistent credential theft.</li>
-          <li><strong>Cross-host correlation</strong> — when multiple hosts share
-            the same user, compromise of one extends to all.</li>
+          <li><strong>File ACL review</strong> - users with modeled write access to
+            security-relevant files or directories.</li>
+          <li><strong>Shell hook review</strong> - writable shell startup files reported
+            by the collector.</li>
+          <li><strong>Cross-host correlation</strong> - identity relationships shared by
+            multiple imported hosts.</li>
         </ul>
         <hr>
         <p class="hint">
-          These queries require the full data collection (file ACLs, shell hooks)
-          to be populated by the collector.
+          These queries require the corresponding file ACL and shell-hook
+          collector modules to be present in the imported scan.
         </p>
       </div>
       <div class="col-sm-8">
-        <h4>Query 48 — File ACL Write Paths</h4>
+        <h4>Query 48 - File ACL Write Paths</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (u:User)-[:CAN_WRITE]->(f:CriticalFile)
 RETURN u.name       AS user,
@@ -571,7 +615,7 @@ RETURN u.name       AS user,
 ORDER BY f.category, u.name
         </pre>
         <hr>
-        <h4>Query 50 — Shell Hook Injection</h4>
+        <h4>Query 50 - Shell Hook Injection</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (u:User)-[:CAN_INJECT_SHELL]->(f:CriticalFile {category: 'shell_hook'})
 RETURN u.name   AS user,
@@ -589,23 +633,21 @@ ORDER BY u.name, f.path
         <h3>Certificate & Cloud Risk</h3>
         <p class="lead">Signing integrity and cloud exposure analysis.</p>
         <p>
-          Code signing certificates are the trust anchor for macOS security.
-          Weaknesses in the certificate chain reduce the barrier for
-          code injection and app replacement attacks.
+          Certificate metadata is one input to application trust review. Interpret it
+          together with notarization, runtime, entitlement, and provenance evidence.
         </p>
         <hr>
         <h4>Certificate Risk Factors</h4>
         <ul>
-          <li><strong>Expired certificates</strong> — apps may bypass Gatekeeper
-            re-validation checks.</li>
-          <li><strong>Ad-hoc signatures</strong> — no identity verification,
-            trivially forgeable.</li>
-          <li><strong>Non-Apple CA chains</strong> — enterprise or third-party CAs
-            may have weaker issuance controls.</li>
+          <li><strong>Expired certificates</strong> - record the signing and timestamp
+            context before drawing a conclusion.</li>
+          <li><strong>Ad-hoc signatures</strong> - no Developer ID identity is attached.</li>
+          <li><strong>Non-Apple CA chains</strong> - record the issuer and validate the
+            expected trust policy; issuer origin alone is not a finding.</li>
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Query 60 — Expired Cert with TCC</h4>
+        <h4>Query 60 - Expired Cert with TCC</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission)
 WHERE a.is_certificate_expired = true
@@ -619,7 +661,7 @@ RETURN a.name                   AS app_name,
 ORDER BY size(tcc_grants) DESC
         </pre>
         <hr>
-        <h4>Query 62 — Non-Apple CA Chain</h4>
+        <h4>Query 62 - Non-Apple CA Chain</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (a:Application)-[:SIGNED_BY_CA]->(leaf:CertificateAuthority)
 OPTIONAL MATCH path = (leaf)-[:ISSUED_BY*0..]->(root:CertificateAuthority {is_root: true})

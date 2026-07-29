@@ -1,0 +1,11 @@
+id: sample.screentime_suspicious_app
+title: Suspicious Screen Time app usage
+severity: high
+description: Screen Time marker for suspicious/tmp-backed app (metadata only).
+attack_techniques:
+  - T1059
+match:
+  event_type: pol.screentime
+  field_contains:
+    screentime.risk_tags: "suspicious_app"
+fixture: screentime_suspicious_app.jsonl

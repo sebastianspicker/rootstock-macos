@@ -1,0 +1,13 @@
+id: sample.weather_widget_path
+title: Weather / widget data residual plane surface present
+severity: high
+description: Weather widget residual markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1518
+match:
+  event_type: weather.widget
+  field_contains:
+    wthrwdg.risk_tags: "weather_surface"
+fixture: weather_widget_path.jsonl

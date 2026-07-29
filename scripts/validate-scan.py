@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-validate-scan.py — Validate a Rootstock scan JSON output.
+validate-scan.py - Validate a Rootstock scan JSON output.
 
 Usage:
     python3 scripts/validate-scan.py <scan-file.json>
@@ -20,7 +20,7 @@ try:
     import jsonschema
 except ImportError:
     print(
-        "ERROR: jsonschema not installed. Run: pip3 install -r graph/requirements.txt",
+        "ERROR: jsonschema not installed. Run: uv sync --project graph --extra dev",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -30,7 +30,7 @@ model_spec = importlib.util.spec_from_file_location(
 )
 if model_spec is None or model_spec.loader is None:
     print(
-        "ERROR: graph models not importable. Run: pip3 install -r graph/requirements.txt",
+        "ERROR: graph models not importable. Run: uv sync --project graph --extra dev",
         file=sys.stderr,
     )
     sys.exit(1)

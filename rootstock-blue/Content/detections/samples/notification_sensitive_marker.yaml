@@ -1,0 +1,11 @@
+id: sample.notification_sensitive_marker
+title: Suspicious Notification Center marker
+severity: medium
+description: Notification metadata from suspicious app (body not exported).
+attack_techniques:
+  - T1056
+match:
+  event_type: notification.delivered
+  field_contains:
+    notif.risk_tags: "suspicious_app"
+fixture: notification_sensitive_marker.jsonl

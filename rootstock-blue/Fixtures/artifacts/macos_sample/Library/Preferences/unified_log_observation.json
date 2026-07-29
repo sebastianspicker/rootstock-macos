@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "path": "/usr/bin/log",
+      "depth": "partial",
+      "tool_present": true,
+      "risk_tags": "observation_surface,partial_visibility,log_tool",
+      "user": "alice",
+      "timestamp": "2026-05-01T12:00:00Z",
+      "notes": "Unified log observation markers \u2014 never dumps private unified-log message bodies or force-collects other users' logarchives"
+    }
+  ]
+}

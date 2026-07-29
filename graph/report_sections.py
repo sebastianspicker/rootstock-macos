@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from query_runner import find_query
+from report_query_results import query_rows
 from report_diagrams import (
     mermaid_icloud_risk_flow,
     mermaid_posture_summary,
@@ -31,7 +34,7 @@ def _section_for_queries(
         name = q.get("name", q["filename"])
         parts.append(f"#### Query {qid}: {name}")
         if isinstance(result, str):
-            parts.append(f"> **Error:** {result}")
+            parts.append(f"> Error: {result}")
         elif not result:
             parts.append(format_no_findings())
         else:
@@ -52,19 +55,11 @@ def _build_vulnerability_section(active_categories: set[str]) -> str:
     return format_vulnerability_summary(contexts)
 
 
-def _get_query_rows(
-    query_results: dict[str, list[dict] | str],
-    filename: str,
-) -> list[dict]:
-    result = query_results.get(filename, [])
-    return result if isinstance(result, list) else []
-
-
 def _has_any_query_rows(
     query_results: dict[str, list[dict] | str],
     *filenames: str,
 ) -> bool:
-    return any(_get_query_rows(query_results, filename) for filename in filenames)
+    return any(query_rows(query_results, filename) for filename in filenames)
 
 
 def _append_titled_query_section(
@@ -114,36 +109,36 @@ def _append_static_extended_query_sections(
 def _extended_section_specs() -> list[tuple[str, str, list[str]]]:
     return [
         (
-            "## Advanced Attack Paths: Injection Chains & XPC Escalation",
-            "> **Risk:** Multi-hop injection chains, XPC services without client verification, "
+            "## Modeled Attack Paths: Injection Chains and XPC Escalation",
+            "> Risk: Multi-hop injection chains, XPC services without client verification, "
             "and sandbox escape paths allow attackers to escalate privileges beyond direct "
             "TCC injection. These paths often bypass single-layer defences.",
             ["11", "13", "15", "30"],
         ),
         (
             "## Code Signing & Certificate Risk",
-            "> **Risk:** Apps signed with expired certificates, ad-hoc signatures, or "
+            "> Risk: Apps signed with expired certificates, ad-hoc signatures, or "
             "non-Apple CA chains have weaker trust guarantees. If these apps hold TCC "
             "grants, an attacker can more easily forge or replace them.",
             ["37", "60", "61", "62"],
         ),
         (
             "## Persistence & Hijack Risk",
-            "> **Risk:** Hijackable LaunchDaemons, writable shell hooks, and unconstrained "
+            "> Risk: Hijackable LaunchDaemons, writable shell hooks, and unconstrained "
             "injectable services provide persistent footholds. An attacker who compromises "
             "these can survive reboots and maintain access indefinitely.",
             ["29", "50", "51"],
         ),
         (
             "## Authorization & Privilege Escalation",
-            "> **Risk:** Admin group membership, weak authorization rights, sudoers NOPASSWD "
+            "> Risk: Admin group membership, weak authorization rights, sudoers NOPASSWD "
             "rules, and group-based capability escalation can grant an attacker root or "
             "near-root privileges without exploiting any vulnerability.",
             ["24", "33", "36", "58"],
         ),
         (
             "## File System & ACL Risk",
-            "> **Risk:** Writable security-critical files (TCC.db, sudoers, sshd_config, "
+            "> Risk: Writable security-critical files (TCC.db, sudoers, sshd_config, "
             "LaunchDaemon directories) enable direct privilege escalation. File ACLs that "
             "grant write access to non-root users are high-priority findings.",
             ["48", "49"],
@@ -156,13 +151,13 @@ def _append_physical_posture_section(
     query_results: dict[str, list[dict] | str],
     queries: list[dict],
 ) -> None:
-    posture_rows = _get_query_rows(
+    posture_rows = query_rows(
         query_results, "67-physical-security-overview.cypher"
     )
     _append_titled_query_section(
         sections,
         "## Physical & Remote Access Posture",
-        "> **Risk:** Weak physical security posture (disabled screen lock, Thunderbolt "
+        "> Risk: Weak physical security posture (disabled screen lock, Thunderbolt "
         "in no-security mode, Lockdown Mode off) combined with enabled remote access "
         "services expands the attack surface to local and network-adjacent attackers.",
         ["25", "64", "67"],
@@ -184,7 +179,7 @@ def _append_icloud_risk_section(
     _append_titled_query_section(
         sections,
         "## Cloud & iCloud Risk",
-        "> **Risk:** Injectable applications with iCloud container entitlements can "
+        "> Risk: Injectable applications with iCloud container entitlements can "
         "exfiltrate data via iCloud sync to all devices enrolled in the same Apple ID. "
         "iCloud Keychain sync exposes credentials across the device fleet.",
         ["68", "69", "70"],
@@ -206,7 +201,7 @@ def _append_tier_classification_section(
     _append_titled_query_section(
         sections,
         "## Tier Classification Overview",
-        "> Tier 0 assets are the crown jewels — apps with Full Disk Access, "
+        "> Tier 0 assets are the crown jewels - apps with Full Disk Access, "
         "Accessibility, or Screen Recording grants that are injectable. Tier 1 "
         "apps hold moderate TCC grants. Tier 2 is everything else.",
         ["46", "57"],
@@ -219,21 +214,28 @@ def _append_tier_classification_section(
     sections.append("")
 
 
-def _fallback_attack_categories(
-    query_results: dict[str, list[dict] | str],
-    injectable_rows: list[dict],
-    electron_rows: list[dict],
-    apple_event_rows: list[dict],
-    icloud_rows: tuple[list[dict], list[dict], list[dict]],
-    cert_rows: tuple[list[dict], list[dict], list[dict]],
-) -> set[str]:
-    state = {
-        "injectable_rows": injectable_rows,
-        "electron_rows": electron_rows,
-        "apple_event_rows": apple_event_rows,
-        "icloud_rows": icloud_rows,
-        "cert_rows": cert_rows,
+@dataclass(frozen=True)
+class _CategoryRows:
+    injectable_rows: list[dict]
+    electron_rows: list[dict]
+    apple_event_rows: list[dict]
+    icloud_rows: tuple[list[dict], list[dict], list[dict]]
+    cert_rows: tuple[list[dict], list[dict], list[dict]]
+
+
+def _category_state(rows: _CategoryRows) -> dict[str, object]:
+    return {
+        "injectable_rows": rows.injectable_rows,
+        "electron_rows": rows.electron_rows,
+        "apple_event_rows": rows.apple_event_rows,
+        "icloud_rows": rows.icloud_rows,
+        "cert_rows": rows.cert_rows,
     }
+
+
+def _fallback_attack_categories(
+    query_results: dict[str, list[dict] | str], state: dict[str, object]
+) -> set[str]:
     active_categories: set[str] = set()
     for categories, condition in _fallback_category_conditions(query_results, state):
         if condition:
@@ -377,7 +379,7 @@ def _collect_active_categories(
     cert_rows: tuple[list[dict], list[dict], list[dict]],
 ) -> set[str]:
     active_categories: set[str] = set()
-    for row in _get_query_rows(query_results, "95-high-risk-apps.cypher"):
+    for row in query_rows(query_results, "95-high-risk-apps.cypher"):
         cats = row.get("attack_categories")
         if isinstance(cats, list):
             active_categories.update(cats)
@@ -385,11 +387,15 @@ def _collect_active_categories(
         return active_categories
     return _fallback_attack_categories(
         query_results,
-        injectable_rows,
-        electron_rows,
-        apple_event_rows,
-        icloud_rows,
-        cert_rows,
+        _category_state(
+            _CategoryRows(
+                injectable_rows=injectable_rows,
+                electron_rows=electron_rows,
+                apple_event_rows=apple_event_rows,
+                icloud_rows=icloud_rows,
+                cert_rows=cert_rows,
+            )
+        ),
     )
 
 
@@ -413,7 +419,7 @@ def _append_threat_landscape(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
 ) -> None:
-    threat_rows = _get_query_rows(query_results, "92-apt-group-exposure.cypher")
+    threat_rows = query_rows(query_results, "92-apt-group-exposure.cypher")
     if not threat_rows:
         return
     sections.append("## Threat Landscape: APT Group Exposure")

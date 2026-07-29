@@ -1,7 +1,7 @@
 """
-test_version_matcher.py — Tests for version-aware vulnerability matching.
+test_version_matcher.py - Tests for version-aware vulnerability matching.
 
-Pure unit tests — no Neo4j or network calls required.
+Pure unit tests - no Neo4j or network calls required.
 """
 
 from __future__ import annotations
@@ -238,7 +238,7 @@ class TestIsAffected:
     def test_safari_17_affected_by_hm_surf(self):
         """Safari 17.0 on macOS 14.5 IS affected by CVE-2024-44133.
 
-        HM Surf is a macOS-level CVE — the version ceiling refers to
+        HM Surf is a macOS-level CVE - the version ceiling refers to
         macOS version, not Safari version. The matching should check
         against the host's macOS version.
         """

@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework",
+      "name": "spotlight",
+      "risk_tags": "spotlight_importer_surface,wave16,dual_use",
+      "user": "alice",
+      "timestamp": "2026-08-01T12:00:00Z",
+      "notes": "Spotlight importer depth markers \u2014 never installs malicious Spotlight importers or dumps mdworker index contents"
+    }
+  ]
+}

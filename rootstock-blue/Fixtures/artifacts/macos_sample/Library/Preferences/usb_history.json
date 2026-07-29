@@ -1,0 +1,35 @@
+{
+  "devices": [
+    {
+      "vendor_id": "FFFF",
+      "product_id": "0001",
+      "serial": "EVILUSB001",
+      "product_name": "Evil HID Inject Device",
+      "manufacturer": "Unknown Vendor Co",
+      "device_class": "hid",
+      "connected_at": "2024-05-15T18:22:00Z",
+      "hid_inject": true,
+      "unknown_vendor": true,
+      "risk_tags": "unknown_vendor,hid_inject"
+    },
+    {
+      "vendor_id": "0781",
+      "product_id": "5583",
+      "serial": "4C530001234567890",
+      "product_name": "SanDisk Ultra USB Drive",
+      "manufacturer": "SanDisk",
+      "device_class": "08",
+      "connected_at": "2024-05-10T09:00:00Z",
+      "mass_storage": true,
+      "risk_tags": "mass_storage"
+    },
+    {
+      "vendor_id": "05AC",
+      "product_id": "12A8",
+      "serial": "C02X1234ABCD",
+      "product_name": "iPhone",
+      "manufacturer": "Apple Inc.",
+      "connected_at": "2024-05-01T12:00:00Z"
+    }
+  ]
+}

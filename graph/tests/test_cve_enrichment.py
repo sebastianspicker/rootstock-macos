@@ -1,7 +1,7 @@
 """
-test_cve_enrichment.py — Tests for EPSS + CISA KEV enrichment.
+test_cve_enrichment.py - Tests for EPSS + CISA KEV enrichment.
 
-Pure unit tests — no network calls, no Neo4j required.
+Pure unit tests - no network calls, no Neo4j required.
 """
 
 from __future__ import annotations
@@ -37,6 +37,29 @@ from cve_reference import CveEntry
 
 
 checks = TestCase()
+
+
+def _mock_json_response(payload):
+    response = MagicMock()
+    response.json.return_value = payload
+    response.raise_for_status = MagicMock()
+    return response
+
+
+def _fetch_with_response(fetch, payload):
+    with patch("cve_enrichment.requests") as mock_requests:
+        mock_requests.get.return_value = _mock_json_response(payload)
+        return fetch(force=True)
+
+
+def _run_main_with_unavailable_feeds(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["cve_enrichment.py", "--fetch"])
+    with (
+        patch("cve_enrichment.fetch_epss", side_effect=RuntimeError("epss down")),
+        patch("cve_enrichment.fetch_kev", side_effect=RuntimeError("kev down")),
+        patch("cve_enrichment.fetch_nvd", side_effect=RuntimeError("nvd down")),
+    ):
+        return main()
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
@@ -127,13 +150,7 @@ class TestCacheManagement:
 
 class TestFetchEpss:
     def test_fetch_from_api(self, tmp_cache_dir, sample_epss_response):
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = sample_epss_response
-        mock_resp.raise_for_status = MagicMock()
-
-        with patch("cve_enrichment.requests") as mock_requests:
-            mock_requests.get.return_value = mock_resp
-            result = fetch_epss(force=True)
+        result = _fetch_with_response(fetch_epss, sample_epss_response)
 
         checks.assertIn("CVE-2024-44133", result)
         checks.assertEqual(result["CVE-2024-44133"]["epss"], 0.42)
@@ -161,13 +178,7 @@ class TestFetchEpss:
         }
         _write_cache(tmp_cache_dir / "epss.json", fresh_cache)
 
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = sample_epss_response
-        mock_resp.raise_for_status = MagicMock()
-
-        with patch("cve_enrichment.requests") as mock_requests:
-            mock_requests.get.return_value = mock_resp
-            result = fetch_epss(force=True)
+        result = _fetch_with_response(fetch_epss, sample_epss_response)
 
         checks.assertIn("CVE-2024-44133", result)
 
@@ -177,13 +188,7 @@ class TestFetchEpss:
 
 class TestFetchKev:
     def test_fetch_from_api(self, tmp_cache_dir, sample_kev_response):
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = sample_kev_response
-        mock_resp.raise_for_status = MagicMock()
-
-        with patch("cve_enrichment.requests") as mock_requests:
-            mock_requests.get.return_value = mock_resp
-            result = fetch_kev(force=True)
+        result = _fetch_with_response(fetch_kev, sample_kev_response)
 
         checks.assertIn("CVE-2024-44133", result)
         checks.assertEqual(result["CVE-2024-44133"]["date_added"], "2024-10-08")
@@ -230,13 +235,7 @@ class TestFailLoudRefresh:
     def test_main_exits_nonzero_on_all_feed_failures_with_no_cache(
         self, tmp_cache_dir, capsys, monkeypatch
     ):
-        monkeypatch.setattr(sys, "argv", ["cve_enrichment.py", "--fetch"])
-        with (
-            patch("cve_enrichment.fetch_epss", side_effect=RuntimeError("epss down")),
-            patch("cve_enrichment.fetch_kev", side_effect=RuntimeError("kev down")),
-            patch("cve_enrichment.fetch_nvd", side_effect=RuntimeError("nvd down")),
-        ):
-            exit_code = main()
+        exit_code = _run_main_with_unavailable_feeds(monkeypatch)
 
         captured = capsys.readouterr()
         checks.assertEqual(exit_code, 1)
@@ -254,13 +253,7 @@ class TestFailLoudRefresh:
                 "_fetched_at": "2000-01-01T00:00:00+00:00",
             },
         )
-        monkeypatch.setattr(sys, "argv", ["cve_enrichment.py", "--fetch"])
-        with (
-            patch("cve_enrichment.fetch_epss", side_effect=RuntimeError("epss down")),
-            patch("cve_enrichment.fetch_kev", side_effect=RuntimeError("kev down")),
-            patch("cve_enrichment.fetch_nvd", side_effect=RuntimeError("nvd down")),
-        ):
-            exit_code = main()
+        exit_code = _run_main_with_unavailable_feeds(monkeypatch)
 
         captured = capsys.readouterr()
         checks.assertEqual(exit_code, 0)

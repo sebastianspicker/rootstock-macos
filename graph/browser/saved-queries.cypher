@@ -1,17 +1,17 @@
 // ============================================================
-// Rootstock — Saved Queries for Neo4j Browser
+// Rootstock - Saved Queries for Neo4j Browser
 // ============================================================
 // Usage: Paste any query into Neo4j Browser and click Run.
 //        Or use the star icon (☆) in Neo4j Browser to save
 //        queries to your local Favorites after running them.
 //
 // Import tip: Neo4j Browser does not have a CLI import for
-// favorites — star (☆) each query after running it once to
+// favorites - star (☆) each query after running it once to
 // add it to your sidebar Favorites panel.
 // ============================================================
 
 
-// ── ★ ANALYSIS QUERY 1 — Injectable FDA Apps ─────────────────────────────
+// ── ★ ANALYSIS QUERY 1 - Injectable FDA Apps ─────────────────────────────
 // Severity: Critical
 // Find all apps with Full Disk Access that can be code-injected by an attacker.
 // Attack: Inject dylib → inherit Full Disk Access → read TCC.db, SSH keys, Mail.
@@ -30,7 +30,7 @@ RETURN app.name            AS app_name,
 ORDER BY method_count DESC, app.name ASC;
 
 
-// ── ★ ANALYSIS QUERY 2 — Shortest Path to Full Disk Access ───────────────
+// ── ★ ANALYSIS QUERY 2 - Shortest Path to Full Disk Access ───────────────
 // Severity: Critical
 // Find the minimum-hop chain from attacker payload to Full Disk Access.
 
@@ -45,7 +45,7 @@ ORDER BY path_length ASC
 LIMIT 10;
 
 
-// ── ★ ANALYSIS QUERY 3 — Electron TCC Inheritance ────────────────────────
+// ── ★ ANALYSIS QUERY 3 - Electron TCC Inheritance ────────────────────────
 // Severity: High
 // Which Electron apps pass TCC permissions to child processes via ELECTRON_RUN_AS_NODE?
 
@@ -59,9 +59,9 @@ RETURN app.name              AS app_name,
 ORDER BY permission_count DESC, app.name ASC;
 
 
-// ── ★ ANALYSIS QUERY 4 — Private Entitlement Audit ───────────────────────
+// ── ★ ANALYSIS QUERY 4 - Private Entitlement Audit ───────────────────────
 // Severity: High
-// Third-party apps with private Apple entitlements — high-value injection targets.
+// Third-party apps with private Apple entitlements - high-value injection targets.
 
 MATCH (app:Application {is_system: false})-[:HAS_ENTITLEMENT]->(ent:Entitlement {is_private: true})
 WITH app, collect(DISTINCT ent.name) AS private_entitlements
@@ -76,7 +76,7 @@ RETURN app.name                          AS app_name,
 ORDER BY private_ent_count DESC, app.name ASC;
 
 
-// ── ★ ANALYSIS QUERY 5 — Apple Event TCC Cascade ─────────────────────────
+// ── ★ ANALYSIS QUERY 5 - Apple Event TCC Cascade ─────────────────────────
 // Severity: High
 // Apps that gain TCC access transitively via Apple Event automation.
 
@@ -94,7 +94,7 @@ RETURN source.name                           AS source_app,
 ORDER BY source.name ASC, perm.display_name ASC;
 
 
-// ── ★ ANALYSIS QUERY 6 — Multi-hop Injection Chain ───────────────────────
+// ── ★ ANALYSIS QUERY 6 - Multi-hop Injection Chain ───────────────────────
 // Severity: Critical
 // Chains of injectable apps leading to high-value TCC permissions.
 
@@ -116,7 +116,7 @@ ORDER BY hops ASC, perm.display_name ASC
 LIMIT 20;
 
 
-// ── ★ ANALYSIS QUERY 7 — TCC Grant Overview ──────────────────────────────
+// ── ★ ANALYSIS QUERY 7 - TCC Grant Overview ──────────────────────────────
 // Severity: Informational / Blue Team
 // Full distribution of TCC grants across all services.
 
@@ -130,7 +130,7 @@ RETURN permission, service, allowed_count, denied_count, total_grants
 ORDER BY total_grants DESC;
 
 
-// ── ★ ANALYSIS QUERY 8 — Persistence Audit ───────────────────────────────
+// ── ★ ANALYSIS QUERY 8 - Persistence Audit ───────────────────────────────
 // Severity: High
 // Third-party LaunchDaemons/Agents that run as root or are linked to injectable apps.
 
@@ -151,9 +151,9 @@ ORDER BY runs_as_root DESC, app_is_injectable DESC, l.label
 LIMIT 50;
 
 
-// ── ★ ANALYSIS QUERY 9 — Keychain ACL Audit ──────────────────────────────
+// ── ★ ANALYSIS QUERY 9 - Keychain ACL Audit ──────────────────────────────
 // Severity: High
-// Applications with direct Keychain read access (no user prompt required).
+// Applications named in imported Keychain ACL metadata; validate live access.
 
 MATCH (a:Application)-[:CAN_READ_KEYCHAIN]->(k:Keychain_Item)
 WITH a, k, size(a.injection_methods) > 0 AS app_is_injectable
@@ -164,9 +164,9 @@ ORDER BY app_is_injectable DESC, a.name, k.kind, k.label
 LIMIT 100;
 
 
-// ── ★ ANALYSIS QUERY 10 — MDM-Managed TCC ───────────────────────────────
+// ── ★ ANALYSIS QUERY 10 - MDM-Managed TCC ───────────────────────────────
 // Severity: High
-// TCC permissions silently enforced via MDM (cannot be revoked by user).
+// TCC permissions represented as managed by imported MDM policy.
 
 MATCH (m:MDM_Profile)-[c:CONFIGURES]->(t:TCC_Permission)
 OPTIONAL MATCH (a:Application {bundle_id: c.bundle_id})
@@ -183,7 +183,7 @@ LIMIT 100;
 // ════════════════════════════════════════════════════════════
 
 
-// ── ★ EXPLORE 1 — Show All Nodes and Relationships ───────────────────────
+// ── ★ EXPLORE 1 - Show All Nodes and Relationships ───────────────────────
 // Quick overview of the entire graph (limited to 100 nodes).
 
 MATCH (n)-[r]->(m)
@@ -191,8 +191,8 @@ RETURN n, r, m
 LIMIT 100;
 
 
-// ── ★ EXPLORE 2 — Apps with Most TCC Permissions ─────────────────────────
-// Find the most-permissioned apps — potential over-privileging.
+// ── ★ EXPLORE 2 - Apps with Most TCC Permissions ─────────────────────────
+// Find the most-permissioned apps - potential over-privileging.
 
 MATCH (app:Application)-[r:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
 WITH app, collect(DISTINCT perm.display_name) AS permissions
@@ -205,7 +205,7 @@ ORDER BY permission_count DESC
 LIMIT 20;
 
 
-// ── ★ EXPLORE 3 — Apps with Most Entitlements ────────────────────────────
+// ── ★ EXPLORE 3 - Apps with Most Entitlements ────────────────────────────
 // Find apps with the largest entitlement surface (higher complexity = higher risk).
 
 MATCH (app:Application {is_system: false})-[:HAS_ENTITLEMENT]->(ent:Entitlement)
@@ -220,7 +220,7 @@ ORDER BY private_count DESC, entitlement_count DESC
 LIMIT 20;
 
 
-// ── ★ EXPLORE 4 — All Inferred Attack Edges ──────────────────────────────
+// ── ★ EXPLORE 4 - All Inferred Attack Edges ──────────────────────────────
 // Show all edges that were inferred by infer.py (attack paths, not raw data).
 
 MATCH (a)-[r]->(b)
@@ -230,7 +230,7 @@ RETURN a, r, b
 LIMIT 100;
 
 
-// ── ★ EXPLORE 5 — TCC Grants by Scope (User vs System) ───────────────────
+// ── ★ EXPLORE 5 - TCC Grants by Scope (User vs System) ───────────────────
 // Distinguish user-level TCC.db grants from system-level grants.
 
 MATCH (app:Application)-[r:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)

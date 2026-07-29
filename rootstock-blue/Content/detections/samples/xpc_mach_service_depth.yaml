@@ -1,0 +1,13 @@
+id: sample.xpc_mach_service_depth
+title: XPC Mach service residual depth surface present
+severity: high
+description: XPC Mach service depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1559
+  - T1543
+  - T1055
+match:
+  event_type: xpc.mach_service
+  field_contains:
+    xpcmach.risk_tags: "xpc_mach_surface"
+fixture: xpc_mach_service_depth.jsonl

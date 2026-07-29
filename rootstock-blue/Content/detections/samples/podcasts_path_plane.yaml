@@ -1,0 +1,13 @@
+id: sample.podcasts_path_plane
+title: Podcasts library path residual surface present
+severity: high
+description: Podcasts path plane markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1119
+match:
+  event_type: podcasts.path
+  field_contains:
+    podpath.risk_tags: "podcasts_surface"
+fixture: podcasts_path_plane.jsonl

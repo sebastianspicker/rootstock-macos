@@ -1,5 +1,5 @@
 """
-test_cleanup.py — Regression tests for graph test cleanup safety.
+test_cleanup.py - Regression tests for graph test cleanup safety.
 
 Requires a running Neo4j instance. Tests are skipped if Neo4j is unavailable.
 """

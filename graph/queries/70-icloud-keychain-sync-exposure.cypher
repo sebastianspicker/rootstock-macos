@@ -1,5 +1,5 @@
 // Name: iCloud Keychain Sync Exposure
-// Purpose: Injectable apps with keychain read access on hosts where iCloud Keychain sync is enabled — compromised secrets propagate to all linked devices, multiplying blast radius
+// Purpose: Correlate Keychain ACL, host sync state, and modeled injection conditions
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

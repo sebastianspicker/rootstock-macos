@@ -1,0 +1,11 @@
+id: sample.trash_sensitive_artifact
+title: Sensitive or suspicious Trash artifact
+severity: high
+description: Trash item with credential/executable/suspicious risk tags for recovery IR.
+attack_techniques:
+  - T1070.004
+match:
+  event_type: filesystem.trash
+  field_contains:
+    trash.risk_tags: "credential_material"
+fixture: trash_sensitive_artifact.jsonl

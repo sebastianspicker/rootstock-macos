@@ -1,5 +1,5 @@
 """
-infer_kerberos.py — Infer CAN_READ_KERBEROS relationships.
+infer_kerberos.py - Infer CAN_READ_KERBEROS relationships.
 
 Creates edges from injectable Applications to KerberosArtifact nodes when the
 app could plausibly read the artifact.  Four rules:

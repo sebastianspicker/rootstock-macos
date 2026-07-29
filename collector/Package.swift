@@ -1,20 +1,25 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.3
 import PackageDescription
 
 let package = Package(
     name: "rootstock-collector",
     platforms: [.macOS(.v14)],
+    products: [
+        .executable(name: "RootstockCLI", targets: ["RootstockCLI"]),
+    ],
     dependencies: [
         .package(
             url: "https://github.com/apple/swift-argument-parser",
             exact: "1.6.2"
         ),
+        .package(path: "../packages/RootstockMacFacts"),
     ],
     targets: [
         .executableTarget(
             name: "RootstockCLI",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
                 "Models",
                 "TCC",
                 "Entitlements",
@@ -48,7 +53,10 @@ let package = Package(
         ),
         .target(
             name: "TCC",
-            dependencies: ["Models"],
+            dependencies: [
+                "Models",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ],
             linkerSettings: [.linkedLibrary("sqlite3")]
         ),
         .target(
@@ -67,11 +75,18 @@ let package = Package(
         ),
         .target(
             name: "XPCServices",
-            dependencies: ["Models"]
+            dependencies: [
+                "Models",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "Persistence",
-            dependencies: ["Models", "XPCServices"]
+            dependencies: [
+                "Models",
+                "XPCServices",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "Keychain",
@@ -146,6 +161,11 @@ let package = Package(
             name: "Quarantine",
             dependencies: ["Models"]
         ),
+        .target(
+            name: "TestSupport",
+            dependencies: ["Models"],
+            path: "Tests/TestSupport"
+        ),
         .testTarget(
             name: "ModelsTests",
             dependencies: ["Models"]
@@ -162,7 +182,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CodeSigningTests",
-            dependencies: ["CodeSigning", "Models"],
+            dependencies: ["CodeSigning", "Models", "TestSupport"],
             linkerSettings: [.linkedFramework("Security")]
         ),
         .testTarget(
@@ -245,15 +265,16 @@ let package = Package(
         ),
         .testTarget(
             name: "SandboxTests",
-            dependencies: ["Sandbox", "Models"]
+            dependencies: ["Sandbox", "Models", "TestSupport"]
         ),
         .testTarget(
             name: "QuarantineTests",
-            dependencies: ["Quarantine", "Models"]
+            dependencies: ["Quarantine", "Models", "TestSupport"]
         ),
         .testTarget(
             name: "RootstockCLITests",
             dependencies: ["RootstockCLI"]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

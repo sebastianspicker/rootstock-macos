@@ -1,0 +1,16 @@
+{
+  "revisions": [
+    {
+      "path": "/Users/alice/Documents/confidential-plan.docx",
+      "version": "3",
+      "mtime": "2024-06-04T11:00:00Z",
+      "gen_store_id": "rev-001-evil",
+      "risk_tags": "sensitive_document"
+    },
+    {
+      "path": "/Users/alice/Documents/notes.md",
+      "version": "12",
+      "mtime": "2024-05-15T16:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "thumbnails": [
+    {
+      "path": "/Users/alice/Documents/secrets/passwords.txt",
+      "content_type": "public.plain-text",
+      "mtime": "2024-06-08T12:00:00Z",
+      "hit_count": 4,
+      "risk_tags": "sensitive_path,credential_filename"
+    },
+    {
+      "path": "/Users/alice/Downloads/evil-payload.dmg",
+      "content_type": "com.apple.disk-image",
+      "mtime": "2024-06-08T12:05:00Z",
+      "hit_count": 1,
+      "risk_tags": "suspicious_name"
+    },
+    {
+      "path": "/Users/alice/Pictures/photo.jpg",
+      "content_type": "public.jpeg",
+      "mtime": "2024-04-01T10:00:00Z",
+      "hit_count": 20
+    }
+  ]
+}

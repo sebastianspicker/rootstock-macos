@@ -3,14 +3,31 @@ import Models
 
 /// Enriches Application objects with code signing metadata and injection assessment.
 ///
-/// This is not a standalone DataSource — it enriches Application objects produced by
+/// This is not a standalone DataSource - it enriches Application objects produced by
 /// EntitlementDataSource, filling in team_id, hardened_runtime, library_validation,
 /// signed, code_signing_analysis_error, and injection_methods fields.
 public struct CodeSigningDataSource {
+    private struct DerivedApplicationState {
+        let resolvedPath: String
+        let sipProtected: Bool
+        let isNotarized: Bool?
+    }
+
     private let analyzer = CodeSigningAnalyzer()
     private let assessment = InjectionAssessment()
+    private let runCommand: ShellCommand
 
-    public init() {}
+    public init() {
+        runCommand = { path, arguments, timeout in
+            ShellCommandRunner.run(path, arguments, timeout)
+        }
+    }
+
+    init(
+        runCommand: @escaping ShellCommand
+    ) {
+        self.runCommand = runCommand
+    }
 
     /// Enriches the given Application array in place with code signing metadata.
     ///
@@ -55,15 +72,26 @@ public struct CodeSigningDataSource {
             isElectron: app.isElectron,
             isSipProtected: sipProtected
         ) : nil
-        let errors = analysisFailed ? [analysisError(for: app)] : []
+        let notarization = notarizationStatus(
+            appPath: resolvedPath,
+            app: app,
+            signingInfo: info
+        )
+        var errors = analysisFailed ? [analysisError(for: app)] : []
+        if let error = notarization.error {
+            errors.append(error)
+        }
 
         return (
             application: makeApplication(
                 from: app,
                 signingInfo: info,
                 assessmentResult: assessmentResult,
-                resolvedPath: resolvedPath,
-                sipProtected: sipProtected
+                state: DerivedApplicationState(
+                    resolvedPath: resolvedPath,
+                    sipProtected: sipProtected,
+                    isNotarized: notarization.value
+                )
             ),
             errors: errors
         )
@@ -73,31 +101,24 @@ public struct CodeSigningDataSource {
         from app: Application,
         signingInfo info: CodeSigningInfo,
         assessmentResult: InjectionAssessmentResult?,
-        resolvedPath: String,
-        sipProtected: Bool
+        state: DerivedApplicationState
     ) -> Application {
         let analysisFailed = info.analysisError
 
-        return Application(
-            identity: Application.Identity(
-                name: app.name,
-                bundleId: app.bundleId,
-                path: app.path,
-                version: app.version
-            ),
-            flags: Application.Flags(isElectron: app.isElectron, isSystem: app.isSystem),
+        return app.replacing(
             signing: signingState(
                 from: app,
                 signingInfo: info,
                 assessmentResult: assessmentResult,
-                resolvedPath: resolvedPath
+                resolvedPath: state.resolvedPath,
+                isNotarized: state.isNotarized
             ),
-            security: securityState(from: app, sipProtected: sipProtected),
+            security: securityState(from: app, sipProtected: state.sipProtected),
             entitlementState: entitlementState(
                 from: app,
                 signingInfo: info,
                 assessmentResult: assessmentResult,
-                resolvedPath: resolvedPath,
+                resolvedPath: state.resolvedPath,
                 analysisFailed: analysisFailed
             )
         )
@@ -107,7 +128,8 @@ public struct CodeSigningDataSource {
         from app: Application,
         signingInfo info: CodeSigningInfo,
         assessmentResult: InjectionAssessmentResult?,
-        resolvedPath: String
+        resolvedPath: String,
+        isNotarized: Bool?
     ) -> Application.Signing {
         let analysisFailed = info.analysisError
         let chain = info.certificateChain
@@ -120,7 +142,7 @@ public struct CodeSigningDataSource {
             signed: analysisFailed ? nil : info.signed,
             analysis: Application.SigningAnalysis(
                 codeSigningAnalysisError: analysisFailed,
-                isNotarized: notarizationStatus(appPath: resolvedPath, app: app, signingInfo: info),
+                isNotarized: isNotarized,
                 isAdhocSigned: analysisFailed ? false : info.isAdhoc
             ),
             certificate: Application.CertificateState(
@@ -175,9 +197,14 @@ public struct CodeSigningDataSource {
         appPath: String,
         app: Application,
         signingInfo info: CodeSigningInfo
-    ) -> Bool? {
-        guard !info.analysisError && !app.isSystem && info.signed else { return nil }
-        return checkNotarization(appPath: appPath)
+    ) -> (value: Bool?, error: CollectionError?) {
+        guard !info.analysisError && !app.isSystem && info.signed else {
+            return (nil, nil)
+        }
+        return Self.notarizationStatus(
+            from: runCommand("/usr/sbin/spctl", ["-a", "-vv", appPath], 15),
+            appPath: appPath
+        )
     }
 
     private func isExpired(certificate: CertificateDetail?) -> Bool {
@@ -186,9 +213,26 @@ public struct CodeSigningDataSource {
         return date < Date()
     }
 
-    /// Check if an app bundle passes Gatekeeper assessment (notarized or signed by identified developer).
-    private func checkNotarization(appPath: String) -> Bool {
-        Shell.succeeds("/usr/sbin/spctl", ["-a", "-vv", appPath])
+    /// Translate Gatekeeper command state without treating infrastructure failures as rejection.
+    static func notarizationStatus(
+        from outcome: ShellOutcome,
+        appPath: String
+    ) -> (value: Bool?, error: CollectionError?) {
+        switch outcome {
+        case .success:
+            return (true, nil)
+        case .nonZeroExit:
+            return (false, nil)
+        case .admissionTimedOut, .launchFailed, .executionTimedOut:
+            return (
+                nil,
+                CollectionError(
+                    source: "CodeSigning",
+                    message: "Notarization status unknown for \(appPath): \(outcome.failureDescription ?? "command failure")",
+                    recoverable: true
+                )
+            )
+        }
     }
 
     /// Detect launch constraint category for an application (macOS 13+).
@@ -196,7 +240,7 @@ public struct CodeSigningDataSource {
     /// Categories:
     /// - "apple_signed": Apple-signed system binaries (SIP-protected or in /System)
     /// - "third_party_signed": Signed third-party apps (potential trust cache members)
-    /// - "unconstrained": Unsigned apps — no launch constraints possible
+    /// - "unconstrained": Unsigned apps - no launch constraints possible
     ///
     /// Note: Precise launch constraint enumeration requires private APIs or
     /// `launchctl print` parsing. This heuristic classifies based on signing

@@ -1,4 +1,4 @@
-"""report_assembly.py — Report assembly, recommendations, and HTML conversion."""
+"""report_assembly.py - Report assembly, recommendations, and HTML conversion."""
 
 from __future__ import annotations
 
@@ -17,7 +17,16 @@ from report_sections import (
     _append_vulnerability_mapping,
     _collect_active_categories,
 )
-from report_diagrams import mermaid_attack_paths_block, mermaid_tcc_pie
+from report_diagrams import (
+    format_family_findings_section,
+    format_multi_plane_campaign_section,
+    format_multi_plane_severity_board,
+    format_purple_engagement_matrix,
+    format_kill_chain_stage_timeline,
+    format_fleet_campaign_dashboard,
+    mermaid_attack_paths_block,
+    mermaid_tcc_pie,
+)
 from report_formatters import (
     escape_report_value,
     format_generic_table,
@@ -35,6 +44,8 @@ __all__ = ["assemble_report", "markdown_to_html"]
 
 @dataclass
 class ReportRows:
+    """Normalized query subsets shared by report sections and recommendations."""
+
     injectable: list[dict]
     path: list[dict]
     electron: list[dict]
@@ -49,8 +60,6 @@ class ReportRows:
 # ── Themed Section Builders ──────────────────────────────────────────────────
 
 
-
-
 # ── Report Assembly ───────────────────────────────────────────────────────────
 
 
@@ -60,7 +69,6 @@ def _get_query_rows(
 ) -> list[dict]:
     result = query_results.get(filename, [])
     return result if isinstance(result, list) else []
-
 
 
 def _metadata_bool(value, true_label="Yes", false_label="No") -> str:
@@ -141,9 +149,12 @@ def _count_scan_metadata_rows(metadata: dict) -> list[list[str]]:
             "Entitlements Extracted",
             _metadata_count(metadata, "entitlement_count", "unknown"),
         ],
-        ["Bluetooth Devices", _metadata_count(metadata, "bluetooth_device_count", "—")],
-        ["File ACLs Audited", _metadata_count(metadata, "file_acl_count", "—")],
-        ["Login Sessions", _metadata_count(metadata, "login_session_count", "—")],
+        [
+            "Bluetooth Devices",
+            _metadata_count(metadata, "bluetooth_device_count", " - "),
+        ],
+        ["File ACLs Audited", _metadata_count(metadata, "file_acl_count", " - ")],
+        ["Login Sessions", _metadata_count(metadata, "login_session_count", " - ")],
     ]
 
 
@@ -198,7 +209,7 @@ def _append_vulnerability_intelligence(sections: list[str]) -> None:
     except Exception as exc:
         sections.append("### Vulnerability Intelligence")
         sections.append(
-            "> **Warning:** CVE enrichment unavailable; vulnerability "
+            "> Warning: CVE enrichment unavailable; vulnerability "
             f"intelligence summary omitted. Detail: {escape_report_value(exc)}"
         )
         sections.append("")
@@ -279,8 +290,8 @@ def _append_critical_finding_section(
 ) -> None:
     sections.append("## Critical Findings: Injectable Apps with Privileged TCC Grants")
     sections.append(
-        "> **Risk:** An attacker who controls a dylib can inject it into these apps "
-        "and inherit their Full Disk Access grant — enabling read/write of TCC.db, "
+        "> Risk: An attacker who controls a dylib can inject it into these apps "
+        "and inherit their Full Disk Access grant - enabling read/write of TCC.db, "
         "Mail, SSH keys, and all user files without prompting the user."
     )
     sections.append("")
@@ -315,7 +326,7 @@ def _append_high_finding_sections(
 ) -> None:
     sections.append("## High Findings: Electron TCC Inheritance")
     sections.append(
-        "> **Risk:** Electron apps can be abused via the `ELECTRON_RUN_AS_NODE` environment "
+        "> Risk: Electron apps can be abused via the `ELECTRON_RUN_AS_NODE` environment "
         "variable to spawn a Node.js interpreter that inherits the parent process's TCC "
         "permissions. An attacker with local code execution can exploit this silently."
     )
@@ -325,7 +336,7 @@ def _append_high_finding_sections(
 
     sections.append("## High Findings: Apple Event TCC Cascade")
     sections.append(
-        "> **Risk:** An app with Apple Event automation permission over a privileged app "
+        "> Risk: An app with Apple Event automation permission over a privileged app "
         "can invoke that app's capabilities transitively, gaining effective access to the "
         "target's TCC grants without holding those grants directly."
     )
@@ -376,7 +387,7 @@ def _append_raw_query_appendix(
         if result is None:
             sections.append("_Not executed._")
         elif isinstance(result, str):
-            sections.append(f"> **Error:** {result}")
+            sections.append(f"> Error: {result}")
         elif not result:
             sections.append("_No results._")
         else:
@@ -385,6 +396,7 @@ def _append_raw_query_appendix(
 
 
 def _collect_report_rows(query_results: dict[str, list[dict] | str]) -> ReportRows:
+    """Collect known query results while treating missing or failed queries as empty."""
     return ReportRows(
         injectable=_get_query_rows(query_results, "01-injectable-fda-apps.cypher"),
         path=_get_query_rows(query_results, "02-shortest-path-to-fda.cypher"),
@@ -416,6 +428,7 @@ def _append_report_body(
     queries: list[dict],
     rows: ReportRows,
 ) -> None:
+    """Append sections in the stable public report order from normalized rows."""
     _append_vulnerability_intelligence(sections)
     _append_core_finding_sections(
         sections,
@@ -458,7 +471,9 @@ def assemble_report(
     metadata: dict,
 ) -> str:
     """Assemble the full Markdown report from query results and metadata."""
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    now = (
+        datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    )
     queries = discover_queries()
     rows = _collect_report_rows(query_results)
     sections: list[str] = []
@@ -479,4 +494,68 @@ def assemble_report(
     )
     _append_report_body(sections, query_results, queries, rows)
 
+    _append_optional_family_sections(sections, metadata)
+
     return "\n".join(sections)
+
+
+def _append_optional_family_sections(sections: list[str], metadata: dict) -> None:
+    family_findings = metadata.get("family_findings") or []
+    if family_findings:
+        sections.append(
+            format_family_findings_section(
+                family_findings, source=metadata.get("family_source")
+            )
+        )
+    _append_optional_sections(
+        sections,
+        metadata,
+        (
+            (
+                "multi_plane_campaign",
+                "multi_plane_campaign_name",
+                "Multi-plane campaign",
+                format_multi_plane_campaign_section,
+                "campaign",
+            ),
+            (
+                "multi_plane_severity_board",
+                "multi_plane_severity_title",
+                "Multi-plane severity board",
+                format_multi_plane_severity_board,
+                "title",
+            ),
+            (
+                "purple_engagement_pairs",
+                "purple_engagement_title",
+                "Purple engagement matrix",
+                format_purple_engagement_matrix,
+                "title",
+            ),
+            (
+                "kill_chain_stages",
+                "kill_chain_title",
+                "Kill-chain stage timeline",
+                format_kill_chain_stage_timeline,
+                "title",
+            ),
+            (
+                "fleet_campaigns",
+                "fleet_campaign_title",
+                "Fleet multi-plane campaign dashboard",
+                format_fleet_campaign_dashboard,
+                "title",
+            ),
+        ),
+    )
+
+
+def _append_optional_sections(
+    sections: list[str], metadata: dict, specifications: tuple
+) -> None:
+    for data_key, title_key, fallback, formatter, keyword in specifications:
+        rows = metadata.get(data_key) or []
+        if rows:
+            sections.append(
+                formatter(rows, **{keyword: metadata.get(title_key) or fallback})
+            )

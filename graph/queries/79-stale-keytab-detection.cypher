@@ -1,5 +1,5 @@
 // Name: Stale Keytab Detection
-// Purpose: Keytabs not rotated in over 1 year — stale keytabs indicate poor key rotation hygiene and may contain compromised credentials
+// Purpose: Keytabs not rotated in over 1 year - stale keytabs indicate poor key rotation hygiene and may contain compromised credentials
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none

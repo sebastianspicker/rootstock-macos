@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Models the POSIX permissions, ownership, and extended ACL entries for files
 /// like TCC databases, keychain files, sudoers configs, and LaunchDaemon plists
-/// — the macOS equivalent of BloodHound's GenericAll/WriteDacl attack edges.
+/// - the macOS equivalent of BloodHound's GenericAll/WriteDacl attack edges.
 public struct FileACL: Codable, Sendable, GraphNode {
     public var nodeType: String { "FileACL" }
 

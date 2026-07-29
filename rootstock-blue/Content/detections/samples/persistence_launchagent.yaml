@@ -1,0 +1,12 @@
+id: sample.persistence_launchagent
+title: LaunchAgent persistence write
+severity: medium
+description: File creation under a LaunchAgents directory.
+attack_techniques:
+  - T1543.001
+match:
+  event_type: NOTIFY_CREATE
+  field_contains:
+    file.path: "/Library/LaunchAgents/"
+fixture: persistence_launchagent.jsonl
+atomic_mapping: T1543.001

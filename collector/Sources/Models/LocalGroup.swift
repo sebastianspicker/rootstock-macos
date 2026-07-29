@@ -13,4 +13,21 @@ public struct LocalGroup: Codable, Sendable, GraphNode {
         self.gid = gid
         self.members = members
     }
+
+    public static func members(inDirectoryServiceOutput output: String) -> [String] {
+        let prefixes = [
+            "GroupMembership:",
+            "dsAttrTypeStandard:GroupMembership:",
+        ]
+        for line in output.components(separatedBy: .newlines) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard let prefix = prefixes.first(where: { trimmed.hasPrefix($0) }) else {
+                continue
+            }
+            return trimmed.dropFirst(prefix.count)
+                .split(whereSeparator: \.isWhitespace)
+                .map(String.init)
+        }
+        return []
+    }
 }

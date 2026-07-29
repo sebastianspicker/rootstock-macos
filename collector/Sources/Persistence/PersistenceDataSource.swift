@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import RootstockMacFacts
 import XPCServices
 
 /// Enumerates all persistence mechanisms on the system.
@@ -9,6 +10,9 @@ import XPCServices
 ///   • LaunchAgents:  /Library/LaunchAgents/, ~/Library/LaunchAgents/
 ///   • Login Items:   ~/Library/Application Support/com.apple.backgroundtaskmanagementagent/backgrounditems.btm
 ///   • Cron jobs:     /etc/crontab, /var/at/tabs/<user>
+///
+/// Launchd directory inventory uses `LaunchdPlistParser` backed by
+/// `LaunchdPlistFacts` (RootstockMacFacts).
 public struct PersistenceDataSource: DataSource {
     public let name = "Persistence"
     public let requiresElevation = false
@@ -17,13 +21,15 @@ public struct PersistenceDataSource: DataSource {
     private let plistParser = LaunchdPlistParser()
 
     private static let daemonDirs = [
-        "/System/Library/LaunchDaemons",
-        "/Library/LaunchDaemons",
+        MacSecurityPaths.appleLaunchDaemons,
+        MacSecurityPaths.systemLaunchDaemons,
     ]
 
     private static let agentDirs = [
-        "/Library/LaunchAgents",
-        NSHomeDirectory() + "/Library/LaunchAgents",
+        MacSecurityPaths.systemLaunchAgents,
+        MacSecurityPaths.userLaunchAgents(
+            home: FileManager.default.homeDirectoryForCurrentUser
+        ).path,
     ]
 
     public init() { }
@@ -127,7 +133,7 @@ public struct PersistenceDataSource: DataSource {
 
         let fm = FileManager.default
         guard fm.fileExists(atPath: btmPath) else {
-            // No BTM file — try sfltool fallback (Sequoia+)
+            // No BTM file - try sfltool fallback (Sequoia+)
             return collectLoginItemsViaSfltool()
         }
         guard let data = fm.contents(atPath: btmPath) else {
@@ -136,7 +142,7 @@ public struct PersistenceDataSource: DataSource {
 
         // BTM is a binary plist on older macOS; attempt plist deserialization
         guard let plist = Shell.parsePlistDict(from: data) else {
-            // BTM format on newer macOS is a custom binary — fall back to sfltool
+            // BTM format on newer macOS is a custom binary - fall back to sfltool
             let (sfltoolItems, sfltoolErrors) = collectLoginItemsViaSfltool()
             if sfltoolItems.isEmpty {
                 return ([], ["BTM file format not parseable as plist (newer macOS): \(btmPath)"] + sfltoolErrors)
@@ -151,10 +157,18 @@ public struct PersistenceDataSource: DataSource {
     }
 
     private func collectLoginItemsViaSfltool() -> ([LaunchItem], [String]) {
-        guard let output = Shell.run("/usr/bin/sfltool", ["dumpbtm"], timeoutSeconds: 5) else {
-            return ([], [])
+        let outcome = Shell.execute(
+            "/usr/bin/sfltool",
+            ["dumpbtm"],
+            timeoutSeconds: 5
+        )
+        guard case .success(let result) = outcome else {
+            return (
+                [],
+                ["sfltool dumpbtm failed: \(outcome.failureDescription ?? "command failure")"]
+            )
         }
-        return (Self.parseSfltoolOutput(output), [])
+        return (Self.parseSfltoolOutput(result.stdout), [])
     }
 
     /// Parse `sfltool dumpbtm` output to extract login items.

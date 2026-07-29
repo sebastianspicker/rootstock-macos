@@ -1,0 +1,13 @@
+.build/
+.swiftpm/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+.DS_Store
+*.pem
+*.p12
+*.key
+.env
+.orchard-local/
+**/Package.resolved
+!Package.resolved

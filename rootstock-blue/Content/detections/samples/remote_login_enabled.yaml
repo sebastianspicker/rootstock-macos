@@ -1,0 +1,12 @@
+id: sample.remote_login_enabled
+title: Remote Login (sshd) service enabled
+severity: high
+description: Host has Remote Login / sshd service enabled - remote access surface beyond SSH key inventory.
+attack_techniques:
+  - T1021.004
+match:
+  event_type: harden.finding
+  field_equals:
+    harden.control: "remote_login"
+    harden.status: "fail"
+fixture: remote_login_enabled.jsonl

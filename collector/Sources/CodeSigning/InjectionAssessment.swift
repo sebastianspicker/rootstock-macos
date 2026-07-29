@@ -16,7 +16,7 @@ struct InjectionAssessment {
 
     /// Assess injection methods and effective library validation for the given app.
     ///
-    /// SIP-protected apps cannot be injected — returns empty methods immediately.
+    /// SIP-protected apps cannot be injected - returns empty methods immediately.
     func assess(
         signingInfo: CodeSigningInfo,
         entitlements: [EntitlementInfo],

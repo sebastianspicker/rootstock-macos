@@ -1,0 +1,11 @@
+id: sample.ard_all_local_users
+title: ARD allows all local users
+severity: high
+description: Apple Remote Desktop / Remote Management configured with ARD_AllLocalUsers.
+attack_techniques:
+  - T1021.001
+match:
+  event_type: remote.management
+  field_equals:
+    ard.all_local_users: "true"
+fixture: ard_all_local_users.jsonl

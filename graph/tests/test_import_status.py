@@ -4,6 +4,7 @@ from unittest import TestCase
 
 import importlib
 import sys
+from contextlib import nullcontext
 from types import SimpleNamespace
 
 
@@ -52,19 +53,10 @@ checks = TestCase()
 
 class _FakeDriver:
     def session(self):
-        return _FakeSession()
+        return nullcontext()
 
     def close(self):
         return None
-
-
-class _FakeSession:
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        return False
-
 
 def _scan_with_collection_error():
     return SimpleNamespace(

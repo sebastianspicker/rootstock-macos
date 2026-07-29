@@ -1,0 +1,20 @@
+name: persistence
+description: Unified persistence surface (launchd + BTM + cron + login items + shell profiles + emond + privileged helpers + folder actions + login hooks + auth plugins + codesign + SSH keys)
+requires_fda: true
+requires_es: false
+artifacts:
+  - autostart
+  - btm
+  - launchagents
+  - loginitems
+  - cron
+  - shell_profiles
+  - emond
+  - privhelpers
+  - folder_actions
+  - login_hooks
+  - auth_plugins
+  - codesign
+  - ssh
+  - systemextensions
+  - launchd_overrides

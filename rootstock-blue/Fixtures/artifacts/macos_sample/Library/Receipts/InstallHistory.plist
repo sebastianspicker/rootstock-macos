@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>date</key>
+		<date>2024-06-15T18:30:00Z</date>
+		<key>displayName</key>
+		<string>Suspicious Remote Tool</string>
+		<key>displayVersion</key>
+		<string>1.2.3</string>
+		<key>processName</key>
+		<string>installer</string>
+		<key>contentType</key>
+		<string>package</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.evil.remotetool</string>
+		</array>
+	</dict>
+	<dict>
+		<key>date</key>
+		<date>2024-01-10T09:00:00Z</date>
+		<key>displayName</key>
+		<string>macOS 14.6.1 Update</string>
+		<key>displayVersion</key>
+		<string>14.6.1</string>
+		<key>processName</key>
+		<string>softwareupdated</string>
+		<key>contentType</key>
+		<string>package</string>
+		<key>packageIdentifiers</key>
+		<array>
+			<string>com.apple.pkg.update.os.14.6.1</string>
+		</array>
+	</dict>
+</array>
+</plist>

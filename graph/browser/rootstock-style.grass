@@ -1,17 +1,17 @@
 /*
-  Rootstock GraSS — Graph Style Sheet for Neo4j Browser
+  Rootstock GraSS - Graph Style Sheet for Neo4j Browser
   Load with: :style http://localhost:8001/rootstock-style.grass
   Or paste the content directly into Neo4j Browser style editor (gear icon → "Edit stylesheet")
 
   Color legend:
-    Application    → blue   (#4A90D9) — installed macOS apps
-    TCC_Permission → red    (#E74C3C) — TCC access control entries
-    Entitlement    → amber  (#F39C12) — code signing entitlements
-    XPC_Service    → green  (#27AE60) — LaunchDaemons and LaunchAgents
-    LaunchItem     → purple (#8E44AD) — persistence mechanisms
-    Keychain_Item  → teal   (#1ABC9C) — Keychain ACL entries (no secrets)
-    MDM_Profile    → gray   (#95A5A6) — MDM configuration profiles
-    User           → orange (#E67E22) — local user accounts
+    Application    → blue   (#4A90D9) - installed macOS apps
+    TCC_Permission → red    (#E74C3C) - TCC access control entries
+    Entitlement    → amber  (#F39C12) - code signing entitlements
+    XPC_Service    → green  (#27AE60) - LaunchDaemons and LaunchAgents
+    LaunchItem     → purple (#8E44AD) - persistence mechanisms
+    Keychain_Item  → teal   (#1ABC9C) - Keychain ACL entries (no secrets)
+    MDM_Profile    → gray   (#95A5A6) - MDM configuration profiles
+    User           → orange (#E67E22) - local user accounts
 
   Edge severity:
     Attack edges (CAN_INJECT_INTO, CHILD_INHERITS_TCC) → red, thick
@@ -132,7 +132,7 @@ relationship {
   caption: type;
 }
 
-/* ── HAS_TCC_GRANT — TCC permission grant (red, medium) ──────────────────── */
+/* ── HAS_TCC_GRANT - TCC permission grant (red, medium) ──────────────────── */
 relationship.HAS_TCC_GRANT {
   color: #E74C3C;
   shaft-width: 3px;
@@ -141,7 +141,7 @@ relationship.HAS_TCC_GRANT {
   caption: type;
 }
 
-/* ── CAN_INJECT_INTO — code injection attack path (red, thick) ───────────── */
+/* ── CAN_INJECT_INTO - code injection attack path (red, thick) ───────────── */
 relationship.CAN_INJECT_INTO {
   color: #C0392B;
   shaft-width: 5px;
@@ -150,7 +150,7 @@ relationship.CAN_INJECT_INTO {
   caption: type;
 }
 
-/* ── CHILD_INHERITS_TCC — Electron TCC inheritance (red, thick) ─────────── */
+/* ── CHILD_INHERITS_TCC - Electron TCC inheritance (red, thick) ─────────── */
 relationship.CHILD_INHERITS_TCC {
   color: #C0392B;
   shaft-width: 4px;
@@ -159,7 +159,7 @@ relationship.CHILD_INHERITS_TCC {
   caption: type;
 }
 
-/* ── CAN_SEND_APPLE_EVENT — automation attack (orange, medium) ───────────── */
+/* ── CAN_SEND_APPLE_EVENT - automation attack (orange, medium) ───────────── */
 relationship.CAN_SEND_APPLE_EVENT {
   color: #E67E22;
   shaft-width: 3px;
@@ -168,7 +168,7 @@ relationship.CAN_SEND_APPLE_EVENT {
   caption: type;
 }
 
-/* ── HAS_ENTITLEMENT — entitlement ownership (amber, thin) ──────────────── */
+/* ── HAS_ENTITLEMENT - entitlement ownership (amber, thin) ──────────────── */
 relationship.HAS_ENTITLEMENT {
   color: #F39C12;
   shaft-width: 1px;
@@ -177,7 +177,7 @@ relationship.HAS_ENTITLEMENT {
   caption: type;
 }
 
-/* ── PERSISTS_VIA — persistence mechanism (purple) ──────────────────────── */
+/* ── PERSISTS_VIA - persistence mechanism (purple) ──────────────────────── */
 relationship.PERSISTS_VIA {
   color: #8E44AD;
   shaft-width: 2px;
@@ -186,7 +186,7 @@ relationship.PERSISTS_VIA {
   caption: type;
 }
 
-/* ── RUNS_AS — service/daemon running as user (purple, thin) ────────────── */
+/* ── RUNS_AS - service/daemon running as user (purple, thin) ────────────── */
 relationship.RUNS_AS {
   color: #9B59B6;
   shaft-width: 1px;
@@ -194,7 +194,7 @@ relationship.RUNS_AS {
   caption: type;
 }
 
-/* ── COMMUNICATES_WITH — XPC communication (green) ──────────────────────── */
+/* ── COMMUNICATES_WITH - XPC communication (green) ──────────────────────── */
 relationship.COMMUNICATES_WITH {
   color: #27AE60;
   shaft-width: 2px;
@@ -203,7 +203,7 @@ relationship.COMMUNICATES_WITH {
   caption: type;
 }
 
-/* ── CAN_READ_KEYCHAIN — keychain access (teal) ──────────────────────────── */
+/* ── CAN_READ_KEYCHAIN - keychain access (teal) ──────────────────────────── */
 relationship.CAN_READ_KEYCHAIN {
   color: #1ABC9C;
   shaft-width: 2px;
@@ -212,7 +212,7 @@ relationship.CAN_READ_KEYCHAIN {
   caption: type;
 }
 
-/* ── CONFIGURES — MDM configures TCC (gray) ──────────────────────────────── */
+/* ── CONFIGURES - MDM configures TCC (gray) ──────────────────────────────── */
 relationship.CONFIGURES {
   color: #95A5A6;
   shaft-width: 2px;
@@ -220,7 +220,7 @@ relationship.CONFIGURES {
   caption: type;
 }
 
-/* ── OWNS — user owns app (orange, thin) ─────────────────────────────────── */
+/* ── OWNS - user owns app (orange, thin) ─────────────────────────────────── */
 relationship.OWNS {
   color: #E67E22;
   shaft-width: 1px;
@@ -228,7 +228,7 @@ relationship.OWNS {
   caption: type;
 }
 
-/* ── SIGNED_BY — code signing relationship (blue, thin) ─────────────────── */
+/* ── SIGNED_BY - code signing relationship (blue, thin) ─────────────────── */
 relationship.SIGNED_BY {
   color: #5D6D7E;
   shaft-width: 1px;
@@ -236,7 +236,7 @@ relationship.SIGNED_BY {
   caption: type;
 }
 
-/* ── HAS_KEYCHAIN — user has keychain (teal, thin) ──────────────────────── */
+/* ── HAS_KEYCHAIN - user has keychain (teal, thin) ──────────────────────── */
 relationship.HAS_KEYCHAIN {
   color: #1ABC9C;
   shaft-width: 1px;

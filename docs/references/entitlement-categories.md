@@ -1,112 +1,121 @@
 # Entitlement Categories
 
-Rootstock classifies Apple entitlements into 8 categories based on their security impact.
-These categories drive the inference engine's risk scoring and attack path discovery.
+Rootstock classifies Apple entitlements into 8 categories for graph inference and
+risk scoring. A category is a model input, not proof that the corresponding
+capability can be exercised.
 
 ## Category Definitions
 
-### 1. `tcc` — TCC Override Entitlements
-Entitlements that grant or bypass Transparency, Consent, and Control (TCC) restrictions.
-These are the highest-impact entitlements — they can silently access protected resources.
+### 1. `tcc` - TCC Override Entitlements
+Entitlements associated with granting or bypassing Transparency, Consent, and
+Control (TCC) restrictions. The effective behavior depends on the entitlement
+value, signing identity, operating-system version, and runtime context.
 
-**Examples:**
-- `com.apple.private.tcc.allow` — bypass TCC for specific services
-- `com.apple.private.tcc.manager` — manage TCC database directly
-- `com.apple.private.tcc.allow.overridable` — overridable TCC bypass
+Examples:
+- `com.apple.private.tcc.allow` - bypass TCC for specific services
+- `com.apple.private.tcc.manager` - manage TCC database directly
+- `com.apple.private.tcc.allow.overridable` - overridable TCC bypass
 
-**Risk:** Apps with these entitlements can access camera, microphone, contacts, etc.
-without user consent prompts. If injectable, an attacker inherits this access.
+Interpretation: Review apps with these entitlements against their expected
+signing and TCC behavior. If the graph also contains an injection relationship,
+validate capability inheritance separately.
 
-### 2. `injection` — Code Injection Surface
-Entitlements that weaken code signing protections, enabling code injection attacks.
+### 2. `injection` - Code Injection Surface
+Entitlements that alter code-signing or executable-memory protections.
 
-**Examples:**
-- `com.apple.security.cs.allow-dyld-environment-variables` — allows DYLD_INSERT_LIBRARIES
-- `com.apple.security.cs.disable-library-validation` — loads unsigned dylibs
-- `com.apple.security.cs.allow-unsigned-executable-memory` — JIT/unsigned code execution
-- `com.apple.security.cs.allow-jit` — just-in-time compilation
+Examples:
+- `com.apple.security.cs.allow-dyld-environment-variables` - allows DYLD_INSERT_LIBRARIES
+- `com.apple.security.cs.disable-library-validation` - loads unsigned dylibs
+- `com.apple.security.cs.allow-unsigned-executable-memory` - JIT/unsigned code execution
+- `com.apple.security.cs.allow-jit` - just-in-time compilation
 
-**Risk:** An injectable app with TCC grants creates a privilege escalation path.
-The injection entitlement is the enabler; the TCC grant is the payload.
+Interpretation: A matching entitlement combined with TCC grants creates a
+modeled path for review. Reproduce the process-loading and permission behavior
+before treating the path as exploitable.
 
-### 3. `privilege` — Privilege Escalation
+### 3. `privilege` - Privilege Escalation
 Entitlements that grant elevated system privileges beyond normal app capabilities.
 
-**Examples:**
-- `com.apple.rootless.install` — modify SIP-protected locations
-- `com.apple.security.cs.debugger` — attach debugger to other processes
-- `com.apple.private.security.clear-library-validation` — clear library validation for targets
-- `com.apple.rootless.storage.TCC` — direct TCC database access
+Examples:
+- `com.apple.rootless.install` - modify SIP-protected locations
+- `com.apple.security.cs.debugger` - attach debugger to other processes
+- `com.apple.private.security.clear-library-validation` - clear library validation for targets
+- `com.apple.rootless.storage.TCC` - direct TCC database access
 
-**Risk:** These entitlements can escalate from app-level to system-level access.
+Interpretation: These entitlements identify system-level capabilities to
+validate against the app's signing identity and runtime behavior.
 
-### 4. `sandbox` — Sandbox Configuration
+### 4. `sandbox` - Sandbox Configuration
 Entitlements related to App Sandbox configuration and exceptions.
 
-**Examples:**
-- `com.apple.security.app-sandbox` — declares the app is sandboxed
-- `com.apple.security.temporary-exception.*` — sandbox escape exceptions
-- `com.apple.security.files.user-selected.read-write` — user-selected file access
+Examples:
+- `com.apple.security.app-sandbox` - declares the app is sandboxed
+- `com.apple.security.temporary-exception.*` - sandbox escape exceptions
+- `com.apple.security.files.user-selected.read-write` - user-selected file access
 
-**Risk:** Sandbox exceptions weaken containment. An app with broad file access
-exceptions combined with injection vectors exposes more of the filesystem.
+Interpretation: Review sandbox exceptions against the app's expected function.
+Effective access depends on the resolved profile, entitlement values, and
+user-selected resources.
 
-### 5. `keychain` — Keychain Access
+### 5. `keychain` - Keychain Access
 Entitlements controlling access to Keychain items and groups.
 
-**Examples:**
-- `keychain-access-groups` — which Keychain access groups the app can read
-- `com.apple.keychain.access-groups` — alternative keychain group entitlement
+Examples:
+- `keychain-access-groups` - declared Keychain access-group identifiers
+- `com.apple.keychain.access-groups` - alternative keychain group entitlement
 
-**Risk:** Apps sharing a Keychain access group can read each other's stored
-credentials. An injectable app in a sensitive group exposes all group secrets.
+Interpretation: A shared access-group identifier is a candidate relationship.
+Validate item ACLs, access-control flags, signing identity, user presence, and
+process behavior before concluding that an item can be read.
 
-### 6. `network` — Network Capabilities
+### 6. `network` - Network Capabilities
 Entitlements granting network-related privileges.
 
-**Examples:**
-- `com.apple.developer.networking.vpn.api` — VPN tunnel creation
-- `com.apple.developer.networking.networkextension` — network extension framework
-- `com.apple.security.network.client` — outbound network access (sandbox)
-- `com.apple.security.network.server` — inbound network access (sandbox)
+Examples:
+- `com.apple.developer.networking.vpn.api` - VPN tunnel creation
+- `com.apple.developer.networking.networkextension` - network extension framework
+- `com.apple.security.network.client` - outbound network access (sandbox)
+- `com.apple.security.network.server` - inbound network access (sandbox)
 
-**Risk:** Network entitlements enable data exfiltration paths and network-level attacks.
+Interpretation: Network entitlements identify available framework capabilities.
+They do not prove that a network extension is installed, active, or authorized.
 
-### 7. `icloud` — iCloud Integration
+### 7. `icloud` - iCloud Integration
 Entitlements enabling iCloud data sync and storage.
 
-**Examples:**
-- `com.apple.developer.icloud-container-identifiers` — iCloud container access
-- `com.apple.developer.icloud-services` — iCloud service types (CloudKit, etc.)
-- `com.apple.developer.ubiquity-container-identifiers` — ubiquity container sync
+Examples:
+- `com.apple.developer.icloud-container-identifiers` - iCloud container access
+- `com.apple.developer.icloud-services` - iCloud service types (CloudKit, etc.)
+- `com.apple.developer.ubiquity-container-identifiers` - ubiquity container sync
 
-**Risk:** Injectable apps with iCloud entitlements can exfiltrate data via iCloud
-sync to all devices enrolled in the same Apple ID — a cross-device data leak.
+Interpretation: iCloud entitlements identify configured container capabilities.
+Validate the container identifiers, account state, sync settings, data access,
+and process behavior before drawing a cross-device conclusion.
 
-### 8. `other` — Uncategorised
+### 8. `other` - Uncategorised
 Entitlements that don't fit the above categories. These are typically low-risk
 or informational (e.g., app group identifiers, associated domains).
 
-**Examples:**
-- `com.apple.developer.associated-domains` — universal links
-- `com.apple.developer.team-identifier` — team ID declaration
-- `com.apple.security.application-groups` — app group containers
+Examples:
+- `com.apple.developer.associated-domains` - universal links
+- `com.apple.developer.team-identifier` - team ID declaration
+- `com.apple.security.application-groups` - app group containers
 
-**Risk:** Generally low, but context-dependent.
+Risk: Generally low, but context-dependent.
 
 ## How Categories Are Used
 
-1. **Risk Scoring** (`infer_risk_score.py`): Each category contributes a weighted
+1. Risk Scoring (`infer_risk_score.py`): Each category contributes a weighted
    factor to the app's composite risk score. `tcc` and `injection` entitlements
    have the highest weights.
 
-2. **CVE Matching** (`import_vulnerabilities.py`): CVE categories map to entitlement
+2. CVE Matching (`import_vulnerabilities.py`): CVE categories map to entitlement
    categories for vulnerability correlation.
 
-3. **Report Generation** (`report_assembly.py`): Recommendations are grouped by
+3. Report assembly (`report_assembly.py`): Recommendations are grouped by
    entitlement category.
 
-4. **Graph Model** (`models.py`): The `EntitlementData.category` field uses these
+4. Graph Model (`models.py`): The `EntitlementData.category` field uses these
    categories as a Literal type enum.
 
 ## Classification Logic

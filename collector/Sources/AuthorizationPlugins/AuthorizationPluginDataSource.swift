@@ -21,33 +21,51 @@ public struct AuthorizationPluginDataSource: DataSource {
         }
 
         var plugins: [AuthorizationPlugin] = []
+        var errors: [CollectionError] = []
         for item in contents where item.hasSuffix(".bundle") {
             let bundlePath = (Self.pluginDir as NSString).appendingPathComponent(item)
             let pluginName = (item as NSString).deletingPathExtension
-            let teamId = extractTeamId(at: bundlePath)
+            let teamIDResult = extractTeamId(at: bundlePath)
+            if let error = teamIDResult.error {
+                errors.append(error)
+            }
 
             plugins.append(AuthorizationPlugin(
                 name: pluginName,
                 path: bundlePath,
-                teamId: teamId
+                teamId: teamIDResult.teamID
             ))
         }
 
-        return DataSourceResult(nodes: plugins, errors: [])
+        return DataSourceResult(nodes: plugins, errors: errors)
     }
 
     /// Extract TeamIdentifier from codesign verbose output (written to stderr).
-    private func extractTeamId(at path: String) -> String? {
-        guard let output = Shell.runStderr("/usr/bin/codesign", ["-d", "--verbose=2", path]) else {
-            return nil
+    private func extractTeamId(
+        at path: String
+    ) -> (teamID: String?, error: CollectionError?) {
+        let outcome = Shell.execute("/usr/bin/codesign", ["-d", "--verbose=2", path])
+        let result: ShellResult
+        switch outcome {
+        case .success(let successfulResult):
+            result = successfulResult
+        case .nonZeroExit:
+            return (nil, nil)
+        case .admissionTimedOut, .launchFailed, .executionTimedOut:
+            return (nil, CollectionError(
+                source: name,
+                message: "Team identifier unknown for \(path): \(outcome.failureDescription ?? "command failure")",
+                recoverable: true
+            ))
         }
+        let output = result.stderr
         for line in output.split(separator: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.hasPrefix("TeamIdentifier=") {
                 let value = String(trimmed.dropFirst("TeamIdentifier=".count))
-                return value == "not set" ? nil : value
+                return (value == "not set" ? nil : value, nil)
             }
         }
-        return nil
+        return (nil, nil)
     }
 }

@@ -1,0 +1,12 @@
+id: sample.emond_tmp_payload
+title: Emond rule executing from /tmp
+severity: high
+description: Event Monitor Daemon rule points at a /tmp payload (T1546.014).
+attack_techniques:
+  - T1546.014
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.kind: "emond"
+    persistence.command: "/tmp/"
+fixture: emond_tmp_payload.jsonl

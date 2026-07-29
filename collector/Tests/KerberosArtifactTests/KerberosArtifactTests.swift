@@ -59,19 +59,7 @@ final class KerberosArtifactTests: XCTestCase {
     }
 
     func testConfigRoundtrip() throws {
-        let artifact = KerberosArtifact(
-            path: "/etc/krb5.conf",
-            artifactType: .config,
-            metadata: KerberosArtifact.FileMetadata(
-                owner: "root",
-                group: "wheel",
-                mode: "644"
-            ),
-            readability: KerberosArtifact.Readability(
-                isReadable: true,
-                isWorldReadable: true
-            )
-        )
+        let artifact = sampleConfigurationArtifact()
         let data = try JSONEncoder().encode(artifact)
         let decoded = try JSONDecoder().decode(KerberosArtifact.self, from: data)
 
@@ -129,6 +117,15 @@ final class KerberosArtifactTests: XCTestCase {
         XCTAssertEqual(decoded.realmNames?.count, 2)
         XCTAssertTrue(decoded.isForwardable ?? false)
         XCTAssertTrue(decoded.isGroupReadable)
+    }
+
+    private func sampleConfigurationArtifact() -> KerberosArtifact {
+        KerberosArtifact(
+            path: "/etc/krb5.conf",
+            artifactType: .config,
+            metadata: KerberosArtifact.FileMetadata(owner: "root", group: "wheel", mode: "644"),
+            readability: KerberosArtifact.Readability(isReadable: true, isWorldReadable: true)
+        )
     }
 
     func testConfigFieldsCodingKeys() throws {

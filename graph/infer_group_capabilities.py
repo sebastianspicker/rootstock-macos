@@ -1,5 +1,5 @@
 """
-infer_group_capabilities.py — Infer capability edges from group membership.
+infer_group_capabilities.py - Infer capability edges from group membership.
 
 Certain macOS local groups grant implicit capabilities:
   - _developer: enables debugger attachment (task_for_pid) to any process

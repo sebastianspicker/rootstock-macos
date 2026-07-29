@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/Users/alice/.oh-my-zsh",
+      "name": "shell",
+      "risk_tags": "shell_plugin_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "Shell plugin manager dual-use markers \u2014 never installs oh-my-zsh plugins or rewrites shell init for persistence"
+    }
+  ]
+}

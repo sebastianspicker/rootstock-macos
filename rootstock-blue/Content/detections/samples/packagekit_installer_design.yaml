@@ -1,0 +1,11 @@
+id: sample.packagekit_installer_design
+title: PackageKit installer design surface present
+severity: high
+description: PackageKit design-surface markers (services/receipts/plugins) indicate installer design-based persistence IR surface.
+attack_techniques:
+  - T1546
+match:
+  event_type: packagekit.design
+  field_contains:
+    packagekit.risk_tags: "design_surface"
+fixture: packagekit_installer_design.jsonl

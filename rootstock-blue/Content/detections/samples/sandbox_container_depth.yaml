@@ -1,0 +1,13 @@
+id: sample.sandbox_container_depth
+title: App sandbox container residual depth surface present
+severity: high
+description: Sandbox container depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1611
+  - T1083
+  - T1005
+match:
+  event_type: sandbox.container
+  field_contains:
+    sbxctr.risk_tags: "sandbox_surface"
+fixture: sandbox_container_depth.jsonl

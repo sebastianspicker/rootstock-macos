@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# create_fixtures.sh — Build minimal fixture .app bundles for Rootstock tests.
+# create_fixtures.sh - Build minimal fixture .app bundles for Rootstock tests.
 #
 # Requirements: macOS with Xcode Command Line Tools (codesign).
 # All apps use ad-hoc signing (codesign --sign -) since no developer cert is needed.
@@ -51,7 +51,7 @@ mkdir -p "$APP/Contents/MacOS"
 make_plist "com.rootstock.test.hardened" "HardenedApp" > "$APP/Contents/Info.plist"
 make_binary "$APP/Contents/MacOS/HardenedApp"
 codesign --sign - --options runtime --force "$APP"
-echo "  HardenedApp.app     — hardened runtime (ad-hoc signed)"
+echo "  HardenedApp.app - hardened runtime (ad-hoc signed)"
 
 # ── UnhardenedApp.app ────────────────────────────────────────────────────────
 APP="$SCRIPT_DIR/UnhardenedApp.app"
@@ -60,7 +60,7 @@ mkdir -p "$APP/Contents/MacOS"
 make_plist "com.rootstock.test.unhardened" "UnhardenedApp" > "$APP/Contents/Info.plist"
 make_binary "$APP/Contents/MacOS/UnhardenedApp"
 codesign --sign - --force "$APP"
-echo "  UnhardenedApp.app   — no hardened runtime (ad-hoc signed)"
+echo "  UnhardenedApp.app - no hardened runtime (ad-hoc signed)"
 
 # ── ElectronApp.app ──────────────────────────────────────────────────────────
 APP="$SCRIPT_DIR/ElectronApp.app"
@@ -71,7 +71,7 @@ make_plist "com.rootstock.test.electron" "ElectronApp" > "$APP/Contents/Info.pli
 make_binary "$APP/Contents/MacOS/ElectronApp"
 # Electron detection uses the presence of "Electron Framework.framework" dir, not signing
 codesign --sign - --force "$APP/Contents/MacOS/ElectronApp" 2>/dev/null || true
-echo "  ElectronApp.app     — Electron Framework present (ad-hoc signed binary)"
+echo "  ElectronApp.app - Electron Framework present (ad-hoc signed binary)"
 
 # ── UnsignedApp.app ──────────────────────────────────────────────────────────
 APP="$SCRIPT_DIR/UnsignedApp.app"
@@ -80,7 +80,7 @@ mkdir -p "$APP/Contents/MacOS"
 make_plist "com.rootstock.test.unsigned" "UnsignedApp" > "$APP/Contents/Info.plist"
 make_binary "$APP/Contents/MacOS/UnsignedApp"
 # Deliberately NOT calling codesign
-echo "  UnsignedApp.app     — no code signature"
+echo "  UnsignedApp.app - no code signature"
 
 # ── WithEntitlements.app ─────────────────────────────────────────────────────
 APP="$SCRIPT_DIR/WithEntitlements.app"
@@ -106,7 +106,7 @@ cat > /tmp/rootstock-test-entitlements.plist <<'ENTITLEMENTS'
 ENTITLEMENTS
 
 codesign --sign - --entitlements /tmp/rootstock-test-entitlements.plist --force "$APP"
-echo "  WithEntitlements.app — allow-dyld-environment-variables + disable-library-validation"
+echo "  WithEntitlements.app - allow-dyld-environment-variables + disable-library-validation"
 
 echo ""
 echo "All fixture apps created in $SCRIPT_DIR"

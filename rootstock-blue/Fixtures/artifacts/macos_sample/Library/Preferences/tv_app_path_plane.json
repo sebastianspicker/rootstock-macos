@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Applications/TV.app",
+      "name": "tv",
+      "risk_tags": "tv_surface,wave16,dual_use",
+      "user": "alice",
+      "timestamp": "2026-08-01T12:00:00Z",
+      "notes": "TV.app path plane markers \u2014 never dumps TV.app media caches or account material"
+    }
+  ]
+}

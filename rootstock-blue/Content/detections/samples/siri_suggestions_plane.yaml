@@ -1,0 +1,13 @@
+id: sample.siri_suggestions_plane
+title: Siri / Suggestions data-access residual surface present
+severity: high
+description: Siri Suggestions residual markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1213
+match:
+  event_type: siri.suggestions
+  field_contains:
+    sirisug.risk_tags: "siri_surface"
+fixture: siri_suggestions_plane.jsonl

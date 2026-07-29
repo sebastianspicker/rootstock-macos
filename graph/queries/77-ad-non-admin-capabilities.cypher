@@ -1,5 +1,5 @@
 // Name: AD Users in Non-Admin Capability Groups
-// Purpose: AD users who gained membership in capability-granting groups (e.g. _developer, wheel) via AD — each group grants distinct escalation paths
+// Purpose: AD users who gained membership in capability-granting groups (e.g. _developer, wheel) via AD - each group grants distinct escalation paths
 // Note: CAN_DEBUG edges require infer_group_capabilities.py to have run first (pipeline default)
 // Category: Red Team
 // Severity: High

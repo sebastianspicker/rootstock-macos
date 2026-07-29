@@ -1,5 +1,5 @@
 // Name: Physical Security Overview
-// Purpose: Complete physical posture inventory per host with all BT devices and posture properties
+// Purpose: List imported host posture and paired Bluetooth-device metadata
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none

@@ -1,0 +1,11 @@
+id: sample.cloudsync_exfil_provider
+title: Third-party cloud sync provider enabled
+severity: medium
+description: Dropbox/OneDrive/GDrive/Box-class sync enabled - bulk exfil surface beyond iCloud.
+attack_techniques:
+  - T1567.002
+match:
+  event_type: cloud.provider_sync
+  field_contains:
+    cloud.risk_tags: "exfil_capable"
+fixture: cloudsync_exfil_provider.jsonl

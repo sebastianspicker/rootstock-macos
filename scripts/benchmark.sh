@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# benchmark.sh — Measure RootstockCLI performance across 3 runs.
+# benchmark.sh - Measure RootstockCLI performance across 3 runs.
 #
 # Usage:
 #   cd collector
@@ -98,13 +98,13 @@ MACOS=$(sw_vers -productVersion)
 
 {
 	echo ""
-	echo "## Run on ${DATE} — ${HOSTNAME} (macOS ${MACOS})"
+	echo "## Run on ${DATE} - ${HOSTNAME} (macOS ${MACOS})"
 	echo ""
 	echo "| Metric | Run 1 | Run 2 | Run 3 | Average |"
 	echo "|---|---|---|---|---|"
 	echo "| Total time (s)   | ${WALLS[0]} | ${WALLS[1]} | ${WALLS[2]} | ${AVG} |"
-	echo "| Apps scanned     | ${APPS[0]} | ${APPS[1]} | ${APPS[2]} | — |"
-	echo "| TCC grants       | ${GRANTS[0]} | ${GRANTS[1]} | ${GRANTS[2]} | — |"
+	echo "| Apps scanned     | ${APPS[0]} | ${APPS[1]} | ${APPS[2]} | - |"
+	echo "| TCC grants       | ${GRANTS[0]} | ${GRANTS[1]} | ${GRANTS[2]} | - |"
 	echo "| JSON size (KB)   | ${SIZES[0]} | ${SIZES[1]} | ${SIZES[2]} | ${AVG_SIZE} |"
 } >>"$BENCHMARK_OUTPUT"
 

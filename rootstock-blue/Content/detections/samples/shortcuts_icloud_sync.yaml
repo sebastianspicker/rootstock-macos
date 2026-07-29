@@ -1,0 +1,13 @@
+id: sample.shortcuts_icloud_sync
+title: Shortcuts iCloud sync residual depth surface present
+severity: high
+description: Shortcuts iCloud sync markers indicate IR surface.
+attack_techniques:
+  - T1059
+  - T1530
+  - T1083
+match:
+  event_type: shortcuts.icloud
+  field_contains:
+    scicloud.risk_tags: "shortcuts_icloud_surface"
+fixture: shortcuts_icloud_sync.jsonl

@@ -1,10 +1,10 @@
-// Name: Keychain Crown Jewels — High-Sensitivity Items
+// Name: Keychain Crown Jewels - High-Sensitivity Items
 // Purpose: Identify high-sensitivity keychain items (SSH keys, certificates) and who can access them
 // Category: Blue Team
 // Severity: High
 // Parameters: none
 // Prerequisites: import_scan.py must have run
-// Forensic: Prioritize keychain items by sensitivity tier — SSH keys and certificates are higher value than saved passwords
+// Forensic: Prioritize keychain items by sensitivity tier - SSH keys and certificates are higher value than saved passwords
 // CVE: CVE-2024-44204
 // ATT&CK: T1555.001
 

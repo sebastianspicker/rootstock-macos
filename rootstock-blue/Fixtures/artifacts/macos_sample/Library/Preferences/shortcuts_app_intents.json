@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "shortcut_name": "Lab Automation",
+      "path": "/Users/alice/Library/Shortcuts/Shortcuts.sqlite",
+      "automation_surface": true,
+      "runs_shell": true,
+      "scripting": true,
+      "remote_adjacent": true,
+      "risk_tags": "automation_surface,scripting_action,remote_adjacent",
+      "notes": "Shortcuts/App Intents path markers - never executes automations",
+      "user": "alice",
+      "timestamp": "2026-04-01T12:15:00Z"
+    },
+    {
+      "shortcut_name": "App Intents framework",
+      "path": "/System/Library/Frameworks/AppIntents.framework",
+      "automation_surface": true,
+      "risk_tags": "automation_surface",
+      "user": "alice",
+      "timestamp": "2026-04-01T12:15:00Z"
+    }
+  ]
+}

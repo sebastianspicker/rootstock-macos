@@ -1,0 +1,13 @@
+id: sample.keychain_acl_path
+title: Keychain ACL path residual surface surface present
+severity: high
+description: Keychain ACL path plane markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1555.001
+  - T1555
+  - T1003
+match:
+  event_type: keychain.acl_path
+  field_contains:
+    kcacl.risk_tags: "keychain_acl_surface"
+fixture: keychain_acl_path.jsonl

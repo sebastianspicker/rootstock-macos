@@ -1,15 +1,14 @@
-// Name: TCC Database Write Path (Complete TCC Takeover)
-// Purpose: Find apps with Full Disk Access that are injectable — granting write access to TCC.db
+// Name: TCC Database Write Preconditions
+// Purpose: Find FDA and injection relationships that warrant TCC database validation
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
 // Prerequisites: import_scan.py + infer.py must have run
 //
-// Attack: Inject injectable FDA app → write /Library/Application Support/com.apple.TCC/TCC.db
-//         → grant arbitrary TCC permissions to any app → full TCC takeover
+// Attack model: injection relationship → FDA app → TCC database candidate
 //
-// Note: Full Disk Access includes write access to TCC.db when SIP is disabled or
-// when the process is running as root. This query identifies the highest-value targets.
+// A result does not establish write access. Validate SIP, process identity,
+// authorization, database location, and current macOS behavior.
 
 MATCH (app:Application)
       -[:HAS_TCC_GRANT {allowed: true}]->

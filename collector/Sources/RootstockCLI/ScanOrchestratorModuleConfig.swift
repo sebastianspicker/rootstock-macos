@@ -1,6 +1,7 @@
 import Foundation
 
-enum RootstockModuleID: String, CaseIterable {
+/// Canonical command-line identifiers used for selection and collector dispatch.
+enum RootstockModuleID: String, CaseIterable, Sendable {
     case tcc
     case entitlements
     case codeSigning = "codesigning"
@@ -41,7 +42,11 @@ enum RootstockModuleConfigError: Error, CustomStringConvertible {
 }
 
 extension ScanOrchestrator {
-    struct ModuleConfig {
+    /// Normalized module selection with prerequisite validation.
+    ///
+    /// Sandbox and quarantine are application enrichments, so they require the
+    /// entitlement discovery pass that supplies their application snapshot.
+    struct ModuleConfig: Sendable {
         private let selectedModules: Set<RootstockModuleID>
 
         static let moduleNames = RootstockModuleID.allCases.map(\.rawValue)
@@ -56,7 +61,7 @@ extension ScanOrchestrator {
             selectedModules.contains(module)
         }
 
-        /// Parse a comma-separated module string or "all".
+        /// Parses, deduplicates, and validates a comma-separated list or `all`.
         static func from(_ moduleString: String) throws -> ModuleConfig {
             let parts = Set(
                 moduleString

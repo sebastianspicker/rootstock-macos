@@ -1,0 +1,13 @@
+id: sample.cups_print_dualuse
+title: CUPS / printer dual-use residual surface surface present
+severity: high
+description: CUPS printer dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1040
+  - T1071
+  - T1204
+match:
+  event_type: cups.print
+  field_contains:
+    cups.risk_tags: "print_surface"
+fixture: cups_print_dualuse.jsonl

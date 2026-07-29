@@ -1,0 +1,63 @@
+name: forensic-triage
+description: Post-incident offline forensics pack (host state + browser + PoL/MRU + access surface)
+requires_fda: true
+requires_es: false
+artifacts:
+  - tcc
+  - quarantine
+  - autostart
+  - btm
+  - cron
+  - loginitems
+  - users
+  - safari
+  - chromium
+  - knowledgec
+  - biome
+  - recentitems
+  - xprotect
+  - basicinfo
+  - installhistory
+  - dock
+  - wifi
+  - configprofiles
+  - ssh
+  - security_posture
+  - alf
+  - systemextensions
+  - utmpx
+  - gatekeeper
+  - netlocation
+  - browser_extensions
+  - shell_profiles
+  - emond
+  - sudoers
+  - launchd_overrides
+  - privhelpers
+  - folder_actions
+  - login_hooks
+  - software_update
+  - file_sharing
+  - auth_plugins
+  - netusage
+  - usb_history
+  - keychain_meta
+  - codesign
+  - ard
+  - spotlight
+  - trash
+  - doc_revisions
+  - saved_state
+  - firefox
+  - notifications
+  - quicklook
+  - screentime
+  - icloud
+  - cookies
+  - bookmarks
+  - office_mru
+  - print_jobs
+  - notes
+  - idevice_backup
+  - msrdc
+  - cloud_sync

@@ -1,5 +1,5 @@
 """
-models.py — Pydantic v2 models mirroring the Rootstock collector JSON schema.
+models.py - Pydantic v2 models mirroring the Rootstock collector JSON schema.
 
 These models validate scan output early and provide typed access throughout
 the importer pipeline. They intentionally mirror `collector/schema/scan-result.schema.json`.
@@ -38,6 +38,10 @@ InjectionMethod = Literal[
     "missing_library_validation",
     "electron_env_var",
 ]
+
+PostureFlag = bool | None
+PostureDelay = int | None
+PostureLevel = str | None
 
 
 class CertificateDetailData(BaseModel):
@@ -347,6 +351,8 @@ class ComputerData(BaseModel):
 
 
 class ScanResult(BaseModel):
+    """Strict collector-to-graph payload; unknown fields fail instead of drifting."""
+
     model_config = ConfigDict(extra="forbid")
 
     scan_id: str = Field(min_length=1)
@@ -376,21 +382,21 @@ class ScanResult(BaseModel):
     ad_binding: ADBindingData | None = None
     kerberos_artifacts: list[KerberosArtifactData] = Field(default_factory=list)
     sandbox_profiles: list[SandboxProfileData] = Field(default_factory=list)
-    gatekeeper_enabled: bool | None = None
-    sip_enabled: bool | None = None
-    filevault_enabled: bool | None = None
-    lockdown_mode_enabled: bool | None = None
-    bluetooth_enabled: bool | None = None
-    bluetooth_discoverable: bool | None = None
-    screen_lock_enabled: bool | None = None
-    screen_lock_delay: int | None = None
-    display_sleep_timeout: int | None = None
-    thunderbolt_security_level: str | None = None
-    secure_boot_level: str | None = None
-    external_boot_allowed: bool | None = None
-    icloud_signed_in: bool | None = None
-    icloud_drive_enabled: bool | None = None
-    icloud_keychain_enabled: bool | None = None
+    gatekeeper_enabled: PostureFlag = None
+    sip_enabled: PostureFlag = None
+    filevault_enabled: PostureFlag = None
+    lockdown_mode_enabled: PostureFlag = None
+    bluetooth_enabled: PostureFlag = None
+    bluetooth_discoverable: PostureFlag = None
+    screen_lock_enabled: PostureFlag = None
+    screen_lock_delay: PostureDelay = None
+    display_sleep_timeout: PostureDelay = None
+    thunderbolt_security_level: PostureLevel = None
+    secure_boot_level: PostureLevel = None
+    external_boot_allowed: PostureFlag = None
+    icloud_signed_in: PostureFlag = None
+    icloud_drive_enabled: PostureFlag = None
+    icloud_keychain_enabled: PostureFlag = None
     errors: list[CollectionErrorData] = Field(default_factory=list)
 
     @model_validator(mode="after")
@@ -404,7 +410,7 @@ class ScanResult(BaseModel):
             app_key = (app.bundle_id, app.path)
             if app_key in seen:
                 _logger.warning(
-                    "Duplicate bundle_id/path '%s' at '%s' — keeping first occurrence",
+                    "Duplicate bundle_id/path '%s' at '%s' - keeping first occurrence",
                     app.bundle_id,
                     app.path,
                 )

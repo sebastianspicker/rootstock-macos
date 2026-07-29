@@ -1,0 +1,11 @@
+id: sample.dock_recent_tmp
+title: Dock recent app under /tmp
+severity: medium
+description: Recent Dock item path under /tmp (suspicious transient binary).
+attack_techniques:
+  - T1204.002
+match:
+  event_type: mru.app
+  field_contains:
+    dock.path: "/tmp/"
+fixture: dock_recent_tmp.jsonl

@@ -31,12 +31,7 @@ struct CronParser {
 
     /// Parse /etc/crontab and report existing unreadable files.
     func parseSystemCrontab(at path: String = "/etc/crontab", errors: inout [String]) -> [CronEntry] {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: path) else { return [] }
-        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
-            errors.append("Cannot read system crontab: \(path)")
-            return []
-        }
+        guard let text = readCrontab(at: path, errors: &errors, kind: "system") else { return [] }
         return parseLines(text, filePath: path, hasUserField: true, defaultUser: "root")
     }
 
@@ -48,13 +43,18 @@ struct CronParser {
 
     /// Parse a user crontab and report existing unreadable files.
     func parseUserCrontab(at path: String, username: String, errors: inout [String]) -> [CronEntry] {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: path) else { return [] }
-        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
-            errors.append("Cannot read user crontab: \(path)")
-            return []
-        }
+        guard let text = readCrontab(at: path, errors: &errors, kind: "user") else { return [] }
         return parseLines(text, filePath: path, hasUserField: false, defaultUser: username)
+    }
+
+    private func readCrontab(at path: String, errors: inout [String], kind: String) -> String? {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: path) else { return nil }
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
+            errors.append("Cannot read \(kind) crontab: \(path)")
+            return nil
+        }
+        return text
     }
 
     /// Enumerate and parse all accessible user crontabs under /var/at/tabs/.

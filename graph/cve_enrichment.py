@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cve_enrichment.py — Live EPSS + CISA KEV enrichment for Rootstock CVE data.
+cve_enrichment.py - Live EPSS + CISA KEV enrichment for Rootstock CVE data.
 
 Fetches exploitation probability (EPSS) and Known Exploited Vulnerabilities (KEV)
 data from public APIs, caches locally, and enriches the static CVE registry with

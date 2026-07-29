@@ -1,0 +1,12 @@
+id: sample.ir_firewall_disabled
+title: Application firewall reported disabled
+severity: high
+description: IR posture reports macOS application firewall disabled (defense impairment).
+attack_techniques:
+  - T1562.004
+match:
+  event_type: ir.posture.protection
+  field_equals:
+    protection.name: Firewall
+    protection.enabled: "false"
+fixture: ir_firewall_disabled.jsonl

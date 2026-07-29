@@ -2,12 +2,12 @@ name: Tests
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths-ignore:
       - "docs/archive/**"
       - "docs/private/**"
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths-ignore:
       - "docs/archive/**"
       - "docs/private/**"
@@ -16,20 +16,97 @@ permissions:
   contents: read
 
 jobs:
+  release-surface:
+    name: Release Surface
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Validate tracked public alpha surface
+        run: python3 scripts/check-release.py --require-clean
+
   swift-tests:
     name: Swift Tests
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Verify Swift 6.3 toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          swift --version | grep -F "Apple Swift version 6.3"
       - name: Build fixture apps
         run: bash tests/fixtures/apps/create_fixtures.sh
+      - name: swift build
+        working-directory: collector
+        run: >-
+          swift build
+          -Xswiftc -strict-concurrency=complete
+          -Xswiftc -warnings-as-errors
       - name: swift test
         working-directory: collector
         timeout-minutes: 55
-        run: swift test --parallel
+        run: >-
+          swift test --parallel
+          -Xswiftc -strict-concurrency=complete
+          -Xswiftc -warnings-as-errors
+      - name: Benchmark script contract
+        run: bash tests/scripts/test_benchmark.sh
+
+  product-family-swift-tests:
+    name: Product Family Swift Tests
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Verify Swift 6.3 toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          swift --version | grep -F "Apple Swift version 6.3"
+      - name: Build and test RootstockMacFacts
+        working-directory: packages/RootstockMacFacts
+        run: |
+          swift build
+          swift test
+      - name: Build and test rootstock-red
+        working-directory: rootstock-red
+        run: |
+          swift build --product rootstock-red
+          swift test
+      - name: Smoke test rootstock-red assess safety
+        working-directory: rootstock-red
+        run: |
+          swift run rootstock-red version
+          swift run rootstock-red list collectors
+          swift run rootstock-red audit --profile quick --format json --output /tmp/rootstock-red-findings.json
+          test -s /tmp/rootstock-red-findings.json
+          if swift run rootstock-red lab persist install; then
+            echo "rootstock-red lab action must fail closed" >&2
+            exit 1
+          fi
+      - name: Build and test rootstock-blue
+        working-directory: rootstock-blue
+        run: |
+          swift build --product rootstock-blue
+          swift test
+      - name: Validate rootstock-blue content and non-goals
+        working-directory: rootstock-blue
+        run: |
+          make content-validate
+          make check-non-goals
+      - name: Smoke test rootstock-blue case workflow
+        working-directory: rootstock-blue
+        run: |
+          .build/debug/rootstock-blue version
+          .build/debug/rootstock-blue case create /tmp/rootstock-blue-ci-demo.rsbcase
+          .build/debug/rootstock-blue case verify /tmp/rootstock-blue-ci-demo.rsbcase
+          .build/debug/rootstock-blue detect run --ruleset samples --content-root Content
 
   python-tests:
     name: Python Tests
@@ -48,20 +125,19 @@ jobs:
           --health-timeout 10s
           --health-retries 12
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          version: "0.11.12"
           python-version: "3.11"
-          cache: pip
+          enable-cache: true
+          working-directory: graph
       - name: Install dependencies
         working-directory: graph
-        run: pip install -r requirements.txt pytest
+        run: uv sync --locked --all-extras
       - name: Validate demo scan contract
-        run: python3 scripts/validate-scan.py examples/demo-scan.json
-      - name: Viewer performance contract
-        working-directory: graph
-        run: timeout 30s node tests/viewer_performance.js
+        run: uv run --project graph --locked python scripts/validate-scan.py examples/demo-scan.json
       - name: pytest graph required Neo4j lane
         working-directory: graph
         env:
@@ -69,61 +145,110 @@ jobs:
           NEO4J_USER: neo4j
           NEO4J_AUTH: none
           ROOTSTOCK_REQUIRE_NEO4J: "1"
-        run: pytest tests/ -v --tb=short
+        run: uv run --locked pytest tests/ -v --tb=short
       - name: graph pipeline smoke with Neo4j
         env:
           NEO4J_URI: bolt://localhost:7687
           NEO4J_USER: neo4j
           NEO4J_AUTH: none
-        run: bash tests/integration/test_full_pipeline.sh
+        run: uv run --project graph --locked bash tests/integration/test_full_pipeline.sh
 
   python-lint:
     name: Python Lint
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          version: "0.11.12"
           python-version: "3.11"
-      - name: Install ruff
-        run: pip install ruff
+          enable-cache: true
+          working-directory: graph
+      - name: Install dependencies
+        working-directory: graph
+        run: uv sync --locked --all-extras
       - name: ruff check
-        run: ruff check graph/ scripts/ examples/ docs/ --exclude docs/archive --exclude docs/private
+        run: uv run --project graph --locked ruff check graph/ scripts/ examples/ docs/ --exclude docs/archive --exclude docs/private
+
+  browser-tests:
+    name: Browser Viewer Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.17.0 --ignore-scripts
+      - name: Install browser test dependencies
+        run: npm ci --no-audit --no-fund --ignore-scripts
+      - name: Verify TypeScript toolchain
+        run: |
+          test "$(node --version)" = "v$(cat .node-version)"
+          test "$(npm --version)" = "11.17.0"
+          ./node_modules/.bin/tsc --version | grep -F "Version 7.0.2"
+          ./node_modules/.bin/esbuild --version | grep -Fx "0.28.1"
+      - name: Type-check viewer
+        run: npm run typecheck
+      - name: Build deterministic viewer bundle
+        run: |
+          npm run bundle
+          git diff --exit-code -- graph/viewer.bundle.js
+      - name: Viewer unit contracts
+        run: |
+          npm run test:viewer:unit
+          npm run test:viewer:bundle
+          npm run test:viewer:performance
+      - name: Install Chromium for Playwright
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Browser viewer tests
+        run: npm run test:browser
 
   cve-scan-tests:
     name: cve-scan Module
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          version: "0.11.12"
           python-version: "3.11"
-          cache: pip
+          enable-cache: true
+          working-directory: modules/cve-scan
       - name: Install cve-scan dependencies
         working-directory: modules/cve-scan
-        run: pip install -e '.[dev]'
+        run: uv sync --locked --all-extras
       - name: ruff check
         working-directory: modules/cve-scan
-        run: ruff check .
+        run: uv run --locked ruff check .
       - name: pytest
         working-directory: modules/cve-scan
-        run: pytest
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-      - name: shellcheck
-        run: shellcheck modules/cve-scan/scripts/perf-smoke.sh
+        run: uv run --locked pytest
 
   shell-lint:
     name: Shellcheck
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: shellcheck
-        run: shellcheck examples/regenerate.sh graph/pipeline.sh scripts/*.sh tests/integration/*.sh
+        run: >-
+          shellcheck
+          examples/regenerate.sh
+          graph/browser/setup-browser.sh
+          graph/pipeline.sh
+          modules/cve-scan/scripts/perf-smoke.sh
+          scripts/*.sh
+          tests/fixtures/apps/create_fixtures.sh
+          tests/integration/*.sh
+          tests/scripts/*.sh

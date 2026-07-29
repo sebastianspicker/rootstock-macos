@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-merge_scans.py — Import multiple Rootstock scan JSONs with hostname namespacing.
+merge_scans.py - Import multiple Rootstock scan JSONs with hostname namespacing.
 
 Enables multi-host correlation by importing scans from different macOS hosts
 into the same Neo4j graph. Each scan creates a Computer node and all
@@ -19,46 +19,13 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+import import_nodes_core
+import import_nodes_enrichment
+import import_nodes_security
+import import_nodes_security_enterprise
+import import_nodes_services
 from neo4j_connection import add_neo4j_args, connect_from_args
 from models import ScanResult, ComputerData
-from import_nodes_core import (
-    ComputerImportContext,
-    import_applications,
-    import_tcc_grants,
-    import_entitlements,
-    import_signed_by_team,
-    import_certificate_authorities,
-    import_computer,
-    import_installed_on,
-    import_local_to,
-    import_sandbox_profiles,
-)
-from import_nodes_services import (
-    import_xpc_services,
-    import_keychain_items,
-    import_mdm_profiles,
-    import_launch_items,
-)
-from import_nodes_security import (
-    import_local_groups,
-    import_remote_access_services,
-    import_firewall_status,
-    import_login_sessions,
-    import_authorization_rights,
-    import_authorization_plugins,
-    import_system_extensions,
-    import_sudoers_rules,
-)
-from import_nodes_enrichment import (
-    import_running_processes,
-    import_file_acls,
-    import_user_details,
-    import_bluetooth_devices,
-)
-from import_nodes_security_enterprise import (
-    import_ad_binding,
-    import_kerberos_artifacts,
-)
 
 from scan_loader import load_scan
 
@@ -80,51 +47,35 @@ def _scan_computer(scan: ScanResult) -> ComputerData:
     )
 
 
-def _scan_computer_context(scan: ScanResult) -> ComputerImportContext:
-    return ComputerImportContext(
-        gatekeeper_enabled=scan.gatekeeper_enabled,
-        sip_enabled=scan.sip_enabled,
-        filevault_enabled=scan.filevault_enabled,
-        lockdown_mode_enabled=scan.lockdown_mode_enabled,
-        bluetooth_enabled=scan.bluetooth_enabled,
-        bluetooth_discoverable=scan.bluetooth_discoverable,
-        screen_lock_enabled=scan.screen_lock_enabled,
-        screen_lock_delay=scan.screen_lock_delay,
-        display_sleep_timeout=scan.display_sleep_timeout,
-        thunderbolt_security_level=scan.thunderbolt_security_level,
-        secure_boot_level=scan.secure_boot_level,
-        external_boot_allowed=scan.external_boot_allowed,
-        icloud_signed_in=scan.icloud_signed_in,
-        icloud_drive_enabled=scan.icloud_drive_enabled,
-        icloud_keychain_enabled=scan.icloud_keychain_enabled,
-    )
+def _scan_computer_context(scan: ScanResult) -> import_nodes_core.ComputerImportContext:
+    return import_nodes_core.computer_import_context(scan)
 
 
 def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
-    n_apps = import_applications(session, scan.applications, scan.scan_id)
-    grants_linked, _ = import_tcc_grants(session, scan.tcc_grants, scan.scan_id)
-    import_entitlements(session, scan.applications, scan.scan_id)
-    import_signed_by_team(session)
-    import_certificate_authorities(session, scan.applications, scan.scan_id)
-    import_xpc_services(session, scan.xpc_services)
-    import_keychain_items(session, scan.keychain_acls, scan.scan_id)
-    import_mdm_profiles(session, scan.mdm_profiles)
-    import_launch_items(session, scan.launch_items, scan.scan_id)
-    import_local_groups(session, scan.local_groups, scan.scan_id)
-    import_remote_access_services(session, scan.remote_access_services)
-    import_firewall_status(session, scan.firewall_status, scan.scan_id)
-    import_login_sessions(session, scan.login_sessions, scan.hostname)
-    import_authorization_rights(session, scan.authorization_rights)
-    import_authorization_plugins(session, scan.authorization_plugins)
-    import_system_extensions(session, scan.system_extensions)
-    import_sudoers_rules(session, scan.sudoers_rules)
-    import_running_processes(session, scan.running_processes, scan.scan_id)
-    import_user_details(session, scan.user_details)
-    import_file_acls(session, scan.file_acls)
-    import_ad_binding(session, scan.ad_binding, scan.hostname, scan.scan_id)
-    import_kerberos_artifacts(session, scan.kerberos_artifacts, scan.hostname, scan.scan_id)
-    import_sandbox_profiles(session, scan.sandbox_profiles, scan.scan_id)
-    import_bluetooth_devices(session, scan.bluetooth_devices, scan.hostname, scan.scan_id)
+    n_apps = import_nodes_core.import_applications(session, scan.applications, scan.scan_id)
+    grants_linked, _ = import_nodes_core.import_tcc_grants(session, scan.tcc_grants, scan.scan_id)
+    import_nodes_core.import_entitlements(session, scan.applications, scan.scan_id)
+    import_nodes_core.import_signed_by_team(session)
+    import_nodes_core.import_certificate_authorities(session, scan.applications, scan.scan_id)
+    import_nodes_services.import_xpc_services(session, scan.xpc_services)
+    import_nodes_services.import_keychain_items(session, scan.keychain_acls, scan.scan_id)
+    import_nodes_services.import_mdm_profiles(session, scan.mdm_profiles)
+    import_nodes_services.import_launch_items(session, scan.launch_items, scan.scan_id)
+    import_nodes_security.import_local_groups(session, scan.local_groups, scan.scan_id)
+    import_nodes_security.import_remote_access_services(session, scan.remote_access_services)
+    import_nodes_security.import_firewall_status(session, scan.firewall_status, scan.scan_id)
+    import_nodes_security.import_login_sessions(session, scan.login_sessions, scan.hostname)
+    import_nodes_security.import_authorization_rights(session, scan.authorization_rights)
+    import_nodes_security.import_authorization_plugins(session, scan.authorization_plugins)
+    import_nodes_security.import_system_extensions(session, scan.system_extensions)
+    import_nodes_security.import_sudoers_rules(session, scan.sudoers_rules)
+    import_nodes_enrichment.import_running_processes(session, scan.running_processes, scan.scan_id)
+    import_nodes_enrichment.import_user_details(session, scan.user_details)
+    import_nodes_enrichment.import_file_acls(session, scan.file_acls)
+    import_nodes_security_enterprise.import_ad_binding(session, scan.ad_binding, scan.hostname, scan.scan_id)
+    import_nodes_security_enterprise.import_kerberos_artifacts(session, scan.kerberos_artifacts, scan.hostname, scan.scan_id)
+    import_nodes_core.import_sandbox_profiles(session, scan.sandbox_profiles, scan.scan_id)
+    import_nodes_enrichment.import_bluetooth_devices(session, scan.bluetooth_devices, scan.hostname, scan.scan_id)
     return n_apps, grants_linked
 
 
@@ -135,10 +86,10 @@ def import_scan(session, scan: ScanResult) -> None:
     if scan.errors:
         _report_scan_errors(scan)
 
-    import_computer(session, _scan_computer(scan), _scan_computer_context(scan))
+    import_nodes_core.import_computer(session, _scan_computer(scan), _scan_computer_context(scan))
     n_apps, grants_linked = _import_scan_entities(session, scan)
-    n_installed = import_installed_on(session, hostname, scan.scan_id)
-    n_local_to = import_local_to(session, hostname, scan.scan_id)
+    n_installed = import_nodes_core.import_installed_on(session, hostname, scan.scan_id)
+    n_local_to = import_nodes_core.import_local_to(session, hostname, scan.scan_id)
 
     print(
         f"  [{hostname}] {n_apps} apps, {grants_linked} grants, "

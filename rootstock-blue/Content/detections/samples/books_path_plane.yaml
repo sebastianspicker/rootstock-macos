@@ -1,0 +1,13 @@
+id: sample.books_path_plane
+title: Books / EPUB path residual plane surface present
+severity: high
+description: Books path plane markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1119
+match:
+  event_type: books.path
+  field_contains:
+    bkpath.risk_tags: "books_surface"
+fixture: books_path_plane.jsonl

@@ -1,0 +1,12 @@
+id: sample.btm_tmp_executable
+title: BTM item executable under /tmp
+severity: high
+description: Offline BTM/login-item parser shows persistence executable path under /tmp (transient staging).
+attack_techniques:
+  - T1543.001
+  - T1547.015
+match:
+  event_type: persistence.btm_item
+  field_contains:
+    btm.executable_path: "/tmp/"
+fixture: btm_tmp_executable.jsonl

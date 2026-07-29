@@ -1,0 +1,13 @@
+id: sample.handoff_clipboard_depth
+title: Handoff / Universal Clipboard residual depth surface present
+severity: high
+description: Handoff clipboard depth markers indicate IR surface.
+attack_techniques:
+  - T1115
+  - T1020
+  - T1005
+match:
+  event_type: handoff.clipboard
+  field_contains:
+    hdoffcb.risk_tags: "handoff_surface"
+fixture: handoff_clipboard_depth.jsonl

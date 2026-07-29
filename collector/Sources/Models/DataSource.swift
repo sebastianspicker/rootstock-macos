@@ -9,12 +9,12 @@ public protocol DataSource {
     var requiresElevation: Bool { get }
 
     /// Collect data from this source.
-    /// Returns partial results on failure — never throws to abort the entire scan.
+    /// Returns partial results on failure - never throws to abort the entire scan.
     func collect() async -> DataSourceResult
 }
 
 /// The result of a single data source collection pass.
-public struct DataSourceResult {
+public struct DataSourceResult: Sendable {
     public let nodes: [any GraphNode]
     public let errors: [CollectionError]
 

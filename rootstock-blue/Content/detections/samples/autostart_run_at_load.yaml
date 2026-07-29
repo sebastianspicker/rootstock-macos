@@ -1,0 +1,11 @@
+id: sample.autostart_run_at_load
+title: LaunchAgent with RunAtLoad true
+severity: medium
+description: Persistence item configured to run at load.
+attack_techniques:
+  - T1543.001
+match:
+  event_type: persistence.item
+  field_equals:
+    persistence.run_at_load: "true"
+fixture: autostart_run_at_load.jsonl

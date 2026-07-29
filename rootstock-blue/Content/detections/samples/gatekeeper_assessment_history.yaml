@@ -1,0 +1,13 @@
+id: sample.gatekeeper_assessment_history
+title: Gatekeeper assessment / syspolicyd history depth surface present
+severity: high
+description: Gatekeeper assessment history markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1553.001
+  - T1204
+  - T1562
+match:
+  event_type: gatekeeper.assessment
+  field_contains:
+    gkh.risk_tags: "assessment_surface"
+fixture: gatekeeper_assessment_history.jsonl

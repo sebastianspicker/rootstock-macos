@@ -1,5 +1,5 @@
 // Name: AD Group to Local Admin Mapping
-// Purpose: AD groups mapped to local admin — compromising the AD group grants local admin on every AD-bound Mac
+// Purpose: List AD groups mapped to a local admin group in imported host data
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

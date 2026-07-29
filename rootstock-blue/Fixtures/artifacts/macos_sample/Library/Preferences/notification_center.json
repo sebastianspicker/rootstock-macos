@@ -1,0 +1,21 @@
+{
+  "notifications": [
+    {
+      "app_id": "com.evil.implant",
+      "category": "ALERT",
+      "title_marker": "Remote access granted",
+      "delivered_at": "2024-06-07T07:30:00Z",
+      "has_body": true,
+      "body_exported": false,
+      "risk_tags": "suspicious_app,security_sensitive"
+    },
+    {
+      "app_id": "com.apple.mail",
+      "category": "INCOMING_MESSAGE",
+      "title_marker": "New Message",
+      "delivered_at": "2024-06-01T09:00:00Z",
+      "has_body": true,
+      "body_exported": false
+    }
+  ]
+}

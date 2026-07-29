@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/Users/alice/Library/Mobile Documents",
+      "name": "icloud",
+      "risk_tags": "icloud_path_surface,wave14,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-01T12:00:00Z",
+      "notes": "iCloud Drive path plane markers \u2014 never enumerates iCloud file contents or exfiltrates Mobile Documents"
+    }
+  ]
+}

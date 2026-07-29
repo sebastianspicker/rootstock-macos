@@ -1,0 +1,13 @@
+{
+  "files": [
+    "tokens.css",
+    "base.css",
+    "layout.css",
+    "header.css",
+    "sidebar.css",
+    "stage.css",
+    "inspector.css",
+    "footer.css",
+    "responsive.css"
+  ]
+}

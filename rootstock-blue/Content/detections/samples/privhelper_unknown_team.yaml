@@ -1,0 +1,12 @@
+id: sample.privhelper_unknown_team
+title: Privileged helper with unknown/orphan risk tags
+severity: high
+description: SMJobBless PrivilegedHelperTools entry with orphan_helper or unknown_team risk (T1543.004).
+attack_techniques:
+  - T1543.004
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.kind: "privileged_helper"
+    persistence.risk_tags: "unknown_team"
+fixture: privhelper_unknown_team.jsonl

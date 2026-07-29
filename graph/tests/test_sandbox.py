@@ -1,5 +1,5 @@
 """
-test_sandbox.py — Tests for sandbox profile models, import, and inference.
+test_sandbox.py - Tests for sandbox profile models, import, and inference.
 
 Usage:
     pytest graph/tests/test_sandbox.py -v
@@ -16,7 +16,7 @@ import pytest
 from conftest import cleanup_test_nodes
 from import_nodes_core import import_applications, import_sandbox_profiles
 
-FIXTURE_PATH = Path(__file__).parent / "fixture_minimal.json"
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "minimal_scan.json"
 TEST_SCAN_ID = "test-sandbox-00000000-0000-0000-0000-000000000001"
 
 

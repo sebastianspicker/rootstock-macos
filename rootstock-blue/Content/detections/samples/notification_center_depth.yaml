@@ -1,0 +1,13 @@
+id: sample.notification_center_depth
+title: Notification Center residual depth surface present
+severity: high
+description: Notification Center depth markers indicate IR surface.
+attack_techniques:
+  - T1518
+  - T1083
+  - T1005
+match:
+  event_type: notification.center
+  field_contains:
+    notictr.risk_tags: "notification_surface"
+fixture: notification_center_depth.jsonl

@@ -1,7 +1,7 @@
 """
-test_threat_groups.py — Tests for ATT&CK group correlation and temporal scoring.
+test_threat_groups.py - Tests for ATT&CK group correlation and temporal scoring.
 
-Pure unit tests — no Neo4j required for most tests.
+Pure unit tests - no Neo4j required for most tests.
 Integration tests for import functions use mock sessions.
 """
 
@@ -11,6 +11,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import pytest
+from conftest import cleaned_neo4j_driver
 
 from cve_reference import (
     ThreatGroup,
@@ -221,11 +222,8 @@ class TestThreatGroupIntegration:
     @pytest.fixture(autouse=True)
     def setup(self, neo4j_driver):
         self.driver = neo4j_driver
-        with self.driver.session() as session:
-            self._cleanup(session)
-        yield
-        with self.driver.session() as session:
-            self._cleanup(session)
+        with cleaned_neo4j_driver(self.driver, self._cleanup):
+            yield
 
     def _cleanup(self, session):
         session.run(

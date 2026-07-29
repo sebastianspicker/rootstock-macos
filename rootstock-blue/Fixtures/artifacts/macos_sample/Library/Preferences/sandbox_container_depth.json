@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/Users/alice/Library/Containers",
+      "name": "sandbox",
+      "risk_tags": "sandbox_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "Sandbox container depth markers \u2014 never breaks app sandbox or forges container entitlements"
+    }
+  ]
+}

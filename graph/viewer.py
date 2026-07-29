@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-viewer.py — Generate an interactive HTML graph viewer from Rootstock OpenGraph JSON.
+viewer.py - Generate an interactive HTML graph viewer from Rootstock OpenGraph JSON.
 
 Reads the JSON output of opengraph_export.py and produces a self-contained HTML
 file with a Canvas-based graph visualization. Pre-computes force-directed layout
@@ -21,25 +21,52 @@ from __future__ import annotations
 import argparse
 import html as html_mod
 import json
+import os
+import re
+import stat
 import sys
 from pathlib import Path
+from typing import Literal
 
+from constants import INTERACTIVE_GRAPH_MAX_EDGES, INTERACTIVE_GRAPH_MAX_NODES
 from viewer_layout import compute_layout
 
-VIEWER_SCRIPT_FILES = (
-    "viewer.js",
-    "viewer_spatial.js",
-    "viewer_render.js",
-    "viewer_analysis.js",
-    "viewer_controls.js",
-    "viewer_live.js",
-    "viewer_shell.js",
-)
+MAX_STATIC_VIEWER_BYTES = 64 * 1024 * 1024
 
 
 def viewer_script_source(asset_dir: Path) -> str:
-    """Return viewer modules in browser execution order."""
-    return "\n".join((asset_dir / name).read_text() for name in VIEWER_SCRIPT_FILES)
+    """Return the deterministic, self-contained TypeScript viewer bundle."""
+    return (asset_dir / "viewer.bundle.js").read_text()
+
+
+def render_viewer_html(
+    data: dict,
+    *,
+    title: str,
+    mode: Literal["static", "live"],
+    api_base_url: str = "",
+) -> str:
+    """Render either static or authenticated-live viewer bootstrap from one template."""
+    asset_dir = Path(__file__).parent
+    template = (asset_dir / "viewer_template.html").read_text()
+    safe_json = json.dumps(data, ensure_ascii=True).replace("</", "<\\/")
+    safe_options = json.dumps(
+        {"mode": mode, "apiBaseUrl": api_base_url}, ensure_ascii=True
+    ).replace("</", "<\\/")
+    bootstrap = (
+        "RootstockViewer.mount(" + safe_json + ", " + safe_options + ");"
+    )
+    replacements = {
+        "VIEWER_TITLE": html_mod.escape(title),
+        "VIEWER_CSS": (asset_dir / "viewer.css").read_text(),
+        "VIEWER_JS": viewer_script_source(asset_dir),
+        "VIEWER_BOOTSTRAP": bootstrap,
+    }
+    return re.sub(
+        r"\{\{(VIEWER_TITLE|VIEWER_CSS|VIEWER_JS|VIEWER_BOOTSTRAP)\}\}",
+        lambda match: replacements[match.group(1)],
+        template,
+    )
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
@@ -55,21 +82,71 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _load_opengraph_json(input_path: Path) -> dict | None:
+def _load_opengraph_json(input_path: Path) -> object | None:
+    """Read an untrusted regular JSON file only when it fits the static size budget."""
     if not input_path.exists():
         print(f"ERROR: File not found: {input_path}", file=sys.stderr)
         return None
     try:
+        file_status = input_path.stat()
+        if not stat.S_ISREG(file_status.st_mode):
+            print(
+                f"ERROR: Input must be a regular file: {input_path}",
+                file=sys.stderr,
+            )
+            return None
+        if file_status.st_size > MAX_STATIC_VIEWER_BYTES:
+            print(
+                "ERROR: Input exceeds the static viewer limit of "
+                f"{MAX_STATIC_VIEWER_BYTES} bytes",
+                file=sys.stderr,
+            )
+            return None
         return json.loads(input_path.read_text())
-    except json.JSONDecodeError as e:
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError) as e:
         print(f"ERROR: Invalid JSON in {input_path}: {e}", file=sys.stderr)
         return None
 
 
-def _validated_graph(data: dict) -> dict | None:
-    graph = data.get("graph", {})
-    if "nodes" not in graph or "edges" not in graph:
-        print("ERROR: Input does not look like OpenGraph JSON (missing graph.nodes or graph.edges)", file=sys.stderr)
+def _graph_members(data: object) -> tuple[dict, list, list] | None:
+    if not isinstance(data, dict) or not isinstance(data.get("graph"), dict):
+        print("ERROR: Input does not contain an OpenGraph graph object", file=sys.stderr)
+        return None
+    graph = data["graph"]
+    nodes, edges = graph.get("nodes"), graph.get("edges")
+    if not isinstance(nodes, list) or not isinstance(edges, list):
+        print(
+            "ERROR: Input does not look like OpenGraph JSON "
+            "(graph.nodes and graph.edges must be arrays)",
+            file=sys.stderr,
+        )
+        return None
+    return graph, nodes, edges
+
+
+def _graph_fits_static_viewer(nodes: list, edges: list) -> bool:
+    return (
+        len(nodes) <= INTERACTIVE_GRAPH_MAX_NODES
+        and len(edges) <= INTERACTIVE_GRAPH_MAX_EDGES
+    )
+
+
+def _validated_graph(data: object) -> dict | None:
+    """Validate the bounded OpenGraph container before layout or HTML generation."""
+    members = _graph_members(data)
+    if members is None:
+        return None
+    graph, nodes, edges = members
+    if not _graph_fits_static_viewer(nodes, edges):
+        print(
+            "ERROR: Graph exceeds the static viewer limit of "
+            f"{INTERACTIVE_GRAPH_MAX_NODES} nodes and "
+            f"{INTERACTIVE_GRAPH_MAX_EDGES} edges",
+            file=sys.stderr,
+        )
+        return None
+    if not all(isinstance(member, dict) for member in [*nodes, *edges]):
+        print("ERROR: Graph nodes and edges must be objects", file=sys.stderr)
         return None
     return graph
 
@@ -96,23 +173,32 @@ def _viewer_output_path(input_path: Path, output: str | None) -> Path:
 def _viewer_html(data: dict) -> str:
     hostname = data.get("metadata", {}).get("hostname", "Graph")
     title = f"{hostname} Attack Graph"
-    safe_title = html_mod.escape(title)
-    safe_json = json.dumps(data).replace("</", "<\\/")
-    asset_dir = Path(__file__).parent
-    template = (asset_dir / "viewer_template.html").read_text()
-    return (
-        template.replace("{{VIEWER_TITLE}}", safe_title)
-        .replace("{{VIEWER_CSS}}", (asset_dir / "viewer.css").read_text())
-        .replace("{{VIEWER_JS}}", viewer_script_source(asset_dir))
-        .replace("null /* VIEWER_DATA */", safe_json)
-    )
+    return render_viewer_html(data, title=title, mode="static")
+
+
+def _write_private_viewer(path: Path, content: str) -> None:
+    """Write confidential graph HTML to a regular file with owner-only access."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    for optional_flag in ("O_CLOEXEC", "O_NOFOLLOW", "O_NONBLOCK"):
+        flags |= getattr(os, optional_flag, 0)
+    descriptor = os.open(path, flags, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise OSError(f"Refusing to write viewer to non-regular file: {path}")
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            descriptor = -1
+            output.write(content)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
 
 
 def main() -> int:
     args = _parse_args()
     input_path = Path(args.input)
     data = _load_opengraph_json(input_path)
-    if data is None:
+    if not isinstance(data, dict):
         return 1
     graph = _validated_graph(data)
     if graph is None:
@@ -120,7 +206,7 @@ def main() -> int:
     n_nodes, n_edges = _compute_viewer_layout(graph)
     output_path = _viewer_output_path(input_path, args.output)
     html_out = _viewer_html(data)
-    output_path.write_text(html_out)
+    _write_private_viewer(output_path, html_out)
     print(f"Generated {output_path} ({n_nodes} nodes, {n_edges} edges)")
     return 0
 

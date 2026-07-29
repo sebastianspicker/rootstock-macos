@@ -1,0 +1,13 @@
+id: sample.homekit_path_plane
+title: HomeKit residual path plane surface present
+severity: high
+description: HomeKit path plane markers indicate IR surface.
+attack_techniques:
+  - T0883
+  - T1005
+  - T1083
+match:
+  event_type: homekit.path
+  field_contains:
+    hkpath.risk_tags: "homekit_surface"
+fixture: homekit_path_plane.jsonl

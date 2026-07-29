@@ -1,33 +1,42 @@
-# Rootstock Documentation
+# Rootstock documentation
 
-This directory contains the active public documentation for Rootstock.
+This directory contains the maintained public documentation for the Core,
+Rootstock Red, and Rootstock Blue source trees.
 
-## Active Docs
+## Start here
 
-- [Product contract](../PRODUCT.md) - audience, purpose, interaction principles,
-  and accessibility target.
-- [Interface design system](../DESIGN.md) - themes, tokens, layout, components,
-  and content rules.
-- [FAQ](FAQ.md) - usage notes, scope boundaries, and common troubleshooting.
-- [Quality](QUALITY.md) - verification expectations and quality gates.
-- [Threat model](THREAT_MODEL.md) - security assumptions and trust boundaries.
-- [Frontend and report interface](frontend.md) - viewer workflows, storage,
-  accessibility, responsive behavior, and release checks.
-- [Comparison](COMPARISON.md) - positioning against adjacent tools.
-- [Contributing ideas](CONTRIBUTING_IDEAS.md) - scoped areas for future work.
-- [Guides](guides/) - operator and module guides.
-- [Design docs](design-docs/) - durable architecture and modeling decisions.
-- [References](references/) - stable macOS security reference material.
-- [Research](research/) - background notes that support active behavior.
-- [Benchmarks](benchmarks/) - public benchmark method and acceptance targets;
-  machine-derived results stay local.
+- [Product family](FAMILY.md) describes component boundaries, artifacts, and
+  explicit interoperability commands.
+- [Architecture](../ARCHITECTURE.md) describes runtime boundaries, contracts,
+  and data flow.
+- [Threat model](THREAT_MODEL.md) describes data sensitivity, network access,
+  mutation boundaries, and operator assumptions.
+- [Quality gates](QUALITY.md) lists the checks used for the alpha candidate.
+- [Release procedure](RELEASING.md) records the approval-only publication
+  sequence. It does not authorize a release.
+- [FAQ](FAQ.md) covers common setup and interpretation questions.
+- [Frontend and reports](frontend.md) describes the maintained viewer and
+  report interfaces.
+- [Technical comparison](COMPARISON.md) defines the repository's scope relative
+  to adjacent tools without claiming feature parity.
 
-## Archive Policy
+## Detailed material
 
-One-off plans, audit packets, status files, investigation notes, deprecated
-drafts, generated reports, and local agent handoff files are
-not active public documentation.
+- [Guides](guides/) contain operator and module instructions.
+- [Design documents](design-docs/) explain implemented architectural
+  decisions. Source and tests define current behavior.
+- [References](references/) contain the technique catalog, severity mapping,
+  and macOS security reference material.
+- [Research notes](research/) provide background for selected implemented
+  behavior. They are not compatibility guarantees.
+- [Benchmarks](benchmarks/) define public methods and acceptance thresholds.
+  Machine-specific results remain local.
+- [Screenshots](screenshots/) contains four Playwright captures of the
+  maintained viewer using synthetic data.
+- [Interface design](../DESIGN.md) records viewer and report presentation rules.
 
-Keep local copies in ignored private, archive, deprecated, or generated artifact
-paths. Do not cite archived material as current behavior unless source code or
-tests verify it.
+## Documentation policy
+
+Only indexed, maintained documents are part of the public documentation set.
+Private data and reproducible local output belong in ignored paths. Statements
+about current behavior must remain supported by source or tests.

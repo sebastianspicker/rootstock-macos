@@ -1,5 +1,5 @@
-// Name: Version-Matched Vulnerabilities
-// Purpose: List applications with version-confirmed CVE matches (precise tier)
+// Name: Version-Range-Matched Vulnerabilities
+// Purpose: List applications with version-range CVE matches in the precise tier
 // Category: Blue Team
 // Severity: Critical
 // Parameters: none

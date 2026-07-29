@@ -1,0 +1,13 @@
+id: sample.ls_quarantine_db_depth
+title: LaunchServices QuarantineEvents DB residual depth surface present
+severity: high
+description: LS QuarantineEvents depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1553.001
+  - T1074
+  - T1083
+match:
+  event_type: ls.quarantine_db
+  field_contains:
+    lsqdb.risk_tags: "quarantine_db_surface"
+fixture: ls_quarantine_db_depth.jsonl

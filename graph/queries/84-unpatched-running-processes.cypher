@@ -1,5 +1,5 @@
 // Name: Running Injectable Processes with CVEs
-// Purpose: Currently running, injectable processes with known CVE associations — live exploitation targets
+// Purpose: Currently running, injectable processes with known CVE associations - live exploitation targets
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

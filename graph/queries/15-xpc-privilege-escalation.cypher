@@ -3,13 +3,12 @@
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Prerequisites: import_scan.py + infer.py must have run; Phase 3.1 (XPC) data required
+// Prerequisites: import_scan.py + infer.py must have run; XPC collector data required
 //
-// Attack: Injectable app → COMMUNICATES_WITH → XPC service with privileged entitlements
-//         → attacker inherits XPC service capabilities via compromised client
+// Attack model: injection relationship → COMMUNICATES_WITH → XPC service entitlements
 //
-// XPC services often hold elevated entitlements (TCC bypass, private APIs, root operations).
-// An injectable app that communicates with such a service is a gateway to those capabilities.
+// A result does not establish that the client can invoke a privileged operation. Validate
+// the service interface, authorization checks, caller identity, and entitlement behavior.
 
 MATCH (app:Application)-[:COMMUNICATES_WITH]->(xpc:XPC_Service)
 MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(app)
@@ -19,7 +18,7 @@ WHERE size(xpc.entitlements) > 0
 
 WITH app, xpc, collect(DISTINCT inj.method) AS injection_methods
 
-// Also check TCC grants of the app for combined severity scoring
+// Also return TCC grants held by the application for review.
 OPTIONAL MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
 WITH app, xpc, injection_methods, collect(DISTINCT perm.display_name) AS app_tcc_grants
 

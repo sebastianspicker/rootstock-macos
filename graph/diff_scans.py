@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-diff_scans.py — Compare two Rootstock scans of the same host to track posture changes.
+diff_scans.py - Compare two Rootstock scans of the same host to track posture changes.
 
 Takes two scan JSON files (same host, different dates) and reports:
   - New / removed applications
@@ -13,7 +13,7 @@ Takes two scan JSON files (same host, different dates) and reports:
   - Remote access service changes
   - iCloud posture changes
 
-This is the "posture trending" capability — transforms Rootstock from a
+This is the "posture trending" capability - transforms Rootstock from a
 point-in-time tool into an operational monitoring platform.
 
 Usage:
@@ -472,7 +472,7 @@ def diff_scans(before: ScanResult, after: ScanResult) -> PostureDiff:
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare two Rootstock scans to track posture changes"
     )
@@ -481,7 +481,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--format", choices=["text", "json"], default="text",
                         help="Output format (default: text)")
     parser.add_argument("--output", "-o", help="Write output to file (default: stdout)")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def _load_diff_inputs(args: argparse.Namespace) -> tuple[ScanResult, ScanResult] | None:
@@ -533,8 +533,8 @@ def _write_diff_output(args: argparse.Namespace, output: str) -> None:
         print(output, end="")
 
 
-def main() -> int:
-    args = _parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
     scans = _load_diff_inputs(args)
     if scans is None:
         return 1

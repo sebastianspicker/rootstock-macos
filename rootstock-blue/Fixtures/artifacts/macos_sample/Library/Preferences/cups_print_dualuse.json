@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/usr/sbin/cupsd",
+      "name": "cupsd",
+      "risk_tags": "print_surface,cups_daemon,dual_use",
+      "user": "alice",
+      "timestamp": "2026-06-01T12:00:00Z",
+      "notes": "CUPS printer dual-use markers \u2014 never submits print jobs or reconfigures CUPS remotely"
+    }
+  ]
+}

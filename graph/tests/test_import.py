@@ -1,5 +1,5 @@
 """
-test_import.py — Integration tests for the graph importer.
+test_import.py - Integration tests for the graph importer.
 
 Requires a running Neo4j instance. Tests are skipped if Neo4j is unavailable.
 
@@ -34,7 +34,7 @@ from import_nodes_services import import_keychain_items, import_launch_items
 from import_nodes_services import import_mdm_profiles, import_xpc_services
 from import_nodes_enrichment import import_user_details
 
-FIXTURE_PATH = Path(__file__).parent / "fixture_minimal.json"
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "minimal_scan.json"
 TEST_SCAN_ID = "test-00000000-0000-0000-0000-000000000001"
 
 

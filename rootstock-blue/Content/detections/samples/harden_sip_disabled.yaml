@@ -1,0 +1,12 @@
+id: sample.harden_sip_disabled
+title: Hardening finding - SIP disabled
+severity: critical
+description: Hardening assessment reports System Integrity Protection disabled.
+attack_techniques:
+  - T1562.001
+match:
+  event_type: harden.finding
+  field_equals:
+    harden.control: "sip"
+    harden.status: "fail"
+fixture: harden_sip_disabled.jsonl

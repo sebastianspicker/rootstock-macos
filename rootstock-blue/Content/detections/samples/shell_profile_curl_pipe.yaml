@@ -1,0 +1,12 @@
+id: sample.shell_profile_curl_pipe
+title: Shell profile curl pipe to shell
+severity: high
+description: Shell init executes remote payload via curl|bash.
+attack_techniques:
+  - T1546.004
+  - T1059.004
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.risk_tags: "curl_pipe_shell"
+fixture: shell_profile_curl_pipe.jsonl

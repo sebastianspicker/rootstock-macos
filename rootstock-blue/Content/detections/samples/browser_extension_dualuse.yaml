@@ -1,0 +1,12 @@
+id: sample.browser_extension_dualuse
+title: Browser extension dual-use plane present
+severity: high
+description: Browser extension dual-use markers indicate persistence/collection IR surface without secret export.
+attack_techniques:
+  - T1176
+  - T1555.003
+match:
+  event_type: browser.extension_dualuse
+  field_contains:
+    ext_dualuse.risk_tags: "dual_use_surface"
+fixture: browser_extension_dualuse.jsonl

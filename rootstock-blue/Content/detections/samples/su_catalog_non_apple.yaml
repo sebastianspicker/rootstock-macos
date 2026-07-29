@@ -1,0 +1,12 @@
+id: sample.su_catalog_non_apple
+title: Non-Apple software update catalog configured
+severity: high
+description: Software Update CatalogURL points to a non-Apple host - supply-chain / misconfig signal.
+attack_techniques:
+  - T1562
+match:
+  event_type: harden.finding
+  field_equals:
+    harden.control: "software_update_catalog"
+    harden.status: "fail"
+fixture: su_catalog_non_apple.jsonl

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>LoginHook</key>
+  <string>/tmp/evil_login_hook.sh</string>
+  <key>LogoutHook</key>
+  <string>/usr/local/bin/evil_logout_hook.sh</string>
+  <key>GuestEnabled</key>
+  <true/>
+  <key>autoLoginUser</key>
+  <string>alice</string>
+</dict>
+</plist>

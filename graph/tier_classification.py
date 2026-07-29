@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-tier_classification.py — Classify Application nodes into Tier 0/1/2 based on security impact.
+tier_classification.py - Classify Application nodes into Tier 0/1/2 based on security impact.
 
 Tier definitions:
   - Tier 0 (Crown Jewels): FDA apps, com.apple.private.tcc.allow holders, SUDO_NOPASSWD targets
@@ -27,7 +27,7 @@ from constants import TIER_PROPERTY
 
 def classify_tier0(session) -> int:
     """
-    Tier 0 — Crown Jewels. Compromise = game over.
+    Tier 0 - Crown Jewels. Compromise = game over.
       - Apps with Full Disk Access grant
       - Apps holding com.apple.private.tcc.allow entitlement
       - Apps targeted by SUDO_NOPASSWD rules
@@ -61,8 +61,8 @@ def classify_tier0(session) -> int:
 
 def classify_tier1(session) -> int:
     """
-    Tier 1 — Privileged access. Valuable targets worth protecting.
-      - Apps with any allowed TCC grant (non-FDA — those are Tier 0)
+    Tier 1 - Privileged access. Valuable targets worth protecting.
+      - Apps with any allowed TCC grant (non-FDA - those are Tier 0)
       - Apps trusted in Keychain ACLs
       - Apps persisting as root-running daemons
     """
@@ -95,7 +95,7 @@ def classify_tier1(session) -> int:
 
 def classify_tier2(session) -> int:
     """
-    Tier 2 — Interesting. Stepping stones or indicators of risk.
+    Tier 2 - Interesting. Stepping stones or indicators of risk.
       - Apps with persistence mechanisms (any launch item)
       - Injectable apps (non-empty injection_methods)
       - Apps with private Apple entitlements
@@ -127,7 +127,7 @@ def classify_tier2(session) -> int:
 
 def classify_tier0_cve(session) -> int:
     """
-    Tier 0 CVE promotion — apps with CISA KEV CVEs and any TCC grant.
+    Tier 0 CVE promotion - apps with CISA KEV CVEs and any TCC grant.
 
     Graceful degradation: returns 0 if no Vulnerability nodes exist.
     """
@@ -146,7 +146,7 @@ def classify_tier0_cve(session) -> int:
 
 def classify_tier1_cve(session) -> int:
     """
-    Tier 1 CVE promotion — apps with high-CVSS CVEs (>=8.0) and any TCC grant.
+    Tier 1 CVE promotion - apps with high-CVSS CVEs (>=8.0) and any TCC grant.
 
     Graceful degradation: returns 0 if no Vulnerability nodes exist.
     """
@@ -165,7 +165,7 @@ def classify_tier1_cve(session) -> int:
 
 def classify_tier2_cve(session) -> int:
     """
-    Tier 2 CVE promotion — any app with a CVE association.
+    Tier 2 CVE promotion - any app with a CVE association.
 
     Graceful degradation: returns 0 if no Vulnerability nodes exist.
     """
@@ -188,7 +188,7 @@ def classify(session) -> tuple[int, int, int]:
     Interleaves structural and CVE-aware classification at each tier level:
     tier0_structural → tier0_cve → tier1_structural → tier1_cve → tier2_structural → tier2_cve
 
-    Returns (tier0_count, tier1_count, tier2_count) — combined structural + CVE.
+    Returns (tier0_count, tier1_count, tier2_count) - combined structural + CVE.
     """
     # Clear existing tiers to allow reclassification
     session.run(

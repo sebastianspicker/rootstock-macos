@@ -1,0 +1,11 @@
+id: sample.install_suspicious_pkg
+title: Suspicious software package install
+severity: high
+description: InstallHistory entry for package identifier under com.evil.*
+attack_techniques:
+  - T1553.001
+match:
+  event_type: software.install
+  field_contains:
+    software.package_identifiers: "com.evil"
+fixture: install_suspicious_pkg.jsonl

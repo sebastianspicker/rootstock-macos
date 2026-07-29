@@ -1,0 +1,11 @@
+id: sample.bookmark_evil_domain
+title: Browser bookmark to evil domain
+severity: medium
+description: Bookmark inventory contains evil-domain or script bookmark risk tags.
+attack_techniques:
+  - T1189
+match:
+  event_type: browser.bookmark
+  field_contains:
+    bookmark.risk_tags: "evil_domain"
+fixture: bookmark_evil_domain.jsonl

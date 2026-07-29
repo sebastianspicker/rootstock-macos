@@ -1,0 +1,11 @@
+id: sample.gatekeeper_override
+title: Gatekeeper assessment override
+severity: high
+description: Gatekeeper user override of assessment policy (not a normal deny/unsigned).
+attack_techniques:
+  - T1553.001
+match:
+  event_type: gatekeeper.assessment
+  field_equals:
+    gatekeeper.override: "true"
+fixture: gatekeeper_override.jsonl

@@ -1,5 +1,5 @@
 // Name: AD Users with Injectable FDA Apps
-// Purpose: AD users whose sessions include injectable FDA apps — injecting the app yields Full Disk Access plus the user's Kerberos tickets
+// Purpose: AD users whose sessions include injectable FDA apps - injecting the app yields Full Disk Access plus the user's Kerberos tickets
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

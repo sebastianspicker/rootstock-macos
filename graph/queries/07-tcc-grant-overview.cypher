@@ -1,5 +1,5 @@
 // Name: TCC Grant Overview (Blue Team)
-// Purpose: Summary of all TCC grants — useful for security audits and baseline establishment
+// Purpose: Summary of all TCC grants - useful for security audits and baseline establishment
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none

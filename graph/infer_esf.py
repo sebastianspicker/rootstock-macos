@@ -1,8 +1,8 @@
 """
-infer_esf.py — Infer Endpoint Security Framework client blinding paths.
+infer_esf.py - Infer Endpoint Security Framework client blinding paths.
 
 Apps with com.apple.developer.endpoint-security.client entitlement are ESF
-clients — they receive system-wide security events (process exec, file open,
+clients - they receive system-wide security events (process exec, file open,
 network connect, etc.). If an ESF client is injectable, an attacker can
 disable or manipulate security monitoring.
 
@@ -35,7 +35,7 @@ def infer(session: Session) -> int:
     Infer CAN_BLIND_MONITORING edges from injectable apps with ESF entitlement
     to SystemExtension nodes of type endpoint_security.
 
-    Also detects monitoring gaps — critical ESF events with no active listener.
+    Also detects monitoring gaps - critical ESF events with no active listener.
 
     Returns the number of edges created or merged. Idempotent.
     """

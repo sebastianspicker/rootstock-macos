@@ -1,0 +1,80 @@
+# RootstockBlue Mac field taxonomy (Sigma-on-ESF mapping target)
+# Keep in sync with RootstockBlueCore.FieldTaxonomy
+
+version: 0
+fields:
+  process.executable.path: Process executable path
+  process.pid: Process ID
+  process.ppid: Parent process ID
+  process.code_signature.signing_id: Code signing identifier
+  process.code_signature.team_id: Developer Team ID
+  process.code_signature.cdhash: CDHash
+  process.code_signature.signed: "true|false"
+  file.path: File path
+  file.destination.path: Rename/link destination
+  event.type: ES event type name (e.g. NOTIFY_EXEC)
+  user.name: Username
+  tcc.service: TCC service identifier
+  tcc.identity: Subject of TCC grant/revoke
+  tcc.right: Authorization right
+  btm.item_type: Background Task Management item type
+  btm.item_path: BTM item path
+  xprotect.malware_identifier: XProtect malware id
+  # Pattern-of-life / Biome
+  pol.stream: Biome / knowledgeC stream name
+  pol.value: Stream value (app, title, bundle)
+  pol.source: Provenance tag (biome|knowledgec)
+  # Persistence
+  persistence.kind: Persistence mechanism (cron|at|periodic|login_item|launch_agent|...)
+  persistence.schedule: Cron schedule or periodic cadence
+  persistence.command: Scheduled command line
+  persistence.label: Launchd / login-item label
+  persistence.path: Path of persistence artifact
+  # System / browser extensions
+  extension.bundle_id: System extension bundle identifier
+  extension.state: Extension activation state
+  extension.team_id: Developer Team ID for extension
+  extension.id: Browser extension ID
+  extension.name: Extension display name
+  extension.version: Extension version string
+  extension.permissions: Comma-separated permission list
+  # Auth / utmpx
+  auth.tty: TTY / line of login session
+  auth.host: Remote host for login
+  auth.type: utmpx type or login/logout class
+  # Gatekeeper
+  gatekeeper.result: Assessment result (allowed|denied|...)
+  gatekeeper.policy: Gatekeeper policy / rule applied
+  # Network location
+  net.service: Network service name
+  net.interface: BSD interface name (en0, ...)
+  net.ipv4: IPv4 address if configured
+  # Browser
+  browser.name: Browser product (chrome|safari|...)
+  # Hardening assessment
+  harden.control: Hardening control id (sip|firewall|gatekeeper|filevault|...)
+  harden.status: Assessment status (pass|fail|warn|unknown)
+  harden.severity: Finding severity
+  harden.remediation: Operator-visible remediation guidance
+  # Privilege / sudoers
+  privilege.kind: sudoers entry class (rule|defaults|alias|include)
+  privilege.line: Raw sudoers line text
+  privilege.risk_tags: Comma-separated risk tags (nopasswd|broad_grant|...)
+  # Defense / launchd overrides
+  defense.kind: Defense surface kind (launchd_override|...)
+  defense.label: launchd job label
+  defense.disabled: Whether the job is disabled (true|false)
+  # Shell profiles
+  shell.risk: Shell profile risk tags
+  shell.profile_scope: system|user
+  # Wave-4 privileged helpers / folder actions / login hooks
+  privhelper.label: Privileged helper job label
+  privhelper.bundle_id: Parent app / helper bundle id
+  folder_action.name: Folder Action name
+  folder_action.watched_path: Watched folder path
+  loginwindow.hook_type: login|logout hook type
+  # Wave-4 access / account posture
+  remote.service: Remote/sharing service name (ssh|file_sharing|screen|...)
+  remote.enabled: true|false|present
+  account.guest_enabled: Guest account enabled flag
+  account.auto_login_user: Auto-login username if configured

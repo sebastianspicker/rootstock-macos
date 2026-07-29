@@ -1,0 +1,11 @@
+id: sample.tcc_esf_visibility_depth
+title: Thin TCC/ESF operator visibility
+severity: high
+description: TCC/ESF visibility depth is thin - limited path listability and/or missing visibility tooling (sensor gap adjacent).
+attack_techniques:
+  - T1562.001
+match:
+  event_type: tcc_esf.visibility
+  field_contains:
+    visibility.risk_tags: "thin_visibility"
+fixture: tcc_esf_visibility_depth.jsonl

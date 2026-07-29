@@ -1,0 +1,11 @@
+id: sample.utmpx_remote_login
+title: Remote login session observed
+severity: medium
+description: utmpx/wtmp session with remote host populated (SSH/network login hypothesis).
+attack_techniques:
+  - T1078
+match:
+  event_type: auth.login
+  field_contains:
+    auth.host: "."
+fixture: utmpx_remote_login.jsonl

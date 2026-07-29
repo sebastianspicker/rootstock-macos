@@ -1,0 +1,13 @@
+id: sample.emond_legacy_depth
+title: Emond legacy rules residual depth surface present
+severity: high
+description: Emond legacy depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1546.014
+  - T1546
+  - T1059
+match:
+  event_type: emond.legacy
+  field_contains:
+    emondleg.risk_tags: "emond_surface"
+fixture: emond_legacy_depth.jsonl

@@ -1,10 +1,10 @@
-// Name: Accessibility API Abuse — Injectable Apps with GUI Control
+// Name: Accessibility API Abuse - Injectable Apps with GUI Control
 // Purpose: Find injectable apps with Accessibility permission that can control other apps via simulated input
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
 // Prerequisites: import_scan.py + infer.py must have run
-// Attack: Accessibility API grants full GUI control (keyboard, mouse, UI reading) — a superset of Apple Events
+// Attack: Accessibility API grants full GUI control (keyboard, mouse, UI reading) - a superset of Apple Events
 // CVE: CVE-2023-42937
 // ATT&CK: T1056.002
 

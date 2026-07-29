@@ -1,0 +1,13 @@
+id: sample.notes_metadata_plane
+title: Notes.app metadata collection path plane surface present
+severity: high
+description: Notes metadata plane markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1005
+  - T1114
+  - T1552
+match:
+  event_type: notes.metadata
+  field_contains:
+    notesmeta.risk_tags: "notes_surface"
+fixture: notes_metadata_plane.jsonl

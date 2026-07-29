@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "browser": "chrome",
+      "extension_path": "/Users/alice/Library/Application Support/Google/Chrome/Default/Extensions/abcdefghijklmnop",
+      "extension_id": "abcdefghijklmnop",
+      "broad_permissions": true,
+      "dual_use_surface": true,
+      "fda_adjacent": true,
+      "risk_tags": "dual_use_surface,broad_permissions,fda_adjacent",
+      "notes": "Browser extension dual-use path markers - secrets not exported",
+      "user": "alice",
+      "timestamp": "2026-04-01T12:10:00Z"
+    },
+    {
+      "browser": "safari",
+      "extension_path": "/Users/alice/Library/Safari/Extensions/Suspicious.safariextz",
+      "extension_id": "com.example.suspicious",
+      "dual_use_surface": true,
+      "risk_tags": "dual_use_surface",
+      "user": "alice",
+      "timestamp": "2026-04-01T12:10:00Z"
+    }
+  ]
+}

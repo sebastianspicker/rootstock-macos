@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-bloodhound_import.py — Import SharpHound JSON ZIP archives into Rootstock Neo4j.
+bloodhound_import.py - Import SharpHound JSON ZIP archives into Rootstock Neo4j.
 
 Parses SharpHound ZIP exports (users.json, groups.json) and creates:
   - (:ADUser) nodes with SID, name, domain, enabled status
@@ -66,6 +66,7 @@ def parse_sharphound_zip(zip_path: str) -> dict:
 
 
 def _parse_sharphound_archive(zf: zipfile.ZipFile, zip_path: str) -> dict:
+    """Validate archive entries, then parse supported files with explicit diagnostics."""
     users: list[dict] = []
     groups: list[dict] = []
     files_present: list[str] = []

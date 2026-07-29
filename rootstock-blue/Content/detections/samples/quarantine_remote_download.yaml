@@ -1,0 +1,11 @@
+id: sample.quarantine_remote
+title: Quarantine event with remote origin URL
+severity: medium
+description: File arrived via remote origin tracked by LSQuarantine.
+attack_techniques:
+  - T1105
+match:
+  event_type: quarantine.event
+  field_contains:
+    quarantine.origin_url: "https://"
+fixture: quarantine_remote_download.jsonl

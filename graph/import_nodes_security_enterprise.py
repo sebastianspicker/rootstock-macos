@@ -1,4 +1,4 @@
-"""import_nodes_security_enterprise.py — AD binding and Kerberos artifact imports."""
+"""import_nodes_security_enterprise.py - AD binding and Kerberos artifact imports."""
 
 from __future__ import annotations
 

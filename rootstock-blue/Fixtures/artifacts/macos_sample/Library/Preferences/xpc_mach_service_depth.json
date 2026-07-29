@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/usr/libexec/xpcproxy",
+      "name": "xpc",
+      "risk_tags": "xpc_mach_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "XPC Mach service depth markers \u2014 never registers XPC services or injects into Mach ports"
+    }
+  ]
+}

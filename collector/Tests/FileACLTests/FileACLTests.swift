@@ -95,6 +95,26 @@ final class FileACLTests: XCTestCase {
         XCTAssertTrue(entries.isEmpty)
     }
 
+    func testCollectPathPreservesPOSIXEvidenceWhenACLReadFails() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("rootstock-acl-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        try Data().write(to: fileURL)
+
+        let source = FileACLDataSource(readACLEntries: { _ in
+            (entries: [], error: "ACL command timed out")
+        })
+        let (acl, error) = source.collectPath(
+            fileURL.path,
+            category: "test",
+            fm: .default
+        )
+
+        XCTAssertEqual(acl?.path, fileURL.path)
+        XCTAssertTrue(acl?.aclEntries.isEmpty == true)
+        XCTAssertEqual(error, "ACL command timed out")
+    }
+
     func testDataSourceMetadata() {
         let ds = FileACLDataSource()
         XCTAssertEqual(ds.name, "File ACLs")

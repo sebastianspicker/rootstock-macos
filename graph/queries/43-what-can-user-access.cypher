@@ -1,9 +1,9 @@
 // Name: User-Centric Access Enumeration
-// Purpose: Given a username, show all reachable TCC permissions, keychain items, and applications
+// Purpose: Given a username, show modeled TCC, Keychain, and application relationships
 // Category: Red Team
 // Severity: High
 // Parameters: $username (e.g. "admin")
-// Attack: Enumerate everything a compromised user account can reach through group membership, sessions, sudo, and app relationships
+// Attack model: traverse group, session, sudo, and application relationships for a user
 // Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (u:User {name: $username})

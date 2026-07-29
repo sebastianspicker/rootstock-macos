@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/usr/bin/profiles",
+      "name": "devicemanagement",
+      "risk_tags": "device_mgmt_surface,wave16,dual_use",
+      "user": "alice",
+      "timestamp": "2026-08-01T12:00:00Z",
+      "notes": "Device management profile markers \u2014 never installs configuration profiles or enrolls hosts in MDM"
+    }
+  ]
+}

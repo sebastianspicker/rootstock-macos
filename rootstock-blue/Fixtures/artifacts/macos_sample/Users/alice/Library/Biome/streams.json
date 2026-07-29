@@ -1,0 +1,24 @@
+{
+  "streams": [
+    {
+      "stream": "app_launch",
+      "value": "com.apple.Safari",
+      "bundle_id": "com.apple.Safari",
+      "timestamp": "2024-06-15T10:00:00Z",
+      "duration": "120"
+    },
+    {
+      "stream": "screen_time",
+      "value": "Terminal",
+      "bundle_id": "com.apple.Terminal",
+      "timestamp": "2024-06-15T11:30:00Z",
+      "duration": "3600"
+    },
+    {
+      "stream": "media_playback",
+      "value": "Suspicious Podcast",
+      "timestamp": "2024-06-15T14:00:00Z",
+      "duration": "1800"
+    }
+  ]
+}

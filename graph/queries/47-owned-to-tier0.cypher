@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Attack: Prioritized attack path — owned nodes to the most critical assets on the system
+// Attack: Prioritized attack path - owned nodes to the most critical assets on the system
 // Prerequisites: import_scan.py + infer.py + mark_owned.py + tier_classification.py must have run
 
 MATCH (src)

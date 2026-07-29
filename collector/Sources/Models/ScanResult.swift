@@ -25,41 +25,41 @@ public struct ScanResult: Codable, Sendable {
     public let collectorVersion: String
     public let elevation: ElevationInfo
     public let applications: [Application]
-    public let tccGrants: [TCCGrant]
-    public let xpcServices: [XPCService]
-    public let keychainAcls: [KeychainItem]
-    public let mdmProfiles: [MDMProfile]
-    public let launchItems: [LaunchItem]
     public let localGroups: [LocalGroup]
-    public let remoteAccessServices: [RemoteAccessService]
-    public let firewallStatus: [FirewallStatus]
-    public let loginSessions: [LoginSession]
-    public let authorizationRights: [AuthorizationRight]
-    public let authorizationPlugins: [AuthorizationPlugin]
-    public let systemExtensions: [SystemExtension]
-    public let sudoersRules: [SudoersRule]
     public let runningProcesses: [RunningProcess]
+    public let tccGrants: [TCCGrant]
+    public let remoteAccessServices: [RemoteAccessService]
     public let userDetails: [UserDetail]
+    public let xpcServices: [XPCService]
+    public let firewallStatus: [FirewallStatus]
     public let fileAcls: [FileACL]
+    public let keychainAcls: [KeychainItem]
+    public let loginSessions: [LoginSession]
     public let bluetoothDevices: [BluetoothDevice]
+    public let mdmProfiles: [MDMProfile]
+    public let authorizationRights: [AuthorizationRight]
     public let adBinding: ADBinding?
+    public let launchItems: [LaunchItem]
+    public let authorizationPlugins: [AuthorizationPlugin]
     public let kerberosArtifacts: [KerberosArtifact]
+    public let systemExtensions: [SystemExtension]
     public let sandboxProfiles: [SandboxProfile]
-    public let gatekeeperEnabled: Bool?
-    public let sipEnabled: Bool?
-    public let filevaultEnabled: Bool?
-    public let lockdownModeEnabled: Bool?
-    public let bluetoothEnabled: Bool?
-    public let bluetoothDiscoverable: Bool?
-    public let screenLockEnabled: Bool?
-    public let screenLockDelay: Int?
-    public let displaySleepTimeout: Int?
-    public let thunderboltSecurityLevel: String?
-    public let secureBootLevel: String?
+    public let sudoersRules: [SudoersRule]
     public let externalBootAllowed: Bool?
-    public let icloudSignedIn: Bool?
-    public let icloudDriveEnabled: Bool?
+    public let displaySleepTimeout: Int?
+    public let secureBootLevel: String?
+    public let screenLockDelay: Int?
+    public let thunderboltSecurityLevel: String?
+    public let screenLockEnabled: Bool?
     public let icloudKeychainEnabled: Bool?
+    public let bluetoothDiscoverable: Bool?
+    public let filevaultEnabled: Bool?
+    public let icloudDriveEnabled: Bool?
+    public let bluetoothEnabled: Bool?
+    public let sipEnabled: Bool?
+    public let icloudSignedIn: Bool?
+    public let lockdownModeEnabled: Bool?
+    public let gatekeeperEnabled: Bool?
     public let errors: [CollectionError]
 
     public struct Metadata: Codable, Sendable {
@@ -85,54 +85,54 @@ public struct ScanResult: Codable, Sendable {
     }
 
     public struct Collections: Codable, Sendable {
-        public let applications: [Application]
-        public let tccGrants: [TCCGrant]
-        public let xpcServices: [XPCService]
-        public let keychainAcls: [KeychainItem]
-        public let mdmProfiles: [MDMProfile]
-        public let launchItems: [LaunchItem]
-        public let localGroups: [LocalGroup]
-        public let remoteAccessServices: [RemoteAccessService]
-        public let firewallStatus: [FirewallStatus]
-        public let loginSessions: [LoginSession]
-        public let authorizationRights: [AuthorizationRight]
-        public let authorizationPlugins: [AuthorizationPlugin]
-        public let systemExtensions: [SystemExtension]
         public let sudoersRules: [SudoersRule]
-        public let runningProcesses: [RunningProcess]
-        public let userDetails: [UserDetail]
-        public let fileAcls: [FileACL]
-        public let bluetoothDevices: [BluetoothDevice]
-        public let adBinding: ADBinding?
-        public let kerberosArtifacts: [KerberosArtifact]
         public let sandboxProfiles: [SandboxProfile]
+        public let systemExtensions: [SystemExtension]
+        public let kerberosArtifacts: [KerberosArtifact]
+        public let authorizationPlugins: [AuthorizationPlugin]
+        public let launchItems: [LaunchItem]
+        public let adBinding: ADBinding?
+        public let authorizationRights: [AuthorizationRight]
+        public let mdmProfiles: [MDMProfile]
+        public let bluetoothDevices: [BluetoothDevice]
+        public let loginSessions: [LoginSession]
+        public let keychainAcls: [KeychainItem]
+        public let fileAcls: [FileACL]
+        public let firewallStatus: [FirewallStatus]
+        public let xpcServices: [XPCService]
+        public let userDetails: [UserDetail]
+        public let remoteAccessServices: [RemoteAccessService]
+        public let tccGrants: [TCCGrant]
+        public let runningProcesses: [RunningProcess]
+        public let localGroups: [LocalGroup]
+        public let applications: [Application]
 
         public init(
             core: CoreCollections = CoreCollections(),
             accountAccess: AccountAccessCollections = AccountAccessCollections(),
             system: SystemCollections = SystemCollections()
         ) {
-            self.applications = core.applications
-            self.tccGrants = core.tccGrants
-            self.xpcServices = core.xpcServices
-            self.keychainAcls = core.keychainAcls
-            self.mdmProfiles = core.mdmProfiles
-            self.launchItems = core.launchItems
-            self.localGroups = accountAccess.localGroups
-            self.remoteAccessServices = accountAccess.remoteAccessServices
-            self.firewallStatus = accountAccess.firewallStatus
-            self.loginSessions = accountAccess.loginSessions
-            self.authorizationRights = accountAccess.authorizationRights
-            self.authorizationPlugins = accountAccess.authorizationPlugins
-            self.systemExtensions = accountAccess.systemExtensions
             self.sudoersRules = accountAccess.sudoersRules
-            self.runningProcesses = system.runningProcesses
-            self.userDetails = system.userDetails
-            self.fileAcls = system.fileAcls
-            self.bluetoothDevices = system.bluetoothDevices
-            self.adBinding = system.adBinding
-            self.kerberosArtifacts = system.kerberosArtifacts
             self.sandboxProfiles = system.sandboxProfiles
+            self.systemExtensions = accountAccess.systemExtensions
+            self.kerberosArtifacts = system.kerberosArtifacts
+            self.authorizationPlugins = accountAccess.authorizationPlugins
+            self.launchItems = core.launchItems
+            self.adBinding = system.adBinding
+            self.authorizationRights = accountAccess.authorizationRights
+            self.mdmProfiles = core.mdmProfiles
+            self.bluetoothDevices = system.bluetoothDevices
+            self.loginSessions = accountAccess.loginSessions
+            self.keychainAcls = core.keychainAcls
+            self.fileAcls = system.fileAcls
+            self.firewallStatus = accountAccess.firewallStatus
+            self.xpcServices = core.xpcServices
+            self.userDetails = system.userDetails
+            self.remoteAccessServices = accountAccess.remoteAccessServices
+            self.tccGrants = core.tccGrants
+            self.runningProcesses = system.runningProcesses
+            self.localGroups = accountAccess.localGroups
+            self.applications = core.applications
         }
     }
 
@@ -236,20 +236,20 @@ public struct ScanResult: Codable, Sendable {
 
     public struct HostPosture: Codable, Sendable {
         public let gatekeeperEnabled: Bool?
-        public let sipEnabled: Bool?
-        public let filevaultEnabled: Bool?
         public let lockdownModeEnabled: Bool?
-        public let bluetoothEnabled: Bool?
-        public let bluetoothDiscoverable: Bool?
-        public let screenLockEnabled: Bool?
-        public let screenLockDelay: Int?
-        public let displaySleepTimeout: Int?
-        public let thunderboltSecurityLevel: String?
-        public let secureBootLevel: String?
-        public let externalBootAllowed: Bool?
         public let icloudSignedIn: Bool?
+        public let sipEnabled: Bool?
+        public let bluetoothEnabled: Bool?
         public let icloudDriveEnabled: Bool?
+        public let filevaultEnabled: Bool?
+        public let bluetoothDiscoverable: Bool?
         public let icloudKeychainEnabled: Bool?
+        public let screenLockEnabled: Bool?
+        public let thunderboltSecurityLevel: String?
+        public let screenLockDelay: Int?
+        public let secureBootLevel: String?
+        public let displaySleepTimeout: Int?
+        public let externalBootAllowed: Bool?
 
         public init(
             gatekeeperEnabled: Bool? = nil,
@@ -259,20 +259,20 @@ public struct ScanResult: Codable, Sendable {
             icloud: ICloud = ICloud()
         ) {
             self.gatekeeperEnabled = gatekeeperEnabled
-            self.sipEnabled = sipEnabled
-            self.filevaultEnabled = filevaultEnabled
             self.lockdownModeEnabled = physicalSecurity.lockdownModeEnabled
-            self.bluetoothEnabled = physicalSecurity.bluetoothEnabled
-            self.bluetoothDiscoverable = physicalSecurity.bluetoothDiscoverable
-            self.screenLockEnabled = physicalSecurity.screenLockEnabled
-            self.screenLockDelay = physicalSecurity.screenLockDelay
-            self.displaySleepTimeout = physicalSecurity.displaySleepTimeout
-            self.thunderboltSecurityLevel = physicalSecurity.thunderboltSecurityLevel
-            self.secureBootLevel = physicalSecurity.secureBootLevel
-            self.externalBootAllowed = physicalSecurity.externalBootAllowed
             self.icloudSignedIn = icloud.icloudSignedIn
+            self.sipEnabled = sipEnabled
+            self.bluetoothEnabled = physicalSecurity.bluetoothEnabled
             self.icloudDriveEnabled = icloud.icloudDriveEnabled
+            self.filevaultEnabled = filevaultEnabled
+            self.bluetoothDiscoverable = physicalSecurity.bluetoothDiscoverable
             self.icloudKeychainEnabled = icloud.icloudKeychainEnabled
+            self.screenLockEnabled = physicalSecurity.screenLockEnabled
+            self.thunderboltSecurityLevel = physicalSecurity.thunderboltSecurityLevel
+            self.screenLockDelay = physicalSecurity.screenLockDelay
+            self.secureBootLevel = physicalSecurity.secureBootLevel
+            self.displaySleepTimeout = physicalSecurity.displaySleepTimeout
+            self.externalBootAllowed = physicalSecurity.externalBootAllowed
         }
     }
 
@@ -380,41 +380,41 @@ public struct ScanResult: Codable, Sendable {
         self.collectorVersion = metadata.collectorVersion
         self.elevation = elevation
         self.applications = collections.applications
-        self.tccGrants = collections.tccGrants
-        self.xpcServices = collections.xpcServices
-        self.keychainAcls = collections.keychainAcls
-        self.mdmProfiles = collections.mdmProfiles
-        self.launchItems = collections.launchItems
         self.localGroups = collections.localGroups
-        self.remoteAccessServices = collections.remoteAccessServices
-        self.firewallStatus = collections.firewallStatus
-        self.loginSessions = collections.loginSessions
-        self.authorizationRights = collections.authorizationRights
-        self.authorizationPlugins = collections.authorizationPlugins
-        self.systemExtensions = collections.systemExtensions
-        self.sudoersRules = collections.sudoersRules
         self.runningProcesses = collections.runningProcesses
+        self.tccGrants = collections.tccGrants
+        self.remoteAccessServices = collections.remoteAccessServices
         self.userDetails = collections.userDetails
+        self.xpcServices = collections.xpcServices
+        self.firewallStatus = collections.firewallStatus
         self.fileAcls = collections.fileAcls
+        self.keychainAcls = collections.keychainAcls
+        self.loginSessions = collections.loginSessions
         self.bluetoothDevices = collections.bluetoothDevices
+        self.mdmProfiles = collections.mdmProfiles
+        self.authorizationRights = collections.authorizationRights
         self.adBinding = collections.adBinding
+        self.launchItems = collections.launchItems
+        self.authorizationPlugins = collections.authorizationPlugins
         self.kerberosArtifacts = collections.kerberosArtifacts
+        self.systemExtensions = collections.systemExtensions
         self.sandboxProfiles = collections.sandboxProfiles
-        self.gatekeeperEnabled = hostPosture.gatekeeperEnabled
-        self.sipEnabled = hostPosture.sipEnabled
-        self.filevaultEnabled = hostPosture.filevaultEnabled
-        self.lockdownModeEnabled = hostPosture.lockdownModeEnabled
-        self.bluetoothEnabled = hostPosture.bluetoothEnabled
-        self.bluetoothDiscoverable = hostPosture.bluetoothDiscoverable
-        self.screenLockEnabled = hostPosture.screenLockEnabled
-        self.screenLockDelay = hostPosture.screenLockDelay
-        self.displaySleepTimeout = hostPosture.displaySleepTimeout
-        self.thunderboltSecurityLevel = hostPosture.thunderboltSecurityLevel
-        self.secureBootLevel = hostPosture.secureBootLevel
+        self.sudoersRules = collections.sudoersRules
         self.externalBootAllowed = hostPosture.externalBootAllowed
-        self.icloudSignedIn = hostPosture.icloudSignedIn
-        self.icloudDriveEnabled = hostPosture.icloudDriveEnabled
+        self.displaySleepTimeout = hostPosture.displaySleepTimeout
+        self.secureBootLevel = hostPosture.secureBootLevel
+        self.screenLockDelay = hostPosture.screenLockDelay
+        self.thunderboltSecurityLevel = hostPosture.thunderboltSecurityLevel
+        self.screenLockEnabled = hostPosture.screenLockEnabled
         self.icloudKeychainEnabled = hostPosture.icloudKeychainEnabled
+        self.bluetoothDiscoverable = hostPosture.bluetoothDiscoverable
+        self.filevaultEnabled = hostPosture.filevaultEnabled
+        self.icloudDriveEnabled = hostPosture.icloudDriveEnabled
+        self.bluetoothEnabled = hostPosture.bluetoothEnabled
+        self.sipEnabled = hostPosture.sipEnabled
+        self.icloudSignedIn = hostPosture.icloudSignedIn
+        self.lockdownModeEnabled = hostPosture.lockdownModeEnabled
+        self.gatekeeperEnabled = hostPosture.gatekeeperEnabled
         self.errors = errors
     }
 

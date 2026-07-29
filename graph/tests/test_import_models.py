@@ -1,5 +1,5 @@
 """
-test_import_models.py — Pydantic model validation tests (no Neo4j required).
+test_import_models.py - Pydantic model validation tests (no Neo4j required).
 
 Usage:
     pytest graph/tests/test_import_models.py -v
@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-FIXTURE_PATH = Path(__file__).parent / "fixture_minimal.json"
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "minimal_scan.json"
 TEST_SCAN_ID = "test-00000000-0000-0000-0000-000000000001"
 
 

@@ -1,4 +1,4 @@
-"""diff_formatters.py — Summary and text formatters for Rootstock posture diffs."""
+"""diff_formatters.py - Summary and text formatters for Rootstock posture diffs."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ def format_text(diff: PostureDiff, summary: dict) -> str:
 
 def _header_lines(diff: PostureDiff) -> list[str]:
     return [
-        f"Rootstock Posture Diff — {diff.hostname}",
+        f"Rootstock Posture Diff - {diff.hostname}",
         f"  Before: {diff.before_timestamp} (scan {diff.before_scan_id[:8]})",
         f"  After:  {diff.after_timestamp} (scan {diff.after_scan_id[:8]})",
         "",

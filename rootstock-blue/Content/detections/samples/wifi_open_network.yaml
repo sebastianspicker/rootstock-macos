@@ -1,0 +1,11 @@
+id: sample.wifi_open_network
+title: Preferred Wi-Fi network with Open security
+severity: medium
+description: Preferred wireless network stored with Open (no) security - elevated MitM / sniffing risk.
+attack_techniques:
+  - T1557
+match:
+  event_type: network.wifi_preferred
+  field_equals:
+    wifi.security: Open
+fixture: wifi_open_network.jsonl

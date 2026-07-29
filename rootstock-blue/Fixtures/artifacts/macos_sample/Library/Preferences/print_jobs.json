@@ -1,0 +1,33 @@
+{
+  "jobs": [
+    {
+      "job_id": "42",
+      "document": "employee_passwords.pdf",
+      "user": "alice",
+      "printer": "OfficeLaser",
+      "pages": "3",
+      "state": "completed",
+      "completed_at": "2026-03-01T14:00:00Z",
+      "risk_tags": "sensitive_document"
+    },
+    {
+      "job_id": "43",
+      "document": "Q1_report.pdf",
+      "user": "alice",
+      "printer": "OfficeLaser",
+      "pages": "12",
+      "state": "completed",
+      "completed_at": "2026-02-28T16:00:00Z"
+    },
+    {
+      "job_id": "44",
+      "document": "evil_payload_notes.pdf",
+      "user": "alice",
+      "printer": "smb://evil.example/print",
+      "pages": "1",
+      "state": "completed",
+      "completed_at": "2026-03-01T15:00:00Z",
+      "risk_tags": "suspicious_document,remote_printer"
+    }
+  ]
+}

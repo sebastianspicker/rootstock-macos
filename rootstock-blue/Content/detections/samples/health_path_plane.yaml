@@ -1,0 +1,13 @@
+id: sample.health_path_plane
+title: Health app residual path plane surface present
+severity: high
+description: Health path plane markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1213
+match:
+  event_type: health.path
+  field_contains:
+    hlthpath.risk_tags: "health_surface"
+fixture: health_path_plane.jsonl

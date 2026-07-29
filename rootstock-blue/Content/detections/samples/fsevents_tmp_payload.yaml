@@ -1,0 +1,11 @@
+id: sample.fsevents_tmp_payload
+title: FSEvents entry for payload under /tmp
+severity: low
+description: FSEvents export path contains payload.dmg
+attack_techniques:
+  - T1105
+match:
+  event_type: fsevents.entry
+  field_contains:
+    file.path: "payload"
+fixture: fsevents_tmp_payload.jsonl

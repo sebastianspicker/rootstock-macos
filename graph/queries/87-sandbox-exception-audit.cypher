@@ -1,5 +1,5 @@
 // Name: Sandbox Exception Audit
-// Purpose: Apps with unconstrained network or file access despite being sandboxed — weakened sandbox posture
+// Purpose: Apps with unconstrained network or file access despite being sandboxed - weakened sandbox posture
 // Category: Blue Team
 // Severity: High
 // Parameters: none

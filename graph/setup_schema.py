@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-setup_schema.py — Create Neo4j indexes and constraints for the Rootstock graph.
+setup_schema.py - Create Neo4j indexes and constraints for the Rootstock graph.
 
 Run once before the first import, or re-run safely (all statements use IF NOT EXISTS).
 

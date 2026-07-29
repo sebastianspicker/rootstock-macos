@@ -1,0 +1,9 @@
+Rootstock Blue
+Copyright 2026 Rootstock Contributors
+
+Rootstock Blue includes optional integration surfaces for independently
+distributed projects, including Santa, Velociraptor, UAC,
+macos-UnifiedLogs, Fleet, osquery, Atomic Red Team, Sigma, and Elastic
+detection content. Those projects are not bundled by the Rootstock Blue Swift
+package unless a source file states otherwise. Review the upstream license
+before adding or redistributing third-party code or content.

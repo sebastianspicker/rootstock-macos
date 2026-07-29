@@ -1,4 +1,4 @@
-"""scan_loader.py — Load and validate Rootstock scan JSON files."""
+"""scan_loader.py - Load and validate Rootstock scan JSON files."""
 
 from __future__ import annotations
 

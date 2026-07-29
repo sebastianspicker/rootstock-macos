@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "item_class": "genp",
+      "label": "evil-implant-backdoor",
+      "access_group": "com.evil.unknown.access",
+      "account": "admin",
+      "mtime": "2024-04-20T03:15:00Z",
+      "system_keychain": true,
+      "risk_tags": "suspicious_label,unexpected_access_group,generic_password_in_system"
+    },
+    {
+      "item_class": "inet",
+      "label": "com.apple.network.eap.user.item.wlan.ssid.CorporateWiFi",
+      "access_group": "apple",
+      "account": "alice@corp.example",
+      "mtime": "2024-03-01T10:00:00Z"
+    },
+    {
+      "item_class": "keys",
+      "label": "com.apple.systemdefault",
+      "access_group": "com.apple.systemdefault",
+      "account": "",
+      "mtime": "2023-01-01T00:00:00Z"
+    }
+  ]
+}

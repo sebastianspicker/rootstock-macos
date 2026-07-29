@@ -1,5 +1,5 @@
 """
-infer_electron.py — Infer CHILD_INHERITS_TCC relationships for Electron apps.
+infer_electron.py - Infer CHILD_INHERITS_TCC relationships for Electron apps.
 
 Electron apps that have allowed TCC grants are vulnerable to the ELECTRON_RUN_AS_NODE
 technique: a child process spawned via the `--inspect` flag or `ELECTRON_RUN_AS_NODE`

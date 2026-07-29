@@ -1,0 +1,3 @@
+#!/bin/sh
+# fixture privileged helper marker
+echo evil-helper

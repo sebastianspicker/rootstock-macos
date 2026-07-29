@@ -1,5 +1,5 @@
 """
-infer_quarantine.py — Infer Gatekeeper bypass relationships from quarantine attributes.
+infer_quarantine.py - Infer Gatekeeper bypass relationships from quarantine attributes.
 
 Creates BYPASSED_GATEKEEPER edges from the attacker node to applications that:
   - Are not notarized (is_notarized = false)
@@ -27,7 +27,7 @@ def infer(session: Session) -> int:
 
     An application that is not notarized AND lacks a quarantine flag indicates it
     was either sideloaded without Gatekeeper enforcement or the quarantine attribute
-    was stripped — both indicate a bypass of the download defence chain.
+    was stripped - both indicate a bypass of the download defence chain.
 
     Returns edge count. Idempotent: uses MERGE, safe to re-run.
     """

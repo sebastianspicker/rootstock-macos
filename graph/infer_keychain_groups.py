@@ -1,5 +1,5 @@
 """
-infer_keychain_groups.py — Infer SHARES_KEYCHAIN_GROUP edges between applications.
+infer_keychain_groups.py - Infer SHARES_KEYCHAIN_GROUP edges between applications.
 
 Applications that share a Keychain access group can read each other's stored
 credentials. If one app in a shared group is injectable, the attacker can
@@ -28,7 +28,7 @@ def infer(session: Session) -> int:
         UNWIND apps AS b
         WITH a, b, grp WHERE a.bundle_id < b.bundle_id
         // Directed edge for MERGE idempotency (a < b ensures one canonical direction).
-        // The relationship is semantically symmetric — queries MUST traverse
+        // The relationship is semantically symmetric - queries MUST traverse
         // undirected: -[:SHARES_KEYCHAIN_GROUP]- (not ->).
         MERGE (a)-[r:SHARES_KEYCHAIN_GROUP {access_group: grp}]->(b)
         SET r.inferred = true

@@ -1,0 +1,12 @@
+id: sample.ir_sip_disabled
+title: SIP reported disabled (IR posture)
+severity: critical
+description: Live/offline IR posture probe reports System Integrity Protection disabled.
+attack_techniques:
+  - T1562.001
+match:
+  event_type: ir.posture.protection
+  field_equals:
+    protection.name: SIP
+    protection.enabled: "false"
+fixture: ir_sip_disabled.jsonl

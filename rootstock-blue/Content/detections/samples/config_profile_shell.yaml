@@ -1,0 +1,11 @@
+id: sample.config_profile_shell
+title: Configuration profile with shell payload
+severity: high
+description: Host configuration profile of type shell or malicious identifier - policy-level persistence/execution.
+attack_techniques:
+  - T1484.001
+match:
+  event_type: host.config_profile
+  field_contains:
+    profile.identifier: "com.evil"
+fixture: config_profile_shell.jsonl

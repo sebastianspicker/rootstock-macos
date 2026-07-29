@@ -1,0 +1,17 @@
+name: access-surface
+description: Remote access and session surface (SSH + utmpx/wtmp + sudoers + sharing services + guest/auto-login + login hooks + ARD + auth plugins)
+requires_fda: true
+requires_es: false
+artifacts:
+  - ssh
+  - utmpx
+  - sudoers
+  - security_posture
+  - gatekeeper
+  - launchd_overrides
+  - login_hooks
+  - file_sharing
+  - software_update
+  - ard
+  - auth_plugins
+  - keychain_meta

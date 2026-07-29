@@ -1,6 +1,6 @@
-# TCC Internals — Research Notes
+# TCC Internals - Research Notes
 
-> Reference for the Collector Engineer agent when implementing the TCC parser.
+> Reference for maintaining the collector's TCC parser.
 > Sources: Apple Platform Security Guide, HackTricks, Wojciech Reguła research.
 
 ## TCC Database Locations
@@ -50,7 +50,7 @@ CREATE TABLE access (
 
 | Value | Meaning |
 |---|---|
-| 1 | User set (via system prompt) |
+| 1 | User set through a system authorization dialog |
 | 2 | User set (via System Preferences / Settings) |
 | 3 | System set (entitlement-based) |
 | 4 | MDM policy |
@@ -60,17 +60,17 @@ CREATE TABLE access (
 
 | Identifier | Display Name | Why it matters |
 |---|---|---|
-| `kTCCServiceSystemPolicyAllFiles` | Full Disk Access | Access to all files including TCC.db itself |
-| `kTCCServiceAccessibility` | Accessibility | Can control other apps, key logging |
-| `kTCCServiceScreenCapture` | Screen Recording | Can capture screen content |
-| `kTCCServiceMicrophone` | Microphone | Audio surveillance |
-| `kTCCServiceCamera` | Camera | Visual surveillance |
+| `kTCCServiceSystemPolicyAllFiles` | Full Disk Access | Broad TCC-authorized file access; SIP, sandbox, process identity, and file permissions still apply |
+| `kTCCServiceAccessibility` | Accessibility | UI-control capability subject to target and runtime checks |
+| `kTCCServiceScreenCapture` | Screen Recording | Screen-capture authorization |
+| `kTCCServiceMicrophone` | Microphone | Microphone authorization |
+| `kTCCServiceCamera` | Camera | Camera authorization |
 | `kTCCServiceSystemPolicyDesktopFolder` | Desktop | Access to ~/Desktop |
 | `kTCCServiceSystemPolicyDocumentsFolder` | Documents | Access to ~/Documents |
 | `kTCCServiceSystemPolicyDownloadsFolder` | Downloads | Access to ~/Downloads |
-| `kTCCServiceAppleEvents` | Automation | Can send Apple Events to other apps |
-| `kTCCServiceListenEvent` | Input Monitoring | Can monitor keyboard/mouse input |
-| `kTCCServicePostEvent` | (deprecated) | Can inject keyboard/mouse events |
+| `kTCCServiceAppleEvents` | Automation | Apple Event authorization for specified targets |
+| `kTCCServiceListenEvent` | Input Monitoring | Input-event monitoring authorization |
+| `kTCCServicePostEvent` | (deprecated) | Input-event posting authorization |
 | `kTCCServiceSystemPolicyRemovableVolumes` | Removable Volumes | Access to USB drives etc. |
 | `kTCCServiceSystemPolicyNetworkVolumes` | Network Volumes | Access to network shares |
 | `kTCCServiceEndpointSecurityClient` | Endpoint Security | Can use ESF APIs |
@@ -82,7 +82,7 @@ It can be decoded with `csreq -r- -t < blob.bin` but for our purposes we
 primarily match via `client` (bundle ID) and verify against the app's
 actual code signing identity during graph import.
 
-**Key insight for attack paths:** The csreq often does NOT include version
+Key insight for attack paths: The csreq often does NOT include version
 information. This means an older, less secure version of the same app
 (same bundle ID, same team ID) can inherit TCC grants from the current version.
 

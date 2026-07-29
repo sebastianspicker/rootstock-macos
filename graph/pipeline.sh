@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pipeline.sh — One-command Rootstock analysis pipeline.
+# pipeline.sh - One-command Rootstock analysis pipeline.
 #
 # Runs all steps in order: setup_schema → cve_enrichment → import → infer → vulnerabilities → classify → report
 #
@@ -30,7 +30,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
 usage() {
-    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--password PASS] [--report FILE] [--skip-report] [--refresh-cve] [--cve-scan-export FILE] [--serve [PORT]]"
+    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--report FILE] [--skip-report] [--refresh-cve] [--cve-scan-export FILE] [--serve [PORT]]"
     echo ""
     echo "Runs the full Rootstock pipeline: schema → import → infer → classify → report"
     echo ""
@@ -55,7 +55,7 @@ if [[ ! -f "$SCAN_FILE" ]]; then
     exit 1
 fi
 
-# Neo4j connection — CLI args override env vars, env vars override defaults
+# Neo4j connection - non-secret CLI args override env vars.
 NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 NEO4J_USER="${NEO4J_USER:-neo4j}"
 NEO4J_PASS="${NEO4J_PASSWORD:-}"
@@ -70,7 +70,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --neo4j)     NEO4J_URI="$2"; shift 2 ;;
         --username)  NEO4J_USER="$2"; shift 2 ;;
-        --password)  NEO4J_PASS="$2"; shift 2 ;;
         --report)    REPORT_FILE="$2"; shift 2 ;;
         --skip-report) SKIP_REPORT=true; shift ;;
         --refresh-cve) REFRESH_CVE=true; shift ;;
@@ -84,7 +83,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$NEO4J_PASS" && "${NEO4J_AUTH:-}" != "none" ]]; then
-    echo "ERROR: Set NEO4J_PASSWORD or use --password" >&2
+    echo "ERROR: Set NEO4J_PASSWORD" >&2
     exit 1
 fi
 

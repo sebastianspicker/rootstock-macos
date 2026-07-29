@@ -1,0 +1,3 @@
+#!/bin/sh
+# evil periodic
+/tmp/clean_logs.sh

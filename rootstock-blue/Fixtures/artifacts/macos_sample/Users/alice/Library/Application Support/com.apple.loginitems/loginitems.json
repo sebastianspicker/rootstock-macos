@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "name": "Evil Login",
+      "path": "/tmp/evil_login_item.app",
+      "hidden": false
+    },
+    {
+      "name": "Safari",
+      "path": "/Applications/Safari.app",
+      "hidden": false
+    }
+  ]
+}

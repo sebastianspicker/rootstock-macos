@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Applications/Notes.app",
+      "name": "notes",
+      "risk_tags": "notes_surface,wave14,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-01T12:00:00Z",
+      "notes": "Notes metadata plane markers \u2014 never reads Notes body contents or exports note secrets"
+    }
+  ]
+}

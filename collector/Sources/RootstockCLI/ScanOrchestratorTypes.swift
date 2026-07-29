@@ -46,6 +46,7 @@ extension ScanOrchestrator {
         let icloud: ICloudProbeResult
     }
 
+    /// Typed, normalized module output before it is assembled into `ScanResult`.
     struct ScanModuleCollection {
         let tccGrants: [TCCGrant]
         let xpcServices: [XPCService]
@@ -70,31 +71,22 @@ extension ScanOrchestrator {
     typealias TimedDataSourceResult = (DataSourceResult, Double)
     typealias TimedPhysicalSecurityResult = (PhysicalSecurityResult, Double)
     typealias TimedActiveDirectoryResult = (
-        (result: DataSourceResult, binding: ADBinding),
+        (result: DataSourceResult, binding: ADBinding?),
         Double
     )
 
+    /// Concurrent collector results keyed by stable module ID, never task order.
     struct ModuleTaskResults {
-        let tcc: TimedDataSourceResult?
-        let xpc: TimedDataSourceResult?
-        let persistence: TimedDataSourceResult?
-        let keychain: TimedDataSourceResult?
-        let mdm: TimedDataSourceResult?
-        let groups: TimedDataSourceResult?
-        let remoteAccess: TimedDataSourceResult?
-        let firewall: TimedDataSourceResult?
-        let loginSessions: TimedDataSourceResult?
-        let authorizationDB: TimedDataSourceResult?
-        let authorizationPlugins: TimedDataSourceResult?
-        let systemExtensions: TimedDataSourceResult?
-        let sudoers: TimedDataSourceResult?
-        let fileACLs: TimedDataSourceResult?
-        let shellHooks: TimedDataSourceResult?
+        let dataSourceResults: [RootstockModuleID: TimedDataSourceResult]
         let physicalSecurity: TimedPhysicalSecurityResult?
         let activeDirectory: TimedActiveDirectoryResult?
-        let kerberos: TimedDataSourceResult?
+
+        func result(for module: RootstockModuleID) -> TimedDataSourceResult? {
+            dataSourceResults[module]
+        }
     }
 
+    /// Bridges the multi-payload physical posture probe into the scan schema.
     struct PhysicalSecurityCollection {
         var bluetoothDevices: [BluetoothDevice] = []
         var lockdownModeEnabled: Bool?

@@ -1,6 +1,6 @@
-"""test_diff_scans.py — Tests for diff_scans.py diff functions.
+"""test_diff_scans.py - Tests for diff_scans.py diff functions.
 
-All tests are pure Python — no Neo4j required. Builds ScanResult objects
+All tests are pure Python - no Neo4j required. Builds ScanResult objects
 from the fixture JSON and modifies fields to test each diff function.
 """
 
@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from unittest import TestCase
 
+from conftest import clone_clean_application
 from diff_scans import (
     diff_apps,
     diff_entitlements,
@@ -24,7 +25,7 @@ from diff_scans import (
 )
 from models import ScanResult
 
-FIXTURE = Path(__file__).parent / "fixture_minimal.json"
+FIXTURE = Path(__file__).parent / "fixtures" / "minimal_scan.json"
 
 
 def _load_fixture() -> ScanResult:
@@ -54,30 +55,14 @@ class TestDiffApps:
     def test_app_added(self):
         before = _load_fixture()
         after_data = _load_raw()
-        after_data["applications"].append(
-            {
-                "name": "NewApp",
-                "bundle_id": "com.example.newapp",
-                "path": "/Applications/NewApp.app",
-                "version": "1.0",
-                "team_id": "T1",
-                "hardened_runtime": True,
-                "library_validation": True,
-                "is_electron": False,
-                "is_system": False,
-                "signed": True,
-                "entitlements": [],
-                "is_adhoc_signed": False,
-                "signing_certificate_cn": None,
-                "signing_certificate_sha256": None,
-                "certificate_expires": None,
-                "is_certificate_expired": False,
-                "certificate_chain_length": None,
-                "certificate_trust_valid": None,
-                "certificate_chain": [],
-                "injection_methods": [],
-            }
+        added_app = clone_clean_application(
+            after_data["applications"][0],
+            name="NewApp",
+            bundle_id="com.example.newapp",
+            path="/Applications/NewApp.app",
+            team_id="T1",
         )
+        after_data["applications"].append(added_app)
         after = _make_scan(after_data)
         diff = diff_apps(before, after)
         checks.assertEqual(len(diff.added), 1)
@@ -182,7 +167,7 @@ class TestDiffInjection:
         """Existing app gains injection methods."""
         before = _load_fixture()
         after_data = _load_raw()
-        # Terminal (index 2) has no injection_methods — give it one
+        # Terminal (index 2) has no injection_methods - give it one
         after_data["applications"][2]["injection_methods"] = ["dyld_insert"]
         after = _make_scan(after_data)
         diff = diff_injection(before, after)
@@ -193,7 +178,7 @@ class TestDiffInjection:
         """App that was injectable is no longer injectable."""
         before = _load_fixture()
         after_data = _load_raw()
-        # iTerm2 (index 0) has injection_methods — clear them
+        # iTerm2 (index 0) has injection_methods - clear them
         after_data["applications"][0]["injection_methods"] = []
         after = _make_scan(after_data)
         diff = diff_injection(before, after)
@@ -204,7 +189,7 @@ class TestDiffInjection:
         """App's injection methods change (but still injectable)."""
         before = _load_fixture()
         after_data = _load_raw()
-        # Slack (index 1) has 3 methods — change to just one different set
+        # Slack (index 1) has 3 methods - change to just one different set
         after_data["applications"][1]["injection_methods"] = ["dyld_insert"]
         after = _make_scan(after_data)
         diff = diff_injection(before, after)
@@ -276,7 +261,7 @@ class TestDiffEntitlements:
     def test_lost_critical(self):
         before = _load_fixture()
         after_data = _load_raw()
-        # Remove all entitlements from iTerm2 (index 0) — it has 2 critical ones
+        # Remove all entitlements from iTerm2 (index 0) - it has 2 critical ones
         after_data["applications"][0]["entitlements"] = []
         after = _make_scan(after_data)
         diff = diff_entitlements(before, after)
@@ -399,30 +384,14 @@ class TestDiffScansEndToEnd:
         before = _load_fixture()
         after_data = _load_raw()
         # Add an app, remove a TCC grant, change SIP
-        after_data["applications"].append(
-            {
-                "name": "Delta",
-                "bundle_id": "com.example.delta",
-                "path": "/Applications/Delta.app",
-                "version": "1.0",
-                "team_id": "T1",
-                "hardened_runtime": True,
-                "library_validation": True,
-                "is_electron": False,
-                "is_system": False,
-                "signed": True,
-                "entitlements": [],
-                "is_adhoc_signed": False,
-                "signing_certificate_cn": None,
-                "signing_certificate_sha256": None,
-                "certificate_expires": None,
-                "is_certificate_expired": False,
-                "certificate_chain_length": None,
-                "certificate_trust_valid": None,
-                "certificate_chain": [],
-                "injection_methods": [],
-            }
+        added_app = clone_clean_application(
+            after_data["applications"][0],
+            name="Delta",
+            bundle_id="com.example.delta",
+            path="/Applications/Delta.app",
+            team_id="T1",
         )
+        after_data["applications"].append(added_app)
         after_data["tcc_grants"] = after_data["tcc_grants"][:2]
         after_data["sip_enabled"] = False
         after = _make_scan(after_data)

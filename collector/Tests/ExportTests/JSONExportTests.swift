@@ -132,11 +132,7 @@ final class JSONExportTests: XCTestCase {
     // MARK: - Round-trip tests
 
     func testRoundTripPreservesApplicationData() throws {
-        let exporter = JSONExporter()
-        let original = makeSampleScanResult()
-        let data = try exporter.encode(original)
-        let decoder = JSONDecoder()
-        let decoded = try decoder.decode(ScanResult.self, from: data)
+        let (original, decoded) = try roundTrippedSampleScanResult()
 
         XCTAssertEqual(decoded.scanId,           original.scanId)
         XCTAssertEqual(decoded.hostname,         original.hostname)
@@ -147,11 +143,7 @@ final class JSONExportTests: XCTestCase {
     }
 
     func testRoundTripPreservesApplicationProperties() throws {
-        let exporter = JSONExporter()
-        let original = makeSampleScanResult()
-        let data = try exporter.encode(original)
-        let decoder = JSONDecoder()
-        let decoded = try decoder.decode(ScanResult.self, from: data)
+        let (original, decoded) = try roundTrippedSampleScanResult()
 
         let origApp = original.applications[0]
         let decApp  = decoded.applications[0]
@@ -166,11 +158,7 @@ final class JSONExportTests: XCTestCase {
     }
 
     func testRoundTripPreservesTCCGrant() throws {
-        let exporter = JSONExporter()
-        let original = makeSampleScanResult()
-        let data = try exporter.encode(original)
-        let decoder = JSONDecoder()
-        let decoded = try decoder.decode(ScanResult.self, from: data)
+        let (original, decoded) = try roundTrippedSampleScanResult()
 
         let origGrant = original.tccGrants[0]
         let decGrant  = decoded.tccGrants[0]
@@ -183,11 +171,7 @@ final class JSONExportTests: XCTestCase {
     }
 
     func testRoundTripPreservesElevationInfo() throws {
-        let exporter = JSONExporter()
-        let original = makeSampleScanResult()
-        let data = try exporter.encode(original)
-        let decoder = JSONDecoder()
-        let decoded = try decoder.decode(ScanResult.self, from: data)
+        let (original, decoded) = try roundTrippedSampleScanResult()
         XCTAssertEqual(decoded.elevation.isRoot,  original.elevation.isRoot)
         XCTAssertEqual(decoded.elevation.hasFda,  original.elevation.hasFda)
     }
@@ -231,9 +215,8 @@ final class JSONExportTests: XCTestCase {
 
     func testWriteRefusesExistingFileWithoutForce() throws {
         let exporter = JSONExporter()
-        let tmpPath = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        let tmpPath = try existingOutputPath()
         defer { try? FileManager.default.removeItem(atPath: tmpPath) }
-        try "existing".write(toFile: tmpPath, atomically: false, encoding: .utf8)
 
         XCTAssertThrowsError(try exporter.write(makeSampleScanResult(), to: tmpPath)) { error in
             XCTAssertTrue(String(describing: error).contains("outputExists"))
@@ -242,9 +225,8 @@ final class JSONExportTests: XCTestCase {
 
     func testForceReplacesRegularFileWithOwnerOnlyMode() throws {
         let exporter = JSONExporter()
-        let tmpPath = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        let tmpPath = try existingOutputPath()
         defer { try? FileManager.default.removeItem(atPath: tmpPath) }
-        try "existing".write(toFile: tmpPath, atomically: false, encoding: .utf8)
         chmod(tmpPath, 0o644)
 
         try exporter.write(makeSampleScanResult(), to: tmpPath, force: true)
@@ -267,6 +249,19 @@ final class JSONExportTests: XCTestCase {
         var info = stat()
         XCTAssertEqual(stat(tmpPath, &info), 0)
         XCTAssertEqual(info.st_mode & 0o777, 0o600)
+    }
+
+    private func roundTrippedSampleScanResult() throws -> (original: ScanResult, decoded: ScanResult) {
+        let original = makeSampleScanResult()
+        let data = try JSONExporter().encode(original)
+        let decoded = try JSONDecoder().decode(ScanResult.self, from: data)
+        return (original, decoded)
+    }
+
+    private func existingOutputPath() throws -> String {
+        let path = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        try "existing".write(toFile: path, atomically: false, encoding: .utf8)
+        return path
     }
 
     func testWriteRefusesSymlinkEvenWithForce() throws {

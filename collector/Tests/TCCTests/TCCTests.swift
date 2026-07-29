@@ -92,28 +92,30 @@ final class TCCTests: XCTestCase {
     // MARK: - SQLiteDatabase tests
 
     func testSQLiteDatabaseReadsRows() throws {
-        let path = NSTemporaryDirectory() + "tcc-test-\(UUID().uuidString).db"
-        defer { try? FileManager.default.removeItem(atPath: path) }
-        makeFixtureDB(at: path)
-
-        let db = try SQLiteDatabase(path: path)
-        let rows = try db.query("SELECT * FROM access")
+        let rows = try withFixtureDatabase { db in
+            try db.query("SELECT * FROM access")
+        }
         XCTAssertEqual(rows.count, 7)
     }
 
     func testSQLiteDatabaseColumnTypes() throws {
-        let path = NSTemporaryDirectory() + "tcc-test-\(UUID().uuidString).db"
-        defer { try? FileManager.default.removeItem(atPath: path) }
-        makeFixtureDB(at: path)
-
-        let db = try SQLiteDatabase(path: path)
-        let rows = try db.query("SELECT service, client_type, last_modified FROM access LIMIT 1")
+        let rows = try withFixtureDatabase { db in
+            try db.query("SELECT service, client_type, last_modified FROM access LIMIT 1")
+        }
         XCTAssertEqual(rows.count, 1)
 
         let row = rows[0]
         XCTAssertTrue(row["service"] is String, "service should be String")
         XCTAssertTrue(row["client_type"] is Int, "client_type should be Int")
         XCTAssertTrue(row["last_modified"] is Int, "last_modified should be Int")
+    }
+
+    private func withFixtureDatabase<T>(_ body: (SQLiteDatabase) throws -> T) throws -> T {
+        let path = NSTemporaryDirectory() + "tcc-test-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        makeFixtureDB(at: path)
+        let db = try SQLiteDatabase(path: path)
+        return try body(db)
     }
 
     func testSQLiteDatabaseNonexistentPath() {

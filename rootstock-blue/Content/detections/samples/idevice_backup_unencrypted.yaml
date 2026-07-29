@@ -1,0 +1,11 @@
+id: sample.idevice_backup_unencrypted
+title: Unencrypted iDevice backup present
+severity: high
+description: Finder/iTunes iDevice backup marker reports encryption disabled.
+attack_techniques:
+  - T1005
+match:
+  event_type: backup.idevice
+  field_equals:
+    backup.encrypted: "false"
+fixture: idevice_backup_unencrypted.jsonl

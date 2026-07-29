@@ -4,27 +4,27 @@
 
 ## Security Layers (outer to inner)
 
-1. **Gatekeeper** — Verifies code signing and notarization before first launch
-2. **XProtect** — Signature-based malware detection (YARA rules)
-3. **App Sandbox** — Per-app filesystem and resource restrictions
-4. **TCC** — Per-app permission grants for sensitive resources (camera, mic, FDA)
-5. **SIP** — Protects system files even from root (`/System`, `/usr`, kernel extensions)
-6. **Secure Boot / T2/M-series** — Hardware root of trust, boot chain verification
+1. Gatekeeper - Verifies code signing and notarization before first launch
+2. XProtect - Signature-based malware detection (YARA rules)
+3. App Sandbox - Per-app filesystem and resource restrictions
+4. TCC - Per-app permission grants for sensitive resources (camera, mic, FDA)
+5. SIP - Protects system files even from root (`/System`, `/usr`, kernel extensions)
+6. Secure Boot / T2/M-series - Hardware root of trust, boot chain verification
 
 ## Key Terminology
 
-- **FDA** = Full Disk Access (TCC service `kTCCServiceSystemPolicyAllFiles`)
-- **SIP** = System Integrity Protection (`csrutil status` to check)
-- **TCC** = Transparency, Consent, and Control (privacy permission framework)
-- **Hardened Runtime** = App opts into stricter security (required for notarization)
-- **Library Validation** = App only loads libraries signed by same team or Apple
-- **Entitlement** = Key-value capability declared in code signature
-- **Notarization** = Apple's automated malware scan for distributed apps
-- **SSV** = Signed System Volume (cryptographic seal on system partition, macOS 11+)
-- **ESF** = Endpoint Security Framework (kernel-level event monitoring API)
-- **XPC** = Cross-Process Communication (macOS IPC mechanism via Mach ports)
-- **Keychain** = macOS credential management system (login, system, iCloud keychains)
-- **LKDC** = Local Key Distribution Center (Kerberos KDC on every macOS since 10.5)
+- FDA = Full Disk Access (TCC service `kTCCServiceSystemPolicyAllFiles`)
+- SIP = System Integrity Protection (`csrutil status` to check)
+- TCC = Transparency, Consent, and Control (privacy permission framework)
+- Hardened Runtime = App opts into stricter security (required for notarization)
+- Library Validation = App only loads libraries signed by same team or Apple
+- Entitlement = Key-value capability declared in code signature
+- Notarization = Apple's automated malware scan for distributed apps
+- SSV = Signed System Volume (cryptographic seal on system partition, macOS 11+)
+- ESF = Endpoint Security Framework (kernel-level event monitoring API)
+- XPC = Cross-Process Communication (macOS IPC mechanism via Mach ports)
+- Keychain = macOS credential management system (login, system, iCloud keychains)
+- LKDC = Local Key Distribution Center (Kerberos KDC on every macOS since 10.5)
 
 ## File Paths That Matter
 

@@ -1,0 +1,13 @@
+id: sample.photos_library_path
+title: Photos.app library collection path plane surface present
+severity: high
+description: Photos library path plane markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1005
+  - T1119
+  - T1530
+match:
+  event_type: photos.library
+  field_contains:
+    photoslib.risk_tags: "photos_surface"
+fixture: photos_library_path.jsonl

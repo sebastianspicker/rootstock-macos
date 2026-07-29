@@ -1,0 +1,11 @@
+id: sample.browser_evil_domain
+title: Browser visit to known-bad domain
+severity: medium
+description: Browser visit URL contains evil.example (fixture IOC).
+attack_techniques:
+  - T1071.001
+match:
+  event_type: browser.visit
+  field_contains:
+    browser.url: "evil.example"
+fixture: browser_evil_domain.jsonl

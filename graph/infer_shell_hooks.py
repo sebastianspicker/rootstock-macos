@@ -1,5 +1,5 @@
 """
-infer_shell_hooks.py — Infer shell hook injection attack paths.
+infer_shell_hooks.py - Infer shell hook injection attack paths.
 
 Creates CAN_INJECT_SHELL edges from Users to CriticalFile nodes
 where the shell hook file is writable by that user.

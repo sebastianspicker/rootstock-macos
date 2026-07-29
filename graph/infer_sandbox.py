@@ -1,5 +1,5 @@
 """
-infer_sandbox.py — Infer sandbox-related attack relationships.
+infer_sandbox.py - Infer sandbox-related attack relationships.
 
 Creates two types of edges:
 

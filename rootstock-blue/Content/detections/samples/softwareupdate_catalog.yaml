@@ -1,0 +1,13 @@
+id: sample.softwareupdate_catalog
+title: Software Update catalog residual surface surface present
+severity: high
+description: Software Update catalog markers indicate IR surface.
+attack_techniques:
+  - T1072
+  - T1195
+  - T1553
+match:
+  event_type: softwareupdate.catalog
+  field_contains:
+    sucat.risk_tags: "softwareupdate_surface"
+fixture: softwareupdate_catalog.jsonl

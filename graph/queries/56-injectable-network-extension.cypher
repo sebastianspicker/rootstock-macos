@@ -1,10 +1,11 @@
 // Name: Injectable Network Extension Apps
-// Purpose: Find injectable apps with VPN/content-filter entitlements that could intercept traffic
+// Purpose: Find network-extension entitlements combined with modeled injection conditions
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
 // Prerequisites: import_scan.py must have run
-// Attack: Injectable network extension apps can intercept, modify, or redirect all network traffic
+// Validate whether an extension is installed, active, authorized, and scoped to
+// the traffic under review before drawing a traffic-access conclusion.
 // CVE: CVE-2024-27842
 // ATT&CK: T1014
 

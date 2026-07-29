@@ -1,5 +1,5 @@
 // Name: Unquarantined Non-System Applications
-// Purpose: Find non-system apps missing the com.apple.quarantine xattr — potential Gatekeeper bypass
+// Purpose: Find non-system apps missing imported quarantine metadata
 // Category: Blue Team
 // Severity: High
 // Parameters: none

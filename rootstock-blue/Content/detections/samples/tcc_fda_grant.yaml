@@ -1,0 +1,12 @@
+id: sample.tcc_fda_grant
+title: Full Disk Access TCC entry observed
+severity: high
+description: TCC access row for SystemPolicyAllFiles (FDA).
+attack_techniques:
+  - T1222
+match:
+  event_type: tcc.access
+  field_contains:
+    tcc.service: SystemPolicyAllFiles
+fixture: tcc_fda_grant.jsonl
+atomic_mapping: T1222

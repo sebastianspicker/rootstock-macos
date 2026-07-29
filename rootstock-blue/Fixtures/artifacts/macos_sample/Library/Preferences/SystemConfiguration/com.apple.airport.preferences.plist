@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>KnownNetworks</key>
+	<dict>
+		<key>EvilCorp-Guest</key>
+		<dict>
+			<key>SSIDString</key>
+			<string>EvilCorp-Guest</string>
+			<key>SecurityType</key>
+			<string>Open</string>
+			<key>LastConnected</key>
+			<date>2024-06-15T12:00:00Z</date>
+			<key>Hidden</key>
+			<false/>
+		</dict>
+		<key>HomeNet</key>
+		<dict>
+			<key>SSIDString</key>
+			<string>HomeNet</string>
+			<key>SecurityType</key>
+			<string>WPA2</string>
+			<key>LastConnected</key>
+			<date>2024-07-01T08:30:00Z</date>
+			<key>Hidden</key>
+			<false/>
+		</dict>
+	</dict>
+</dict>
+</plist>

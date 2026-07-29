@@ -1,0 +1,851 @@
+{
+  "schema_version": 1,
+  "source": "rootstock-blue",
+  "generated_at": "2026-07-16T12:30:00Z",
+  "scope_name": "synthetic-blue-case",
+  "scan_profile": "offline-dfir",
+  "node_types": [
+    "Finding",
+    "Host",
+    "LaunchItem",
+    "Protection"
+  ],
+  "edge_types": [
+    "HAS_FINDING",
+    "HAS_LAUNCH_ITEM",
+    "HAS_PROTECTION"
+  ],
+  "edge_vocabulary": [
+    "HAS_FINDING",
+    "HAS_LAUNCH_ITEM",
+    "HAS_PROTECTION"
+  ],
+  "nodes": [
+    {
+      "id": "Host:incident-host",
+      "type": "Host",
+      "name": "incident-host",
+      "hostname": "incident-host",
+      "case_name": "incident-2026-01"
+    },
+    {
+      "id": "Finding:harden.sip_disabled",
+      "type": "Finding",
+      "name": "SIP appears disabled",
+      "finding_id": "harden.sip_disabled",
+      "severity": "critical",
+      "category": "protection"
+    },
+    {
+      "id": "Protection:gatekeeper",
+      "type": "Protection",
+      "name": "Gatekeeper",
+      "enabled": "true"
+    },
+    {
+      "id": "LaunchItem:com.malware.agent",
+      "type": "LaunchItem",
+      "name": "com.malware.agent",
+      "label": "com.malware.agent",
+      "path": "/Library/LaunchAgents/com.malware.agent.plist",
+      "program": "/tmp/payload"
+    },
+    {
+      "id": "Finding:harden.url_scheme_handler",
+      "type": "Finding",
+      "name": "URL scheme / document-handler surface present",
+      "finding_id": "harden.url_scheme_handler",
+      "severity": "medium",
+      "category": "delivery"
+    },
+    {
+      "id": "Finding:harden.launchd_override_depth",
+      "type": "Finding",
+      "name": "Launchd override depth security-disable hints",
+      "finding_id": "harden.launchd_override_depth",
+      "severity": "high",
+      "category": "defense"
+    },
+    {
+      "id": "Finding:harden.browser_extension_dualuse",
+      "type": "Finding",
+      "name": "Browser extension dual-use plane",
+      "finding_id": "harden.browser_extension_dualuse",
+      "severity": "high",
+      "category": "persist"
+    },
+    {
+      "id": "Finding:harden.shortcuts_app_intents",
+      "type": "Finding",
+      "name": "Shortcuts / App Intents automation surface",
+      "finding_id": "harden.shortcuts_app_intents",
+      "severity": "medium",
+      "category": "automation"
+    },
+    {
+      "id": "Finding:harden.webloc_inetloc_delivery",
+      "type": "Finding",
+      "name": "Webloc / Internet Location file delivery",
+      "finding_id": "harden.webloc_inetloc_delivery",
+      "severity": "medium",
+      "category": "webloc"
+    },
+    {
+      "id": "Finding:harden.mail_rules_automation",
+      "type": "Finding",
+      "name": "Mail rules / Apple Mail automation persistence",
+      "finding_id": "harden.mail_rules_automation",
+      "severity": "medium",
+      "category": "mail"
+    },
+    {
+      "id": "Finding:harden.unified_log_observation",
+      "type": "Finding",
+      "name": "Unified log / logarchive observation depth",
+      "finding_id": "harden.unified_log_observation",
+      "severity": "medium",
+      "category": "unified_log"
+    },
+    {
+      "id": "Finding:harden.dock_persistence_surface",
+      "type": "Finding",
+      "name": "Dock persistent apps / recent items dual-use",
+      "finding_id": "harden.dock_persistence_surface",
+      "severity": "medium",
+      "category": "dock"
+    },
+    {
+      "id": "Finding:harden.osascript_scpt_delivery",
+      "type": "Finding",
+      "name": "Compiled AppleScript / OSA delivery residual",
+      "finding_id": "harden.osascript_scpt_delivery",
+      "severity": "medium",
+      "category": "osascript"
+    },
+    {
+      "id": "Finding:harden.network_share_mount",
+      "type": "Finding",
+      "name": "Network share / SMB mount dual-use lateral",
+      "finding_id": "harden.network_share_mount",
+      "severity": "medium",
+      "category": "smb"
+    },
+    {
+      "id": "Finding:harden.calendar_reminders_automation",
+      "type": "Finding",
+      "name": "Calendar / Reminders automation lateral surface",
+      "finding_id": "harden.calendar_reminders_automation",
+      "severity": "medium",
+      "category": "calendar"
+    },
+    {
+      "id": "Finding:harden.gatekeeper_assessment_history",
+      "type": "Finding",
+      "name": "Gatekeeper assessment / syspolicyd history depth",
+      "finding_id": "harden.gatekeeper_assessment_history",
+      "severity": "medium",
+      "category": "gatekeeper"
+    },
+    {
+      "id": "Finding:harden.homebrew_package_dualuse",
+      "type": "Finding",
+      "name": "Homebrew / third-party package manager dual-use",
+      "finding_id": "harden.homebrew_package_dualuse",
+      "severity": "medium",
+      "category": "homebrew"
+    },
+    {
+      "id": "Finding:harden.cups_print_dualuse",
+      "type": "Finding",
+      "name": "CUPS / printer dual-use residual surface",
+      "finding_id": "harden.cups_print_dualuse",
+      "severity": "medium",
+      "category": "cups"
+    },
+    {
+      "id": "Finding:harden.screencapture_privacy_dualuse",
+      "type": "Finding",
+      "name": "ScreenCapture / screenshot privacy dual-use depth",
+      "finding_id": "harden.screencapture_privacy_dualuse",
+      "severity": "medium",
+      "category": "screencapture"
+    },
+    {
+      "id": "Finding:harden.automator_workflow",
+      "type": "Finding",
+      "name": "Automator workflow delivery residual",
+      "finding_id": "harden.automator_workflow",
+      "severity": "medium",
+      "category": "automator"
+    },
+    {
+      "id": "Finding:harden.icloud_drive_path",
+      "type": "Finding",
+      "name": "iCloud Drive / Mobile Documents path plane",
+      "finding_id": "harden.icloud_drive_path",
+      "severity": "medium",
+      "category": "icloud"
+    },
+    {
+      "id": "Finding:harden.bluetooth_continuity_depth",
+      "type": "Finding",
+      "name": "Bluetooth / Continuity proximity residual depth",
+      "finding_id": "harden.bluetooth_continuity_depth",
+      "severity": "medium",
+      "category": "bluetooth"
+    },
+    {
+      "id": "Finding:harden.font_validation_dualuse",
+      "type": "Finding",
+      "name": "Font validation / ATS dual-use surface",
+      "finding_id": "harden.font_validation_dualuse",
+      "severity": "medium",
+      "category": "font"
+    },
+    {
+      "id": "Finding:harden.quicklook_cache_depth",
+      "type": "Finding",
+      "name": "QuickLook thumbnail cache residual depth",
+      "finding_id": "harden.quicklook_cache_depth",
+      "severity": "medium",
+      "category": "quicklook"
+    },
+    {
+      "id": "Finding:harden.dns_resolver_dualuse",
+      "type": "Finding",
+      "name": "DNS resolver / mDNSResponder dual-use surface",
+      "finding_id": "harden.dns_resolver_dualuse",
+      "severity": "medium",
+      "category": "dns"
+    },
+    {
+      "id": "Finding:harden.ls_quarantine_db_depth",
+      "type": "Finding",
+      "name": "LaunchServices QuarantineEvents DB residual depth",
+      "finding_id": "harden.ls_quarantine_db_depth",
+      "severity": "medium",
+      "category": "quarantine"
+    },
+    {
+      "id": "Finding:harden.pam_auth_module",
+      "type": "Finding",
+      "name": "PAM authentication module residual surface",
+      "finding_id": "harden.pam_auth_module",
+      "severity": "medium",
+      "category": "pam"
+    },
+    {
+      "id": "Finding:harden.cron_at_job_depth",
+      "type": "Finding",
+      "name": "Cron / at job dual-use residual depth",
+      "finding_id": "harden.cron_at_job_depth",
+      "severity": "medium",
+      "category": "cron"
+    },
+    {
+      "id": "Finding:harden.notes_metadata_plane",
+      "type": "Finding",
+      "name": "Notes.app metadata collection path plane",
+      "finding_id": "harden.notes_metadata_plane",
+      "severity": "medium",
+      "category": "notes"
+    },
+    {
+      "id": "Finding:harden.photos_library_path",
+      "type": "Finding",
+      "name": "Photos.app library collection path plane",
+      "finding_id": "harden.photos_library_path",
+      "severity": "medium",
+      "category": "photos"
+    },
+    {
+      "id": "Finding:harden.vpn_config_dualuse",
+      "type": "Finding",
+      "name": "VPN configuration dual-use residual surface",
+      "finding_id": "harden.vpn_config_dualuse",
+      "severity": "medium",
+      "category": "vpn"
+    },
+    {
+      "id": "Finding:harden.sandbox_container_depth",
+      "type": "Finding",
+      "name": "App sandbox container residual depth",
+      "finding_id": "harden.sandbox_container_depth",
+      "severity": "medium",
+      "category": "sandbox"
+    },
+    {
+      "id": "Finding:harden.xpc_mach_service_depth",
+      "type": "Finding",
+      "name": "XPC Mach service residual depth",
+      "finding_id": "harden.xpc_mach_service_depth",
+      "severity": "medium",
+      "category": "xpc"
+    },
+    {
+      "id": "Finding:harden.tm_local_snapshot_depth",
+      "type": "Finding",
+      "name": "Time Machine local snapshot residual depth",
+      "finding_id": "harden.tm_local_snapshot_depth",
+      "severity": "medium",
+      "category": "timemachine"
+    },
+    {
+      "id": "Finding:harden.emond_legacy_depth",
+      "type": "Finding",
+      "name": "Emond legacy rules residual depth",
+      "finding_id": "harden.emond_legacy_depth",
+      "severity": "medium",
+      "category": "emond"
+    },
+    {
+      "id": "Finding:harden.screen_sharing_ard_depth",
+      "type": "Finding",
+      "name": "Screen Sharing / ARD residual depth",
+      "finding_id": "harden.screen_sharing_ard_depth",
+      "severity": "medium",
+      "category": "screensharing"
+    },
+    {
+      "id": "Finding:harden.keychain_acl_path",
+      "type": "Finding",
+      "name": "Keychain ACL path residual surface",
+      "finding_id": "harden.keychain_acl_path",
+      "severity": "medium",
+      "category": "keychain"
+    },
+    {
+      "id": "Finding:harden.python_runtime_dualuse",
+      "type": "Finding",
+      "name": "Python runtime dual-use residual surface",
+      "finding_id": "harden.python_runtime_dualuse",
+      "severity": "medium",
+      "category": "python"
+    },
+    {
+      "id": "Finding:harden.shell_plugin_manager",
+      "type": "Finding",
+      "name": "Shell plugin manager dual-use residual",
+      "finding_id": "harden.shell_plugin_manager",
+      "severity": "medium",
+      "category": "shell"
+    },
+    {
+      "id": "Finding:harden.airplay_receiver_surface",
+      "type": "Finding",
+      "name": "AirPlay receiver dual-use residual",
+      "finding_id": "harden.airplay_receiver_surface",
+      "severity": "medium",
+      "category": "airplay"
+    },
+    {
+      "id": "Finding:harden.handoff_clipboard_depth",
+      "type": "Finding",
+      "name": "Handoff / Universal Clipboard residual depth",
+      "finding_id": "harden.handoff_clipboard_depth",
+      "severity": "medium",
+      "category": "handoff"
+    },
+    {
+      "id": "Finding:harden.imessage_path_plane",
+      "type": "Finding",
+      "name": "iMessage / Messages path collection plane",
+      "finding_id": "harden.imessage_path_plane",
+      "severity": "medium",
+      "category": "imessage"
+    },
+    {
+      "id": "Finding:harden.facetime_camera_surface",
+      "type": "Finding",
+      "name": "FaceTime / camera pipeline dual-use surface",
+      "finding_id": "harden.facetime_camera_surface",
+      "severity": "medium",
+      "category": "facetime"
+    },
+    {
+      "id": "Finding:harden.finder_sync_extension",
+      "type": "Finding",
+      "name": "Finder Sync extension dual-use surface",
+      "finding_id": "harden.finder_sync_extension",
+      "severity": "medium",
+      "category": "finder"
+    },
+    {
+      "id": "Finding:harden.fileprovider_domain",
+      "type": "Finding",
+      "name": "File Provider domain residual surface",
+      "finding_id": "harden.fileprovider_domain",
+      "severity": "medium",
+      "category": "fileprovider"
+    },
+    {
+      "id": "Finding:harden.notification_center_depth",
+      "type": "Finding",
+      "name": "Notification Center residual depth",
+      "finding_id": "harden.notification_center_depth",
+      "severity": "medium",
+      "category": "notification"
+    },
+    {
+      "id": "Finding:harden.siri_suggestions_plane",
+      "type": "Finding",
+      "name": "Siri / Suggestions data-access residual",
+      "finding_id": "harden.siri_suggestions_plane",
+      "severity": "medium",
+      "category": "siri"
+    },
+    {
+      "id": "Finding:harden.spotlight_importer_depth",
+      "type": "Finding",
+      "name": "Spotlight importer residual depth",
+      "finding_id": "harden.spotlight_importer_depth",
+      "severity": "medium",
+      "category": "spotlight"
+    },
+    {
+      "id": "Finding:harden.contacts_path_plane",
+      "type": "Finding",
+      "name": "Contacts database path residual plane",
+      "finding_id": "harden.contacts_path_plane",
+      "severity": "medium",
+      "category": "contacts"
+    },
+    {
+      "id": "Finding:harden.calendar_server_path",
+      "type": "Finding",
+      "name": "Calendar server / CalDAV residual surface",
+      "finding_id": "harden.calendar_server_path",
+      "severity": "medium",
+      "category": "calendar"
+    },
+    {
+      "id": "Finding:harden.reminders_cloud_path",
+      "type": "Finding",
+      "name": "Reminders cloud path residual plane",
+      "finding_id": "harden.reminders_cloud_path",
+      "severity": "medium",
+      "category": "reminders"
+    },
+    {
+      "id": "Finding:harden.maps_location_path",
+      "type": "Finding",
+      "name": "Maps / location services residual plane",
+      "finding_id": "harden.maps_location_path",
+      "severity": "medium",
+      "category": "maps"
+    },
+    {
+      "id": "Finding:harden.weather_widget_path",
+      "type": "Finding",
+      "name": "Weather / widget data residual plane",
+      "finding_id": "harden.weather_widget_path",
+      "severity": "medium",
+      "category": "weather"
+    },
+    {
+      "id": "Finding:harden.music_library_path",
+      "type": "Finding",
+      "name": "Music / media library path residual",
+      "finding_id": "harden.music_library_path",
+      "severity": "medium",
+      "category": "music"
+    },
+    {
+      "id": "Finding:harden.books_path_plane",
+      "type": "Finding",
+      "name": "Books / EPUB path residual plane",
+      "finding_id": "harden.books_path_plane",
+      "severity": "medium",
+      "category": "books"
+    },
+    {
+      "id": "Finding:harden.podcasts_path_plane",
+      "type": "Finding",
+      "name": "Podcasts library path residual",
+      "finding_id": "harden.podcasts_path_plane",
+      "severity": "medium",
+      "category": "podcasts"
+    },
+    {
+      "id": "Finding:harden.tv_app_path_plane",
+      "type": "Finding",
+      "name": "TV.app residual path plane",
+      "finding_id": "harden.tv_app_path_plane",
+      "severity": "medium",
+      "category": "tv"
+    },
+    {
+      "id": "Finding:harden.homekit_path_plane",
+      "type": "Finding",
+      "name": "HomeKit residual path plane",
+      "finding_id": "harden.homekit_path_plane",
+      "severity": "medium",
+      "category": "homekit"
+    },
+    {
+      "id": "Finding:harden.health_path_plane",
+      "type": "Finding",
+      "name": "Health app residual path plane",
+      "finding_id": "harden.health_path_plane",
+      "severity": "medium",
+      "category": "health"
+    },
+    {
+      "id": "Finding:harden.wallet_pass_path",
+      "type": "Finding",
+      "name": "Wallet / pass residual path plane",
+      "finding_id": "harden.wallet_pass_path",
+      "severity": "medium",
+      "category": "wallet"
+    },
+    {
+      "id": "Finding:harden.findmy_path_plane",
+      "type": "Finding",
+      "name": "Find My residual path plane",
+      "finding_id": "harden.findmy_path_plane",
+      "severity": "medium",
+      "category": "findmy"
+    },
+    {
+      "id": "Finding:harden.shortcuts_icloud_sync",
+      "type": "Finding",
+      "name": "Shortcuts iCloud sync residual depth",
+      "finding_id": "harden.shortcuts_icloud_sync",
+      "severity": "medium",
+      "category": "shortcuts"
+    },
+    {
+      "id": "Finding:harden.devicemanagement_profile",
+      "type": "Finding",
+      "name": "Device management profile residual depth",
+      "finding_id": "harden.devicemanagement_profile",
+      "severity": "medium",
+      "category": "mdm"
+    },
+    {
+      "id": "Finding:harden.softwareupdate_catalog",
+      "type": "Finding",
+      "name": "Software Update catalog residual surface",
+      "finding_id": "harden.softwareupdate_catalog",
+      "severity": "medium",
+      "category": "softwareupdate"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.sip_disabled",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Protection:gatekeeper",
+      "type": "HAS_PROTECTION"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "LaunchItem:com.malware.agent",
+      "type": "HAS_LAUNCH_ITEM"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.url_scheme_handler",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.launchd_override_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.browser_extension_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.shortcuts_app_intents",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.webloc_inetloc_delivery",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.mail_rules_automation",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.unified_log_observation",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.dock_persistence_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.osascript_scpt_delivery",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.network_share_mount",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.calendar_reminders_automation",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.gatekeeper_assessment_history",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.homebrew_package_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.cups_print_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.screencapture_privacy_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.automator_workflow",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.icloud_drive_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.bluetooth_continuity_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.font_validation_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.quicklook_cache_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.dns_resolver_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.ls_quarantine_db_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.pam_auth_module",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.cron_at_job_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.notes_metadata_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.photos_library_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.vpn_config_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.sandbox_container_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.xpc_mach_service_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.tm_local_snapshot_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.emond_legacy_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.screen_sharing_ard_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.keychain_acl_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.python_runtime_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.shell_plugin_manager",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.airplay_receiver_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.handoff_clipboard_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.imessage_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.facetime_camera_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.finder_sync_extension",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.fileprovider_domain",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.notification_center_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.siri_suggestions_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.spotlight_importer_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.contacts_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.calendar_server_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.reminders_cloud_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.maps_location_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.weather_widget_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.music_library_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.books_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.podcasts_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.tv_app_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.homekit_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.health_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.wallet_pass_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.findmy_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.shortcuts_icloud_sync",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.devicemanagement_profile",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:incident-host",
+      "to": "Finding:harden.softwareupdate_catalog",
+      "type": "HAS_FINDING"
+    }
+  ]
+}

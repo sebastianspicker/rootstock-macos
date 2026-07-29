@@ -13,7 +13,7 @@ struct CodeSigningInfo {
     let libraryValidationFlag: Bool
     /// True if Security.framework analysis failed (app may still be unsigned).
     let analysisError: Bool
-    /// True if CS_ADHOC flag is set — signed without a real certificate.
+    /// True if CS_ADHOC flag is set - signed without a real certificate.
     let isAdhoc: Bool
     /// Full certificate chain from leaf to root.
     let certificateChain: [CertificateDetail]
@@ -36,11 +36,11 @@ struct CodeSigningAnalyzer {
         }
         return false
     }
-    /// CS_ADHOC (0x2) — signed without a real certificate identity
+    /// CS_ADHOC (0x2) - signed without a real certificate identity
     private static let csAdhoc: UInt32 = 0x2
-    /// CS_RUNTIME (0x10000) — hardened runtime flag from <Security/CSCommon.h>
+    /// CS_RUNTIME (0x10000) - hardened runtime flag from <Security/CSCommon.h>
     private static let csRuntime: UInt32 = 0x10000
-    /// CS_REQUIRE_LV (0x2000) — require library validation flag
+    /// CS_REQUIRE_LV (0x2000) - require library validation flag
     private static let csRequireLV: UInt32 = 0x2000
 
     /// Analyzes the code signing metadata for the app bundle at `appPath`.

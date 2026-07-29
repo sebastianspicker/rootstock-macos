@@ -1,14 +1,14 @@
 // Name: Persistent Root Code Execution via Injectable Apps
-// Purpose: Injectable apps whose LaunchDaemons run as root — injection = persistent root exec
+// Purpose: Find modeled injection relationships to apps associated with root LaunchDaemons
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import_scan.py + infer.py must have run; Phase 3.2 (Persistence) data required
+// Prerequisites: import_scan.py + infer.py must have run; persistence collector data required
 //
-// Attack: Inject parent app → app controls root LaunchDaemon → persistent root code execution
+// Attack model: injection relationship → app associated with root LaunchDaemon
 //
-// An attacker who injects a process that persists via a root-level LaunchDaemon gains
-// persistence across reboots and code execution as root — the most severe possible escalation.
+// A result combines graph relationships and launch configuration metadata. Validate
+// process control, launch ownership, runtime identity, and reboot behavior separately.
 
 MATCH (app:Application)-[:PERSISTS_VIA]->(l:LaunchItem)
 MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(app)
@@ -21,7 +21,7 @@ WITH app, l, u, collect(DISTINCT inj.method) AS injection_methods,
        ELSE false
      END AS runs_as_root
 
-// Also fetch any TCC grants (compounding the severity)
+// Also fetch any TCC grants for review with the modeled path.
 OPTIONAL MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
 WITH app, l, u, injection_methods, runs_as_root, collect(DISTINCT perm.display_name) AS tcc_grants
 

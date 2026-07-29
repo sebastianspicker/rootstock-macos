@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/Users/alice/Library/Preferences/com.apple.dock.plist",
+      "tile_path": "/tmp/suspicious.app",
+      "risk_tags": "dock_surface,tmp_tile,persistence_hint",
+      "user": "alice",
+      "timestamp": "2026-05-01T12:00:00Z",
+      "notes": "Dock persistence dual-use markers \u2014 never modifies Dock.plist or plants malicious Dock entries"
+    }
+  ]
+}

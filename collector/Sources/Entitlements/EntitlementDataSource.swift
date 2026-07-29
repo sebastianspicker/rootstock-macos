@@ -69,7 +69,7 @@ public struct EntitlementDataSource: DataSource {
         if !appsWithKnownEntitlements.isEmpty && appsWithKnownEntitlements.allSatisfy({ $0.entitlements.isEmpty }) {
             errors.append(CollectionError(
                 source: name,
-                message: "All \(applications.count) apps returned zero entitlements — codesign may not be working",
+                message: "All \(applications.count) apps returned zero entitlements - codesign may not be working",
                 recoverable: true
             ))
         }

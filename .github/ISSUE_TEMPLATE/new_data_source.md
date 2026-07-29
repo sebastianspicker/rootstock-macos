@@ -1,6 +1,6 @@
 ---
 name: New Data Source
-about: Propose a new macOS data source for the collector
+about: Propose a bounded macOS data source for the Rootstock Core collector
 title: "[data-source] "
 labels: data-source
 ---
@@ -9,8 +9,8 @@ labels: data-source
 
 Name the macOS subsystem or security boundary.
 
-Scope note: analysis and remediation should target active source and docs, not
-private, archive, deprecated, or generated artifact folders.
+This template is for the Rootstock Core collector. Red and Blue use separate
+artifacts and extension paths; describe any optional bridge impact below.
 
 ## What It Collects
 
@@ -48,6 +48,7 @@ What new queries or attack paths would this data source enable?
 
 - Collector models/schema change:
 - Graph importer/model changes:
+- Optional Red or Blue bridge impact, if any:
 - Suggested fixture regression test:
 
 ## References

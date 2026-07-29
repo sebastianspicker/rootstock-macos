@@ -1,4 +1,4 @@
-"""report_formatters.py — Table and section formatters for Rootstock reports."""
+"""report_formatters.py - Table and section formatters for Rootstock reports."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ def escape_report_value(value: object) -> str:
 def _format_table(rows: list[dict], columns: ColumnSpec) -> str:
     """Generic table builder: maps row dicts to a Markdown table via a column spec.
 
-    Each entry in *columns* is ``(header, key, default)`` — the dict key to extract
+    Each entry in columns is ``(header, key, default)`` - the dict key to extract
     and the fallback value.  Uses :func:`list_or_str` for list→string coercion.
     Returns a GitHub-flavoured Markdown table via :func:`tabulate`.
     """
@@ -68,7 +68,7 @@ def format_injectable_fda_table(rows: list[dict]) -> str:
         methods = escape_report_value(r.get("injection_methods", []))
         table_rows.append([
             escape_report_value(r.get("app_name", "?")),
-            escape_report_value(r.get("team_id") or "—"),
+            escape_report_value(r.get("team_id") or " - "),
             methods,
             escape_report_value(r.get("bundle_id", "?")),
         ])
@@ -81,7 +81,7 @@ def format_injectable_fda_table(rows: list[dict]) -> str:
         app = escape_report_value(r.get("app_name", "?"))
         methods = escape_report_value(r.get("injection_methods", []))
         risk_lines.append(
-            f"- **{app}**: Attacker can inject via `{methods}` to inherit Full Disk Access."
+            f"- {app}: Attacker can inject via `{methods}` to inherit Full Disk Access."
         )
 
     return table + "\n\n" + "\n".join(risk_lines)
@@ -92,7 +92,7 @@ def format_electron_table(rows: list[dict]) -> str:
     return _format_table(rows, [
         ("Electron App", "app_name", "?"),
         ("Bundle ID", "bundle_id", "?"),
-        ("Inherited Permissions", "inherited_permissions", "—"),
+        ("Inherited Permissions", "inherited_permissions", " - "),
         ("Count", "permission_count", "0"),
     ])
 
@@ -125,7 +125,7 @@ def format_private_entitlement_table(rows: list[dict]) -> str:
     ]
     return _format_table(formatted_rows, [
         ("App", "app_name", "?"),
-        ("Private Entitlements", "private_entitlements", "—"),
+        ("Private Entitlements", "private_entitlements", " - "),
         ("Injectable?", "is_injectable", "No"),
     ])
 
@@ -185,9 +185,9 @@ def _append_tier_classification(
     lines.append("")
     lines.append(
         f"**Tier Classification:** "
-        f"**{t0}** Tier 0 (crown jewels) | "
-        f"**{t1}** Tier 1 (high value) | "
-        f"**{t2}** Tier 2 (standard)"
+        f"{t0} Tier 0 (crown jewels) | "
+        f"{t1} Tier 1 (high value) | "
+        f"{t2} Tier 2 (standard)"
     )
 
 
@@ -292,14 +292,14 @@ def _cve_summary_rows(
             str(cve.cvss_score),
             _exploitation_icon(getattr(cve, "exploitation_status", "theoretical")),
             cve.title,
-            cve.patched_version or "—",
-            cve_priority.get(cve.cve_id, "—"),
+            cve.patched_version or " - ",
+            cve_priority.get(cve.cve_id, " - "),
         ]
         if not enrichment_unavailable:
             epss_str = (
                 f"{enriched.epss_score:.2f}"
                 if enriched and enriched.epss_score is not None
-                else "—"
+                else " - "
             )
             kev_str = "KEV" if enriched and enriched.in_kev else ""
             row[2:2] = [epss_str, kev_str]

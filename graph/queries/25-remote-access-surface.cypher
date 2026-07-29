@@ -1,9 +1,9 @@
 // Name: Remote Access Attack Surface
-// Purpose: SSH/Screen Sharing enabled with injectable apps accessible by remote users
+// Purpose: Correlate enabled remote-access services with modeled app injection conditions
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Attack: Remote login via SSH/VNC → exploit injectable app → TCC privilege escalation
+// Attack model: remote-access service → user context → injection relationship
 // Prerequisites: import_scan.py + infer.py must have run; remote access + groups modules collected
 // ATT&CK: T1021.004, T1021.005
 

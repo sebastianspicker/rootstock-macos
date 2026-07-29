@@ -1,0 +1,13 @@
+id: sample.facetime_camera_surface
+title: FaceTime / camera pipeline dual-use surface surface present
+severity: high
+description: FaceTime camera dual-use markers indicate IR surface.
+attack_techniques:
+  - T1125
+  - T1123
+  - T1113
+match:
+  event_type: facetime.camera
+  field_contains:
+    ftcam.risk_tags: "facetime_surface"
+fixture: facetime_camera_surface.jsonl

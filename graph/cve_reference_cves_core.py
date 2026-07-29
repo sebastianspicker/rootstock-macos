@@ -37,7 +37,7 @@ _CVE_2024_44168 = CveEntry(
 
 _CVE_2024_44133 = CveEntry(
     cve_id="CVE-2024-44133",
-    title="HM Surf — Safari TCC Bypass",
+    title="HM Surf - Safari TCC Bypass",
     cvss_score=8.8,
     affected_versions="macOS 14.6 and earlier",
     patched_version="macOS 15",
@@ -96,7 +96,7 @@ _CVE_2023_44402 = CveEntry(
     ),
     reference_url="https://github.com/nicedayzhu/Electron-CVE-2023-44402",
     cwe_ids=("CWE-668",),  # Exposure of Resource to Wrong Sphere
-    # No specific bundle_ids — affects any Electron app; matched via category
+    # No specific bundle_ids - affects any Electron app; matched via category
 )
 
 _CVE_2024_44243 = CveEntry(

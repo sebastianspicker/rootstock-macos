@@ -1,0 +1,13 @@
+id: sample.imessage_path_plane
+title: iMessage / Messages path collection plane surface present
+severity: high
+description: iMessage path plane markers indicate IR surface.
+attack_techniques:
+  - T1114
+  - T1005
+  - T1539
+match:
+  event_type: imessage.path
+  field_contains:
+    imsgpath.risk_tags: "imessage_surface"
+fixture: imessage_path_plane.jsonl

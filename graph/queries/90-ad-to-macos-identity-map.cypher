@@ -1,5 +1,5 @@
 // Name: AD to macOS Identity Map
-// Purpose: AD users mapped to macOS local users via SAME_IDENTITY — identifies cross-domain principal linkage for attack path analysis
+// Purpose: AD users mapped to macOS local users via SAME_IDENTITY - identifies cross-domain principal linkage for attack path analysis
 // Category: Red Team
 // Severity: High
 // Parameters: none

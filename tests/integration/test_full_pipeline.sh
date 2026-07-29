@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_full_pipeline.sh — Rootstock end-to-end smoke test.
+# test_full_pipeline.sh - Rootstock end-to-end smoke test.
 
 set -euo pipefail
 
@@ -15,7 +15,7 @@ fi
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GRAPH_DIR="$REPO_ROOT/graph"
-FIXTURE_JSON="$GRAPH_DIR/tests/fixture_minimal.json"
+FIXTURE_JSON="$GRAPH_DIR/tests/fixtures/minimal_scan.json"
 REPORT_OUT="/tmp/rootstock-integration-report.md"
 REPORT_ERR="/tmp/rootstock-integration-report.err"
 TEMP_SCAN_JSON="/tmp/rootstock-integration-scan.json"

@@ -2,6 +2,7 @@ import XCTest
 import Darwin
 @testable import Quarantine
 import Models
+import TestSupport
 
 final class QuarantineTests: XCTestCase {
 
@@ -72,7 +73,7 @@ final class QuarantineTests: XCTestCase {
     }
 
     func testParseQuarantineStringNoApproval() {
-        // Flags: 0x0003 — neither approval nor translocation
+        // Flags: 0x0003 - neither approval nor translocation
         let raw = "0003;5f3b3c00;com.google.Chrome;"
         let info = QuarantineDataSource.parseQuarantineString(raw)
 
@@ -83,7 +84,7 @@ final class QuarantineTests: XCTestCase {
     }
 
     func testParseQuarantineStringApprovedOnly() {
-        // Flags: 0x0043 — user approved (0x0040) but not translocated
+        // Flags: 0x0043 - user approved (0x0040) but not translocated
         let raw = "0043;5f3b3c00;com.apple.Safari;UUID"
         let info = QuarantineDataSource.parseQuarantineString(raw)
 
@@ -92,7 +93,7 @@ final class QuarantineTests: XCTestCase {
     }
 
     func testParseQuarantineStringTranslocatedOnly() {
-        // Flags: 0x0023 — translocated (0x0020) but not user approved
+        // Flags: 0x0023 - translocated (0x0020) but not user approved
         let raw = "0023;5f3b3c00;com.apple.Safari;UUID"
         let info = QuarantineDataSource.parseQuarantineString(raw)
 
@@ -136,21 +137,7 @@ final class QuarantineTests: XCTestCase {
             quarantineAgent: "com.apple.Safari",
             wasUserApproved: true
         )
-        let app = Application(
-            identity: Application.Identity(
-                name: "TestApp",
-                bundleId: "com.example.test",
-                path: "/Applications/TestApp.app",
-                version: "1.0"
-            ),
-            flags: Application.Flags(isElectron: false, isSystem: false),
-            signing: Application.Signing(
-                hardenedRuntime: true,
-                libraryValidation: true,
-                signed: true
-            ),
-            quarantineInfo: qInfo
-        )
+        let app = ApplicationTestFactory.make(options: .init(quarantineInfo: qInfo))
         let data = try JSONEncoder().encode(app)
         let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         XCTAssertNotNil(dict?["quarantine_info"])
@@ -161,20 +148,7 @@ final class QuarantineTests: XCTestCase {
     }
 
     func testApplicationWithoutQuarantineInfoEncoding() throws {
-        let app = Application(
-            identity: Application.Identity(
-                name: "TestApp",
-                bundleId: "com.example.test",
-                path: "/Applications/TestApp.app",
-                version: "1.0"
-            ),
-            flags: Application.Flags(isElectron: false, isSystem: false),
-            signing: Application.Signing(
-                hardenedRuntime: true,
-                libraryValidation: true,
-                signed: true
-            )
-        )
+        let app = ApplicationTestFactory.make()
         let data = try JSONEncoder().encode(app)
         let decoded = try JSONDecoder().decode(Application.self, from: data)
         XCTAssertNil(decoded.quarantineInfo)
@@ -188,21 +162,14 @@ final class QuarantineTests: XCTestCase {
             wasUserApproved: true,
             wasTranslocated: false
         )
-        let original = Application(
-            identity: Application.Identity(
-                name: "TestApp",
-                bundleId: "com.example.test",
-                path: "/Applications/TestApp.app",
-                version: "1.0"
-            ),
-            flags: Application.Flags(isElectron: false, isSystem: false),
-            signing: Application.Signing(
-                teamId: "TEST123",
-                hardenedRuntime: true,
-                libraryValidation: true,
-                signed: true
-            ),
-            quarantineInfo: qInfo
+        let signing = Application.Signing(
+            teamId: "TEST123",
+            hardenedRuntime: true,
+            libraryValidation: true,
+            signed: true
+        )
+        let original = ApplicationTestFactory.make(
+            options: .init(signing: signing, quarantineInfo: qInfo)
         )
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(Application.self, from: data)

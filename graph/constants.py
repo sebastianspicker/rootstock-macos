@@ -1,5 +1,5 @@
 """
-constants.py — Shared constants for the Rootstock graph pipeline.
+constants.py - Shared constants for the Rootstock graph pipeline.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ REQUIRE_LIB_VALIDATION_ENTITLEMENT = "com.apple.security.cs.require-library-vali
 DISABLE_LIB_VALIDATION_ENTITLEMENT = "com.apple.security.cs.disable-library-validation"
 PRIVATE_TCC_ALLOW_ENTITLEMENT = "com.apple.private.tcc.allow"
 
-# TCC service identifiers — canonical names matching Apple's internal strings
+# TCC service identifiers - canonical names matching Apple's internal strings
 FDA_SERVICE = "kTCCServiceSystemPolicyAllFiles"
 APPLE_EVENTS_SERVICE = "kTCCServiceAppleEvents"
 ACCESSIBILITY_SERVICE = "kTCCServiceAccessibility"
@@ -40,6 +40,10 @@ RISK_LEVEL_PROPERTY = "risk_level"
 ATTACK_CATEGORIES_PROPERTY = "attack_categories"
 CRITICAL_FINDING_COUNT_PROPERTY = "critical_finding_count"
 HIGH_FINDING_COUNT_PROPERTY = "high_finding_count"
+
+# Viewer/API availability limits shared by live and generated graph surfaces.
+INTERACTIVE_GRAPH_MAX_NODES = 10_000
+INTERACTIVE_GRAPH_MAX_EDGES = 50_000
 
 # Canonical mapping of Neo4j labels to their unique key property.
 # Used by mark_owned.py (for node lookup) and opengraph_export.py (for ID generation).
@@ -80,6 +84,7 @@ NODE_KEY_PROPERTY: dict[str, str] = {
     "DataContext": "id",
     "Finding": "id",
     "Host": "id",
+    "Protection": "id",
     "IdentityContext": "id",
     "Manifest": "id",
     "Owner": "id",

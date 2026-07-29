@@ -1,0 +1,12 @@
+id: sample.launchd_override_depth
+title: Launchd override depth with security-product disable hints
+severity: high
+description: Launchd disabled/override depth markers show security-product disable class defense-evasion surface.
+attack_techniques:
+  - T1562.001
+  - T1489
+match:
+  event_type: launchd.override_depth
+  field_contains:
+    launchd_depth.risk_tags: "security_product_disabled"
+fixture: launchd_override_depth.jsonl

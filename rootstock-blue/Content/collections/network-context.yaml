@@ -1,0 +1,8 @@
+name: network-context
+description: Network context for IR (Wi-Fi preferred networks + SC locations/interfaces + process net usage)
+requires_fda: true
+requires_es: false
+artifacts:
+  - wifi
+  - netlocation
+  - netusage

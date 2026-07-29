@@ -1,0 +1,25 @@
+{
+  "backups": [
+    {
+      "device_name": "Alice iPhone",
+      "last_backup": "2026-02-28T22:00:00Z",
+      "encrypted": false,
+      "product_type": "iPhone14,2",
+      "ios_version": "18.3",
+      "udid_marker": "00008030-001A…",
+      "backup_path": "Library/Application Support/MobileSync/Backup/00008030",
+      "user": "alice",
+      "risk_tags": "unencrypted_backup"
+    },
+    {
+      "device_name": "Alice iPad",
+      "last_backup": "2026-01-15T18:00:00Z",
+      "encrypted": true,
+      "product_type": "iPad13,1",
+      "ios_version": "18.2",
+      "udid_marker": "00008101-001B…",
+      "user": "alice",
+      "risk_tags": "encrypted_backup"
+    }
+  ]
+}

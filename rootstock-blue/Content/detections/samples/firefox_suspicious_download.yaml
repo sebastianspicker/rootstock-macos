@@ -1,0 +1,11 @@
+id: sample.firefox_suspicious_download
+title: Suspicious Firefox download
+severity: high
+description: Firefox download or visit with evil_domain/script_download risk tags.
+attack_techniques:
+  - T1105
+match:
+  event_type: browser.download
+  field_contains:
+    browser.risk_tags: "evil_domain"
+fixture: firefox_suspicious_download.jsonl

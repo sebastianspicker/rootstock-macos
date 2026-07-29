@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-import_vulnerabilities.py — Import Vulnerability and AttackTechnique nodes into Neo4j.
+import_vulnerabilities.py - Import Vulnerability and AttackTechnique nodes into Neo4j.
 
 Reads the enriched CVE registry (static + cached EPSS/KEV/NVD data) and creates:
   - (:Vulnerability) nodes with EPSS, KEV, CVSS, CVSS vector properties

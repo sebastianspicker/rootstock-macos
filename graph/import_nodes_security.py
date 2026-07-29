@@ -1,4 +1,4 @@
-"""import_nodes_security.py — Security infrastructure node imports."""
+"""import_nodes_security.py - Security infrastructure node imports."""
 
 from __future__ import annotations
 

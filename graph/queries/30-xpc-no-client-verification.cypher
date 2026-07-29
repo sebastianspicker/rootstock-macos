@@ -1,9 +1,9 @@
-// Name: XPC Services Without Client Verification
-// Purpose: Find XPC services that lack SMAuthorizedClients — any process can connect
+// Name: XPC Services Without SMAuthorizedClients Metadata
+// Purpose: Find XPC services requiring review of client authorization controls
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Attack: Connect to unprotected XPC service from attacker process → invoke privileged operations
+// Review service-side audit-token, entitlement, code-signing, and sandbox checks.
 // CVE: CVE-2024-40781
 // ATT&CK: T1559.001
 // Prerequisites: import_scan.py must have run

@@ -4,7 +4,7 @@ import Models
 /// Reads TCC (Transparency, Consent, and Control) grants from macOS TCC databases.
 ///
 /// Always attempts the user-level database. The system-level database requires
-/// Full Disk Access — failure there is caught and logged, not fatal.
+/// Full Disk Access - failure there is caught and logged, not fatal.
 ///
 /// Schema compatibility is determined at runtime via PRAGMA-based column
 /// introspection. The reader validates the stable columns it needs and ignores
@@ -26,7 +26,7 @@ public struct TCCDataSource: DataSource {
     let systemDBPath: String?
     let macOSVersion: MacOSVersion
 
-    /// Default initializer — uses the standard macOS TCC database paths.
+    /// Default initializer - uses the standard macOS TCC database paths.
     public init() {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         userDBPath = home + "/Library/Application Support/com.apple.TCC/TCC.db"

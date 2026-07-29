@@ -1,8 +1,11 @@
 import Foundation
+import RootstockMacFacts
 
 /// Parses launchd plist files (XML and binary) from LaunchDaemon/LaunchAgent directories.
 ///
-/// PropertyListSerialization handles both XML and binary plist formats transparently.
+/// Directory listing and Program/ProgramArguments/KeepAlive extraction use
+/// `LaunchdPlistFacts` (RootstockMacFacts). Product-specific fields (MachServices,
+/// SMAuthorizedClients, required Label) stay here.
 public struct LaunchdPlistParser {
 
     public struct ParsedEntry {
@@ -27,17 +30,8 @@ public struct LaunchdPlistParser {
             from: data, options: [], format: &format
         ) as? [String: Any] else { return nil }
 
-        guard let label = plist["Label"] as? String, !label.isEmpty else { return nil }
-
-        // Binary path from Program or first element of ProgramArguments
-        let program: String?
-        if let prog = plist["Program"] as? String {
-            program = prog
-        } else if let args = plist["ProgramArguments"] as? [String], let first = args.first {
-            program = first
-        } else {
-            program = nil
-        }
+        let shared = LaunchdPlistFacts.summarize(path: path, dict: plist)
+        guard let label = shared.label, !label.isEmpty else { return nil }
 
         // MachServices is a dict; we want the registered service name keys
         let machServices: [String]
@@ -58,17 +52,17 @@ public struct LaunchdPlistParser {
         return ParsedEntry(
             label: label,
             plistPath: path,
-            program: program,
-            user: plist["UserName"] as? String,
-            runAtLoad: plist["RunAtLoad"] as? Bool ?? false,
-            keepAlive: resolveKeepAlive(plist["KeepAlive"]),
+            program: shared.program,
+            user: shared.userName,
+            runAtLoad: shared.runAtLoad,
+            keepAlive: shared.keepAlive,
             machServices: machServices,
             hasAuthorizedClients: hasAuthorizedClients
         )
     }
 
     /// Parse all plists in a directory. Missing directories are silently skipped.
-    /// Returns (entries, errorMessages) — never throws.
+    /// Returns (entries, errorMessages) - never throws.
     public func parseDirectory(at dirPath: String) -> (entries: [ParsedEntry], errors: [String]) {
         let fm = FileManager.default
 
@@ -77,15 +71,16 @@ public struct LaunchdPlistParser {
             return ([], [])
         }
 
-        guard let filenames = try? fm.contentsOfDirectory(atPath: dirPath) else {
+        let paths = LaunchdPlistFacts.listPlistPaths(in: dirPath, fileManager: fm)
+        // Distinguish unreadable directory (exists but list fails) from empty
+        if paths.isEmpty, (try? fm.contentsOfDirectory(atPath: dirPath)) == nil {
             return ([], ["Cannot read directory: \(dirPath)"])
         }
 
         var entries: [ParsedEntry] = []
         var errors: [String] = []
 
-        for filename in filenames where filename.hasSuffix(".plist") {
-            let fullPath = (dirPath as NSString).appendingPathComponent(filename)
+        for fullPath in paths {
             if let entry = parse(at: fullPath) {
                 entries.append(entry)
             } else {
@@ -94,14 +89,5 @@ public struct LaunchdPlistParser {
         }
 
         return (entries, errors)
-    }
-
-    // MARK: - Private
-
-    /// KeepAlive can be a plain Bool or a throttle-config dict (non-empty dict = true).
-    private func resolveKeepAlive(_ value: Any?) -> Bool {
-        if let b = value as? Bool { return b }
-        if let d = value as? [String: Any], !d.isEmpty { return true }
-        return false
     }
 }

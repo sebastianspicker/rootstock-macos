@@ -1,5 +1,5 @@
 // Name: Sandbox Escape Vectors via Mach-Lookup
-// Purpose: Sandboxed apps with mach-lookup exceptions to privileged XPC services — potential sandbox escape paths
+// Purpose: Sandboxed apps with mach-lookup exceptions to privileged XPC services - potential sandbox escape paths
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

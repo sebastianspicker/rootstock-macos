@@ -1,0 +1,1 @@
+{"id":"00000000-0000-4000-8000-000000000012","eventTime":"2026-01-15T12:00:00Z","collectedAt":"2026-01-15T12:00:01Z","source":"es","sourcePlugin":"fixture","eventType":"NOTIFY_BTM_LAUNCH_ITEM_ADD","entityRefs":[],"fields":{"btm.item_path":"/Users/alice/Library/LaunchAgents/x.plist","btm.item_type":"agent","event.type":"NOTIFY_BTM_LAUNCH_ITEM_ADD"},"rawRef":null,"confidence":1}

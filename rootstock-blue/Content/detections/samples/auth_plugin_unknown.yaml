@@ -1,0 +1,12 @@
+id: sample.auth_plugin_unknown
+title: Unknown or risky authorization plugin
+severity: high
+description: SecurityAgent authorization plugin with unknown_vendor/unsigned/tmp risk tags (T1556.001-class).
+attack_techniques:
+  - T1556.001
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.kind: "authorization_plugin"
+    persistence.risk_tags: "unknown_vendor"
+fixture: auth_plugin_unknown.jsonl

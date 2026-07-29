@@ -9,7 +9,7 @@ public enum KerberosArtifactType: String, Codable, Sendable {
 
 /// Metadata about a Kerberos artifact (ccache, keytab, or config) found on disk.
 ///
-/// **Security note:** Only filesystem metadata is collected — the file contents are
+/// **Security note:** Only filesystem metadata is collected - the file contents are
 /// never read for ccache/keytab types.  For `config` type (`krb5.conf`), the file
 /// IS read because it is a configuration file (not a credential store) and Apple
 /// ships it world-readable.  The `principalHint` is inferred from the filename

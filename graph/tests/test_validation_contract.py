@@ -14,7 +14,7 @@ from models import ScanResult
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = ROOT / "collector" / "schema" / "scan-result.schema.json"
 DEMO_SCAN_PATH = ROOT / "examples" / "demo-scan.json"
-FIXTURE_SCAN_PATH = ROOT / "graph" / "tests" / "fixture_minimal.json"
+FIXTURE_SCAN_PATH = ROOT / "graph" / "tests" / "fixtures" / "minimal_scan.json"
 VALIDATOR_PATH = ROOT / "scripts" / "validate-scan.py"
 
 

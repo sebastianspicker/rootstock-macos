@@ -1,5 +1,5 @@
 """
-test_infer.py — Integration tests for the Rootstock inference engine.
+test_infer.py - Integration tests for the Rootstock inference engine.
 
 Tests use isolated synthetic nodes tagged with TEST_SCAN_ID so they can be
 cleaned up after each test. Neo4j is required; tests skip if unavailable.
@@ -316,7 +316,7 @@ class TestInferElectron:
         infer_inj(session)
         infer(session)
 
-        # App A is not Electron — should NOT have CHILD_INHERITS_TCC
+        # App A is not Electron - should NOT have CHILD_INHERITS_TCC
         result = session.run(
             """
             MATCH ()-[r:CHILD_INHERITS_TCC]->(:Application {bundle_id: 'test.app.alpha'})

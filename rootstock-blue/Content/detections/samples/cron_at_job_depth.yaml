@@ -1,0 +1,13 @@
+id: sample.cron_at_job_depth
+title: Cron / at job dual-use residual depth surface present
+severity: high
+description: Cron/at job depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1053.003
+  - T1053
+  - T1543
+match:
+  event_type: cron.at_job
+  field_contains:
+    cronat.risk_tags: "cron_at_surface"
+fixture: cron_at_job_depth.jsonl

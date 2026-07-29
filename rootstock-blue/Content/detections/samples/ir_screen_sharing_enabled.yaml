@@ -1,0 +1,12 @@
+id: sample.ir_screen_sharing_enabled
+title: Screen Sharing reported enabled
+severity: medium
+description: IR posture reports Screen Sharing enabled (remote access surface).
+attack_techniques:
+  - T1021.005
+match:
+  event_type: ir.posture.remote_access
+  field_equals:
+    protection.name: ScreenSharing
+    protection.enabled: "true"
+fixture: ir_screen_sharing_enabled.jsonl

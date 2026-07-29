@@ -1,0 +1,13 @@
+id: sample.shell_plugin_manager
+title: Shell plugin manager dual-use residual surface present
+severity: high
+description: Shell plugin manager dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1546.004
+  - T1059.004
+  - T1546
+match:
+  event_type: shell.plugin_manager
+  field_contains:
+    shplug.risk_tags: "shell_plugin_surface"
+fixture: shell_plugin_manager.jsonl

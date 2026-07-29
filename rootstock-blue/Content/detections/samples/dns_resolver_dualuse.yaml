@@ -1,0 +1,13 @@
+id: sample.dns_resolver_dualuse
+title: DNS resolver / mDNSResponder dual-use surface surface present
+severity: high
+description: DNS resolver dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1071.004
+  - T1568
+  - T1040
+match:
+  event_type: dns.resolver
+  field_contains:
+    dnsres.risk_tags: "dns_surface"
+fixture: dns_resolver_dualuse.jsonl

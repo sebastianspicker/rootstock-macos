@@ -1,0 +1,11 @@
+id: sample.shell_profile_dyld_insert
+title: Shell profile sets DYLD_INSERT_LIBRARIES
+severity: high
+description: Shell init file injects a library via DYLD_INSERT_LIBRARIES (T1546.004).
+attack_techniques:
+  - T1546.004
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.risk_tags: "dyld_insert"
+fixture: shell_profile_dyld_insert.jsonl

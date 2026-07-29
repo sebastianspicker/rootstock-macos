@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 
+from report_query_results import query_rows
+
+
 # ── Recommendations ───────────────────────────────────────────────────────────
 
 RECOMMENDATIONS = {
     "injectable_fda": [
         "Enable Hardened Runtime for all first-party and in-house applications via the entitlements editor in Xcode.",
         "Enable Library Validation (`com.apple.security.cs.require-library-validation`) to prevent unsigned dylib injection. [ref: CVE-2024-44168]",
-        "Audit all applications with Full Disk Access — revoke unnecessary grants via System Settings → Privacy & Security → Full Disk Access.",
+        "Audit all applications with Full Disk Access - revoke unnecessary grants via System Settings → Privacy & Security → Full Disk Access.",
         "Use `codesign --verify --deep --strict` in CI/CD pipelines to catch hardened-runtime regressions before release.",
     ],
     "electron_inheritance": [
@@ -18,66 +21,66 @@ RECOMMENDATIONS = {
         "Apply least privilege: Electron apps should not hold TCC permissions they don't actively need; request only what is strictly required.",
     ],
     "apple_events": [
-        "Audit Apple Event automation grants in TCC — revoke `kTCCServiceAppleEvents` grants to low-trust or injectable apps. [ref: CVE-2024-44206]",
+        "Audit Apple Event automation grants in TCC - revoke `kTCCServiceAppleEvents` grants to low-trust or injectable apps. [ref: CVE-2024-44206]",
         "Implement Apple Event permission review as part of quarterly access reviews alongside FDA and Accessibility grants.",
     ],
     "physical_security": [
         "Enable Lockdown Mode on high-value targets to reduce the attack surface from zero-click exploits and hardware interfaces. [ref: CVE-2023-42861]",
         "Configure automatic screen lock with a delay of 60 seconds or less to prevent physical-access exploitation.",
-        "Review Thunderbolt security level — set to `full` security to require user approval for Thunderbolt/USB4 peripherals.",
+        "Review Thunderbolt security level - set to `full` security to require user approval for Thunderbolt/USB4 peripherals.",
         "Enable FileVault full-disk encryption on all endpoints to protect data at rest from physical theft.",
     ],
     "certificate_hygiene": [
         "Require notarization for all in-house applications before deployment to ensure Apple has scanned for known malware.",
-        "Monitor for expired signing certificates on applications with active TCC grants — expired certs weaken trust validation.",
-        "Audit non-Apple CA chains in your application inventory — these may indicate repackaged or enterprise-signed software with elevated risk.",
+        "Monitor for expired signing certificates on applications with active TCC grants - expired certs weaken trust validation.",
+        "Audit non-Apple CA chains in your application inventory - these may indicate repackaged or enterprise-signed software with elevated risk.",
     ],
     "icloud_risk": [
-        "Review iCloud container entitlements on injectable applications — injected code can exfiltrate data via iCloud sync to all user devices.",
+        "Review iCloud container entitlements on injectable applications - injected code can exfiltrate data via iCloud sync to all user devices.",
         "Consider disabling iCloud Drive on high-security endpoints where synced data could create a cross-device exfiltration path.",
-        "Audit iCloud Keychain sync on endpoints with sensitive credentials — synced keychain items are accessible on all enrolled devices.",
+        "Audit iCloud Keychain sync on endpoints with sensitive credentials - synced keychain items are accessible on all enrolled devices.",
     ],
     "authorization_hardening": [
-        "Audit sudoers NOPASSWD entries — remove unnecessary passwordless sudo rules that allow privilege escalation without authentication. [ref: T1548.003]",
-        "Review non-Apple authorization plugins in `/Library/Security/SecurityAgentPlugins/` — third-party plugins execute in the authorization flow.",
+        "Audit sudoers NOPASSWD entries - remove unnecessary passwordless sudo rules that allow privilege escalation without authentication. [ref: T1548.003]",
+        "Review non-Apple authorization plugins in `/Library/Security/SecurityAgentPlugins/` - third-party plugins execute in the authorization flow.",
         "Harden weak authorization rights that use `allow` or `authenticate-session-owner` rules for sensitive operations.",
     ],
     "shell_hooks": [
-        "Audit writable shell configuration files (.zshrc, .bashrc, .zprofile) — restrict write access to the owning user only. [ref: CVE-2023-32364]",
+        "Audit writable shell configuration files (.zshrc, .bashrc, .zprofile) - restrict write access to the owning user only. [ref: CVE-2023-32364]",
         "Deploy file integrity monitoring on shell hook files to detect unauthorised modifications that could inject keyloggers or credential harvesters.",
     ],
     "file_acl_escalation": [
-        "Audit file ACLs on security-critical files (TCC.db, sudoers, sshd_config) — remove non-root write ACEs. [ref: CVE-2024-23296]",
+        "Audit file ACLs on security-critical files (TCC.db, sudoers, sshd_config) - remove non-root write ACEs. [ref: CVE-2024-23296]",
         "Implement periodic ACL scanning to detect privilege creep on LaunchDaemon directories and authorization databases.",
     ],
     "esf_bypass": [
-        "Harden injectable apps with ESF entitlements — these can blind EDR and security monitoring if compromised. [ref: CVE-2024-27842]",
+        "Harden injectable apps with ESF entitlements - these can blind EDR and security monitoring if compromised. [ref: CVE-2024-27842]",
         "Monitor for anomalous ESF client registrations and network extension loads that may indicate tampered security tools.",
     ],
     "sandbox_escape": [
-        "Prioritise patching sandbox escape CVEs (CVE-2023-32414, CVE-2023-38606) — sandbox escapes enable full system access from app-level compromise.",
+        "Prioritise patching sandbox escape CVEs (CVE-2023-32414, CVE-2023-38606) - sandbox escapes enable full system access from app-level compromise.",
         "Audit unsandboxed injectable apps and consider deploying App Sandbox for in-house tools where feasible.",
     ],
     "mdm_risk": [
-        "Review MDM PPPC profiles for overgrants — ensure scripting interpreters (Python, Ruby, osascript) do not hold FDA or Accessibility grants via MDM. [ref: CVE-2024-44301]",
+        "Review MDM PPPC profiles for overgrants - ensure scripting interpreters (Python, Ruby, osascript) do not hold FDA or Accessibility grants via MDM. [ref: CVE-2024-44301]",
         "Implement MDM profile change auditing to detect unauthorized TCC grant modifications.",
     ],
     "lateral_movement": [
         "Restrict SSH and Screen Sharing access to authorised users via MDM or `/etc/ssh/sshd_config` AllowUsers/AllowGroups directives. [ref: T1021.004]",
-        "Audit cross-host user accounts — shared credentials across hosts enable lateral movement after initial compromise.",
+        "Audit cross-host user accounts - shared credentials across hosts enable lateral movement after initial compromise.",
     ],
     "running_processes": [
-        "Monitor running injectable processes with active TCC grants — these are live exploitation targets. [ref: CVE-2025-24085]",
+        "Monitor running injectable processes with active TCC grants - these are live exploitation targets. [ref: CVE-2025-24085]",
         "Implement runtime injection detection (e.g., DYLD_INSERT_LIBRARIES monitoring) for high-value processes.",
     ],
     "gatekeeper_bypass": [
-        "Investigate unquarantined non-system applications — these bypassed Gatekeeper download checks. [ref: CVE-2022-42821, CVE-2024-44175]",
+        "Investigate unquarantined non-system applications - these bypassed Gatekeeper download checks. [ref: CVE-2022-42821, CVE-2024-44175]",
         "Enable Gatekeeper enforcement via `spctl --master-enable` on all endpoints.",
         "Review apps without quarantine attributes that hold TCC grants for potential Gatekeeper bypass abuse.",
     ],
     "general": [
         "Ensure System Integrity Protection (SIP) is enabled on all managed endpoints (`csrutil status`).",
-        "Enforce Full Disk Access via MDM Privacy Preferences Policy Control (PPPC) profiles — maintain an allow-list of approved applications.",
+        "Enforce Full Disk Access via MDM Privacy Preferences Policy Control (PPPC) profiles - maintain an allow-list of approved applications.",
         "Review all LaunchDaemons and LaunchAgents with `launchctl list` and remove any unrecognised or unnecessary persistence items.",
         "Deploy application allow-listing via PPPC profiles through your MDM solution.",
         "Run Rootstock periodically (e.g., monthly or after major software installs) to detect new attack paths introduced by vendor updates.",
@@ -85,19 +88,11 @@ RECOMMENDATIONS = {
 }
 
 
-def _get_query_rows(
-    query_results: dict[str, list[dict] | str],
-    filename: str,
-) -> list[dict]:
-    result = query_results.get(filename, [])
-    return result if isinstance(result, list) else []
-
-
 def _has_any_query_rows(
     query_results: dict[str, list[dict] | str],
     *filenames: str,
 ) -> bool:
-    return any(_get_query_rows(query_results, filename) for filename in filenames)
+    return any(query_rows(query_results, filename) for filename in filenames)
 
 
 def _append_recommendations(
@@ -125,7 +120,7 @@ def _append_recommendations_section(
         "injectable_rows": rows.injectable,
         "electron_rows": rows.electron,
         "apple_event_rows": rows.apple_event,
-        "posture_rows_67": _get_query_rows(
+        "posture_rows_67": query_rows(
             query_results, "67-physical-security-overview.cypher"
         ),
         "icloud_rows": rows.icloud,

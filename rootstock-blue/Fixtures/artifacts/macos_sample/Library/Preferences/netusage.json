@@ -1,0 +1,27 @@
+{
+  "usage": [
+    {
+      "process": "/tmp/evil_c2_agent",
+      "domain": "evil.example",
+      "bytes_in": 102400,
+      "bytes_out": 128000000,
+      "first_seen": "2024-06-01T12:00:00Z",
+      "last_seen": "2024-06-02T08:30:00Z",
+      "risk_tags": "anomalous_egress,high_volume,suspicious_process"
+    },
+    {
+      "process": "curl",
+      "domain": "c2.evil.example",
+      "bytes_in": 4096,
+      "bytes_out": 2048000,
+      "first_seen": "2024-06-01T14:00:00Z"
+    },
+    {
+      "process": "/Applications/Safari.app/Contents/MacOS/Safari",
+      "domain": "apple.com",
+      "bytes_in": 5000000,
+      "bytes_out": 250000,
+      "first_seen": "2024-06-01T09:00:00Z"
+    }
+  ]
+}

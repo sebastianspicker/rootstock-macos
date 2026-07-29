@@ -1,4 +1,4 @@
-"""test_diff_formatters.py — Tests for diff_formatters.py (summarize, format_text)."""
+"""test_diff_formatters.py - Tests for diff_formatters.py (summarize, format_text)."""
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ from unittest import TestCase
 import json
 from pathlib import Path
 
+from conftest import clone_clean_application
 from diff_formatters import format_text, summarize
 from diff_scans import diff_scans
 from models import ScanResult
 
-FIXTURE = Path(__file__).parent / "fixture_minimal.json"
+FIXTURE = Path(__file__).parent / "fixtures" / "minimal_scan.json"
 
 
 def _load_fixture() -> ScanResult:
@@ -95,30 +96,14 @@ def test_format_text_app_changes():
     """Diff with added app shows [+] marker."""
     before = _load_fixture()
     after_data = json.loads(FIXTURE.read_text())
-    after_data["applications"].append(
-        {
-            "name": "NewApp",
-            "bundle_id": "com.example.newapp",
-            "path": "/Applications/NewApp.app",
-            "version": "1.0",
-            "team_id": "TEAM123",
-            "hardened_runtime": True,
-            "library_validation": True,
-            "is_electron": False,
-            "is_system": False,
-            "signed": True,
-            "entitlements": [],
-            "is_adhoc_signed": False,
-            "signing_certificate_cn": None,
-            "signing_certificate_sha256": None,
-            "certificate_expires": None,
-            "is_certificate_expired": False,
-            "certificate_chain_length": None,
-            "certificate_trust_valid": None,
-            "certificate_chain": [],
-            "injection_methods": [],
-        }
+    added_app = clone_clean_application(
+        after_data["applications"][0],
+        name="NewApp",
+        bundle_id="com.example.newapp",
+        path="/Applications/NewApp.app",
+        team_id="TEAM123",
     )
+    after_data["applications"].append(added_app)
     after = ScanResult.model_validate(after_data)
 
     diff = diff_scans(before, after)

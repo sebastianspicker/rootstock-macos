@@ -24,7 +24,7 @@ final class SQLiteDatabase {
     init(path: String) throws {
         let rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, nil)
         guard rc == SQLITE_OK else {
-            let msg = db.flatMap { String(validatingUTF8: sqlite3_errmsg($0)) } ?? "unknown error"
+            let msg = db.flatMap { String(validatingCString: sqlite3_errmsg($0)) } ?? "unknown error"
             sqlite3_close(db)
             db = nil
             throw SQLiteError.cannotOpen(path: path, message: msg)
@@ -59,7 +59,7 @@ final class SQLiteDatabase {
         var stmt: OpaquePointer?
         let prepareRC = sqlite3_prepare_v2(db, sql, -1, &stmt, nil)
         guard prepareRC == SQLITE_OK else {
-            let msg = String(validatingUTF8: sqlite3_errmsg(db)) ?? "unknown error"
+            let msg = String(validatingCString: sqlite3_errmsg(db)) ?? "unknown error"
             throw SQLiteError.queryFailed(code: prepareRC, message: msg)
         }
         defer { sqlite3_finalize(stmt) }
@@ -75,7 +75,7 @@ final class SQLiteDatabase {
                 break
             }
             guard stepRC == SQLITE_ROW else {
-                let msg = String(validatingUTF8: sqlite3_errmsg(db)) ?? "unknown error"
+                let msg = String(validatingCString: sqlite3_errmsg(db)) ?? "unknown error"
                 throw SQLiteError.queryFailed(code: stepRC, message: msg)
             }
             rows.append(readRow(from: stmt))

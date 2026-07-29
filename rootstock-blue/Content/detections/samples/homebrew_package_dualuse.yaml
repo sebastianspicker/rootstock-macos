@@ -1,0 +1,13 @@
+id: sample.homebrew_package_dualuse
+title: Homebrew / third-party package manager dual-use surface present
+severity: high
+description: Homebrew package dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1072
+  - T1546
+  - T1059
+match:
+  event_type: homebrew.package
+  field_contains:
+    brew.risk_tags: "package_surface"
+fixture: homebrew_package_dualuse.jsonl

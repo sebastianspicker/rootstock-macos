@@ -1,0 +1,13 @@
+id: sample.finder_sync_extension
+title: Finder Sync extension dual-use surface surface present
+severity: high
+description: Finder Sync dual-use markers indicate IR surface.
+attack_techniques:
+  - T1546
+  - T1176
+  - T1059
+match:
+  event_type: finder.sync_ext
+  field_contains:
+    fndsync.risk_tags: "finder_sync_surface"
+fixture: finder_sync_extension.jsonl

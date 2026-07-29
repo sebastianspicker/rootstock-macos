@@ -1,37 +1,54 @@
 # Examples
 
-Demo data and scripts for Rootstock.
+Synthetic fixtures and scripts for Rootstock. These files are the only
+assessment-shaped data that belong in the public tree. Real host scans, reports,
+viewers, and package inventories stay local and gitignored.
 
-## Files
+## Included files
 
 ### `demo-scan.json`
-Synthetic scan data representing a typical corporate MacBook ("Acme Corp").
-This file is the demo source of truth. Edit it directly to add or modify demo data,
-then validate it against the Pydantic models in `graph/models.py` and the JSON Schema
-in `collector/schema/scan-result.schema.json`:
+
+Synthetic scan data for a fictional Mac named `Acme Corp`. This file is the
+example source of truth. After editing it, validate it against the Pydantic
+models in `graph/models.py` and the JSON Schema in
+`collector/schema/scan-result.schema.json`:
 
 ```bash
-python3 scripts/validate-scan.py examples/demo-scan.json
+uv run --project graph --locked python scripts/validate-scan.py examples/demo-scan.json
 ```
 
 Use this scan to test the graph pipeline without running the collector.
 
+### `cve-scan-export.json`
+
+Synthetic `rootstock-export.json` bridge fixture for graph import of cve-scan
+evidence. See [docs/guides/cve-scan-module.md](../docs/guides/cve-scan-module.md).
+
+### `family-export-blue.json` and `family-export-red.json`
+
+Synthetic family open-export fixtures used by the optional rootstock-blue and
+rootstock-red → Neo4j import path. See [docs/FAMILY.md](../docs/FAMILY.md) and
+`graph/import_family_export.py`.
+
 ### `regenerate.sh`
-End-to-end script that validates `demo-scan.json` and rebuilds the pipeline outputs.
-It does not rewrite `demo-scan.json`. Requires a running Neo4j instance.
+
+This script validates `demo-scan.json` and rebuilds the pipeline output. It
+does not rewrite `demo-scan.json` and requires a running Neo4j instance.
 
 ```bash
-# Start Neo4j with graph/docker-compose.yml if needed.
-cd graph && NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d && cd ..
+# Run from the repository root. Start Neo4j if needed.
+NEO4J_AUTH=neo4j/CHANGE_ME docker compose -f graph/docker-compose.yml up -d
 
-NEO4J_PASSWORD=CHANGE_ME bash examples/regenerate.sh
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  bash examples/regenerate.sh
 ```
 
-This runs the full pipeline (schema, cached/static CVE enrichment, import,
-infer, vulnerabilities, classify, report) and produces:
-- `generated/demo-report.md` — Full attack path report with Mermaid diagrams and recommendations
-- `generated/demo-graph.json` — OpenGraph JSON export for viewer
-- `generated/demo-viewer.html` — Interactive Canvas-based graph viewer (open in browser)
+This runs schema setup, cached or static CVE enrichment, import, inference,
+vulnerability import, classification, and report output. It writes:
+
+- `generated/demo-report.md`: attack-path report
+- `generated/demo-graph.json`: OpenGraph JSON for the viewer
+- `generated/demo-viewer.html`: offline graph viewer
 
 `generated/` is a local output directory, not the source of truth. Keep demo
 data changes in `demo-scan.json`, then regenerate derived outputs.
@@ -39,23 +56,33 @@ data changes in `demo-scan.json`, then regenerate derived outputs.
 Environment variables: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`. The bundled
 Neo4j compose file requires `NEO4J_AUTH`, for example `neo4j/CHANGE_ME`.
 
-## Using Demo Data
+## Using example data
 
 ```bash
+# Run these commands from the repository root. The graph commands use the
+# locked graph environment.
+
 # Import into Neo4j (one command)
-NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh examples/demo-scan.json
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  bash graph/pipeline.sh examples/demo-scan.json
 
 # Or step by step:
-python3 graph/setup_schema.py
-python3 graph/import_scan.py --input examples/demo-scan.json
-python3 graph/infer.py
-python3 graph/import_vulnerabilities.py
-python3 graph/tier_classification.py
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  python graph/setup_schema.py
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  python graph/import_scan.py --input examples/demo-scan.json
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked python graph/infer.py
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  python graph/import_vulnerabilities.py
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  python graph/tier_classification.py
 
 # Start the API server + interactive viewer
-ROOTSTOCK_API_TOKEN=CHANGE_ME_API_TOKEN NEO4J_PASSWORD=CHANGE_ME \
-  python3 graph/server.py --port 8000
+export ROOTSTOCK_API_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  python graph/server.py --port 8000
 # Open http://localhost:8000
 ```
 
-Install Python dependencies first with `pip3 install -r graph/requirements.txt`.
+Install the locked Python environment first with
+`uv sync --project graph --locked --all-extras`.

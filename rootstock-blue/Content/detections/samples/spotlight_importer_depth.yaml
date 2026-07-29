@@ -1,0 +1,13 @@
+id: sample.spotlight_importer_depth
+title: Spotlight importer residual depth surface present
+severity: high
+description: Spotlight importer depth markers indicate IR surface.
+attack_techniques:
+  - T1083
+  - T1005
+  - T1213
+match:
+  event_type: spotlight.importer
+  field_contains:
+    spimp.risk_tags: "spotlight_importer_surface"
+fixture: spotlight_importer_depth.jsonl

@@ -175,27 +175,10 @@ final class MDMTests: XCTestCase {
         XCTAssertEqual(policy?.allowed, allowed, file: file, line: line)
     }
 
-    private static let tccPolicyPayloadXML = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>_computerlevel</key>
-            <array>
-                <dict>
-                    <key>ProfileIdentifier</key>
-                    <string>com.example.tcc.profile</string>
-                    <key>ProfileDisplayName</key>
-                    <string>Privacy Policy</string>
-                    <key>ProfileItems</key>
-                    <array>
-                        <dict>
-                            <key>PayloadType</key>
-                            <string>com.apple.TCC.configuration-profile-policy</string>
-                            <key>PayloadContent</key>
-                            <dict>
-                                <key>Services</key>
-                                <dict>
+    private static let tccPolicyPayloadXML = tccProfileXML(
+        identifier: "com.example.tcc.profile",
+        displayName: "Privacy Policy",
+        services: """
                                     <key>SystemPolicyAllFiles</key>
                                     <array>
                                         <dict>
@@ -218,20 +201,10 @@ final class MDMTests: XCTestCase {
                                             <false/>
                                         </dict>
                                     </array>
-                                </dict>
-                            </dict>
-                        </dict>
-                    </array>
-                </dict>
-            </array>
-        </dict>
-        </plist>
         """
+    )
 
-    private static let noTCCPayloadProfileXML = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
+    private static let noTCCPayloadProfileXML = plistDocument("""
         <dict>
             <key>_computerlevel</key>
             <array>
@@ -256,8 +229,7 @@ final class MDMTests: XCTestCase {
                 </dict>
             </array>
         </dict>
-        </plist>
-        """
+        """)
 
     private static let emptyPlistXML = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -267,10 +239,7 @@ final class MDMTests: XCTestCase {
         </plist>
         """
 
-    private static let minimalProfileXML = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
+    private static let minimalProfileXML = plistDocument("""
         <dict>
             <key>_computerlevel</key>
             <array>
@@ -282,28 +251,11 @@ final class MDMTests: XCTestCase {
                 </dict>
             </array>
         </dict>
-        </plist>
-        """
+        """)
 
-    private static let pathBasedTCCEntryXML = """
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>_computerlevel</key>
-            <array>
-                <dict>
-                    <key>ProfileIdentifier</key>
-                    <string>com.example.path.profile</string>
-                    <key>ProfileItems</key>
-                    <array>
-                        <dict>
-                            <key>PayloadType</key>
-                            <string>com.apple.TCC.configuration-profile-policy</string>
-                            <key>PayloadContent</key>
-                            <dict>
-                                <key>Services</key>
-                                <dict>
+    private static let pathBasedTCCEntryXML = tccProfileXML(
+        identifier: "com.example.path.profile",
+        services: """
                                     <key>Accessibility</key>
                                     <array>
                                         <dict>
@@ -315,6 +267,53 @@ final class MDMTests: XCTestCase {
                                             <true/>
                                         </dict>
                                     </array>
+        """
+    )
+
+    private static let plistHeader = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        """
+
+    private static func plistDocument(_ body: String) -> String {
+        """
+        \(plistHeader)
+        \(body)
+        </plist>
+        """
+    }
+
+    private static func tccProfileXML(
+        identifier: String,
+        displayName: String? = nil,
+        services: String
+    ) -> String {
+        let displayNameEntry = displayName.map {
+            """
+                    <key>ProfileDisplayName</key>
+                    <string>\($0)</string>
+            """
+        } ?? ""
+        return """
+        \(plistHeader)
+        <dict>
+            <key>_computerlevel</key>
+            <array>
+                <dict>
+                    <key>ProfileIdentifier</key>
+                    <string>\(identifier)</string>
+        \(displayNameEntry)
+                    <key>ProfileItems</key>
+                    <array>
+                        <dict>
+                            <key>PayloadType</key>
+                            <string>com.apple.TCC.configuration-profile-policy</string>
+                            <key>PayloadContent</key>
+                            <dict>
+                                <key>Services</key>
+                                <dict>
+        \(services)
                                 </dict>
                             </dict>
                         </dict>
@@ -324,4 +323,5 @@ final class MDMTests: XCTestCase {
         </dict>
         </plist>
         """
+    }
 }

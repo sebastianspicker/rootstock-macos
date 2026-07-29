@@ -1,5 +1,5 @@
 // Name: High-EPSS Injectable Applications
-// Purpose: Injectable apps with high exploitation probability (EPSS > 0.3) — active threat targets
+// Purpose: Injectable apps with high exploitation probability (EPSS > 0.3) - active threat targets
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

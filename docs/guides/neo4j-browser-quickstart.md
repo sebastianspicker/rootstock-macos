@@ -8,22 +8,25 @@ interactive attack-path queries in Neo4j Browser with the Rootstock style sheet.
 - Docker, Neo4j Desktop, or a native Neo4j install
 - Python 3 for serving the Browser guide over HTTP
 - A Rootstock scan JSON produced by the Swift collector
-- Graph dependencies installed with `pip install -r graph/requirements.txt`
+- Graph dependencies installed with
+  `uv sync --project graph --locked --all-extras`
+
+Run the commands in this guide from the repository root unless a command says
+otherwise. Graph Python and shell commands use the locked graph environment.
 
 ## Step 1: Start Neo4j
 
 ### Option A: Docker
 
 ```bash
-cd graph
-NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d
+NEO4J_AUTH=neo4j/CHANGE_ME docker compose -f graph/docker-compose.yml up -d
 export NEO4J_PASSWORD=CHANGE_ME
 ```
 
 Wait for Neo4j to start:
 
 ```bash
-docker compose logs -f neo4j | grep "Started"
+docker compose -f graph/docker-compose.yml logs -f neo4j | grep "Started"
 ```
 
 The compose file creates `rootstock-neo4j` and maps ports 7474 and 7687 on
@@ -39,43 +42,33 @@ The compose file creates `rootstock-neo4j` and maps ports 7474 and 7687 on
 ## Step 2: Import Scan Data
 
 ```bash
-cd graph
-python3 import_scan.py --input /path/to/scan.json --neo4j bolt://localhost:7687
+uv run --project graph --locked python graph/import_scan.py \
+  --input /path/to/scan.json --neo4j bolt://localhost:7687
 ```
 
-Expected shape:
-
-```text
-Connected Neo4j bolt://localhost:7687
-Importing scan abc-1234 from macbook-pro.local (macOS 14.5)
-Imported 247 applications
-Imported 89 TCC grants across 22 services
-Imported 1,432 entitlements
-Imported 12 XPC services
-Import complete.
-```
+The importer reports counts from the selected scan. Review any collection or
+import warnings before using those counts as coverage evidence.
 
 Then run relationship inference:
 
 ```bash
-python3 infer.py --neo4j bolt://localhost:7687
+uv run --project graph --locked python graph/infer.py \
+  --neo4j bolt://localhost:7687
 ```
 
 ## Step 3: Open Neo4j Browser
 
 Navigate to <http://localhost:7474> and log in with:
 
-- **Username:** `neo4j`
-- **Password:** the password from `NEO4J_AUTH`
+- Username: `neo4j`
+- Password: the password from `NEO4J_AUTH`
 
 ## Step 4: Load the Rootstock Style Sheet
 
 Start the local Browser asset server:
 
 ```bash
-cd graph/browser
-chmod +x setup-browser.sh
-./setup-browser.sh
+uv run --project graph --locked bash graph/browser/setup-browser.sh
 ```
 
 In the Neo4j Browser query editor, run:
@@ -119,7 +112,7 @@ query to Neo4j Browser Favorites:
 After import and inference, generate a Markdown report:
 
 ```bash
-python3 graph/report.py \
+uv run --project graph --locked python graph/report.py \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.md
 ```
@@ -127,13 +120,13 @@ python3 graph/report.py \
 Add the original scan JSON when richer metadata is needed:
 
 ```bash
-python3 graph/report.py \
+uv run --project graph --locked python graph/report.py \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.md \
   --scan-json /path/to/scan.json
 ```
 
-Generated reports are local artifacts and are ignored by git.
+Reports are local artifacts and are ignored by Git.
 
 ## Troubleshooting
 
@@ -167,8 +160,8 @@ If the count is `0`, check:
 ### Docker cannot connect to Neo4j
 
 ```bash
-docker compose ps
-docker compose logs neo4j | tail -20
+docker compose -f graph/docker-compose.yml ps
+docker compose -f graph/docker-compose.yml logs neo4j | tail -20
 ```
 
 Common causes:
@@ -188,5 +181,6 @@ MATCH ()-[r:CAN_INJECT_INTO]->() RETURN count(r) AS injection_edges
 If the count is `0`, re-run:
 
 ```bash
-python3 graph/infer.py --neo4j bolt://localhost:7687
+uv run --project graph --locked python graph/infer.py \
+  --neo4j bolt://localhost:7687
 ```

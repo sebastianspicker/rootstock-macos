@@ -1,7 +1,7 @@
-const http = require('node:http');
-const fs = require('node:fs');
-const {test, expect} = require('@playwright/test');
-const AxeBuilder = require('@axe-core/playwright').default;
+import http from 'node:http';
+import fs from 'node:fs';
+import AxeBuilder from '@axe-core/playwright';
+import {expect, test} from '@playwright/test';
 
 const graph = {
   metadata: {hostname: 'synthetic-browser-fixture', generated_at: '2026-07-11T00:00:00Z'},
@@ -15,24 +15,13 @@ const graph = {
 };
 
 function assembledViewer(live) {
-  let script = [
-    fs.readFileSync('graph/viewer.js', 'utf8'),
-    fs.readFileSync('graph/viewer_spatial.js', 'utf8'),
-    fs.readFileSync('graph/viewer_render.js', 'utf8'),
-    fs.readFileSync('graph/viewer_analysis.js', 'utf8'),
-    fs.readFileSync('graph/viewer_controls.js', 'utf8'),
-    fs.readFileSync('graph/viewer_live.js', 'utf8'),
-    fs.readFileSync('graph/viewer_shell.js', 'utf8'),
-  ].join('\n');
+  const script = fs.readFileSync('graph/viewer.bundle.js', 'utf8');
   const payload = live ? {metadata: {}, graph: {nodes: [], edges: []}} : graph;
-  script = script.replace(
-    'let DATA = null /* VIEWER_DATA */;',
-    `${live ? "const __ROOTSTOCK_LIVE__ = true; const API_BASE = '';" : ''}\nlet DATA = ${JSON.stringify(payload)};`,
-  );
   return fs.readFileSync('graph/viewer_template.html', 'utf8')
     .replace('{{VIEWER_TITLE}}', live ? 'Live fixture' : 'Static fixture')
     .replace('{{VIEWER_CSS}}', fs.readFileSync('graph/viewer.css', 'utf8'))
-    .replace('{{VIEWER_JS}}', script);
+    .replace('{{VIEWER_JS}}', script)
+    .replace('{{VIEWER_BOOTSTRAP}}', `RootstockViewer.mount(${JSON.stringify(payload)}, ${JSON.stringify(live ? {mode: 'live'} : {mode: 'static'})});`);
 }
 
 let server;
@@ -77,7 +66,7 @@ test('static graph supports keyboard selection, path building, and theme overrid
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', {name: 'Demo App'})).toBeVisible();
   await expectNoSeriousAxeFindings(page);
-  await page.getByRole('button', {name: 'Build path'}).click();
+  await page.getByRole('button', {name: 'Build path', exact: true}).click();
   await page.getByRole('button', {name: /Demo App/}).click();
   await page.getByRole('button', {name: /Full Disk Access/}).click();
   await expect(page.getByText('1 hop', {exact: true})).toBeVisible();

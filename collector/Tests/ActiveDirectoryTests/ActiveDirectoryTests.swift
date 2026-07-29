@@ -99,6 +99,53 @@ final class ActiveDirectoryTests: XCTestCase {
         XCTAssertFalse(binding.isBound)
     }
 
+    func testBindingAdmissionFailureIsUnknownWithDiagnostic() {
+        let ds = ActiveDirectoryDataSource { _, _, _ in .admissionTimedOut }
+        var errors: [CollectionError] = []
+
+        let binding = ds.parseBinding(errors: &errors)
+
+        XCTAssertNil(binding)
+        XCTAssertEqual(errors.count, 1)
+        XCTAssertTrue(errors[0].message.contains("admission timed out"))
+    }
+
+    func testBindingExecutionTimeoutIsUnknownWithDiagnostic() {
+        let ds = ActiveDirectoryDataSource { _, _, _ in
+            .executionTimedOut(Self.shellResult(timedOut: true))
+        }
+        var errors: [CollectionError] = []
+
+        let binding = ds.parseBinding(errors: &errors)
+
+        XCTAssertNil(binding)
+        XCTAssertEqual(errors.count, 1)
+        XCTAssertTrue(errors[0].message.contains("execution timed out"))
+    }
+
+    func testBindingSuccessfulEmptyOutputIsDefinitivelyUnbound() {
+        let ds = ActiveDirectoryDataSource { _, _, _ in
+            .success(Self.shellResult(stdout: "This computer is not bound to Active Directory."))
+        }
+        var errors: [CollectionError] = []
+
+        let binding = ds.parseBinding(errors: &errors)
+
+        XCTAssertEqual(binding?.isBound, false)
+        XCTAssertTrue(errors.isEmpty)
+    }
+
+    func testLegacyBindingAPIsRemainNonoptionalOnFailure() {
+        let ds = ActiveDirectoryDataSource { _, _, _ in .admissionTimedOut }
+
+        let binding = ds.collectBinding()
+        let collection = ds.collectWithBinding()
+
+        XCTAssertFalse(binding.isBound)
+        XCTAssertFalse(collection.binding.isBound)
+        XCTAssertEqual(collection.result.errors.count, 1)
+    }
+
     // MARK: - Group mapping parsing
 
     func testParseGroupMappings() {
@@ -170,21 +217,43 @@ final class ActiveDirectoryTests: XCTestCase {
     // MARK: - AD group membership discovery
 
     func testDiffGroupMembershipFindsADUsers() {
-        // This tests the diff logic — actual dscl calls won't find AD users
-        // in a CI environment, so we test the parser directly.
-        let ds = ActiveDirectoryDataSource()
+        let ds = ActiveDirectoryDataSource { _, arguments, _ in
+            if arguments[0] == "/Search" {
+                return .success(Self.shellResult(stdout: "GroupMembership: testuser jsmith"))
+            }
+            return .success(Self.shellResult(stdout: "GroupMembership: testuser"))
+        }
+        var errors: [CollectionError] = []
 
-        // Simulate: /Search has "jsmith" in _developer, local does not
-        let searchOutput = "GroupMembership: testuser jsmith"
-        let localOutput = "GroupMembership: testuser"
+        XCTAssertEqual(ds.diffGroupMembership("_developer", errors: &errors), ["jsmith"])
+        XCTAssertTrue(errors.isEmpty)
+    }
 
-        let searchMembers = searchOutput.components(separatedBy: ":").last?
-            .split(whereSeparator: \.isWhitespace).map(String.init) ?? []
-        let localMembers = localOutput.components(separatedBy: ":").last?
-            .split(whereSeparator: \.isWhitespace).map(String.init) ?? []
-        let diff = Set(searchMembers).subtracting(localMembers).sorted()
+    func testDiffGroupMembershipReportsUnexpectedNonzeroExit() {
+        let ds = ActiveDirectoryDataSource { _, arguments, _ in
+            if arguments[0] == "/Search" {
+                return .nonZeroExit(Self.shellResult(stderr: "Directory unavailable", status: 1))
+            }
+            return .success(Self.shellResult(stdout: "GroupMembership: testuser"))
+        }
+        var errors: [CollectionError] = []
 
-        XCTAssertEqual(diff, ["jsmith"])
+        XCTAssertTrue(ds.diffGroupMembership("_developer", errors: &errors).isEmpty)
+        XCTAssertEqual(errors.count, 1)
+        XCTAssertTrue(errors[0].message.contains("Directory unavailable"))
+    }
+
+    func testDiffGroupMembershipAcceptsExpectedMissingRecord() {
+        let ds = ActiveDirectoryDataSource { _, arguments, _ in
+            if arguments[0] == "/Search" {
+                return .nonZeroExit(Self.shellResult(stderr: "eDSRecordNotFound", status: 1))
+            }
+            return .success(Self.shellResult(stdout: "GroupMembership: testuser"))
+        }
+        var errors: [CollectionError] = []
+
+        XCTAssertTrue(ds.diffGroupMembership("_developer", errors: &errors).isEmpty)
+        XCTAssertTrue(errors.isEmpty)
     }
 
     func testSecurityRelevantGroupsDoesNotIncludeAdmin() {
@@ -199,5 +268,19 @@ final class ActiveDirectoryTests: XCTestCase {
         let ds = ActiveDirectoryDataSource()
         XCTAssertEqual(ds.name, "Active Directory")
         XCTAssertFalse(ds.requiresElevation)
+    }
+
+    private static func shellResult(
+        stdout: String = "",
+        stderr: String = "",
+        status: Int32 = 0,
+        timedOut: Bool = false
+    ) -> ShellResult {
+        ShellResult(
+            stdout: stdout,
+            stderr: stderr,
+            terminationStatus: status,
+            timedOut: timedOut
+        )
     }
 }

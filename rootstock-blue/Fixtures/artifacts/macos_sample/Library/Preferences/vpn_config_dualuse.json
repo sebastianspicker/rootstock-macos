@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Library/Frameworks/NetworkExtension.framework",
+      "name": "vpn",
+      "risk_tags": "vpn_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "VPN config dual-use markers \u2014 never installs VPN profiles or rewrites network extension VPN configs"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+id: sample.tcc_camera
+title: Camera TCC access grant
+severity: medium
+description: TCC access row for Camera service.
+attack_techniques:
+  - T1125
+match:
+  event_type: tcc.access
+  field_contains:
+    tcc.service: "Camera"
+fixture: tcc_camera_access.jsonl

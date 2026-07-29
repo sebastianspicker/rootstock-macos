@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Applications/Photos.app",
+      "name": "photos",
+      "risk_tags": "photos_surface,wave15,dual_use",
+      "user": "alice",
+      "timestamp": "2026-07-15T12:00:00Z",
+      "notes": "Photos library path plane markers \u2014 never reads photo contents or exports Photo Library media"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+id: sample.contacts_path_plane
+title: Contacts database path residual plane surface present
+severity: high
+description: Contacts path plane markers indicate IR surface.
+attack_techniques:
+  - T1213
+  - T1005
+  - T1087
+match:
+  event_type: contacts.path
+  field_contains:
+    ctpath.risk_tags: "contacts_surface"
+fixture: contacts_path_plane.jsonl

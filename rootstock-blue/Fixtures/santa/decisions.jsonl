@@ -1,0 +1,2 @@
+{"decision":"DENY","path":"/tmp/evil_payload","sha256":"abc123def456","reason":"BLOCKLIST","timestamp":"2026-01-15T12:00:00Z"}
+{"decision":"ALLOW","path":"/Applications/Safari.app/Contents/MacOS/Safari","sha256":"fedcba987654","reason":"ALLOWLIST","timestamp":"2026-01-15T12:05:00Z"}

@@ -1,9 +1,9 @@
 // Name: Admin Group Privilege Escalation
-// Purpose: Users in the admin group that own injectable apps — sudo escalation path
+// Purpose: Correlate admin-group membership with modeled app injection conditions
 // Category: Red Team
 // Severity: High
 // Parameters: none
-// Attack: Compromise injectable app owned by admin user → sudo -S → root escalation
+// Attack model: admin-group user → associated app → injection relationship
 // Prerequisites: import_scan.py + infer.py must have run; groups module must have collected data
 // ATT&CK: T1068, T1548.003
 

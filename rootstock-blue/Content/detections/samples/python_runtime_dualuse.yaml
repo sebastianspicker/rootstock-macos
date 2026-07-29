@@ -1,0 +1,13 @@
+id: sample.python_runtime_dualuse
+title: Python runtime dual-use residual surface surface present
+severity: high
+description: Python runtime dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1059.006
+  - T1059
+  - T1204
+match:
+  event_type: python.runtime
+  field_contains:
+    pyrun.risk_tags: "python_surface"
+fixture: python_runtime_dualuse.jsonl

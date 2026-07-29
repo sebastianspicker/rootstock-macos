@@ -1,5 +1,5 @@
 """
-cve_reference.py — CVE and MITRE ATT&CK reference registry for Rootstock findings.
+cve_reference.py - CVE and MITRE ATT&CK reference registry for Rootstock findings.
 
 Maps Rootstock finding categories to real-world CVEs (2023-2025) and ATT&CK techniques,
 enabling prioritised vulnerability context in reports.
@@ -18,7 +18,7 @@ from cve_reference_models import (
     ThreatGroup,
 )
 
-# Registry version — bump when CVE/ATT&CK/CWE entries are added or modified.
+# Registry version - bump when CVE/ATT&CK/CWE entries are added or modified.
 # Imported by import_vulnerabilities.py and embedded in graph metadata.
 REGISTRY_VERSION = "2026-03-21"
 
@@ -81,7 +81,7 @@ def get_contexts_for_query(query: dict) -> list[AttackContext]:
 
 
 def get_all_critical_cves(min_cvss: float = 8.0) -> list[CveEntry]:
-    """Return all CVEs at or above *min_cvss*, sorted by CVSS descending."""
+    """Return all CVEs at or above min_cvss, sorted by CVSS descending."""
     seen: set[str] = set()
     result: list[CveEntry] = []
     for ctx in _REGISTRY.values():
@@ -95,7 +95,7 @@ def get_all_critical_cves(min_cvss: float = 8.0) -> list[CveEntry]:
 
 # ── CWE Reference Lookup ────────────────────────────────────────────────────
 
-# Master CWE reference table — maps CWE IDs to human-readable names.
+# Master CWE reference table - maps CWE IDs to human-readable names.
 CWE_REGISTRY: dict[str, CweReference] = {
     "CWE-20":  CweReference("CWE-20",  "Improper Input Validation",                      "input_validation"),
     "CWE-22":  CweReference("CWE-22",  "Path Traversal",                                 "input_validation"),

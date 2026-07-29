@@ -1,0 +1,13 @@
+id: sample.santa_deny_tmp
+title: Santa DENY for executable under /tmp
+severity: medium
+description: Santa decision log DENY for process path under /tmp (blocked execution attempt).
+attack_techniques:
+  - T1204
+match:
+  event_type: santa.decision
+  field_equals:
+    santa.decision: DENY
+  field_contains:
+    process.executable.path: "/tmp/"
+fixture: santa_deny_tmp.jsonl

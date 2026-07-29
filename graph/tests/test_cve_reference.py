@@ -1,7 +1,7 @@
 """
-test_cve_reference.py — Tests for the CVE & ATT&CK reference registry.
+test_cve_reference.py - Tests for the CVE & ATT&CK reference registry.
 
-Pure unit tests — no Neo4j required.
+Pure unit tests - no Neo4j required.
 """
 
 from __future__ import annotations

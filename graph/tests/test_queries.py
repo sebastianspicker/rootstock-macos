@@ -1,5 +1,5 @@
 """
-test_queries.py — Tests for the Rootstock Cypher query library.
+test_queries.py - Tests for the Rootstock Cypher query library.
 
 Two layers:
   1. File validation (no Neo4j): all .cypher files have correct headers.
@@ -370,7 +370,7 @@ class TestQuerySyntax:
             stmt = _first_statement(cypher)
             if not stmt:
                 continue
-            # Strip parameter references for EXPLAIN — use empty params
+            # Strip parameter references for EXPLAIN - use empty params
             try:
                 neo4j_session.run(
                     f"EXPLAIN {stmt}",

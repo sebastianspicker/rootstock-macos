@@ -1,0 +1,175 @@
+/* Status bar, brand, pill nav, connection gate */
+
+#status-bar {
+  position: relative;
+  z-index: var(--z-sticky);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) auto minmax(0, 1.1fr);
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--ink);
+}
+.brand { display: flex; align-items: center; gap: 12px; white-space: nowrap; min-width: 0; }
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: linear-gradient(160deg, #e26572, #b53745);
+  color: #fff;
+  font: 600 11px var(--font-mono);
+  letter-spacing: -.02em;
+}
+.brand-name {
+  font: 600 12px var(--font-ui);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.breadcrumb {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 0;
+  border-left: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 12px;
+}
+.breadcrumb > span:first-child { color: var(--muted); font-style: normal; }
+.breadcrumb .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+
+/* Pill nav for active mode */
+#global-nav {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: center;
+}
+.global-nav-item {
+  position: relative;
+  min-height: 30px;
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.global-nav-item:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text);
+}
+.global-nav-item.active {
+  color: var(--text);
+  background: var(--pane-raised);
+}
+.global-nav-item.active::after { display: none; }
+
+.status-group {
+  justify-self: end;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--subtle);
+  white-space: nowrap;
+  font-size: 12px;
+}
+.status-group strong { color: var(--muted); font: 500 11px var(--font-mono); }
+.status-chip, .provenance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+}
+.status-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--subtle);
+  opacity: .9;
+}
+.status-chip.connected::before { background: var(--verified); }
+.status-chip.error { color: var(--critical); }
+.status-chip.error::before { background: var(--critical); }
+
+/* De-emphasize secondary chrome */
+.provenance-chip {
+  padding-left: 0;
+  border-left: 0;
+  opacity: .72;
+  font-size: 11px;
+}
+.provenance-chip strong { color: var(--verified); font-weight: 500; }
+.provenance-chip strong[data-state="partial"] { color: var(--high); }
+.provenance-chip strong[data-state="unavailable"] { color: var(--subtle); }
+.snapshot-status { display: none; }
+.graph-counts { display: none; color: var(--subtle); font-size: 11px; }
+#theme-select {
+  width: 80px;
+  min-height: 28px;
+  padding-block: 2px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+#theme-select:hover { color: var(--text); }
+.icon-button {
+  width: 30px;
+  min-height: 28px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+.icon-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-color: transparent;
+}
+.export-button {
+  min-height: 28px;
+  padding-inline: 10px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.export-button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text);
+  border-color: transparent;
+}
+
+.connection-gate {
+  position: fixed;
+  inset: 52px 0 0;
+  z-index: var(--z-backdrop);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--ink);
+}
+.connection-gate form {
+  width: min(460px, 100%);
+  padding: 28px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
+}
+.connection-gate h1 { margin: 6px 0 9px; font-size: 22px; }
+.connection-gate p { margin-bottom: 18px; color: var(--muted); }
+.connection-gate .eyebrow { margin-bottom: 0; color: var(--action); }
+.connection-gate label { display: block; margin-bottom: 6px; }

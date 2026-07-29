@@ -1,5 +1,5 @@
 """
-report.py — Rootstock Security Assessment Report Generator.
+report.py - Rootstock Security Assessment Report Generator.
 
 CLI: python3 report.py --neo4j bolt://localhost:7687 --output report.md
      python3 report.py --neo4j bolt://localhost:7687 --output report.html --format html

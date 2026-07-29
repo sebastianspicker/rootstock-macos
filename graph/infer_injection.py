@@ -1,5 +1,5 @@
 """
-infer_injection.py — Infer CAN_INJECT_INTO relationships.
+infer_injection.py - Infer CAN_INJECT_INTO relationships.
 
 Creates edges from a synthetic `attacker.payload` node to any Application that:
   - Has at least one allowed TCC grant (making it a valuable target), AND
@@ -8,7 +8,7 @@ Creates edges from a synthetic `attacker.payload` node to any Application that:
   - Has the allow-dyld-environment-variables entitlement
 
 Design note: CAN_INJECT_INTO edges are only created for apps with TCC grants.
-This is intentional — the injection is only security-relevant when the target
+This is intentional - the injection is only security-relevant when the target
 has TCC permissions worth stealing. Apps without TCC grants may be technically
 injectable but don't represent an attack-path escalation opportunity. The
 collector still records injection_methods on all apps for completeness.

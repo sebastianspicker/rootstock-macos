@@ -1,5 +1,5 @@
 // Name: AD-Bound Mac Attack Surface
-// Purpose: AD-bound hosts with injectable apps that can access Kerberos tickets — cross-boundary bridge for lateral movement into Active Directory
+// Purpose: AD-bound hosts with injectable apps that can access Kerberos tickets - cross-boundary bridge for lateral movement into Active Directory
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

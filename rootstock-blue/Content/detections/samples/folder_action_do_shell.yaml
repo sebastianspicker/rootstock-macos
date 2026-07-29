@@ -1,0 +1,12 @@
+id: sample.folder_action_do_shell
+title: Folder Action with do shell script / Downloads watch
+severity: high
+description: Event-triggered Folder Action uses do shell script or watches Downloads (T1546).
+attack_techniques:
+  - T1546
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.kind: "folder_action"
+    persistence.risk_tags: "do_shell_script"
+fixture: folder_action_do_shell.jsonl

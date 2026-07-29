@@ -1,0 +1,40 @@
+{
+  "paths": [
+    {
+      "path_family": "browser",
+      "path": "/Users/alice/Library/Application Support/Google/Chrome",
+      "fda_adjacent": true,
+      "risk_tags": "multi_app_collection,fda_adjacent",
+      "user": "alice",
+      "timestamp": "2026-03-01T14:00:00Z"
+    },
+    {
+      "path_family": "messaging",
+      "path": "/Users/alice/Library/Messages",
+      "fda_adjacent": true,
+      "risk_tags": "multi_app_collection,fda_adjacent",
+      "user": "alice"
+    },
+    {
+      "path_family": "vault",
+      "path": "/Users/alice/Library/Application Support/1Password",
+      "fda_adjacent": false,
+      "risk_tags": "multi_app_collection",
+      "user": "alice"
+    },
+    {
+      "path_family": "wallet",
+      "path": "/Users/alice/Library/Application Support/Exodus",
+      "fda_adjacent": false,
+      "risk_tags": "multi_app_collection",
+      "user": "alice"
+    },
+    {
+      "path_family": "sync",
+      "path": "/Users/alice/Library/CloudStorage",
+      "fda_adjacent": false,
+      "risk_tags": "multi_app_collection",
+      "user": "alice"
+    }
+  ]
+}

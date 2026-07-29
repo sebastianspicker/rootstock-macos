@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-mark_owned.py — Mark graph nodes as "owned" (compromised) for attack path analysis.
+mark_owned.py - Mark graph nodes as "owned" (compromised) for attack path analysis.
 
 Sets `owned: true` and `owned_at: <ISO timestamp>` on matched nodes.
 Supports targeting by bundle_id, username, or label+key.
@@ -71,7 +71,7 @@ def mark_by_label_key(session, label: str, keys: list[str], timestamp: str) -> i
             f"Unknown label '{label}'. Valid labels: {', '.join(sorted(NODE_KEY_PROPERTY))}"
         )
 
-    # SAFETY: `label` is safe to interpolate — NODE_KEY_PROPERTY.get(label) above
+    # SAFETY: `label` is safe to interpolate - NODE_KEY_PROPERTY.get(label) above
     # rejects any label not in the hardcoded allowlist (constants.py:23-43).
     # All allowlist keys are clean identifier strings (e.g. "Application", "User").
     result = session.run(

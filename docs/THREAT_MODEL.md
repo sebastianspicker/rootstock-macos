@@ -1,117 +1,91 @@
-# Threat Model
+# Threat model
 
-> Documents the assumptions, capabilities, limitations, and ethical boundaries of Rootstock.
+This document describes the current trust boundaries of the Core, cve-scan,
+Rootstock Red, and Rootstock Blue source trees. It does not assert that all
+components have the same runtime or risk profile.
 
-## What Rootstock Is
+## Operator assumptions
 
-Rootstock is a **passive, read-only analysis tool** that maps macOS security boundaries as a directed property graph. It discovers potential privilege escalation paths by correlating metadata from TCC grants, code signing, entitlements, XPC services, Keychain ACLs, and persistence mechanisms. The optional `modules/cve-scan/` module adds scoped CVE evidence through local artifacts, not through collector-side network collection.
+1. The operator owns the analyzed systems or has explicit authorization.
+2. Local collection runs on a cooperative macOS endpoint. The tools do not
+   bypass System Integrity Protection, Gatekeeper, or Full Disk Access.
+3. Neo4j, output directories, and case storage are under the operator's control.
+4. A scan or case is a point-in-time artifact. Host state can change after it
+   is collected.
+5. Findings and inferred paths require analyst validation. They are not proof
+   that exploitation occurred or will succeed.
 
-It is the macOS equivalent of what [BloodHound](https://github.com/BloodHoundAD/BloodHound) does for Active Directory — graph-based attack path discovery.
+## Component boundaries
 
-## Assumptions
-
-1. **Local access.** The collector runs on the macOS endpoint being analyzed. There is no remote collection capability.
-2. **User or root.** The collector runs as the current user by default. Running as root (or with Full Disk Access) unlocks system-level TCC data.
-3. **Point-in-time snapshot.** Each scan captures the state at one moment. TCC grants, installed apps, and entitlements can change at any time after the scan.
-4. **Cooperative target.** The endpoint is not actively resisting analysis (no anti-forensics). Rootstock does not bypass SIP, Gatekeeper, or other macOS protections.
-5. **Trusted graph database.** The Neo4j instance used for analysis is assumed to be under the analyst's control and not exposed to untrusted users.
-6. **Loopback by default.** The bundled Neo4j and API server are intended for local analysis. Remote exposure requires an explicit operator decision and a named access-control layer.
-
-## What Rootstock Does NOT Do
-
-| Capability | Rootstock | Notes |
+| Component | Default network behavior | Host mutation boundary |
 |---|---|---|
-| Remote collection | No | Requires local execution on the target Mac |
-| Secret extraction | No | Reads metadata only — never passwords, keys, or token values |
-| Active exploitation | No | Analysis only; does not execute attacks or modify system state |
-| Real-time monitoring | No | Point-in-time snapshot; no persistent agent or daemon |
-| SIP bypass | No | Respects System Integrity Protection; system TCC.db requires FDA |
-| Network calls | Collector: No; graph CVE refresh and cve-scan probes: opt-in | The collector is strictly local; CVE enrichment fetches only when `--refresh-cve` or `--fetch` is explicit; cve-scan touches only declared scope |
-| Anti-forensics evasion | No | Does not attempt to hide its execution or artifacts |
+| Core collector | No collection-side network path | Reads host metadata and writes the requested scan artifact |
+| Core graph and API | Connects to configured Neo4j; API is restricted to loopback in this alpha | Writes graph data, reports, and viewer artifacts |
+| cve-scan | Network collection and feed refresh require explicit scope or flags | Writes run artifacts and caches; does not modify scanned services |
+| Rootstock Red assessment | Network egress disabled unless `--allow-network` is supplied | Reads posture and writes findings, state, and audit artifacts |
+| Rootstock Red Lab | Network disabled in the current lab context | Separate executable; defaults to dry-run and can create or remove documented lab state only after authorization and non-dry-run selection |
+| Rootstock Blue | Offline case analysis is the default tested path | Writes case packages, timelines, detections, custody records, and reports; selected live posture commands read the running host |
 
-## Exposure Boundaries
+Rootstock Blue's Endpoint Security client is a mock-backed alpha surface. Live
+operation requires Apple entitlements, Full Disk Access, root or system
+extension approval as applicable, and a separately validated deployment path.
+AUTH or blocking mode is not enabled by default.
 
-- **Collector output.** Real scan JSON, reports, graph exports, generated viewer
-  HTML, screenshots, and Neo4j data volumes contain sensitive local security
-  metadata. Keep them local and out of commits.
-- **cve-scan output.** Real `modules/cve-scan` runs can expose package names,
-  service banners, URLs, ownership context, TLS metadata, and remediation
-  priorities. Keep real `scan.json`, `rootstock-export.json`, reports, caches,
-  and screenshots local.
-- **Neo4j.** The bundled Compose file binds Browser and Bolt to `127.0.0.1` and
-  requires `NEO4J_AUTH`. Do not bind Neo4j to a network interface for real data
-  without an explicit authentication and network-access plan.
-- **FastAPI.** Every `/api/*` route requires `Authorization: Bearer
-  $ROOTSTOCK_API_TOKEN`. The server refuses non-loopback `--host` values unless
-  `--allow-remote` is also present.
-- **Viewer.** The live viewer serves `/` without embedding graph data. Browser
-  code fetches graph/query data through the authenticated API.
+## Data sensitivity
 
-## Limitations
+Real output can expose security-relevant host and organization data:
 
-### Technical Limitations
+- Core scans and graph exports can identify applications, users, groups,
+  entitlements, TCC grants, persistence, services, and modeled paths.
+- cve-scan output can contain package versions, URLs, service banners, TLS
+  metadata, scope ownership, and remediation state.
+- Red output can contain host posture, paths, finding evidence, scope and
+  operator identifiers, and assessment audit records.
+- Blue cases can contain copied or parsed forensic artifacts, event timelines,
+  file metadata, custody records, and detection evidence.
 
-- **TCC access on macOS 15+.** Starting with macOS 15 Sequoia, reading the user-level TCC.db requires Full Disk Access at the kernel level. Without FDA, the TCC module returns zero grants and logs a recoverable error.
-- **SIP-protected apps.** System applications (e.g., Safari, Terminal) are
-  protected by SIP at the kernel level, which prevents DYLD injection
-  regardless of code signing flags. Treat injection findings on platform
-  binaries as candidates that require SIP-aware validation.
-- **Schema stability.** Apple changes TCC schemas, entitlement semantics, and security mechanisms with each macOS release. Rootstock uses PRAGMA-based runtime schema detection to be forward-compatible, but new security mechanisms may not be modeled until explicitly added.
-- **Inference is necessary conditions, not sufficient.** The `CAN_INJECT_INTO` relationship indicates that the target app _lacks the code signing protections_ that would prevent injection. It does not guarantee that a working exploit exists — additional factors (ASLR, code signature validation timing, sandboxing) may prevent exploitation.
-- **Electron inheritance model.** The `CHILD_INHERITS_TCC` relationship for Electron apps assumes the `ELECTRON_RUN_AS_NODE` attack vector. Apple has mitigated this in recent macOS versions for hardened Electron apps, but the mitigation coverage is not comprehensive.
-- **Keychain ACL resolution.** Keychain items report their ACL metadata, but the actual access control enforcement depends on keychain lock state, user authentication, and app signature verification — factors not modeled in the graph.
+Treat real scans, exports, reports, case packages, findings, screenshots,
+tokens, local Neo4j volumes, and browser query history as confidential. They
+must not be committed to the public repository.
 
-### Scope Limitations
+No component is intended to export passwords, private keys, Keychain secret
+values, session tokens, or recovery keys. Metadata and presence indicators can
+still be sensitive.
 
-- **macOS only.** Rootstock does not model iOS, iPadOS, or cross-platform trust boundaries.
-- **Single-host.** Each scan covers one endpoint. Multi-host correlation (e.g., shared team IDs across a fleet) requires importing multiple scans into the same Neo4j instance — supported but not automated.
-- **No user behavior.** The graph models static configuration, not runtime behavior. It cannot detect whether an attack path has been or is being exploited.
-- **Bounded network evidence.** cve-scan can collect declared service, TLS, and
-  web evidence, but it is not a full network scanner or vulnerability
-  management platform.
+## Service exposure
 
-## Comparison with BloodHound
+- The bundled Neo4j Compose configuration binds Browser and Bolt to loopback
+  and requires authentication.
+- Every `/api/*` route requires a bearer token of at least 32 bytes.
+- The alpha API refuses non-loopback listen addresses and non-loopback Neo4j
+  URIs. There is no command-line override.
+- The viewer fetches live graph data through the authenticated API. The `/`
+  document does not embed the graph.
 
-| Aspect | BloodHound | Rootstock |
-|---|---|---|
-| **Domain** | Active Directory / Azure AD | macOS-native security boundaries |
-| **Graph model** | Identity-centric (users, groups, GPOs, ACLs) | App-centric (TCC, entitlements, code signing) |
-| **Node types** | User, Group, Computer, Domain, GPO, OU | Application, TCC_Permission, Entitlement, XPC_Service, Keychain_Item, LaunchItem, MDM_Profile, User |
-| **Attack paths** | Kerberoast, DCSync, AdminTo, GenericAll | DYLD injection, TCC abuse, Electron inheritance, Apple Events |
-| **Data collection** | SharpHound (C#/.NET), remote LDAP queries | Rootstock Swift collector (`RootstockCLI`), local macOS APIs |
-| **Analysis** | Neo4j + custom UI | Neo4j + Cypher query library |
-| **Operating system** | Windows / Linux / macOS (collector runs anywhere with AD access) | macOS only (collector must run on target) |
-| **Complementary?** | Yes — BloodHound does not model macOS-native boundaries | Yes — Rootstock does not model AD trust relationships |
+Do not expose these services through a proxy, tunnel, or broader interface for
+real data without a separate access-control and deployment review.
 
-### Future Integration
+## Technical limitations
 
-BloodHound's [OpenGraph](https://support.bloodhoundenterprise.io/) data model could potentially ingest Rootstock nodes and edges, enabling unified analysis of AD + macOS attack paths in enterprise environments where Macs are joined to Active Directory.
+- Missing Full Disk Access can make TCC and other protected evidence incomplete.
+- Apple changes schemas and security behavior between macOS releases. Unknown
+  versions can produce partial modeling until support is added and tested.
+- Code-signing and entitlement relationships are necessary-condition models.
+  Runtime defenses and application behavior can prevent a modeled path.
+- Keychain access depends on lock state, user authentication, ACL evaluation,
+  and signature checks that are not fully represented in the graph.
+- Blue offline analysis cannot decrypt FileVault media without valid operator-
+  supplied access material and does not extract Secure Enclave secrets or full
+  physical memory from Apple silicon.
+- The repository does not provide real-time fleet monitoring, a multi-platform
+  endpoint monitor, a SIEM, an MDM system, or automated incident containment.
 
-## Ethical Framework
+## Responsible operation
 
-### Intended Use
+Run collection and Red Lab actions only within written authorization. Review
+outputs before sharing them. If a result indicates a third-party vulnerability,
+use the affected project's private reporting process before public disclosure.
 
-Rootstock is designed for:
-- **Security auditing** of macOS endpoints by authorized administrators
-- **Penetration testing** of macOS environments with explicit authorization
-- **Academic research** on macOS security boundaries and attack surface analysis
-- **Compliance assessment** of TCC grant hygiene and entitlement exposure
-
-### Responsible Use Guidelines
-
-1. **Authorization required.** Only scan systems you own or have explicit written permission to test.
-2. **Data handling.** Scan output contains security-sensitive metadata (which apps have FDA, which lack hardened runtime). Treat scan JSON as confidential.
-3. **No weaponization.** Rootstock identifies potential attack paths but does not provide exploits. Using the output to develop targeted attacks against unauthorized systems is outside the tool's intended purpose.
-4. **Responsible disclosure.** If Rootstock reveals a vulnerability in a third-party application, follow responsible disclosure practices — contact the vendor before publishing.
-
-### What an Attacker Could Learn
-
-An attacker with access to Rootstock scan output could learn:
-- Which applications have Full Disk Access, camera, microphone, or other TCC grants
-- Which applications are injectable (missing hardened runtime / library validation)
-- Which Electron apps could be abused via `ELECTRON_RUN_AS_NODE`
-- Which keychain items are accessible to which applications
-- Which XPC services run as root and which applications communicate with them
-- The complete entitlement surface of every installed application
-
-This is security-relevant metadata that an attacker could otherwise obtain through manual enumeration, but Rootstock makes it immediately visible and queryable. This is exactly why the tool is valuable for defenders — it reveals the same attack surface an adversary would discover, enabling proactive remediation.
+Repository vulnerabilities must be reported through [SECURITY.md](../SECURITY.md).
+Rootstock Red's additional operating policy is in
+[ACCEPTABLE_USE.md](../rootstock-red/ACCEPTABLE_USE.md).

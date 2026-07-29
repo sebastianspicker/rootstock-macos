@@ -1,5 +1,5 @@
 // Name: Machine Keytab Exposure
-// Purpose: Checks whether machine keytabs are world-readable or accessible via injection — a leaked keytab allows impersonating the machine account in AD
+// Purpose: Checks whether machine keytabs are world-readable or accessible via injection - a leaked keytab allows impersonating the machine account in AD
 // Category: Blue Team
 // Severity: High
 // Parameters: none

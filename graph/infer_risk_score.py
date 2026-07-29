@@ -1,5 +1,5 @@
 """
-infer_risk_score.py — Compute graph-native risk scores on Application nodes.
+infer_risk_score.py - Compute graph-native risk scores on Application nodes.
 
 Runs after all other inference + tier classification to set per-node:
   - risk_score (float 0.0-10.0)

@@ -1,0 +1,13 @@
+id: sample.calendar_reminders_automation
+title: Calendar / Reminders automation lateral surface surface present
+severity: high
+description: Calendar/Reminders automation markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1059
+  - T1546
+  - T1115
+match:
+  event_type: calendar.reminders
+  field_contains:
+    calrem.risk_tags: "automation_surface"
+fixture: calendar_reminders_automation.jsonl

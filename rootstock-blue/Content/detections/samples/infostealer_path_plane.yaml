@@ -1,0 +1,11 @@
+id: sample.infostealer_path_plane
+title: Info-stealer multi-app path plane
+severity: high
+description: Multi-app collection path plane (browser/messaging/vault/wallet/sync) - path presence only, no secrets.
+attack_techniques:
+  - T1555
+match:
+  event_type: stealer.path
+  field_contains:
+    stealer.risk_tags: "multi_app_collection"
+fixture: infostealer_path_plane.jsonl

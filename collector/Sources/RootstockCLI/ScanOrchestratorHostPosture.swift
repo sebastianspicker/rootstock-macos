@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import RootstockMacFacts
 
 extension ScanOrchestrator {
     static func collectHostPostureProbeResults() async -> HostPostureProbeResults {
@@ -16,47 +17,56 @@ extension ScanOrchestrator {
     }
 
     /// Returns unknown with a diagnostic if spctl is unavailable or unparseable.
+    /// Parsing is shared via `HostPostureProbes` (RootstockMacFacts).
     static func detectGatekeeper(
         runCommand: (String, [String]) -> String? = Shell.run
     ) -> HostProbeResult {
-        guard let output = runCommand("/usr/sbin/spctl", ["--status"]), !output.isEmpty else {
+        guard let output = runCommand(HostPostureProbes.spctlPath, ["--status"]), !output.isEmpty else {
             return HostProbeResult(
                 value: nil,
                 error: postureError("Gatekeeper probe failed: spctl --status returned no usable output")
             )
         }
-        return parseEnabledDisabled(output, subject: "Gatekeeper", enabledWord: "enabled", disabledWord: "disabled")
+        if let value = HostPostureProbes.parseGatekeeperOutput(output) {
+            return HostProbeResult(value: value, error: nil)
+        }
+        return HostProbeResult(
+            value: nil,
+            error: postureError("Gatekeeper probe returned unrecognized output: \(output)")
+        )
     }
 
     /// Returns unknown with a diagnostic if csrutil is unavailable or unparseable.
     static func detectSIP(
         runCommand: (String, [String]) -> String? = Shell.run
     ) -> HostProbeResult {
-        guard let output = runCommand("/usr/bin/csrutil", ["status"]), !output.isEmpty else {
+        guard let output = runCommand(HostPostureProbes.csrutilPath, ["status"]), !output.isEmpty else {
             return HostProbeResult(
                 value: nil,
                 error: postureError("SIP probe failed: csrutil status returned no usable output")
             )
         }
-        return parseEnabledDisabled(output, subject: "SIP", enabledWord: "enabled", disabledWord: "disabled")
+        if let value = HostPostureProbes.parseSIPOutput(output) {
+            return HostProbeResult(value: value, error: nil)
+        }
+        return HostProbeResult(
+            value: nil,
+            error: postureError("SIP probe returned unrecognized output: \(output)")
+        )
     }
 
     /// Returns unknown with a diagnostic if fdesetup is unavailable or unparseable.
     static func detectFileVault(
         runCommand: (String, [String]) -> String? = Shell.run
     ) -> HostProbeResult {
-        guard let output = runCommand("/usr/bin/fdesetup", ["status"]), !output.isEmpty else {
+        guard let output = runCommand(HostPostureProbes.fdesetupPath, ["status"]), !output.isEmpty else {
             return HostProbeResult(
                 value: nil,
                 error: postureError("FileVault probe failed: fdesetup status returned no usable output")
             )
         }
-        let normalized = output.lowercased()
-        if normalized.contains("filevault is on") {
-            return HostProbeResult(value: true, error: nil)
-        }
-        if normalized.contains("filevault is off") || normalized.contains("filevault is disabled") {
-            return HostProbeResult(value: false, error: nil)
+        if let value = HostPostureProbes.parseFileVaultOutput(output) {
+            return HostProbeResult(value: value, error: nil)
         }
         return HostProbeResult(
             value: nil,
@@ -125,25 +135,6 @@ extension ScanOrchestrator {
             driveEnabled: driveEnabled,
             keychainEnabled: keychainEnabled,
             error: nil
-        )
-    }
-
-    private static func parseEnabledDisabled(
-        _ output: String,
-        subject: String,
-        enabledWord: String,
-        disabledWord: String
-    ) -> HostProbeResult {
-        let normalized = output.lowercased()
-        if normalized.contains(disabledWord) {
-            return HostProbeResult(value: false, error: nil)
-        }
-        if normalized.contains(enabledWord) {
-            return HostProbeResult(value: true, error: nil)
-        }
-        return HostProbeResult(
-            value: nil,
-            error: postureError("\(subject) probe returned unrecognized output: \(output)")
         )
     }
 

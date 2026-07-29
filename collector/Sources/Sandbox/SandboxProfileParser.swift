@@ -1,6 +1,6 @@
 import Foundation
 
-/// Parses sandbox profile text (SBPL — Sandbox Profile Language) into
+/// Parses sandbox profile text (SBPL - Sandbox Profile Language) into
 /// structured rules grouped by category.
 ///
 /// SBPL profiles use a Scheme-like syntax with `(allow ...)` and `(deny ...)`

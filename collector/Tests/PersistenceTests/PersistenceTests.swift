@@ -202,7 +202,7 @@ final class PersistenceTests: XCTestCase {
         let items = result.nodes.compactMap { $0 as? LaunchItem }
 
         // On a real Mac, LaunchDaemons alone provide >50 items
-        // In minimal environments (CI without /System), may be 0 — just verify no crash
+        // In minimal environments (CI without /System), may be 0 - just verify no crash
         XCTAssertGreaterThanOrEqual(items.count, 0)
 
         // All items must have non-empty label and path

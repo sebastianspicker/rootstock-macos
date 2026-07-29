@@ -1,0 +1,12 @@
+id: sample.shortcuts_app_intents
+title: Shortcuts / App Intents automation surface present
+severity: high
+description: Shortcuts/App Intents markers indicate automation lateral IR surface.
+attack_techniques:
+  - T1059
+  - T1546
+match:
+  event_type: shortcuts.automation
+  field_contains:
+    shortcuts.risk_tags: "automation_surface"
+fixture: shortcuts_app_intents.jsonl

@@ -1,9 +1,9 @@
 // Name: Unconstrained Injectable Applications
-// Purpose: Find injectable apps without launch constraints — easiest targets for code injection
+// Purpose: Find modeled injection relationships where launch constraints are absent
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Attack: Apps without launch constraints (macOS 13+) can be freely injected via DYLD_INSERT_LIBRARIES
+// Attack model: missing launch constraints combined with an inferred injection method
 // Prerequisites: import_scan.py + infer.py must have run
 
 MATCH (attacker:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(target:Application)

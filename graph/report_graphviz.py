@@ -1,19 +1,19 @@
 """
-report_graphviz.py — Graphviz DOT format export for Rootstock graphs.
+report_graphviz.py - Graphviz DOT format export for Rootstock graphs.
 
 CLI: python3 report_graphviz.py --neo4j bolt://localhost:7687 --output graph.dot
 
 Color coding (security dashboard palette for dark backgrounds):
-  Application    = #4a90d9  (steel blue — primary entities)
-  TCC_Permission = #e05252  (red — security-critical grants)
-  Entitlement    = #d4a843  (amber — capability markers)
-  XPC_Service    = #4caf7c  (green — service endpoints)
-  LaunchItem     = #d28f22  (orange — persistence mechanisms)
-  MDM_Profile    = #9c7ec2  (purple — management controls)
-  User           = #b0bec5  (grey — identity)
-  Keychain_Item  = #ab7fcc  (violet — credential stores)
-  Vulnerability  = #e04545  (bright red — threats)
-  Computer       = #5a9fd4  (blue — infrastructure)
+  Application    = #4a90d9  (steel blue - primary entities)
+  TCC_Permission = #e05252  (red - security-critical grants)
+  Entitlement    = #d4a843  (amber - capability markers)
+  XPC_Service    = #4caf7c  (green - service endpoints)
+  LaunchItem     = #d28f22  (orange - persistence mechanisms)
+  MDM_Profile    = #9c7ec2  (purple - management controls)
+  User           = #b0bec5  (grey - identity)
+  Keychain_Item  = #ab7fcc  (violet - credential stores)
+  Vulnerability  = #e04545  (bright red - threats)
+  Computer       = #5a9fd4  (blue - infrastructure)
 
 Edge styles:
   solid  = explicit relationships (imported directly from scan data)
@@ -123,7 +123,7 @@ def fetch_graph_data(
     Fetch nodes and relationships from Neo4j.
 
     Returns:
-        (nodes, edges) — each a list of property dicts.
+        (nodes, edges) - each a list of property dicts.
     """
     label_filter = " OR ".join(f"n:{label}" for label in NODE_COLORS)
     edge_label_a = " OR ".join(f"a:{label}" for label in NODE_COLORS)

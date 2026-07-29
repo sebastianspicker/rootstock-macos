@@ -1,5 +1,5 @@
 // Name: Password Change Attack Paths
-// Purpose: Admin users who can change passwords of users owning privileged apps — enables account takeover of TCC-granted applications
+// Purpose: Admin users who can change passwords of users owning privileged apps - enables account takeover of TCC-granted applications
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

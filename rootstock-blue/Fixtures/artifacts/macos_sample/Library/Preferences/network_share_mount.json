@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/Volumes/Shared",
+      "share_url": "smb://files.corp.example/Shared",
+      "risk_tags": "share_surface,smb_mount,lateral_hint",
+      "user": "alice",
+      "timestamp": "2026-05-01T12:00:00Z",
+      "notes": "Network share mount markers \u2014 never mounts attacker shares or writes credentials to NetAuth"
+    }
+  ]
+}

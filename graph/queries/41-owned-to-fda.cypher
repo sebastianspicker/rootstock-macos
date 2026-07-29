@@ -1,5 +1,5 @@
 // Name: Shortest Path from Owned Nodes to Full Disk Access
-// Purpose: From any node marked as owned, find the shortest path to FDA — generalizes query 02
+// Purpose: From any node marked as owned, find the shortest path to FDA - generalizes query 02
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

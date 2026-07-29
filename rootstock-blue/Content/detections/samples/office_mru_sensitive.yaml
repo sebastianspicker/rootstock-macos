@@ -1,0 +1,11 @@
+id: sample.office_mru_sensitive
+title: Sensitive or suspicious Office collaboration MRU
+severity: medium
+description: Office/Teams/Slack MRU references sensitive, tmp, or suspicious documents.
+attack_techniques:
+  - T1005
+match:
+  event_type: mru.office
+  field_contains:
+    office.risk_tags: "sensitive"
+fixture: office_mru_sensitive.jsonl

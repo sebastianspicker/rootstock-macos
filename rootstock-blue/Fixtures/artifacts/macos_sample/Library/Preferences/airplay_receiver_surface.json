@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Library/PrivateFrameworks/AirPlaySupport.framework",
+      "name": "airplay",
+      "risk_tags": "airplay_surface,wave16,dual_use",
+      "user": "alice",
+      "timestamp": "2026-08-01T12:00:00Z",
+      "notes": "AirPlay receiver dual-use markers \u2014 never enables AirPlay Receiver or spoofs AirPlay targets"
+    }
+  ]
+}

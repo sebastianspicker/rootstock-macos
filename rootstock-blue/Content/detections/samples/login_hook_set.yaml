@@ -1,0 +1,11 @@
+id: sample.login_hook_set
+title: loginwindow LoginHook or LogoutHook configured
+severity: high
+description: Deprecated root-context LoginHook/LogoutHook is set (T1037.002).
+attack_techniques:
+  - T1037.002
+match:
+  event_type: persistence.item
+  field_contains:
+    persistence.kind: "login_hook"
+fixture: login_hook_set.jsonl

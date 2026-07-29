@@ -1,0 +1,13 @@
+id: sample.reminders_cloud_path
+title: Reminders cloud path residual plane surface present
+severity: high
+description: Reminders cloud path markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1213
+  - T1083
+match:
+  event_type: reminders.cloud
+  field_contains:
+    remcloud.risk_tags: "reminders_cloud_surface"
+fixture: reminders_cloud_path.jsonl

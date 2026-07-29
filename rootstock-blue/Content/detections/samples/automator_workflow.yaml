@@ -1,0 +1,13 @@
+id: sample.automator_workflow
+title: Automator workflow delivery residual surface present
+severity: high
+description: Automator workflow delivery markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1059
+  - T1204
+  - T1546
+match:
+  event_type: automator.workflow
+  field_contains:
+    automator.risk_tags: "workflow_surface"
+fixture: automator_workflow.jsonl

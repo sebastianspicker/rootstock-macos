@@ -1,7 +1,7 @@
 """
-test_import_vulnerabilities.py — Tests for vulnerability node import.
+test_import_vulnerabilities.py - Tests for vulnerability node import.
 
-Pure unit tests for the import logic — no Neo4j required for most tests.
+Pure unit tests for the import logic - no Neo4j required for most tests.
 Integration tests require a running Neo4j instance.
 """
 
@@ -13,6 +13,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import pytest
+from conftest import cleaned_neo4j_driver
 
 from cve_reference import AttackContext, AttackTechnique, CveEntry, _REGISTRY
 from import_vulnerabilities import (
@@ -254,11 +255,8 @@ class TestImportIntegration:
     @pytest.fixture(autouse=True)
     def setup(self, neo4j_driver):
         self.driver = neo4j_driver
-        with self.driver.session() as session:
-            self._cleanup(session)
-        yield
-        with self.driver.session() as session:
-            self._cleanup(session)
+        with cleaned_neo4j_driver(self.driver, self._cleanup):
+            yield
 
     def _cleanup(self, session):
         session.run(

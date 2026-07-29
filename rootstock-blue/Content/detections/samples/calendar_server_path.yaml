@@ -1,0 +1,13 @@
+id: sample.calendar_server_path
+title: Calendar server / CalDAV residual surface surface present
+severity: high
+description: Calendar CalDAV residual markers indicate IR surface.
+attack_techniques:
+  - T1213
+  - T1005
+  - T1071
+match:
+  event_type: calendar.caldav
+  field_contains:
+    caldav.risk_tags: "caldav_surface"
+fixture: calendar_server_path.jsonl

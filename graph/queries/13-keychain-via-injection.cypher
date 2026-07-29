@@ -1,15 +1,15 @@
 // Name: Keychain Credential Access via Injection
-// Purpose: Find injectable apps that have silent Keychain read access (no user prompt)
+// Purpose: Find modeled injection paths to apps named in Keychain ACL metadata
 // Category: Red Team
 // Severity: Critical
 // Parameters: none
-// Prerequisites: import_scan.py + infer.py must have run; Phase 3.3 (Keychain) data required
+// Prerequisites: import_scan.py + infer.py must have run; Keychain collector data required
 //
-// Attack: Inject app → inherit ACL-trusted access → read credentials silently
+// Attack model: injection relationship → app named by Keychain ACL metadata
 //
 // CAN_READ_KEYCHAIN edges indicate an app is in the ACL trusted-application list
-// for a Keychain item. Apps in this list can read the item without user prompting.
-// If such an app is injectable, an attacker inherits this silent access.
+// for a Keychain item. Validate the current item ACL, process identity, and user
+// interaction behavior before concluding that the item can be read.
 
 MATCH (app:Application)-[:CAN_READ_KEYCHAIN]->(k:Keychain_Item)
 MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(app)

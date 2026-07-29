@@ -1,0 +1,30 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+      - duplicate
+      - invalid
+  categories:
+    - title: Breaking changes
+      labels:
+        - breaking
+    - title: Features and data sources
+      labels:
+        - enhancement
+        - feature
+        - data-source
+    - title: Fixes and security
+      labels:
+        - bug
+        - security
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Maintenance
+      labels:
+        - dependencies
+        - ci
+        - refactor
+    - title: Other changes
+      labels:
+        - "*"

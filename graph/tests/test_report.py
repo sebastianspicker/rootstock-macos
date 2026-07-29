@@ -1,5 +1,5 @@
 """
-Tests for report.py formatting functions — no Neo4j required.
+Tests for report.py formatting functions - no Neo4j required.
 All tested functions take query result dicts and return Markdown strings.
 """
 
@@ -34,6 +34,21 @@ from unittest.mock import ANY, MagicMock, patch
 
 
 checks = TestCase()
+
+
+def assert_failed_report(output, driver, *uninvoked_mocks):
+    checks.assertEqual(1, main())
+    driver.close.assert_called_once()
+    for mock in uninvoked_mocks:
+        mock.assert_not_called()
+    checks.assertFalse(output.exists())
+
+
+def report_cli_setup(tmp_path, monkeypatch):
+    output = tmp_path / "report.md"
+    fake_driver = MagicMock()
+    monkeypatch.setattr("sys.argv", ["report.py", "--output", str(output)])
+    return output, fake_driver
 
 
 def assert_report_line_contains(lines, label, value):
@@ -112,7 +127,7 @@ class TestHtmlReportEscaping:
 
     def test_html_report_uses_landmarks_language_and_accessible_tables(self):
         html = render_report_html(
-            "# Report\n\n> **Risk:** review this finding.\n\n"
+            "# Report\n\n> Risk: review this finding.\n\n"
             "| Name | Value |\n| --- | --- |\n| `item` | [details](https://example.test) |\n\n"
             "```text\ncommand\n```"
         )
@@ -490,9 +505,7 @@ class TestReportQueries:
 
 class TestReportCli:
     def test_main_uses_shared_connection_helper(self, tmp_path, monkeypatch):
-        output = tmp_path / "report.md"
-        fake_driver = MagicMock()
-        monkeypatch.setattr("sys.argv", ["report.py", "--output", str(output)])
+        output, fake_driver = report_cli_setup(tmp_path, monkeypatch)
 
         with (
             patch("report.connect_from_args", return_value=fake_driver) as connect_mock,
@@ -522,20 +535,12 @@ class TestReportCli:
             patch("report.run_all_queries") as run_queries_mock,
             patch("report.assemble_report") as assemble_mock,
         ):
-            exit_code = main()
-
-        checks.assertEqual(exit_code, 1)
-        fake_driver.close.assert_called_once()
-        run_queries_mock.assert_not_called()
-        assemble_mock.assert_not_called()
-        checks.assertFalse(output.exists())
+            assert_failed_report(output, fake_driver, run_queries_mock, assemble_mock)
 
     def test_main_fails_when_neo4j_metadata_query_reports_uncertainty(
         self, tmp_path, monkeypatch
     ):
-        output = tmp_path / "report.md"
-        fake_driver = MagicMock()
-        monkeypatch.setattr("sys.argv", ["report.py", "--output", str(output)])
+        output, fake_driver = report_cli_setup(tmp_path, monkeypatch)
 
         with (
             patch("report.connect_from_args", return_value=fake_driver),
@@ -546,13 +551,7 @@ class TestReportCli:
             patch("report.run_all_queries") as run_queries_mock,
             patch("report.assemble_report") as assemble_mock,
         ):
-            exit_code = main()
-
-        checks.assertEqual(exit_code, 1)
-        fake_driver.close.assert_called_once()
-        run_queries_mock.assert_not_called()
-        assemble_mock.assert_not_called()
-        checks.assertFalse(output.exists())
+            assert_failed_report(output, fake_driver, run_queries_mock, assemble_mock)
 
     def test_main_fails_when_any_query_fails(self, tmp_path, monkeypatch):
         output = tmp_path / "report.md"
@@ -570,9 +569,4 @@ class TestReportCli:
             ),
             patch("report.assemble_report") as assemble_mock,
         ):
-            exit_code = main()
-
-        checks.assertEqual(exit_code, 1)
-        fake_driver.close.assert_called_once()
-        assemble_mock.assert_not_called()
-        checks.assertFalse(output.exists())
+            assert_failed_report(output, fake_driver, assemble_mock)

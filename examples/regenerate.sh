@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# regenerate.sh — Rebuild demo outputs from the checked-in demo scan.
+# regenerate.sh - Rebuild demo outputs from the checked-in demo scan.
 #
 # Requires a running Neo4j instance (default: bolt://localhost:7687).
 # The repository commits demo-scan.json as the demo source of truth. Pipeline artifacts
@@ -113,10 +113,10 @@ python3 graph/viewer.py -i "$OUTPUT_DIR/demo-graph.json" -o "$OUTPUT_DIR/demo-vi
 
 echo ""
 echo "Done! Generated:"
-echo "  examples/demo-scan.json              — validated synthetic scan data"
+echo "  examples/demo-scan.json - validated synthetic scan data"
 if [[ "${#CVE_SCAN_ARGS[@]}" -gt 0 ]]; then
-	echo "  $CVE_SCAN_EXPORT          — imported cve-scan graph fixture"
+	echo "  $CVE_SCAN_EXPORT - imported cve-scan graph fixture"
 fi
-echo "  examples/generated/demo-report.md    — attack path report"
-echo "  examples/generated/demo-graph.json   — graph export for viewer"
-echo "  examples/generated/demo-viewer.html  — interactive graph viewer"
+echo "  examples/generated/demo-report.md - attack path report"
+echo "  examples/generated/demo-graph.json - graph export for viewer"
+echo "  examples/generated/demo-viewer.html - interactive graph viewer"

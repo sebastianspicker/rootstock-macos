@@ -170,10 +170,8 @@ final class PhysicalSecurityTests: XCTestCase {
 
     func testCollectWithoutCrash() async {
         let ds = PhysicalSecurityDataSource()
-        let result = await ds.collectAll()
-        // On CI, BT may not be available — just verify it doesn't crash
-        // and returns a valid result structure
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result.bluetoothDevices is [BluetoothDevice])
+        // On CI, BT may not be available - just verify it doesn't crash
+        // while producing a concrete result value.
+        _ = await ds.collectAll()
     }
 }

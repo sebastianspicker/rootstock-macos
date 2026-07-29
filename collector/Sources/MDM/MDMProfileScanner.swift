@@ -33,12 +33,12 @@ struct MDMProfileScanner {
             return ([], ["profiles command not available at \(profilesPath)"])
         }
 
-        guard let result = Shell.runProcess(profilesPath, args, timeoutSeconds: 15) else {
-            return ([], ["profiles \(args.joined(separator: " ")) failed to start"])
-        }
-        guard result.terminationStatus == 0, !result.timedOut else {
-            let detail = result.timedOut ? "timed out" : result.stderr
-            return ([], ["profiles \(args.joined(separator: " ")) failed: \(detail)"])
+        let outcome = Shell.execute(profilesPath, args, timeoutSeconds: 15)
+        guard case .success(let result) = outcome else {
+            return (
+                [],
+                ["profiles \(args.joined(separator: " ")) failed: \(outcome.failureDescription ?? "command failure")"]
+            )
         }
 
         let data = Data(result.stdout.utf8)

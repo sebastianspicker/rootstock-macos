@@ -1,0 +1,8 @@
+{
+  "disabled": {
+    "com.google.santa.daemon": true,
+    "com.crowdstrike.falcon.Agent": true,
+    "com.apple.softwareupdated": false,
+    "com.example.benign": true
+  }
+}

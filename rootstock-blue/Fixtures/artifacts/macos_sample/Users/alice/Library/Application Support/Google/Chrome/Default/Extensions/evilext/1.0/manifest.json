@@ -1,0 +1,13 @@
+{
+  "name": "Evil Extension",
+  "version": "1.0",
+  "permissions": [
+    "<all_urls>",
+    "tabs",
+    "webRequest",
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ]
+}

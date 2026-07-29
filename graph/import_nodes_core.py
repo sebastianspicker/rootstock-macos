@@ -1,4 +1,4 @@
-"""import_nodes_core.py — Core node imports (applications, TCC, entitlements, certificates)."""
+"""import_nodes_core.py - Core node imports (applications, TCC, entitlements, certificates)."""
 
 from __future__ import annotations
 
@@ -36,6 +36,8 @@ __all__ = [
 
 @dataclass(frozen=True)
 class ComputerImportContext:
+    """Collector posture and import-quality fields attached to the host node."""
+
     gatekeeper_enabled: bool | None = None
     sip_enabled: bool | None = None
     filevault_enabled: bool | None = None
@@ -56,6 +58,37 @@ class ComputerImportContext:
     tcc_grants_linked: int = 0
     tcc_grants_skipped: int = 0
     import_status: str = "complete"
+
+
+def computer_import_context(
+    scan,
+    grants_linked: int = 0,
+    grants_skipped: int = 0,
+    import_status: str = "complete",
+) -> ComputerImportContext:
+    """Build the shared host-posture context used by single and merged imports."""
+    return ComputerImportContext(
+        gatekeeper_enabled=scan.gatekeeper_enabled,
+        sip_enabled=scan.sip_enabled,
+        filevault_enabled=scan.filevault_enabled,
+        lockdown_mode_enabled=scan.lockdown_mode_enabled,
+        bluetooth_enabled=scan.bluetooth_enabled,
+        bluetooth_discoverable=scan.bluetooth_discoverable,
+        screen_lock_enabled=scan.screen_lock_enabled,
+        screen_lock_delay=scan.screen_lock_delay,
+        display_sleep_timeout=scan.display_sleep_timeout,
+        thunderbolt_security_level=scan.thunderbolt_security_level,
+        secure_boot_level=scan.secure_boot_level,
+        external_boot_allowed=scan.external_boot_allowed,
+        icloud_signed_in=scan.icloud_signed_in,
+        icloud_drive_enabled=scan.icloud_drive_enabled,
+        icloud_keychain_enabled=scan.icloud_keychain_enabled,
+        collection_error_count=len(scan.errors),
+        collection_error_sources=[error.source for error in scan.errors] if scan.errors else [],
+        tcc_grants_linked=grants_linked,
+        tcc_grants_skipped=grants_skipped,
+        import_status=import_status,
+    )
 
 
 def _now_iso() -> str:

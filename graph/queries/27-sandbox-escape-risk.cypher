@@ -1,5 +1,5 @@
 // Name: Unsandboxed Injectable Apps
-// Purpose: Injectable apps that are NOT sandboxed — higher severity injection targets
+// Purpose: Injectable apps that are NOT sandboxed - higher severity injection targets
 // Category: Red Team
 // Severity: High
 // Parameters: none

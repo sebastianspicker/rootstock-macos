@@ -1,5 +1,5 @@
 // Name: Certificate Authority Hierarchy
-// Purpose: Visualize the complete CA trust chain across all applications
+// Purpose: Visualize imported application and certificate-authority relationships
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none

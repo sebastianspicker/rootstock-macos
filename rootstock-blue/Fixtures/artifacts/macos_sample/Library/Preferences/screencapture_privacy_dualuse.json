@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/usr/sbin/screencapture",
+      "name": "screencapture",
+      "risk_tags": "capture_surface,screenshot_tool,privacy_depth",
+      "user": "alice",
+      "timestamp": "2026-06-01T12:00:00Z",
+      "notes": "ScreenCapture privacy dual-use markers \u2014 never captures screens or dumps Screen Recording TCC rows"
+    }
+  ]
+}

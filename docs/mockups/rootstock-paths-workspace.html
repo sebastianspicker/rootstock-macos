@@ -1,0 +1,1849 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rootstock Paths Workspace Mockup</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #061521;
+      --bg-deep: #04101a;
+      --surface: #0a1b28;
+      --surface-raised: #0e2231;
+      --surface-selected: #102c46;
+      --line: #2a4150;
+      --line-strong: #3f5b6b;
+      --text: #f3f6f7;
+      --muted: #9aabba;
+      --subtle: #718696;
+      --accent: #3988ff;
+      --accent-soft: #78adff;
+      --critical: #ff625a;
+      --high: #ff984b;
+      --medium: #f5c84d;
+      --low: #5d9dff;
+      --verified: #6fc981;
+      --focus: #8bbcff;
+      --radius: 4px;
+      --header-height: 54px;
+      --provenance-height: 70px;
+      --ui-font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono-font: "SFMono-Regular", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      background: var(--bg-deep);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ui-font);
+      font-size: 14px;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    select {
+      color: inherit;
+      font: inherit;
+    }
+
+    button,
+    select {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    button {
+      border: 0;
+    }
+
+    svg {
+      display: block;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.7;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-height) minmax(0, 1fr) var(--provenance-height);
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(44, 84, 110, 0.045) 1px, transparent 1px) 0 0 / 72px 72px,
+        var(--bg);
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(360px, 1fr) auto minmax(390px, 1fr);
+      align-items: center;
+      height: var(--header-height);
+      border-bottom: 1px solid var(--line);
+      background: rgba(4, 16, 26, 0.96);
+    }
+
+    .identity,
+    .session,
+    .mode-nav {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .identity {
+      gap: 13px;
+      padding: 0 16px;
+    }
+
+    .mark {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border: 1px solid #d5e2ea;
+      border-radius: 3px;
+      font-family: var(--mono-font);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .wordmark {
+      letter-spacing: 0.2em;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .identity-separator {
+      width: 1px;
+      height: 28px;
+      margin: 0 3px;
+      background: var(--line);
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 8px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .breadcrumb strong {
+      color: var(--accent-soft);
+      font-weight: 550;
+    }
+
+    .breadcrumb span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mode-nav {
+      align-self: stretch;
+      gap: 6px;
+    }
+
+    .mode-nav button {
+      position: relative;
+      align-self: stretch;
+      padding: 0 20px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .mode-nav button:hover {
+      color: var(--text);
+    }
+
+    .mode-nav button[aria-current="page"] {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .mode-nav button[aria-current="page"]::after {
+      position: absolute;
+      right: 18px;
+      bottom: 0;
+      left: 18px;
+      height: 3px;
+      background: var(--accent);
+      content: "";
+    }
+
+    .session {
+      justify-content: flex-end;
+      gap: 18px;
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .session-status,
+    .verified-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--verified);
+      box-shadow: 0 0 0 3px rgba(111, 201, 129, 0.08);
+    }
+
+    .verified-status {
+      padding-left: 18px;
+      border-left: 1px solid var(--line);
+    }
+
+    .verified-status strong {
+      color: var(--verified);
+      font-weight: 600;
+    }
+
+    .export-button {
+      display: inline-flex;
+      min-height: 34px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .export-button:hover {
+      border-color: var(--accent-soft);
+      background: var(--surface-raised);
+    }
+
+    .workspace {
+      display: grid;
+      min-height: 0;
+      grid-template-columns: 25% minmax(500px, 1fr) 24%;
+    }
+
+    .queue {
+      min-width: 0;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: rgba(5, 20, 31, 0.94);
+    }
+
+    .queue-tools {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 42px;
+      gap: 8px;
+      padding: 14px 16px 10px;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box .icon {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 38px;
+      padding: 0 46px 0 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      outline: 0;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .search-box input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-box kbd {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 2px 5px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      color: var(--muted);
+      font: 11px var(--mono-font);
+    }
+
+    .icon-button {
+      display: grid;
+      width: 42px;
+      height: 38px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--muted);
+    }
+
+    .icon-button:hover {
+      color: var(--text);
+      border-color: var(--accent-soft);
+    }
+
+    .severity-field {
+      position: relative;
+      display: block;
+      margin: 0 16px 14px;
+    }
+
+    .severity-field select {
+      width: 100%;
+      height: 36px;
+      appearance: none;
+      padding: 0 34px 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .severity-field .icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 15px;
+      height: 15px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .queue-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      padding: 0 16px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .queue-title h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .queue-title span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .queue-columns,
+    .investigation-row {
+      display: grid;
+      grid-template-columns: 79px minmax(0, 1fr) 44px 54px;
+      align-items: center;
+    }
+
+    .queue-columns {
+      min-height: 37px;
+      padding: 0 16px;
+      color: var(--subtle);
+      font-size: 11px;
+    }
+
+    .investigations {
+      display: grid;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .investigation-row {
+      width: 100%;
+      min-height: 68px;
+      padding: 9px 16px;
+      border-top: 1px solid rgba(42, 65, 80, 0.8);
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    .investigation-row:hover {
+      background: rgba(16, 44, 70, 0.52);
+      color: var(--text);
+    }
+
+    .investigation-row[aria-pressed="true"] {
+      position: relative;
+      z-index: 1;
+      border: 1px solid var(--accent);
+      background: var(--surface-selected);
+      color: var(--text);
+    }
+
+    .investigation-row[hidden] {
+      display: none;
+    }
+
+    .severity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+
+    .severity::before {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--severity-color);
+      content: "";
+    }
+
+    .severity.critical {
+      --severity-color: var(--critical);
+    }
+
+    .severity.high {
+      --severity-color: var(--high);
+    }
+
+    .severity.medium {
+      --severity-color: var(--medium);
+    }
+
+    .severity.low {
+      --severity-color: var(--low);
+    }
+
+    .investigation-name {
+      padding-right: 8px;
+      color: inherit;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .hops,
+    .updated {
+      color: inherit;
+      font-family: var(--mono-font);
+      font-size: 12px;
+    }
+
+    .canvas-panel {
+      display: grid;
+      min-width: 0;
+      min-height: 0;
+      grid-template-rows: 128px minmax(0, 1fr);
+      background: #071925;
+    }
+
+    .canvas-heading {
+      display: grid;
+      align-content: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(5, 20, 31, 0.9);
+    }
+
+    .critical-label {
+      margin: 0 0 6px;
+      color: var(--critical);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .canvas-heading h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(20px, 1.55vw, 25px);
+      font-weight: 680;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+    }
+
+    .path-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .caveat-chip {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border: 1px solid rgba(255, 98, 90, 0.42);
+      border-radius: var(--radius);
+      color: var(--critical);
+      font-size: 11px;
+    }
+
+    .graph-stage {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background-color: #071925;
+      background-image: radial-gradient(circle, rgba(83, 129, 158, 0.28) 1px, transparent 1.2px);
+      background-position: 0 0;
+      background-size: 18px 18px;
+    }
+
+    .view-toolbar {
+      position: absolute;
+      z-index: 3;
+      top: 14px;
+      left: 16px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .view-toolbar button,
+    .view-toolbar output {
+      display: grid;
+      height: 36px;
+      min-width: 38px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-right-width: 0;
+      background: rgba(7, 25, 37, 0.94);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .view-toolbar button:first-child {
+      border-radius: var(--radius) 0 0 var(--radius);
+    }
+
+    .view-toolbar button:last-child {
+      border-right-width: 1px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .view-toolbar button:hover {
+      color: var(--text);
+      background: var(--surface-raised);
+    }
+
+    .view-toolbar output {
+      width: 56px;
+      font-family: var(--mono-font);
+    }
+
+    .view-mode {
+      position: absolute;
+      z-index: 3;
+      top: 14px;
+      right: 164px;
+      height: 36px;
+      padding: 0 34px 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      appearance: none;
+      background: rgba(7, 25, 37, 0.94);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend {
+      position: absolute;
+      z-index: 3;
+      top: 16px;
+      right: 18px;
+      display: grid;
+      gap: 9px;
+      width: 120px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .legend-line {
+      position: relative;
+      width: 34px;
+      border-top: 1px solid var(--text);
+    }
+
+    .legend-line::after {
+      position: absolute;
+      top: -4px;
+      right: -1px;
+      width: 6px;
+      height: 6px;
+      border-top: 1px solid var(--text);
+      border-right: 1px solid var(--text);
+      transform: rotate(45deg);
+      content: "";
+    }
+
+    .legend-line.dashed {
+      border-top-style: dashed;
+    }
+
+    .legend-line.dotted {
+      border-top-style: dotted;
+    }
+
+    .graph-wrap {
+      position: absolute;
+      inset: 50px 0 0;
+      display: grid;
+      place-items: center;
+      transform: scale(var(--graph-scale, 1));
+      transform-origin: 50% 50%;
+      transition: transform 140ms ease;
+    }
+
+    .graph {
+      width: min(96%, 970px);
+      height: min(90%, 600px);
+      overflow: visible;
+    }
+
+    .graph .edge {
+      stroke: #c9d6dc;
+      stroke-width: 1.35;
+    }
+
+    .graph .support-edge {
+      fill: none;
+      stroke: #c9d6dc;
+      stroke-dasharray: 5 5;
+      stroke-width: 1.2;
+    }
+
+    .graph .edge-label,
+    .graph .node-meta,
+    .graph .support-title {
+      fill: var(--muted);
+      font-family: var(--ui-font);
+      font-size: 12px;
+    }
+
+    .graph .node-title {
+      fill: var(--text);
+      font-family: var(--ui-font);
+      font-size: 14px;
+      font-weight: 560;
+    }
+
+    .graph .support-title {
+      fill: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .graph .node-box {
+      fill: #0c2130;
+      stroke: #607786;
+      stroke-width: 1;
+      transition: fill 120ms ease, stroke 120ms ease;
+    }
+
+    .graph .node-group {
+      cursor: pointer;
+      outline: 0;
+    }
+
+    .graph .node-group:hover .node-box,
+    .graph .node-group:focus .node-box {
+      fill: #102b3d;
+      stroke: var(--accent-soft);
+    }
+
+    .graph .node-group.selected .node-box {
+      fill: #102c46;
+      stroke: var(--accent);
+      stroke-width: 2;
+    }
+
+    .graph .node-icon {
+      fill: none;
+      stroke: var(--text);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2;
+    }
+
+    .minimap {
+      position: absolute;
+      right: 24px;
+      bottom: 20px;
+      width: 144px;
+      height: 82px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: rgba(6, 21, 33, 0.92);
+    }
+
+    .minimap svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .minimap line {
+      stroke: var(--muted);
+      stroke-width: 1;
+    }
+
+    .minimap rect {
+      fill: #0d2637;
+      stroke: var(--muted);
+    }
+
+    .minimap .viewport-box {
+      fill: rgba(57, 136, 255, 0.08);
+      stroke: var(--accent);
+    }
+
+    .evidence-panel {
+      display: grid;
+      min-width: 0;
+      min-height: 0;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border-left: 1px solid var(--line);
+      background: rgba(5, 20, 31, 0.96);
+    }
+
+    .evidence-header {
+      padding: 18px 20px 13px;
+    }
+
+    .evidence-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 680;
+      letter-spacing: -0.02em;
+    }
+
+    .evidence-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tabs button {
+      position: relative;
+      min-height: 50px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tabs button:hover {
+      color: var(--text);
+    }
+
+    .tabs button[aria-selected="true"] {
+      color: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    .tabs button[aria-selected="true"]::after {
+      position: absolute;
+      right: 16px;
+      bottom: 0;
+      left: 16px;
+      height: 3px;
+      background: var(--accent);
+      content: "";
+    }
+
+    .evidence-content {
+      overflow: auto;
+      padding: 8px 20px 20px;
+    }
+
+    .evidence-section {
+      padding: 14px 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .evidence-section:last-child {
+      border-bottom: 0;
+    }
+
+    .evidence-section h3 {
+      margin: 0 0 12px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .property-list {
+      margin: 0;
+    }
+
+    .property-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 1fr) minmax(100px, auto);
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(42, 65, 80, 0.58);
+    }
+
+    .property-row:last-child {
+      border-bottom: 0;
+    }
+
+    .property-row dt {
+      color: var(--muted);
+    }
+
+    .property-row dd {
+      margin: 0;
+      color: #cbd6dc;
+      text-align: right;
+    }
+
+    .property-row .high-confidence {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .property-row .high-confidence::before {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--verified);
+      content: "";
+    }
+
+    .caveat {
+      margin: 0;
+      color: #b4c2cc;
+      line-height: 1.65;
+    }
+
+    .relationship-list,
+    .remediation-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .relationship-list li,
+    .remediation-list li {
+      padding: 10px 12px;
+      border-left: 2px solid var(--line-strong);
+      background: rgba(14, 34, 49, 0.55);
+      color: #bdcad2;
+    }
+
+    .relationship-list strong,
+    .remediation-list strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .evidence-actions {
+      display: grid;
+      gap: 8px;
+      padding: 14px 20px 18px;
+      border-top: 1px solid var(--line);
+      background: var(--bg-deep);
+    }
+
+    .primary-action,
+    .secondary-action {
+      min-height: 42px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .primary-action {
+      border: 1px solid #70a7ff;
+      background: #216fe3;
+      color: white;
+    }
+
+    .primary-action:hover {
+      background: #2e7cf0;
+    }
+
+    .secondary-action {
+      border: 1px solid #c2d0d8;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .secondary-action:hover {
+      background: var(--surface-raised);
+    }
+
+    .provenance {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(220px, 1.5fr);
+      align-items: center;
+      gap: 0;
+      height: var(--provenance-height);
+      padding: 0 16px;
+      border-top: 1px solid var(--line);
+      background: var(--bg-deep);
+    }
+
+    .provenance-step {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+    }
+
+    .provenance-step:not(:nth-child(4))::after {
+      position: absolute;
+      right: 14px;
+      width: min(48px, 20%);
+      border-top: 1px solid #d8e0e4;
+      content: "";
+    }
+
+    .provenance-step:not(:nth-child(4))::before {
+      position: absolute;
+      z-index: 1;
+      right: 14px;
+      width: 6px;
+      height: 6px;
+      border-top: 1px solid #d8e0e4;
+      border-right: 1px solid #d8e0e4;
+      transform: rotate(45deg);
+      content: "";
+    }
+
+    .provenance-step .icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    .provenance-step strong {
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .provenance-step time {
+      color: var(--muted);
+      font: 11px var(--mono-font);
+    }
+
+    .provenance-source {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .provenance-source strong {
+      color: var(--verified);
+      font-weight: 600;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 20;
+      right: 18px;
+      bottom: 88px;
+      max-width: 360px;
+      padding: 11px 14px;
+      border: 1px solid var(--accent-soft);
+      border-radius: var(--radius);
+      background: #102b3d;
+      color: var(--text);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 140ms ease, transform 140ms ease;
+      pointer-events: none;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    dialog {
+      width: min(640px, calc(100vw - 32px));
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.58);
+    }
+
+    dialog::backdrop {
+      background: rgba(1, 8, 13, 0.78);
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .dialog-header button {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: transparent;
+    }
+
+    .raw-evidence {
+      margin: 0;
+      overflow: auto;
+      padding: 18px;
+      color: #bdd2df;
+      font: 12px/1.6 var(--mono-font);
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 1260px) {
+      .topbar {
+        grid-template-columns: minmax(300px, 1fr) auto minmax(300px, 1fr);
+      }
+
+      .breadcrumb span:last-child,
+      .verified-status {
+        display: none;
+      }
+
+      .workspace {
+        grid-template-columns: 300px minmax(480px, 1fr) 320px;
+      }
+
+      .queue-columns,
+      .investigation-row {
+        grid-template-columns: 72px minmax(0, 1fr) 38px;
+      }
+
+      .queue-columns span:last-child,
+      .investigation-row .updated {
+        display: none;
+      }
+
+      .legend {
+        display: none;
+      }
+
+      .view-mode {
+        right: 18px;
+      }
+
+      .provenance-step:not(:nth-child(4))::after,
+      .provenance-step:not(:nth-child(4))::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        display: block;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        position: sticky;
+        z-index: 10;
+        top: 0;
+        grid-template-columns: 1fr auto;
+        height: auto;
+        min-height: 58px;
+      }
+
+      .identity {
+        min-height: 58px;
+      }
+
+      .breadcrumb,
+      .session-status,
+      .verified-status {
+        display: none;
+      }
+
+      .session {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .mode-nav {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        min-height: 48px;
+        overflow-x: auto;
+        border-top: 1px solid var(--line);
+      }
+
+      .mode-nav button {
+        min-width: 96px;
+      }
+
+      .export-button,
+      .search-box input,
+      .icon-button,
+      .severity-field select,
+      .view-toolbar button,
+      .view-toolbar output,
+      .primary-action,
+      .secondary-action {
+        min-height: 44px;
+        height: 44px;
+      }
+
+      .search-box .icon {
+        top: 13px;
+      }
+
+      .search-box kbd {
+        top: 11px;
+      }
+
+      .severity-field .icon {
+        top: 14px;
+      }
+
+      .workspace {
+        display: block;
+      }
+
+      .queue {
+        max-height: 430px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .queue-columns,
+      .investigation-row {
+        grid-template-columns: 82px minmax(0, 1fr) 48px 58px;
+      }
+
+      .queue-columns span:last-child,
+      .investigation-row .updated {
+        display: block;
+      }
+
+      .canvas-panel {
+        min-height: 760px;
+      }
+
+      .evidence-panel {
+        min-height: 620px;
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
+
+      .provenance {
+        height: auto;
+        min-height: var(--provenance-height);
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px 12px;
+        padding: 16px;
+      }
+
+      .provenance-source {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .identity {
+        gap: 9px;
+      }
+
+      .wordmark {
+        font-size: 11px;
+      }
+
+      .session {
+        padding-left: 0;
+      }
+
+      .export-button span {
+        display: none;
+      }
+
+      .queue-columns,
+      .investigation-row {
+        grid-template-columns: 72px minmax(0, 1fr) 36px;
+      }
+
+      .queue-columns span:last-child,
+      .investigation-row .updated {
+        display: none;
+      }
+
+      .canvas-panel {
+        min-height: 690px;
+        grid-template-rows: 152px minmax(0, 1fr);
+      }
+
+      .canvas-heading {
+        padding: 18px 16px;
+      }
+
+      .path-meta {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .view-mode,
+      .minimap {
+        display: none;
+      }
+
+      .graph-wrap {
+        inset-top: 56px;
+        overflow-x: auto;
+        place-items: center start;
+      }
+
+      .graph {
+        width: 780px;
+        max-width: none;
+        margin-left: 8px;
+      }
+
+      .provenance {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    @media print {
+      body {
+        overflow: visible;
+        background: white;
+      }
+
+      .app {
+        min-height: auto;
+      }
+
+      .topbar,
+      .queue,
+      .view-toolbar,
+      .view-mode,
+      .legend,
+      .evidence-actions,
+      .toast {
+        display: none !important;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+      }
+
+      .canvas-panel,
+      .evidence-panel,
+      .provenance {
+        color: #0c1720;
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="identity">
+        <div class="mark" aria-hidden="true">R</div>
+        <strong class="wordmark">ROOTSTOCK</strong>
+        <span class="identity-separator" aria-hidden="true"></span>
+        <div class="breadcrumb" aria-label="Current snapshot">
+          <strong>Snapshot</strong>
+          <span aria-hidden="true">›</span>
+          <span>Core</span>
+          <span aria-hidden="true">/</span>
+          <span>synthetic-alpha-fixture</span>
+        </div>
+      </div>
+
+      <nav class="mode-nav" aria-label="Workspace modes">
+        <button type="button" data-mode="Triage">Triage</button>
+        <button type="button" data-mode="Paths" aria-current="page">Paths</button>
+        <button type="button" data-mode="Graph">Graph</button>
+        <button type="button" data-mode="Queries">Queries</button>
+      </nav>
+
+      <div class="session">
+        <span class="session-status"><span class="status-dot" aria-hidden="true"></span>Local session (offline)</span>
+        <span class="verified-status">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"></ellipse><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5"></path><path d="M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"></path></svg>
+          Provenance: <strong>Verified</strong>
+        </span>
+        <button class="export-button" id="export-button" type="button" aria-label="Export investigation">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 8 5-5 5 5"></path><path d="M5 14v6h14v-6"></path></svg>
+          <span>Export</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="queue" aria-labelledby="queue-heading">
+        <div class="queue-tools">
+          <label class="search-box">
+            <span class="sr-only">Search investigations</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            <input id="investigation-search" type="search" placeholder="Search investigations" autocomplete="off">
+            <kbd>⌘K</kbd>
+          </label>
+          <button class="icon-button" id="filter-button" type="button" aria-label="Focus severity filter">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v6l-4 2v-8z"></path></svg>
+          </button>
+        </div>
+
+        <label class="severity-field">
+          <span class="sr-only">Severity</span>
+          <select id="severity-filter">
+            <option value="all">Severity · All</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+        </label>
+
+        <div class="queue-title">
+          <h2 id="queue-heading">Investigation queue</h2>
+          <span id="queue-count">4 items</span>
+        </div>
+
+        <div class="queue-columns" aria-hidden="true">
+          <span>Severity</span><span>Investigation</span><span>Hops</span><span>Updated</span>
+        </div>
+
+        <ul class="investigations" id="investigations" aria-label="Investigations">
+          <li>
+            <button class="investigation-row" type="button" data-severity="critical" data-title="Shared credential reaches protected configuration" aria-pressed="true">
+              <span class="severity critical">Critical</span>
+              <span class="investigation-name">Shared credential reaches protected configuration</span>
+              <span class="hops">3</span>
+              <span class="updated">09:42</span>
+            </button>
+          </li>
+          <li>
+            <button class="investigation-row" type="button" data-severity="high" data-title="Unsigned helper reaches Full Disk Access" aria-pressed="false">
+              <span class="severity high">High</span>
+              <span class="investigation-name">Unsigned helper reaches Full Disk Access</span>
+              <span class="hops">2</span>
+              <span class="updated">09:31</span>
+            </button>
+          </li>
+          <li>
+            <button class="investigation-row" type="button" data-severity="medium" data-title="Login persistence enables privileged editor" aria-pressed="false">
+              <span class="severity medium">Medium</span>
+              <span class="investigation-name">Login persistence enables privileged editor</span>
+              <span class="hops">2</span>
+              <span class="updated">09:21</span>
+            </button>
+          </li>
+          <li>
+            <button class="investigation-row" type="button" data-severity="low" data-title="Library validation recommendation" aria-pressed="false">
+              <span class="severity low">Low</span>
+              <span class="investigation-name">Library validation recommendation</span>
+              <span class="hops">1</span>
+              <span class="updated">07:49</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <main class="canvas-panel" aria-labelledby="investigation-title">
+        <header class="canvas-heading">
+          <p class="critical-label" id="investigation-severity">Critical</p>
+          <h1 id="investigation-title">Shared credential reaches protected configuration</h1>
+          <div class="path-meta">
+            <span>Modeled path</span><span aria-hidden="true">·</span><span id="hop-count">3 hops</span>
+            <span class="caveat-chip">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.8 8.2 7 10 4.2-1.8 7-5.3 7-10V6z"></path><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg>
+              Preconditions, not proof
+            </span>
+          </div>
+        </header>
+
+        <section class="graph-stage" aria-label="Modeled attack path">
+          <div class="view-toolbar" role="group" aria-label="Graph zoom">
+            <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+            <output id="zoom-level" aria-live="polite">100%</output>
+            <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+            <button id="zoom-fit" type="button" aria-label="Fit path">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5"></path><path d="M16 3h5v5"></path><path d="M8 21H3v-5"></path><path d="M16 21h5v-5"></path></svg>
+            </button>
+            <button id="lock-layout" type="button" aria-label="Lock graph layout" aria-pressed="false">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+            </button>
+          </div>
+
+          <select class="view-mode" aria-label="Graph view">
+            <option>View: Modeled</option>
+            <option>View: Evidence</option>
+          </select>
+
+          <div class="legend" aria-label="Relationship legend">
+            <span class="legend-row"><span class="legend-line"></span>Leads to</span>
+            <span class="legend-row"><span class="legend-line dashed"></span>Enables</span>
+            <span class="legend-row"><span class="legend-line dotted"></span>Uses / Reads</span>
+          </div>
+
+          <div class="graph-wrap" id="graph-wrap">
+            <svg class="graph" viewBox="0 0 900 560" role="group" aria-labelledby="graph-title graph-desc">
+              <title id="graph-title">Three-hop modeled path to protected configuration</title>
+              <desc id="graph-desc">Unsigned Helper executes Privileged Editor, which accesses Shared Credential, which modifies Protected Configuration. Login Persistence, Full Disk Access, and Enable Library Validation are supporting modeled conditions.</desc>
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0 10 5 0 10z" fill="#c9d6dc"></path>
+                </marker>
+              </defs>
+
+              <line class="edge" x1="164" y1="200" x2="246" y2="200" marker-end="url(#arrow)"></line>
+              <line class="edge" x1="364" y1="200" x2="446" y2="200" marker-end="url(#arrow)"></line>
+              <line class="edge" x1="564" y1="200" x2="646" y2="200" marker-end="url(#arrow)"></line>
+              <text class="edge-label" x="181" y="182">executes</text>
+              <text class="edge-label" x="382" y="182">accesses</text>
+              <text class="edge-label" x="581" y="182">modifies</text>
+
+              <path class="support-edge" d="M105 405v-60h600v-58" marker-end="url(#arrow)"></path>
+              <path class="support-edge" d="M105 345h198v-58" marker-end="url(#arrow)"></path>
+              <path class="support-edge" d="M503 405v-60h0v-58" marker-end="url(#arrow)"></path>
+              <path class="support-edge" d="M705 405v-60"></path>
+
+              <text class="node-meta" x="48" y="368">Supporting conditions (modeled preconditions)</text>
+
+              <g class="node-group" data-node="Unsigned Helper" role="button" tabindex="0" aria-label="Inspect Unsigned Helper">
+                <rect class="node-box" x="44" y="138" width="120" height="124" rx="4"></rect>
+                <path class="node-icon" d="M65 162h15l8 8v23H65zM80 162v8h8M72 178h9M72 184h8"></path>
+                <text class="node-title" x="99" y="174"><tspan>Unsigned</tspan><tspan x="99" dy="20">Helper</tspan></text>
+                <text class="node-meta" x="104" y="231" text-anchor="middle">Entry point</text>
+              </g>
+
+              <g class="node-group" data-node="Privileged Editor" role="button" tabindex="0" aria-label="Inspect Privileged Editor">
+                <rect class="node-box" x="244" y="138" width="120" height="124" rx="4"></rect>
+                <rect class="node-icon" x="262" y="163" width="25" height="22" rx="2"></rect>
+                <path class="node-icon" d="m268 169 5 5-5 5M276 179h6"></path>
+                <text class="node-title" x="300" y="174"><tspan>Privileged</tspan><tspan x="300" dy="20">Editor</tspan></text>
+                <text class="node-meta" x="304" y="231" text-anchor="middle">Privilege context</text>
+              </g>
+
+              <g class="node-group selected" data-node="Shared Credential" role="button" tabindex="0" aria-label="Inspect Shared Credential">
+                <rect class="node-box" x="444" y="132" width="120" height="136" rx="4"></rect>
+                <circle class="node-icon" cx="470" cy="171" r="10"></circle>
+                <path class="node-icon" d="m478 178 14 14M484 184l-5 5M489 189l-5 5"></path>
+                <text class="node-title" x="502" y="174"><tspan>Shared</tspan><tspan x="502" dy="20">Credential</tspan></text>
+                <text class="node-meta" x="504" y="237" text-anchor="middle">Credential material</text>
+              </g>
+
+              <g class="node-group" data-node="Protected Configuration" role="button" tabindex="0" aria-label="Inspect Protected Configuration">
+                <rect class="node-box" x="644" y="138" width="120" height="124" rx="4"></rect>
+                <path class="node-icon" d="M670 161 658 166v9c0 9 5 15 12 19 7-4 12-10 12-19v-9z"></path>
+                <text class="node-title" x="700" y="174"><tspan>Protected</tspan><tspan x="700" dy="20">Configuration</tspan></text>
+                <text class="node-meta" x="704" y="231" text-anchor="middle">System integrity</text>
+              </g>
+
+              <g class="node-group" data-node="Login Persistence" role="button" tabindex="0" aria-label="Inspect Login Persistence">
+                <rect class="node-box" x="105" y="405" width="134" height="104" rx="4"></rect>
+                <circle class="node-icon" cx="130" cy="438" r="8"></circle>
+                <path class="node-icon" d="M116 465v-7c0-8 28-8 28 0v7"></path>
+                <text class="support-title" x="155" y="439"><tspan>Login</tspan><tspan x="155" dy="18">Persistence</tspan></text>
+                <text class="node-meta" x="172" y="491" text-anchor="middle">Maintains access</text>
+              </g>
+
+              <g class="node-group" data-node="Full Disk Access" role="button" tabindex="0" aria-label="Inspect Full Disk Access">
+                <rect class="node-box" x="437" y="405" width="134" height="104" rx="4"></rect>
+                <rect class="node-icon" x="462" y="438" width="18" height="20" rx="2"></rect>
+                <path class="node-icon" d="M466 438v-7a5 5 0 0 1 10 0v7"></path>
+                <text class="support-title" x="493" y="439"><tspan>Full Disk</tspan><tspan x="493" dy="18">Access</tspan></text>
+                <text class="node-meta" x="504" y="491" text-anchor="middle">Broad file access</text>
+              </g>
+
+              <g class="node-group" data-node="Enable Library Validation" role="button" tabindex="0" aria-label="Inspect Enable Library Validation">
+                <rect class="node-box" x="637" y="405" width="156" height="104" rx="4"></rect>
+                <path class="node-icon" d="m660 438-8 10 8 10M672 438l8 10-8 10M668 433l-5 30"></path>
+                <text class="support-title" x="692" y="439"><tspan>Enable Library</tspan><tspan x="692" dy="18">Validation</tspan></text>
+                <text class="node-meta" x="715" y="491" text-anchor="middle">Weakens trust</text>
+              </g>
+            </svg>
+          </div>
+
+          <div class="minimap" aria-hidden="true">
+            <svg viewBox="0 0 144 82">
+              <line x1="18" y1="40" x2="126" y2="40"></line>
+              <rect x="12" y="34" width="12" height="12"></rect>
+              <rect x="48" y="34" width="12" height="12"></rect>
+              <rect x="84" y="34" width="12" height="12"></rect>
+              <rect x="120" y="34" width="12" height="12"></rect>
+              <rect class="viewport-box" x="44" y="18" width="56" height="48"></rect>
+            </svg>
+          </div>
+        </section>
+      </main>
+
+      <aside class="evidence-panel" aria-labelledby="evidence-title">
+        <header class="evidence-header">
+          <h2 id="evidence-title">Shared Credential</h2>
+          <p id="evidence-step">Step 3 of 4</p>
+        </header>
+
+        <div class="tabs" role="tablist" aria-label="Investigation details">
+          <button id="tab-evidence" type="button" role="tab" aria-selected="true" aria-controls="panel-evidence">Evidence</button>
+          <button id="tab-relationships" type="button" role="tab" aria-selected="false" aria-controls="panel-relationships">Relationships</button>
+          <button id="tab-remediation" type="button" role="tab" aria-selected="false" aria-controls="panel-remediation">Remediation</button>
+        </div>
+
+        <div class="evidence-content">
+          <div id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence">
+            <section class="evidence-section">
+              <h3>Summary</h3>
+              <dl class="property-list">
+                <div class="property-row"><dt>Type</dt><dd id="node-type">Keychain Item</dd></div>
+                <div class="property-row"><dt>Evidence</dt><dd id="node-evidence">synthetic fixture</dd></div>
+                <div class="property-row"><dt>Risk level</dt><dd id="node-risk">Critical</dd></div>
+                <div class="property-row"><dt>Source</dt><dd id="node-source">public-release-screenshot-fixture</dd></div>
+                <div class="property-row"><dt>Confidence</dt><dd class="high-confidence">High</dd></div>
+              </dl>
+            </section>
+
+            <section class="evidence-section">
+              <h3>Provenance</h3>
+              <dl class="property-list">
+                <div class="property-row"><dt>Collected</dt><dd>23:59:24</dd></div>
+                <div class="property-row"><dt>Imported</dt><dd>23:59:40</dd></div>
+                <div class="property-row"><dt>Derived</dt><dd>23:59:54</dd></div>
+                <div class="property-row"><dt>Snapshot</dt><dd>00:00:00</dd></div>
+              </dl>
+            </section>
+
+            <section class="evidence-section">
+              <h3>Caveat</h3>
+              <p class="caveat">Modeled preconditions do not prove exploitation. Evidence is synthetic.</p>
+            </section>
+          </div>
+
+          <div id="panel-relationships" role="tabpanel" aria-labelledby="tab-relationships" hidden>
+            <section class="evidence-section">
+              <h3>Relationship summary</h3>
+              <ul class="relationship-list">
+                <li><strong>Incoming · accesses</strong>Privileged Editor</li>
+                <li><strong>Outgoing · modifies</strong>Protected Configuration</li>
+                <li><strong>Supporting condition</strong>Full Disk Access</li>
+              </ul>
+            </section>
+            <section class="evidence-section">
+              <h3>Interpretation</h3>
+              <p class="caveat">The selected credential connects an observed privilege context to a modeled write condition.</p>
+            </section>
+          </div>
+
+          <div id="panel-remediation" role="tabpanel" aria-labelledby="tab-remediation" hidden>
+            <section class="evidence-section">
+              <h3>Recommended next steps</h3>
+              <ol class="remediation-list">
+                <li><strong>Constrain credential access</strong>Review the Keychain access control list and remove unnecessary trusted applications.</li>
+                <li><strong>Validate the write condition</strong>Confirm whether the privileged editor can modify the protected configuration in the current host state.</li>
+                <li><strong>Enable library validation</strong>Apply the linked hardening recommendation where it does not break required workflows.</li>
+              </ol>
+            </section>
+          </div>
+        </div>
+
+        <div class="evidence-actions">
+          <button class="primary-action" id="add-path" type="button">Add to path</button>
+          <button class="secondary-action" id="open-raw" type="button">Open raw evidence</button>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="provenance" aria-label="Snapshot provenance">
+      <div class="provenance-step">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"></ellipse><path d="M5 5v14c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"></path></svg>
+        <strong>Collected</strong><time>23:59:24</time>
+      </div>
+      <div class="provenance-step">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M4 18h16v3H4z"></path></svg>
+        <strong>Imported</strong><time>23:59:40</time>
+      </div>
+      <div class="provenance-step">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"></circle><circle cx="5" cy="18" r="2"></circle><circle cx="19" cy="18" r="2"></circle><path d="M12 7v4M12 11 5 16M12 11l7 5"></path></svg>
+        <strong>Derived</strong><time>23:59:54</time>
+      </div>
+      <div class="provenance-step">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h10l2 3h2v12H3V8h2z"></path><circle cx="12" cy="14" r="4"></circle></svg>
+        <strong>Snapshot</strong><time>00:00:00</time>
+      </div>
+      <div class="provenance-source"><span>synthetic-alpha-fixture</span><span aria-hidden="true">•</span><strong>Local only</strong></div>
+    </footer>
+  </div>
+
+  <p class="toast" id="toast" role="status" aria-live="polite"></p>
+
+  <dialog id="raw-dialog" aria-labelledby="raw-title">
+    <div class="dialog-header">
+      <h2 id="raw-title">Raw evidence · Shared Credential</h2>
+      <button id="close-raw" type="button" aria-label="Close raw evidence">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>
+    <pre class="raw-evidence">{
+  "id": "shared-credential",
+  "kind": "rs_KeychainItem",
+  "label": "Shared Credential",
+  "properties": {
+    "evidence": "synthetic fixture",
+    "risk_level": "critical",
+    "source": "public-release-screenshot-fixture",
+    "confidence": "high"
+  }
+}</pre>
+  </dialog>
+
+  <script>
+    (() => {
+      const nodeDetails = {
+        "Unsigned Helper": {step: "Step 1 of 4", type: "Application", risk: "High"},
+        "Privileged Editor": {step: "Step 2 of 4", type: "Application", risk: "High"},
+        "Shared Credential": {step: "Step 3 of 4", type: "Keychain Item", risk: "Critical"},
+        "Protected Configuration": {step: "Step 4 of 4", type: "Critical File", risk: "Critical"},
+        "Login Persistence": {step: "Supporting condition", type: "Launch Item", risk: "Medium"},
+        "Full Disk Access": {step: "Supporting condition", type: "TCC Permission", risk: "Critical"},
+        "Enable Library Validation": {step: "Recommendation", type: "Recommendation", risk: "Low"}
+      };
+
+      const investigationSearch = document.querySelector("#investigation-search");
+      const severityFilter = document.querySelector("#severity-filter");
+      const rows = [...document.querySelectorAll(".investigation-row")];
+      const nodeGroups = [...document.querySelectorAll(".node-group")];
+      const tabs = [...document.querySelectorAll(".tabs [role='tab']")];
+      const panels = [...document.querySelectorAll("[role='tabpanel']")];
+      const toast = document.querySelector("#toast");
+      const rawDialog = document.querySelector("#raw-dialog");
+      const graphWrap = document.querySelector("#graph-wrap");
+      let zoom = 100;
+      let toastTimer;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 2200);
+      }
+
+      function filterInvestigations() {
+        const query = investigationSearch.value.trim().toLowerCase();
+        const severity = severityFilter.value;
+        let visible = 0;
+        rows.forEach((row) => {
+          const matchesQuery = row.dataset.title.toLowerCase().includes(query);
+          const matchesSeverity = severity === "all" || row.dataset.severity === severity;
+          const show = matchesQuery && matchesSeverity;
+          row.hidden = !show;
+          if (show) visible += 1;
+        });
+        document.querySelector("#queue-count").textContent = `${visible} ${visible === 1 ? "item" : "items"}`;
+      }
+
+      function selectInvestigation(row) {
+        rows.forEach((item) => item.setAttribute("aria-pressed", String(item === row)));
+        document.querySelector("#investigation-title").textContent = row.dataset.title;
+        const severity = row.dataset.severity;
+        const label = severity.charAt(0).toUpperCase() + severity.slice(1);
+        const severityElement = document.querySelector("#investigation-severity");
+        severityElement.textContent = label;
+        severityElement.style.color = `var(--${severity})`;
+        document.querySelector("#hop-count").textContent = `${row.querySelector(".hops").textContent} ${row.querySelector(".hops").textContent === "1" ? "hop" : "hops"}`;
+        if (severity !== "critical") showToast(`${row.dataset.title} selected`);
+      }
+
+      function selectNode(group) {
+        nodeGroups.forEach((item) => item.classList.toggle("selected", item === group));
+        const name = group.dataset.node;
+        const detail = nodeDetails[name];
+        document.querySelector("#evidence-title").textContent = name;
+        document.querySelector("#evidence-step").textContent = detail.step;
+        document.querySelector("#node-type").textContent = detail.type;
+        document.querySelector("#node-risk").textContent = detail.risk;
+        document.querySelector("#raw-title").textContent = `Raw evidence · ${name}`;
+      }
+
+      function selectTab(tab) {
+        tabs.forEach((item) => item.setAttribute("aria-selected", String(item === tab)));
+        panels.forEach((panel) => {
+          panel.hidden = panel.id !== tab.getAttribute("aria-controls");
+        });
+      }
+
+      function setZoom(nextZoom) {
+        zoom = Math.min(130, Math.max(70, nextZoom));
+        document.querySelector("#zoom-level").textContent = `${zoom}%`;
+        graphWrap.style.setProperty("--graph-scale", String(zoom / 100));
+      }
+
+      investigationSearch.addEventListener("input", filterInvestigations);
+      severityFilter.addEventListener("change", filterInvestigations);
+      document.querySelector("#filter-button").addEventListener("click", () => severityFilter.focus());
+      rows.forEach((row) => row.addEventListener("click", () => selectInvestigation(row)));
+
+      nodeGroups.forEach((group) => {
+        group.addEventListener("click", () => selectNode(group));
+        group.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectNode(group);
+          }
+        });
+      });
+
+      tabs.forEach((tab) => tab.addEventListener("click", () => selectTab(tab)));
+      document.querySelector("#zoom-in").addEventListener("click", () => setZoom(zoom + 10));
+      document.querySelector("#zoom-out").addEventListener("click", () => setZoom(zoom - 10));
+      document.querySelector("#zoom-fit").addEventListener("click", () => setZoom(100));
+      document.querySelector("#lock-layout").addEventListener("click", (event) => {
+        const button = event.currentTarget;
+        const locked = button.getAttribute("aria-pressed") === "true";
+        button.setAttribute("aria-pressed", String(!locked));
+        showToast(locked ? "Graph layout unlocked." : "Graph layout locked.");
+      });
+
+      document.querySelector("#add-path").addEventListener("click", (event) => {
+        const button = event.currentTarget;
+        const added = button.getAttribute("aria-pressed") === "true";
+        button.setAttribute("aria-pressed", String(!added));
+        button.textContent = added ? "Add to path" : "Added to path";
+        showToast(added ? "Shared Credential removed from the modeled path." : "Shared Credential added to the modeled path.");
+      });
+
+      document.querySelector("#open-raw").addEventListener("click", () => rawDialog.showModal());
+      document.querySelector("#close-raw").addEventListener("click", () => rawDialog.close());
+      rawDialog.addEventListener("click", (event) => {
+        if (event.target === rawDialog) rawDialog.close();
+      });
+
+      document.querySelector("#export-button").addEventListener("click", () => {
+        showToast("Export view prepared. Use the print dialog to save a local PDF.");
+        window.setTimeout(() => window.print(), 250);
+      });
+
+      document.querySelectorAll(".mode-nav button").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.dataset.mode === "Paths") return;
+          showToast(`${button.dataset.mode} is outside this focused Paths mockup.`);
+        });
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+          event.preventDefault();
+          investigationSearch.focus();
+        }
+        if (event.key === "Escape" && rawDialog.open) rawDialog.close();
+      });
+    })();
+  </script>
+</body>
+</html>

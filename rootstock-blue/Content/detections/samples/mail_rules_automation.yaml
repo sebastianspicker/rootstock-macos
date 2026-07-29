@@ -1,0 +1,13 @@
+id: sample.mail_rules_automation
+title: Mail rules / Apple Mail automation persistence surface present
+severity: high
+description: Mail rules automation markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1114
+  - T1059
+  - T1546
+match:
+  event_type: mail.rules
+  field_contains:
+    mail_rules.risk_tags: "rules_surface"
+fixture: mail_rules_automation.jsonl

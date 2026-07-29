@@ -1,0 +1,11 @@
+id: sample.saved_state_suspicious_app
+title: Suspicious Saved Application State
+severity: medium
+description: Saved Application State for suspicious or tmp-backed app bundle.
+attack_techniques:
+  - T1547
+match:
+  event_type: app.saved_state
+  field_contains:
+    savedstate.risk_tags: "suspicious_bundle"
+fixture: saved_state_suspicious_app.jsonl

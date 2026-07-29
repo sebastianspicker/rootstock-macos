@@ -1,0 +1,13 @@
+id: sample.dock_persistence_surface
+title: Dock persistent apps / recent items dual-use surface present
+severity: high
+description: Dock persistence dual-use markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1547
+  - T1012
+  - T1083
+match:
+  event_type: dock.persistence
+  field_contains:
+    dock.risk_tags: "dock_surface"
+fixture: dock_persistence_surface.jsonl

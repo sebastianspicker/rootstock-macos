@@ -4,7 +4,7 @@ import Models
 /// Scans the filesystem for Kerberos artifacts (ccache, keytab, krb5.conf).
 ///
 /// **Security note:** Only file metadata (path, owner, permissions, modification time)
-/// is collected — file contents are never read.  The principal hint is inferred from
+/// is collected - file contents are never read.  The principal hint is inferred from
 /// the ccache filename pattern (`krb5cc_<uid>` → getpwuid), not from the credential
 /// cache itself.
 ///
@@ -95,7 +95,7 @@ public struct KerberosArtifactDataSource: DataSource {
     }
 
     /// Probe a single file path for metadata without reading contents.
-    /// For `config` type, also parses the krb5.conf content (safe — config, not credential).
+    /// For `config` type, also parses the krb5.conf content (safe - config, not credential).
     func probeFile(path: String, type: KerberosArtifactType) -> KerberosArtifact? {
         let fm = FileManager.default
         guard fm.fileExists(atPath: path) else { return nil }
@@ -188,8 +188,8 @@ public struct KerberosArtifactDataSource: DataSource {
     ///
     /// krb5.conf is a standard MIT Kerberos INI-like format with sections
     /// (`[libdefaults]`, `[realms]`, `[domain_realm]`).  This parser extracts:
-    /// - `default_realm` — the realm used by default
-    /// - `permitted_enctypes` / `default_tkt_enctypes` — encryption preferences
+    /// - `default_realm` - the realm used by default
+    /// - `permitted_enctypes` / `default_tkt_enctypes` - encryption preferences
     /// - realm names from `[realms]` section headers
     /// - `forwardable` flag (security-relevant default)
     ///
@@ -300,7 +300,7 @@ public struct KerberosArtifactDataSource: DataSource {
         let lineKey = parts[0].trimmingCharacters(in: .whitespaces).lowercased()
         guard lineKey == key.lowercased() else { return nil }
         var value = String(parts[1])
-        // Strip inline comments (# or ;) — safe here because extractValue
+        // Strip inline comments (# or ;) - safe here because extractValue
         // is only called for key=value lines, never section headers.
         if let commentIdx = value.firstIndex(where: { $0 == "#" || $0 == ";" }) {
             value = String(value[value.startIndex..<commentIdx])

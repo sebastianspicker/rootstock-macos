@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-infer.py — Run all Rootstock inference modules to derive attack-path relationships.
+infer.py - Run all Rootstock inference modules to derive attack-path relationships.
 
 Usage:
     python3 graph/infer.py

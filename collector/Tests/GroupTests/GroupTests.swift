@@ -36,6 +36,24 @@ final class GroupTests: XCTestCase {
         XCTAssertTrue(decoded.members.isEmpty)
     }
 
+    func testLocalGroupMembersParsesExpectedDirectoryServiceLabels() {
+        XCTAssertEqual(
+            LocalGroup.members(inDirectoryServiceOutput: "GroupMembership: alice bob"),
+            ["alice", "bob"]
+        )
+        XCTAssertEqual(
+            LocalGroup.members(inDirectoryServiceOutput: "dsAttrTypeStandard:GroupMembership: alice"),
+            ["alice"]
+        )
+    }
+
+    func testLocalGroupMembersRejectsMalformedOrUnrelatedLabels() {
+        XCTAssertTrue(LocalGroup.members(inDirectoryServiceOutput: "GroupMembership alice").isEmpty)
+        XCTAssertTrue(
+            LocalGroup.members(inDirectoryServiceOutput: "OtherAttribute: GroupMembership: alice").isEmpty
+        )
+    }
+
     // MARK: - DataSource tests
 
     func testGroupDataSourceMetadata() {
@@ -57,7 +75,7 @@ final class GroupTests: XCTestCase {
         for group in groups {
             XCTAssertTrue(
                 GroupDataSource.securityRelevantGroups.contains(group.name),
-                "Unexpected group '\(group.name)' — should only collect security-relevant groups"
+                "Unexpected group '\(group.name)' - should only collect security-relevant groups"
             )
         }
     }

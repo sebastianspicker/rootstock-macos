@@ -1,5 +1,5 @@
 // Name: Weak Physical Security Posture
-// Purpose: Hosts with physical security weaknesses — no lockdown mode, BT discoverable, no screen lock, etc.
+// Purpose: Hosts with physical security weaknesses - no lockdown mode, BT discoverable, no screen lock, etc.
 // Category: Blue Team
 // Severity: High
 // Parameters: none

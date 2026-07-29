@@ -1,0 +1,11 @@
+id: sample.icloud_desktop_documents_sync
+title: iCloud Desktop and Documents sync enabled
+severity: medium
+description: iCloud Desktop & Documents sync posture enabled - bulk staging/exfil risk.
+attack_techniques:
+  - T1567
+match:
+  event_type: cloud.sync_posture
+  field_contains:
+    icloud.desktop_documents_sync: "true"
+fixture: icloud_desktop_documents_sync.jsonl

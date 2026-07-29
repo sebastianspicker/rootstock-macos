@@ -1,0 +1,13 @@
+id: sample.unified_log_observation
+title: Unified log / logarchive observation depth surface present
+severity: high
+description: Unified log observation markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1083
+  - T1005
+  - T1562
+match:
+  event_type: unified_log.observation
+  field_contains:
+    ulog.risk_tags: "observation_surface"
+fixture: unified_log_observation.jsonl

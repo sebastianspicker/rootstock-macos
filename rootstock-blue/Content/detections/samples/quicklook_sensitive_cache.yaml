@@ -1,0 +1,11 @@
+id: sample.quicklook_sensitive_cache
+title: Sensitive path in QuickLook cache
+severity: medium
+description: QuickLook thumbnail cache references credential-like path.
+attack_techniques:
+  - T1005
+match:
+  event_type: filesystem.quicklook
+  field_contains:
+    ql.risk_tags: "sensitive_path"
+fixture: quicklook_sensitive_cache.jsonl

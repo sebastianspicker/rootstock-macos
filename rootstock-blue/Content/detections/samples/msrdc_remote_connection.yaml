@@ -1,0 +1,11 @@
+id: sample.msrdc_remote_connection
+title: Remote desktop client connection history
+severity: medium
+description: MSRDC/RDP client connection residue indicates remote access activity.
+attack_techniques:
+  - T1021.001
+match:
+  event_type: remote.rdp_connection
+  field_contains:
+    rdp.risk_tags: "remote_connection"
+fixture: msrdc_remote_connection.jsonl

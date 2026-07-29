@@ -1,0 +1,17 @@
+{
+  "states": [
+    {
+      "bundle_id": "com.evil.implant",
+      "path": "/Users/alice/Library/Saved Application State/com.evil.implant.savedState",
+      "app_path": "/tmp/evil-implant.app",
+      "last_restored": "2024-06-05T09:00:00Z",
+      "risk_tags": "suspicious_bundle,tmp_path"
+    },
+    {
+      "bundle_id": "com.apple.TextEdit",
+      "path": "/Users/alice/Library/Saved Application State/com.apple.TextEdit.savedState",
+      "app_path": "/System/Applications/TextEdit.app",
+      "last_restored": "2024-05-01T12:00:00Z"
+    }
+  ]
+}

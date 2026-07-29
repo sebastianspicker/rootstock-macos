@@ -1,0 +1,13 @@
+id: sample.music_library_path
+title: Music / media library path residual surface present
+severity: high
+description: Music library path markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1119
+match:
+  event_type: music.library
+  field_contains:
+    muslib.risk_tags: "music_surface"
+fixture: music_library_path.jsonl

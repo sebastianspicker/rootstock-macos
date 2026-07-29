@@ -1,67 +1,94 @@
 # Frontend and report interface
 
-Rootstock's frontend is a local forensic workstation, not a hosted dashboard.
-The live viewer at `/` and generated `*-viewer.html` files share the same vanilla
-HTML, CSS, and JavaScript interaction model. Generated viewers remain single-file
-and dependency-free at runtime.
+Rootstock's frontend is a local analysis interface, not a hosted dashboard. The
+live viewer at `/` and rendered `*-viewer.html` files use the same HTML, CSS,
+and JavaScript interaction model. Offline viewers are single files with no
+runtime asset dependency.
 
-The maintained source is split across `graph/viewer_template.html`,
-`graph/viewer.css`, and `graph/viewer.js`. `graph/viewer.py` inlines those assets
-for offline viewers, while `graph/server.py` assembles the same source for the
-authenticated live route. There is no frontend runtime framework or external
-asset request.
+The maintained source is `graph/viewer_template.html`, modular styles in
+`graph/viewer-css/` (assembled to `graph/viewer.css`), and the typed files in
+`graph/viewer-src/`. `npm run bundle` assembles CSS and writes
+`graph/viewer.bundle.js`. Both `graph/viewer.py` and `graph/server.py` use the
+same renderer.
 
-## Supported workflows
+The live visual system is Graphite Laboratory: quiet forensic chrome, path-first
+stage, and a title-first evidence dossier. Author styles in `graph/viewer-css/`
+and rebuild with `npm run bundle:css` rather than editing assembled
+`graph/viewer.css` by hand.
 
-- Connect with the API token held only in `sessionStorage`.
-- Search and filter the graph, select a node from Canvas or the synchronized list,
-  inspect properties and relationships, and construct an ordered path.
-- Run categorized saved queries or read-only custom Cypher, review ordered results,
-  and highlight mapped nodes.
+## Implemented workflows
+
+- Store the API token only in `sessionStorage` and connect to the local API.
+- Search and filter the graph, select nodes from the canvas or semantic list,
+  inspect relationships, and construct an ordered path.
+- Run saved queries or read-only custom Cypher and inspect tabular results.
 - Mark owned nodes, classify tiers, refresh data, and export a PNG.
-- Read and print semantic graph and CVE reports on desktop or narrow screens.
+- Read and print graph and CVE reports at desktop and narrow widths.
 
 ## Storage and privacy
 
-The API token is session-only. The theme preference is stored as
-`rootstock.theme`. Custom Cypher history is local to the browser and can be
-cleared from the Queries view. Rootstock has no frontend telemetry. Generated
-reports, viewers, scan data, tokens, browser history, and screenshots containing
-real evidence must not be committed.
+The API token is session-only. Theme preference and custom query history are
+browser-local. Query history can be cleared from the interface. The frontend
+contains no telemetry.
 
-Release screenshots are generated from the synthetic examples and reviewed for
-hostnames, usernames, paths, and metadata before publication. Routine browser
-captures remain ignored local test artifacts.
+Reports, viewers, real scan data, tokens, query history, and images
+containing real evidence are confidential artifacts. They must not be
+committed.
+
+Public release images use the seven-node synthetic fixture in
+`scripts/release-screenshot-fixture.mjs`. The script
+`scripts/capture-release-screenshots.mjs` mounts the maintained viewer assets
+with that fixture and captures four states directly in Playwright. These images
+verify production rendering and local interactions with synthetic data; they
+do not verify live Neo4j or authenticated API behavior.
 
 ## Accessibility and responsive behavior
 
-The target is WCAG 2.2 AA. Canvas is a two-dimensional exception, but equivalent
-node selection, inspection, and path operations are available in semantic DOM.
-At widths below 768px and at high zoom, the list and detail drawer become the
-primary interface. Reports reflow to 320 CSS pixels; wide tables use labelled
-horizontal wrappers and retain semantic headers.
+The design target is WCAG 2.2 AA. The graph canvas is a two-dimensional
+exception, but node selection, inspection, and path operations also have
+semantic DOM controls. At widths below 768 pixels and at high zoom, the list
+and details surface becomes the primary interface. Reports reflow to 320 CSS
+pixels, while wide tables retain semantic headers and labelled scrolling.
 
-Keyboard support includes Tab/Shift+Tab, Enter and Space on controls, Escape to
-close transient surfaces or cancel path mode, and Cmd/Ctrl+Enter to run Cypher.
-Reduced-motion preferences disable nonessential transitions.
+Keyboard behavior includes Tab and Shift+Tab navigation, Enter and Space on
+controls, Escape for transient surfaces and path mode, and Cmd+Enter or
+Ctrl+Enter to run Cypher. Reduced-motion preference disables nonessential
+transitions.
 
 ## Browser and release verification
 
-The release target covers current and previous Safari, Chrome, and Firefox on
-supported macOS, plus current iOS Safari and Android Chrome for reports. The
-checked-in Playwright lane currently exercises installed Google Chrome at desktop,
-compact, and 320-pixel widths, with axe checks for static and mocked-live states.
-The broader browser matrix and VoiceOver workflow remain manual release checks.
-A live authenticated Neo4j fixture is required before claiming end-to-end graph
-runtime completion; otherwise report the result as locally clean but partially
-verified.
+The automated lane uses Playwright's revision-pinned Chromium at desktop,
+compact, and 320-pixel widths. It includes axe checks for static and mocked-live
+states. Safari, Firefox, mobile browsers, and VoiceOver are not part of the
+automated matrix for this alpha and require separate manual checks.
 
-Install the approved dev-only browser dependencies with `npm install`, then run
-the static and mocked-live browser lane with `npm run test:browser`. The default
-configuration uses the installed Google Chrome channel and does not add a
-frontend runtime dependency. `node_modules/`, Playwright reports, traces, HAR
-files, and test screenshots are local artifacts ignored by git.
+A live authenticated Neo4j fixture is required before claiming end-to-end API
+and graph runtime verification. Static and mocked browser tests do not provide
+that evidence.
 
-The interaction performance contract is 10,000 nodes and 50,000 edges, with idle
-rendering stopped, hit-testing p95 below 16ms, and filter/search p95 below 100ms on
-the recorded reference environment.
+Install the locked development dependencies and run the frontend checks:
+
+```bash
+npm ci --no-audit --no-fund --ignore-scripts
+npx --no-install playwright install chromium
+npm run typecheck
+npm run bundle
+npm run test:viewer:unit
+npm run test:viewer:bundle
+npm run test:viewer:performance
+npm run test:browser
+npm run screenshots:release
+```
+
+If the pinned Playwright browser cannot be installed but a compatible local
+Chromium executable is already present, set `ROOTSTOCK_BROWSER_PATH` to that
+executable for `npm run test:browser` and `npm run screenshots:release`. Record
+that substitution in validation results.
+
+`node_modules/`, Playwright reports, traces, HAR files, and routine test images
+are local artifacts ignored by Git.
+
+The performance contract uses a synthetic graph with 10,000 nodes and 50,000
+edges. It requires stopped idle rendering, hit-testing p95 below 16 ms, and
+filter/search p95 below 100 ms on the recorded environment. Results from one
+host are not a general browser performance claim.

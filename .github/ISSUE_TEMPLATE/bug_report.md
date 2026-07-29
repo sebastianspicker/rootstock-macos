@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in Rootstock
+about: Report a reproducible issue in a Rootstock component
 title: "[bug] "
 labels: bug
 ---
@@ -10,14 +10,12 @@ labels: bug
 - macOS version:
 - Rootstock version or commit:
 - Elevation level: user / root / Full Disk Access
-- Affected area: collector / graph pipeline / cve-scan / docs / CI
+- Affected component: Core collector / Core graph or viewer / cve-scan /
+  Rootstock Red / Rootstock Blue / RootstockMacFacts / docs or CI
 
 ## Description
 
 Describe the bug clearly.
-
-Scope note: remediation should target active source and docs, not private,
-archive, deprecated, or generated artifact folders.
 
 ## Steps to Reproduce
 
@@ -43,6 +41,7 @@ infrastructure details from a real environment.
 - [ ] Collector command:
 - [ ] Graph command:
 - [ ] cve-scan command:
+- [ ] Rootstock Red or Blue command:
 - [ ] Relevant test or validation command:
 
 ## Additional Context

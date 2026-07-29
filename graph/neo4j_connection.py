@@ -1,5 +1,5 @@
 """
-neo4j_connection.py — Shared Neo4j connection helpers for Rootstock CLIs.
+neo4j_connection.py - Shared Neo4j connection helpers for Rootstock CLIs.
 
 Provides unified argparse arguments, driver creation, and error handling
 used by import_scan.py, infer.py, report.py, and query_runner.py.
@@ -20,14 +20,14 @@ try:
     from neo4j.exceptions import ServiceUnavailable, AuthError
 except ImportError:
     print(
-        "ERROR: neo4j driver not installed. Run: pip3 install -r graph/requirements.txt",
+        "ERROR: neo4j driver not installed. Run: uv sync --project graph --extra dev",
         file=sys.stderr,
     )
     sys.exit(1)
 
 if importlib.util.find_spec("pydantic") is None:
     print(
-        "ERROR: pydantic not installed. Run: pip3 install -r graph/requirements.txt",
+        "ERROR: pydantic not installed. Run: uv sync --project graph --extra dev",
         file=sys.stderr,
     )
     sys.exit(1)

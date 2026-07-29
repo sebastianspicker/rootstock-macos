@@ -1,5 +1,5 @@
 """
-version_matcher.py — Version-aware vulnerability matching for Rootstock.
+version_matcher.py - Version-aware vulnerability matching for Rootstock.
 
 Parses Apple-style version strings ("macOS 14.6 and earlier") and semver-like
 application versions ("127.0.6533.72"), then determines whether a given
@@ -102,7 +102,7 @@ def _compare_versions(a: tuple[int, ...], b: tuple[int, ...]) -> int:
 
 
 def version_lte(version, ceiling) -> bool:
-    """Return True if *version* <= *ceiling*.
+    """Return True if version <= ceiling.
 
     Accepts either raw strings or pre-parsed tuples.
     """
@@ -112,7 +112,7 @@ def version_lte(version, ceiling) -> bool:
 
 
 def version_lt(version: str, ceiling: str) -> bool:
-    """Return True if *version* < *ceiling*."""
+    """Return True if version < ceiling."""
     return _compare_versions(parse_version_tuple(version), parse_version_tuple(ceiling)) < 0
 
 
@@ -211,7 +211,7 @@ def is_affected(
     patched_version:
         The CVE's patched_version field, or None.
     is_macos_cve:
-        If True, this is a macOS-level CVE — match against macos_version
+        If True, this is a macOS-level CVE - match against macos_version
         instead of app_version.
     macos_version:
         The macOS version of the scanned host (from Computer node).

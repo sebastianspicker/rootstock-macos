@@ -9,10 +9,12 @@ import Models
 /// Password item classes are intentionally not queried so password-bearing
 /// items cannot transit collector memory.
 struct KeychainScanner {
-    static let scannedItemClasses: [(secClass: CFString, kind: KeychainItem.Kind)] = [
-        (kSecClassCertificate, .certificate),
-        (kSecClassKey, .key),
-    ]
+    static var scannedItemClasses: [(secClass: CFString, kind: KeychainItem.Kind)] {
+        [
+            (kSecClassCertificate, .certificate),
+            (kSecClassKey, .key),
+        ]
+    }
 
     func scan() -> (items: [KeychainItem], errors: [String]) {
         var items: [KeychainItem] = []
@@ -72,7 +74,7 @@ struct KeychainScanner {
 
     private func describeError(kind: KeychainItem.Kind, status: OSStatus) -> String {
         if status == errSecInteractionNotAllowed {
-            return "Keychain locked — \(kind.rawValue) items skipped (unlock screen and retry)"
+            return "Keychain locked - \(kind.rawValue) items skipped (unlock screen and retry)"
         }
         return "SecItemCopyMatching(\(kind.rawValue)): OSStatus \(status)"
     }

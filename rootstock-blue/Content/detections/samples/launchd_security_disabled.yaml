@@ -1,0 +1,12 @@
+id: sample.launchd_security_disabled
+title: Security product launchd job disabled
+severity: critical
+description: launchd disabled override targets a security/IR agent (T1562.001).
+attack_techniques:
+  - T1562.001
+match:
+  event_type: defense.launchd_override
+  field_equals:
+    defense.disabled: "true"
+    defense.security_product_hint: "true"
+fixture: launchd_security_disabled.jsonl

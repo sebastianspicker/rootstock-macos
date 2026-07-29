@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/Users/alice/Library/Calendars",
+      "name": "suspicious-invite",
+      "risk_tags": "automation_surface,calendar_path,remote_adjacent",
+      "user": "alice",
+      "timestamp": "2026-06-01T12:00:00Z",
+      "notes": "Calendar/Reminders automation markers \u2014 never reads event contents or creates malicious calendar invites"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 // Purpose: Apps with more TCC permissions than typical (> $min_permissions distinct services)
 // Category: Blue Team
 // Severity: High
-// Parameters: $min_permissions (default: 3) — minimum number of TCC services to flag
+// Parameters: $min_permissions (default: 3) - minimum number of TCC services to flag
 // Prerequisites: import_scan.py must have run
 //
 // Use case: Identify applications that have accumulated excessive TCC permissions

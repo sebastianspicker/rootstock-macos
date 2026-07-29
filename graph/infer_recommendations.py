@@ -1,5 +1,5 @@
 """
-infer_recommendations.py — Create graph-native Recommendation nodes with edges.
+infer_recommendations.py - Create graph-native Recommendation nodes with edges.
 
 Creates (:Recommendation) nodes and links them to Application nodes via
 (:Application)-[:HAS_RECOMMENDATION]->(:Recommendation) edges based on
@@ -65,7 +65,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "audit_fda_grants",
         "injectable_fda",
-        "Audit all applications with Full Disk Access — revoke unnecessary grants.",
+        "Audit all applications with Full Disk Access - revoke unnecessary grants.",
         "critical",
         (),
         RISK_CATEGORY_PREDICATES["injectable_fda"],
@@ -89,7 +89,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "audit_apple_events",
         "apple_events",
-        "Audit Apple Event automation grants — revoke kTCCServiceAppleEvents from low-trust apps.",
+        "Audit Apple Event automation grants - revoke kTCCServiceAppleEvents from low-trust apps.",
         "high",
         ("T1059.002",),
         RISK_CATEGORY_PREDICATES["apple_events"],
@@ -116,7 +116,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "audit_shell_hooks",
         "shell_hooks",
-        "Audit writable shell configuration files — restrict write access to owning user.",
+        "Audit writable shell configuration files - restrict write access to owning user.",
         "high",
         ("T1546.004",),
         """size(app.injection_methods) > 0
@@ -125,7 +125,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "harden_esf_clients",
         "esf_bypass",
-        "Harden injectable apps with ESF entitlements — these can blind EDR monitoring.",
+        "Harden injectable apps with ESF entitlements - these can blind EDR monitoring.",
         "critical",
         ("T1014", "T1562.001"),
         RISK_CATEGORY_PREDICATES["esf_bypass"],
@@ -133,7 +133,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "patch_sandbox_escapes",
         "sandbox_escape",
-        "Prioritise patching sandbox escape CVEs — sandbox escapes enable full system access.",
+        "Prioritise patching sandbox escape CVEs - sandbox escapes enable full system access.",
         "critical",
         ("T1612",),
         RISK_CATEGORY_PREDICATES["sandbox_escape"],
@@ -160,7 +160,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "audit_file_acls",
         "file_acl_escalation",
-        "Audit file ACLs on security-critical files — remove non-root write ACEs.",
+        "Audit file ACLs on security-critical files - remove non-root write ACEs.",
         "high",
         ("T1098",),
         RISK_CATEGORY_PREDICATES["file_acl_escalation"],
@@ -168,7 +168,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
     RecommendationRule(
         "audit_sudoers",
         "authorization_hardening",
-        "Audit sudoers NOPASSWD entries — remove unnecessary passwordless sudo rules.",
+        "Audit sudoers NOPASSWD entries - remove unnecessary passwordless sudo rules.",
         "medium",
         ("T1548.003",),
         """EXISTS {

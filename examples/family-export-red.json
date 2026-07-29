@@ -1,0 +1,1010 @@
+{
+  "schema_version": 1,
+  "source": "rootstock-red",
+  "generated_at": "2026-07-16T12:00:00Z",
+  "scope_name": "synthetic-red-assess",
+  "scan_profile": "standard",
+  "node_types": [
+    "Finding",
+    "Host",
+    "LaunchItem",
+    "Protection"
+  ],
+  "edge_types": [
+    "HAS_FINDING",
+    "HAS_LAUNCH_ITEM",
+    "HAS_PROTECTION"
+  ],
+  "edge_vocabulary": [
+    "HAS_FINDING",
+    "HAS_LAUNCH_ITEM",
+    "HAS_PROTECTION"
+  ],
+  "nodes": [
+    {
+      "id": "Host:synthetic-macbook",
+      "type": "Host",
+      "name": "synthetic-macbook",
+      "hostname": "synthetic-macbook",
+      "os_version": "15.0"
+    },
+    {
+      "id": "Finding:rootstock.check.tcc.preflight_summary",
+      "type": "Finding",
+      "name": "TCC preflight summary",
+      "finding_id": "rootstock.check.tcc.preflight_summary",
+      "severity": "info",
+      "category": "tcc",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.tcc.fda_permission_pivot",
+      "type": "Finding",
+      "name": "FDA permission pivot surface",
+      "finding_id": "rootstock.vector.tcc.fda_permission_pivot",
+      "severity": "high",
+      "category": "tcc",
+      "confidence": "medium"
+    },
+    {
+      "id": "Protection:sip",
+      "type": "Protection",
+      "name": "SIP",
+      "enabled": "true"
+    },
+    {
+      "id": "LaunchItem:com.example.agent",
+      "type": "LaunchItem",
+      "name": "com.example.agent",
+      "label": "com.example.agent",
+      "path": "/Users/demo/Library/LaunchAgents/com.example.agent.plist",
+      "program": "/usr/bin/true"
+    },
+    {
+      "id": "Finding:rootstock.vector.delivery.url_scheme_handler",
+      "type": "Finding",
+      "name": "URL scheme / document-handler delivery surface",
+      "finding_id": "rootstock.vector.delivery.url_scheme_handler",
+      "severity": "medium",
+      "category": "delivery",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.defense.launchd_override_depth",
+      "type": "Finding",
+      "name": "Launchd override depth surface",
+      "finding_id": "rootstock.vector.defense.launchd_override_depth",
+      "severity": "high",
+      "category": "defense",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.browser_extension_dualuse",
+      "type": "Finding",
+      "name": "Browser extension dual-use plane",
+      "finding_id": "rootstock.vector.persist.browser_extension_dualuse",
+      "severity": "medium",
+      "category": "persist",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.automation.shortcuts_app_intents",
+      "type": "Finding",
+      "name": "Shortcuts / App Intents automation surface",
+      "finding_id": "rootstock.vector.automation.shortcuts_app_intents",
+      "severity": "medium",
+      "category": "automation",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.check.vuln.wave11_multi_plane_cluster.multi_plane",
+      "type": "Finding",
+      "name": "Wave-11 multi-plane compound",
+      "finding_id": "rootstock.check.vuln.wave11_multi_plane_cluster.multi_plane",
+      "severity": "medium",
+      "category": "misconfig",
+      "confidence": "low"
+    },
+    {
+      "id": "Finding:rootstock.vector.delivery.webloc_inetloc",
+      "type": "Finding",
+      "name": "Webloc / Internet Location file delivery",
+      "finding_id": "rootstock.vector.delivery.webloc_inetloc",
+      "severity": "medium",
+      "category": "webloc",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.mail_rules_automation",
+      "type": "Finding",
+      "name": "Mail rules / Apple Mail automation persistence",
+      "finding_id": "rootstock.vector.persist.mail_rules_automation",
+      "severity": "medium",
+      "category": "mail",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.esf.unified_log_observation",
+      "type": "Finding",
+      "name": "Unified log / logarchive observation depth",
+      "finding_id": "rootstock.vector.esf.unified_log_observation",
+      "severity": "medium",
+      "category": "unified_log",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.dock_persistence_surface",
+      "type": "Finding",
+      "name": "Dock persistent apps / recent items dual-use",
+      "finding_id": "rootstock.vector.persist.dock_persistence_surface",
+      "severity": "medium",
+      "category": "dock",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.delivery.osascript_scpt",
+      "type": "Finding",
+      "name": "Compiled AppleScript / OSA delivery residual",
+      "finding_id": "rootstock.vector.delivery.osascript_scpt",
+      "severity": "medium",
+      "category": "osascript",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.share_mount_surface",
+      "type": "Finding",
+      "name": "Network share / SMB mount dual-use lateral",
+      "finding_id": "rootstock.vector.network.share_mount_surface",
+      "severity": "medium",
+      "category": "smb",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.check.vuln.wave12_multi_plane_cluster.multi_plane",
+      "type": "Finding",
+      "name": "Wave-12 multi-plane compound",
+      "finding_id": "rootstock.check.vuln.wave12_multi_plane_cluster.multi_plane",
+      "severity": "medium",
+      "category": "misconfig",
+      "confidence": "low"
+    },
+    {
+      "id": "Finding:rootstock.vector.automation.calendar_reminders",
+      "type": "Finding",
+      "name": "Calendar / Reminders automation lateral surface",
+      "finding_id": "rootstock.vector.automation.calendar_reminders",
+      "severity": "medium",
+      "category": "calendar",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.codesign.gk_assessment_history",
+      "type": "Finding",
+      "name": "Gatekeeper assessment / syspolicyd history depth",
+      "finding_id": "rootstock.vector.codesign.gk_assessment_history",
+      "severity": "medium",
+      "category": "gatekeeper",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.dev.homebrew_package_dualuse",
+      "type": "Finding",
+      "name": "Homebrew / third-party package manager dual-use",
+      "finding_id": "rootstock.vector.dev.homebrew_package_dualuse",
+      "severity": "medium",
+      "category": "homebrew",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.cups_print_dualuse",
+      "type": "Finding",
+      "name": "CUPS / printer dual-use residual surface",
+      "finding_id": "rootstock.vector.network.cups_print_dualuse",
+      "severity": "medium",
+      "category": "cups",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.screencapture_privacy",
+      "type": "Finding",
+      "name": "ScreenCapture / screenshot privacy dual-use depth",
+      "finding_id": "rootstock.vector.data.screencapture_privacy",
+      "severity": "medium",
+      "category": "screencapture",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.check.vuln.wave13_multi_plane_cluster.multi_plane",
+      "type": "Finding",
+      "name": "Wave-13 multi-plane compound",
+      "finding_id": "rootstock.check.vuln.wave13_multi_plane_cluster.multi_plane",
+      "severity": "medium",
+      "category": "misconfig",
+      "confidence": "low"
+    },
+    {
+      "id": "Finding:rootstock.vector.delivery.automator_workflow",
+      "type": "Finding",
+      "name": "Automator workflow delivery residual",
+      "finding_id": "rootstock.vector.delivery.automator_workflow",
+      "severity": "medium",
+      "category": "automator",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.icloud_drive_path",
+      "type": "Finding",
+      "name": "iCloud Drive / Mobile Documents path plane",
+      "finding_id": "rootstock.vector.data.icloud_drive_path",
+      "severity": "medium",
+      "category": "icloud",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.bluetooth_continuity_depth",
+      "type": "Finding",
+      "name": "Bluetooth / Continuity proximity residual depth",
+      "finding_id": "rootstock.vector.network.bluetooth_continuity_depth",
+      "severity": "medium",
+      "category": "bluetooth",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.delivery.font_validation_dualuse",
+      "type": "Finding",
+      "name": "Font validation / ATS dual-use surface",
+      "finding_id": "rootstock.vector.delivery.font_validation_dualuse",
+      "severity": "medium",
+      "category": "font",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.quicklook_cache_depth",
+      "type": "Finding",
+      "name": "QuickLook thumbnail cache residual depth",
+      "finding_id": "rootstock.vector.data.quicklook_cache_depth",
+      "severity": "medium",
+      "category": "quicklook",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.dns_resolver_dualuse",
+      "type": "Finding",
+      "name": "DNS resolver / mDNSResponder dual-use surface",
+      "finding_id": "rootstock.vector.network.dns_resolver_dualuse",
+      "severity": "medium",
+      "category": "dns",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.codesign.ls_quarantine_db_depth",
+      "type": "Finding",
+      "name": "LaunchServices QuarantineEvents DB residual depth",
+      "finding_id": "rootstock.vector.codesign.ls_quarantine_db_depth",
+      "severity": "medium",
+      "category": "quarantine",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.auth.pam_auth_module",
+      "type": "Finding",
+      "name": "PAM authentication module residual surface",
+      "finding_id": "rootstock.vector.auth.pam_auth_module",
+      "severity": "medium",
+      "category": "pam",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.cron_at_job_depth",
+      "type": "Finding",
+      "name": "Cron / at job dual-use residual depth",
+      "finding_id": "rootstock.vector.persist.cron_at_job_depth",
+      "severity": "medium",
+      "category": "cron",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.notes_metadata_plane",
+      "type": "Finding",
+      "name": "Notes.app metadata collection path plane",
+      "finding_id": "rootstock.vector.data.notes_metadata_plane",
+      "severity": "medium",
+      "category": "notes",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.check.vuln.wave14_multi_plane_cluster.multi_plane",
+      "type": "Finding",
+      "name": "Wave-14 multi-plane compound",
+      "finding_id": "rootstock.check.vuln.wave14_multi_plane_cluster.multi_plane",
+      "severity": "medium",
+      "category": "misconfig",
+      "confidence": "low"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.photos_library_path",
+      "type": "Finding",
+      "name": "Photos.app library collection path plane",
+      "finding_id": "rootstock.vector.data.photos_library_path",
+      "severity": "medium",
+      "category": "photos",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.vpn_config_dualuse",
+      "type": "Finding",
+      "name": "VPN configuration dual-use residual surface",
+      "finding_id": "rootstock.vector.network.vpn_config_dualuse",
+      "severity": "medium",
+      "category": "vpn",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.sandbox.sandbox_container_depth",
+      "type": "Finding",
+      "name": "App sandbox container residual depth",
+      "finding_id": "rootstock.vector.sandbox.sandbox_container_depth",
+      "severity": "medium",
+      "category": "sandbox",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.inject.xpc_mach_service_depth",
+      "type": "Finding",
+      "name": "XPC Mach service residual depth",
+      "finding_id": "rootstock.vector.inject.xpc_mach_service_depth",
+      "severity": "medium",
+      "category": "xpc",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.tm_local_snapshot_depth",
+      "type": "Finding",
+      "name": "Time Machine local snapshot residual depth",
+      "finding_id": "rootstock.vector.data.tm_local_snapshot_depth",
+      "severity": "medium",
+      "category": "timemachine",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.emond_legacy_depth",
+      "type": "Finding",
+      "name": "Emond legacy rules residual depth",
+      "finding_id": "rootstock.vector.persist.emond_legacy_depth",
+      "severity": "medium",
+      "category": "emond",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.screen_sharing_ard_depth",
+      "type": "Finding",
+      "name": "Screen Sharing / ARD residual depth",
+      "finding_id": "rootstock.vector.network.screen_sharing_ard_depth",
+      "severity": "medium",
+      "category": "screensharing",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.keychain_acl_path",
+      "type": "Finding",
+      "name": "Keychain ACL path residual surface",
+      "finding_id": "rootstock.vector.data.keychain_acl_path",
+      "severity": "medium",
+      "category": "keychain",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.lool.python_runtime_dualuse",
+      "type": "Finding",
+      "name": "Python runtime dual-use residual surface",
+      "finding_id": "rootstock.vector.lool.python_runtime_dualuse",
+      "severity": "medium",
+      "category": "python",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.shell_plugin_manager",
+      "type": "Finding",
+      "name": "Shell plugin manager dual-use residual",
+      "finding_id": "rootstock.vector.persist.shell_plugin_manager",
+      "severity": "medium",
+      "category": "shell",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.check.vuln.wave15_multi_plane_cluster.multi_plane",
+      "type": "Finding",
+      "name": "Wave-15 multi-plane compound",
+      "finding_id": "rootstock.check.vuln.wave15_multi_plane_cluster.multi_plane",
+      "severity": "medium",
+      "category": "misconfig",
+      "confidence": "low"
+    },
+    {
+      "id": "Finding:rootstock.vector.network.airplay_receiver_surface",
+      "type": "Finding",
+      "name": "AirPlay receiver dual-use residual",
+      "finding_id": "rootstock.vector.network.airplay_receiver_surface",
+      "severity": "medium",
+      "category": "airplay",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.handoff_clipboard_depth",
+      "type": "Finding",
+      "name": "Handoff / Universal Clipboard residual depth",
+      "finding_id": "rootstock.vector.data.handoff_clipboard_depth",
+      "severity": "medium",
+      "category": "handoff",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.imessage_path_plane",
+      "type": "Finding",
+      "name": "iMessage / Messages path collection plane",
+      "finding_id": "rootstock.vector.data.imessage_path_plane",
+      "severity": "medium",
+      "category": "imessage",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.facetime_camera_surface",
+      "type": "Finding",
+      "name": "FaceTime / camera pipeline dual-use surface",
+      "finding_id": "rootstock.vector.data.facetime_camera_surface",
+      "severity": "medium",
+      "category": "facetime",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.finder_sync_extension",
+      "type": "Finding",
+      "name": "Finder Sync extension dual-use surface",
+      "finding_id": "rootstock.vector.persist.finder_sync_extension",
+      "severity": "medium",
+      "category": "finder",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.fileprovider_domain",
+      "type": "Finding",
+      "name": "File Provider domain residual surface",
+      "finding_id": "rootstock.vector.data.fileprovider_domain",
+      "severity": "medium",
+      "category": "fileprovider",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.notification_center_depth",
+      "type": "Finding",
+      "name": "Notification Center residual depth",
+      "finding_id": "rootstock.vector.data.notification_center_depth",
+      "severity": "medium",
+      "category": "notification",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.siri_suggestions_plane",
+      "type": "Finding",
+      "name": "Siri / Suggestions data-access residual",
+      "finding_id": "rootstock.vector.data.siri_suggestions_plane",
+      "severity": "medium",
+      "category": "siri",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.spotlight_importer_depth",
+      "type": "Finding",
+      "name": "Spotlight importer residual depth",
+      "finding_id": "rootstock.vector.data.spotlight_importer_depth",
+      "severity": "medium",
+      "category": "spotlight",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.contacts_path_plane",
+      "type": "Finding",
+      "name": "Contacts database path residual plane",
+      "finding_id": "rootstock.vector.data.contacts_path_plane",
+      "severity": "medium",
+      "category": "contacts",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.calendar_server_path",
+      "type": "Finding",
+      "name": "Calendar server / CalDAV residual surface",
+      "finding_id": "rootstock.vector.data.calendar_server_path",
+      "severity": "medium",
+      "category": "calendar",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.reminders_cloud_path",
+      "type": "Finding",
+      "name": "Reminders cloud path residual plane",
+      "finding_id": "rootstock.vector.data.reminders_cloud_path",
+      "severity": "medium",
+      "category": "reminders",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.maps_location_path",
+      "type": "Finding",
+      "name": "Maps / location services residual plane",
+      "finding_id": "rootstock.vector.data.maps_location_path",
+      "severity": "medium",
+      "category": "maps",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.weather_widget_path",
+      "type": "Finding",
+      "name": "Weather / widget data residual plane",
+      "finding_id": "rootstock.vector.data.weather_widget_path",
+      "severity": "medium",
+      "category": "weather",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.music_library_path",
+      "type": "Finding",
+      "name": "Music / media library path residual",
+      "finding_id": "rootstock.vector.data.music_library_path",
+      "severity": "medium",
+      "category": "music",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.books_path_plane",
+      "type": "Finding",
+      "name": "Books / EPUB path residual plane",
+      "finding_id": "rootstock.vector.data.books_path_plane",
+      "severity": "medium",
+      "category": "books",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.podcasts_path_plane",
+      "type": "Finding",
+      "name": "Podcasts library path residual",
+      "finding_id": "rootstock.vector.data.podcasts_path_plane",
+      "severity": "medium",
+      "category": "podcasts",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.tv_app_path_plane",
+      "type": "Finding",
+      "name": "TV.app residual path plane",
+      "finding_id": "rootstock.vector.data.tv_app_path_plane",
+      "severity": "medium",
+      "category": "tv",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.homekit_path_plane",
+      "type": "Finding",
+      "name": "HomeKit residual path plane",
+      "finding_id": "rootstock.vector.data.homekit_path_plane",
+      "severity": "medium",
+      "category": "homekit",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.health_path_plane",
+      "type": "Finding",
+      "name": "Health app residual path plane",
+      "finding_id": "rootstock.vector.data.health_path_plane",
+      "severity": "medium",
+      "category": "health",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.wallet_pass_path",
+      "type": "Finding",
+      "name": "Wallet / pass residual path plane",
+      "finding_id": "rootstock.vector.data.wallet_pass_path",
+      "severity": "medium",
+      "category": "wallet",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.data.findmy_path_plane",
+      "type": "Finding",
+      "name": "Find My residual path plane",
+      "finding_id": "rootstock.vector.data.findmy_path_plane",
+      "severity": "medium",
+      "category": "findmy",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.automation.shortcuts_icloud_sync",
+      "type": "Finding",
+      "name": "Shortcuts iCloud sync residual depth",
+      "finding_id": "rootstock.vector.automation.shortcuts_icloud_sync",
+      "severity": "medium",
+      "category": "shortcuts",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.mdm.devicemanagement_profile",
+      "type": "Finding",
+      "name": "Device management profile residual depth",
+      "finding_id": "rootstock.vector.mdm.devicemanagement_profile",
+      "severity": "medium",
+      "category": "mdm",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.vector.persist.softwareupdate_catalog",
+      "type": "Finding",
+      "name": "Software Update catalog residual surface",
+      "finding_id": "rootstock.vector.persist.softwareupdate_catalog",
+      "severity": "medium",
+      "category": "softwareupdate",
+      "confidence": "medium"
+    },
+    {
+      "id": "Finding:rootstock.check.vuln.wave16_multi_plane_cluster.multi_plane",
+      "type": "Finding",
+      "name": "Wave-16 multi-plane compound",
+      "finding_id": "rootstock.check.vuln.wave16_multi_plane_cluster.multi_plane",
+      "severity": "medium",
+      "category": "misconfig",
+      "confidence": "low"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.tcc.preflight_summary",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.tcc.fda_permission_pivot",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Protection:sip",
+      "type": "HAS_PROTECTION"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "LaunchItem:com.example.agent",
+      "type": "HAS_LAUNCH_ITEM"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.delivery.url_scheme_handler",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.defense.launchd_override_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.browser_extension_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.automation.shortcuts_app_intents",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.vuln.wave11_multi_plane_cluster.multi_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.delivery.webloc_inetloc",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.mail_rules_automation",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.esf.unified_log_observation",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.dock_persistence_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.delivery.osascript_scpt",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.share_mount_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.vuln.wave12_multi_plane_cluster.multi_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.automation.calendar_reminders",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.codesign.gk_assessment_history",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.dev.homebrew_package_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.cups_print_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.screencapture_privacy",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.vuln.wave13_multi_plane_cluster.multi_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.delivery.automator_workflow",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.icloud_drive_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.bluetooth_continuity_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.delivery.font_validation_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.quicklook_cache_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.dns_resolver_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.codesign.ls_quarantine_db_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.auth.pam_auth_module",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.cron_at_job_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.notes_metadata_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.vuln.wave14_multi_plane_cluster.multi_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.photos_library_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.vpn_config_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.sandbox.sandbox_container_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.inject.xpc_mach_service_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.tm_local_snapshot_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.emond_legacy_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.screen_sharing_ard_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.keychain_acl_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.lool.python_runtime_dualuse",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.shell_plugin_manager",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.vuln.wave15_multi_plane_cluster.multi_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.network.airplay_receiver_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.handoff_clipboard_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.imessage_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.facetime_camera_surface",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.finder_sync_extension",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.fileprovider_domain",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.notification_center_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.siri_suggestions_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.spotlight_importer_depth",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.contacts_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.calendar_server_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.reminders_cloud_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.maps_location_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.weather_widget_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.music_library_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.books_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.podcasts_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.tv_app_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.homekit_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.health_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.wallet_pass_path",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.data.findmy_path_plane",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.automation.shortcuts_icloud_sync",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.mdm.devicemanagement_profile",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.vector.persist.softwareupdate_catalog",
+      "type": "HAS_FINDING"
+    },
+    {
+      "from": "Host:synthetic-macbook",
+      "to": "Finding:rootstock.check.vuln.wave16_multi_plane_cluster.multi_plane",
+      "type": "HAS_FINDING"
+    }
+  ]
+}

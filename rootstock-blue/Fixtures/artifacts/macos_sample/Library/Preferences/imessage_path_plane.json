@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/System/Applications/Messages.app",
+      "name": "imessage",
+      "risk_tags": "imessage_surface,wave16,dual_use",
+      "user": "alice",
+      "timestamp": "2026-08-01T12:00:00Z",
+      "notes": "iMessage path plane markers \u2014 never reads Messages database contents or exports chat transcripts"
+    }
+  ]
+}

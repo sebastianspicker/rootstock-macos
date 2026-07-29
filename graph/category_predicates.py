@@ -107,23 +107,16 @@ SHARED_CATEGORY_PREDICATES: dict[str, str] = {
     """,
 }
 
-RISK_CATEGORY_PREDICATES: dict[str, str] = {
-    "injectable_fda": SHARED_CATEGORY_PREDICATES["injectable_fda"],
-    "dyld_injection": SHARED_CATEGORY_PREDICATES["dyld_injection"],
-    "tcc_bypass": SHARED_CATEGORY_PREDICATES["tcc_bypass"],
+def _category_predicates(overrides: dict[str, str]) -> dict[str, str]:
+    return {**SHARED_CATEGORY_PREDICATES, **overrides}
+
+
+RISK_CATEGORY_PREDICATES: dict[str, str] = _category_predicates({
     "electron_inheritance": """
         EXISTS {
             MATCH ()-[:CHILD_INHERITS_TCC]->(app)
         }
     """,
-    "sip_bypass": SHARED_CATEGORY_PREDICATES["sip_bypass"],
-    "persistence_hijack": SHARED_CATEGORY_PREDICATES["persistence_hijack"],
-    "xpc_exploitation": SHARED_CATEGORY_PREDICATES["xpc_exploitation"],
-    "apple_events": SHARED_CATEGORY_PREDICATES["apple_events"],
-    "accessibility_abuse": SHARED_CATEGORY_PREDICATES["accessibility_abuse"],
-    "kerberos": SHARED_CATEGORY_PREDICATES["kerberos"],
-    "keychain_access": SHARED_CATEGORY_PREDICATES["keychain_access"],
-    "kernel_escalation": SHARED_CATEGORY_PREDICATES["kernel_escalation"],
     "physical_security": """
         false
     """,
@@ -145,30 +138,14 @@ RISK_CATEGORY_PREDICATES: dict[str, str] = {
             MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(t)
         }
     """,
-    "running_processes": SHARED_CATEGORY_PREDICATES["running_processes"],
-    "icloud_risk": SHARED_CATEGORY_PREDICATES["icloud_risk"],
-    "firewall_exposure": SHARED_CATEGORY_PREDICATES["firewall_exposure"],
-    "certificate_hygiene": SHARED_CATEGORY_PREDICATES["certificate_hygiene"],
-    "blastpass_class": SHARED_CATEGORY_PREDICATES["blastpass_class"],
-}
+})
 
-VULNERABILITY_CATEGORY_PREDICATES: dict[str, str] = {
-    "injectable_fda": SHARED_CATEGORY_PREDICATES["injectable_fda"],
-    "dyld_injection": SHARED_CATEGORY_PREDICATES["dyld_injection"],
-    "tcc_bypass": SHARED_CATEGORY_PREDICATES["tcc_bypass"],
+VULNERABILITY_CATEGORY_PREDICATES: dict[str, str] = _category_predicates({
     "electron_inheritance": """
         EXISTS {
             MATCH (app)-[:CHILD_INHERITS_TCC]->()
         }
     """,
-    "sip_bypass": SHARED_CATEGORY_PREDICATES["sip_bypass"],
-    "persistence_hijack": SHARED_CATEGORY_PREDICATES["persistence_hijack"],
-    "xpc_exploitation": SHARED_CATEGORY_PREDICATES["xpc_exploitation"],
-    "apple_events": SHARED_CATEGORY_PREDICATES["apple_events"],
-    "accessibility_abuse": SHARED_CATEGORY_PREDICATES["accessibility_abuse"],
-    "kerberos": SHARED_CATEGORY_PREDICATES["kerberos"],
-    "keychain_access": SHARED_CATEGORY_PREDICATES["keychain_access"],
-    "kernel_escalation": SHARED_CATEGORY_PREDICATES["kernel_escalation"],
     "physical_security": """
         EXISTS {
             MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission)
@@ -194,11 +171,7 @@ VULNERABILITY_CATEGORY_PREDICATES: dict[str, str] = {
             MATCH (app)-[:MDM_OVERGRANT]->()
         }
     """,
-    "running_processes": SHARED_CATEGORY_PREDICATES["running_processes"],
-    "icloud_risk": SHARED_CATEGORY_PREDICATES["icloud_risk"],
-    "blastpass_class": SHARED_CATEGORY_PREDICATES["blastpass_class"],
-    "firewall_exposure": SHARED_CATEGORY_PREDICATES["firewall_exposure"],
-}
+})
 
 DIVERGENT_RISK_AND_VULNERABILITY_CATEGORIES = frozenset(
     {

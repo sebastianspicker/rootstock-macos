@@ -1,0 +1,13 @@
+id: sample.devicemanagement_profile
+title: Device management profile residual depth surface present
+severity: high
+description: Device management profile markers indicate IR surface.
+attack_techniques:
+  - T1484
+  - T1072
+  - T1562
+match:
+  event_type: mdm.profile_depth
+  field_contains:
+    mdmprof.risk_tags: "device_mgmt_surface"
+fixture: devicemanagement_profile.jsonl

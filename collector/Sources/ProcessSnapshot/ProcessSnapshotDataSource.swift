@@ -27,7 +27,7 @@ public struct ProcessSnapshotDataSource: DataSource {
 
     /// Parse `ps axo pid,user,comm` output.
     internal static func parsePsOutput(_ output: String, knownApps: [Application]) -> [RunningProcess] {
-        // Build path → bundleId lookup (only full .app paths — no short names to avoid collisions)
+        // Build path → bundleId lookup (only full .app paths - no short names to avoid collisions)
         var pathToBundle: [String: String] = [:]
         for app in knownApps {
             pathToBundle[app.path] = app.bundleId

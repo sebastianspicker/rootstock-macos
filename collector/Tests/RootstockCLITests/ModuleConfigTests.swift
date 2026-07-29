@@ -38,6 +38,37 @@ final class ModuleConfigTests: XCTestCase {
         )
     }
 
+    func testIndependentModuleRegistryMapsAllSixteenModulesExactlyOnce() {
+        let expected: [RootstockModuleID] = [
+            .tcc,
+            .xpc,
+            .persistence,
+            .keychain,
+            .mdm,
+            .groups,
+            .remoteAccess,
+            .firewall,
+            .loginSessions,
+            .authorizationDB,
+            .authorizationPlugins,
+            .systemExtensions,
+            .sudoers,
+            .fileACLs,
+            .shellHooks,
+            .kerberos,
+        ]
+        let registered = ScanOrchestrator.independentModuleIDs
+
+        XCTAssertEqual(registered, expected)
+        XCTAssertEqual(registered.count, 16)
+        XCTAssertEqual(Set(registered).count, registered.count)
+        XCTAssertEqual(
+            Set(ScanOrchestrator.independentModules.map(\.id)),
+            Set(expected),
+            "Every registered ID must have exactly one collection mapping"
+        )
+    }
+
     func testParsesWhitespaceAndDuplicateModuleNames() throws {
         let config = try ScanOrchestrator.ModuleConfig.from(" tcc, tcc, entitlements ")
 

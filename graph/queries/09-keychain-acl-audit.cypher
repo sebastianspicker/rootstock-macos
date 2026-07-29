@@ -5,12 +5,10 @@
 // Parameters: none
 // Prerequisites: import_scan.py must have run
 //
-// Finds Application nodes that are explicitly listed in a Keychain item's
-// ACL trusted-application list — meaning the app can read that credential
-// without prompting the user.
+// Finds Application nodes explicitly listed in Keychain ACL metadata.
 //
-// High-value finding: an attacker who compromises or injects into an app
-// with CAN_READ_KEYCHAIN gains silent access to those stored credentials.
+// Validate the live item ACL, process identity, and user interaction behavior
+// before concluding that a stored item can be read.
 //
 // Usage:
 //   cypher-shell -u neo4j -p "$NEO4J_PASSWORD" < graph/queries/09-keychain-acl-audit.cypher

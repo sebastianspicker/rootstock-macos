@@ -1,0 +1,13 @@
+id: sample.tv_app_path_plane
+title: TV.app residual path plane surface present
+severity: high
+description: TV.app path plane markers indicate IR surface.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1119
+match:
+  event_type: tv.path
+  field_contains:
+    tvpath.risk_tags: "tv_surface"
+fixture: tv_app_path_plane.jsonl

@@ -1,0 +1,13 @@
+id: sample.screen_sharing_ard_depth
+title: Screen Sharing / ARD residual depth surface present
+severity: high
+description: Screen Sharing ARD depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1021
+  - T1219
+  - T1133
+match:
+  event_type: ard.screen_sharing
+  field_contains:
+    ardss.risk_tags: "ard_surface"
+fixture: screen_sharing_ard_depth.jsonl

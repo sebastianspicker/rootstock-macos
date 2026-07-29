@@ -1,16 +1,15 @@
 // Name: MDM-Managed TCC Permissions
-// Purpose: Find TCC grants silently enforced via MDM profiles (user-irrevocable)
+// Purpose: Find TCC grants represented as managed by MDM profiles
 // Category: Blue Team
 // Severity: Informational
 // Parameters: none
 // Prerequisites: import_scan.py must have run
 //
-// Finds TCC permissions that are silently enforced via MDM configuration profiles.
-// MDM grants cannot be revoked by the user and take precedence over manual settings.
+// Finds TCC permissions associated with imported MDM configuration profiles.
+// Validate the effective policy and user controls on the relevant macOS version.
 //
-// High-value finding: injectable applications with MDM-granted TCC permissions
-// are particularly dangerous — an attacker who injects into such an app inherits
-// the silent MDM-granted access without any user prompt.
+// A result that also has modeled injection conditions is a review candidate. It
+// does not establish injection success or permission inheritance.
 //
 // Usage:
 //   cypher-shell -u neo4j -p "$NEO4J_PASSWORD" < graph/queries/10-mdm-managed-tcc.cypher

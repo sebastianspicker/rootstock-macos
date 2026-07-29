@@ -2,9 +2,9 @@ import Foundation
 import Models
 
 /// Classifies raw entitlement keys into `EntitlementInfo` values.
-struct EntitlementClassifier {
+struct EntitlementClassifier: Sendable {
 
-    private enum Category: String {
+    private enum Category: String, Sendable {
         case tcc
         case injection
         case privilege
@@ -22,7 +22,7 @@ struct EntitlementClassifier {
         }
     }
 
-    private struct CategoryRule {
+    private struct CategoryRule: Sendable {
         let category: Category
         let exactMatches: Set<String>
         let prefixes: [String]
@@ -47,7 +47,7 @@ struct EntitlementClassifier {
     }
 
     /// Result of sandbox analysis from entitlements.
-    struct SandboxInfo {
+    struct SandboxInfo: Sendable {
         let isSandboxed: Bool
         let exceptions: [String]
     }

@@ -77,7 +77,7 @@ def test_pipeline_requires_password_before_steps() -> None:
     )
     password_error = _line_index_after(
         source,
-        'echo "ERROR: Set NEO4J_PASSWORD or use --password" >&2',
+        'echo "ERROR: Set NEO4J_PASSWORD" >&2',
         password_check,
     )
     password_exit = _line_index_after(source, "exit 1", password_error)
@@ -124,6 +124,8 @@ def test_pipeline_does_not_pass_password_on_child_argv() -> None:
     checks.assertIn('NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")', source)
     checks.assertFalse(any("NEO4J_PASS" in line for line in python_invocations))
     checks.assertFalse(any("--password" in line for line in python_invocations))
+    checks.assertNotIn("--password PASS", source)
+    checks.assertNotIn("--password)", source)
 
 
 def test_pipeline_generates_report_before_full_completion() -> None:

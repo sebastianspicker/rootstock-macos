@@ -2,18 +2,18 @@
 // Purpose: Visualize all trust relationships between apps (same team, automation, XPC)
 // Category: Forensic
 // Severity: Informational
-// Parameters: $app_name (optional) — filter to a specific app's trust relationships
+// Parameters: $app_name (optional) - filter to a specific app's trust relationships
 // Prerequisites: import_scan.py + infer.py must have run
 //
 // Use case: Understand which apps implicitly trust each other. Trust boundaries
-// define the blast radius of a compromise — if App A trusts App B, compromising
+// define the blast radius of a compromise - if App A trusts App B, compromising
 // either exposes the data accessible by both.
 //
 // Trust types modelled:
-//   SIGNED_BY_SAME_TEAM  — same signing team (code identity trust)
-//   CAN_SEND_APPLE_EVENT — automation trust
-//   COMMUNICATES_WITH    — XPC service trust
-//   CAN_INJECT_INTO      — injection vulnerability (unintended trust)
+//   SIGNED_BY_SAME_TEAM  - same signing team (code identity trust)
+//   CAN_SEND_APPLE_EVENT - automation trust
+//   COMMUNICATES_WITH    - XPC service trust
+//   CAN_INJECT_INTO      - injection vulnerability (unintended trust)
 
 MATCH (a:Application)-[r]->(b)
 WHERE type(r) IN ['SIGNED_BY_SAME_TEAM', 'CAN_SEND_APPLE_EVENT', 'COMMUNICATES_WITH', 'CAN_INJECT_INTO']

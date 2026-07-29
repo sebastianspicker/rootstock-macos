@@ -1,12 +1,12 @@
 """
-infer_finder_fda.py — Infer HAS_TRANSITIVE_FDA relationships.
+infer_finder_fda.py - Infer HAS_TRANSITIVE_FDA relationships.
 
 Apps with an allowed kTCCServiceAppleEvents TCC grant can automate Finder (or
 other Apple Events targets). Because Finder has implicit Full Disk Access, any
 app that can send Apple Events can transitively access files via Finder scripting.
 
-This is an approximation: the TCC database stores the *source* app's automation
-grant but does not always record the *target* app. We flag all apps with an
+This is an approximation: the TCC database stores the source app's automation
+grant but does not always record the target app. We flag all apps with an
 AppleEvents grant as having transitive FDA potential.
 
 Edge: App -[:HAS_TRANSITIVE_FDA {inferred: true, via: 'apple_events'}]-> TCC_Permission(FDA)

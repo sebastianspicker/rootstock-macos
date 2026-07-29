@@ -1,5 +1,5 @@
 """
-viewer_layout.py — Force-directed layout computation for Rootstock graph viewer.
+viewer_layout.py - Force-directed layout computation for Rootstock graph viewer.
 
 Extracted from viewer.py to keep layout logic separate from HTML generation.
 """

@@ -1,0 +1,1461 @@
+# Rootstock family technique catalog
+# SOT for stable cross-product technique IDs. Validate with:
+#   python3 scripts/check-technique-catalog.py
+#
+# status: mapped | red_only | blue_only | graph_only | planned
+# mappings.graph_queries: basenames under graph/queries/
+# mappings.red_findings: rootstock.vector.* / rootstock.check.* string IDs
+# mappings.blue_detections: basenames under rootstock-blue/Content/detections/samples/ (no .yaml)
+
+version: 1
+techniques:
+  - id: rootstock.tech.fda_pivot
+    title: Full Disk Access permission pivot
+    attack_techniques: ["T1068"]
+    surfaces: [tcc, fda]
+    depth_notes: |
+      collector: full TCC.db grants when readable
+      red: listability/FDA heuristics only (no TCC.db content read)
+      blue: offline TCC.db events + detections
+    mappings:
+      graph_queries:
+        - 01-injectable-fda-apps.cypher
+        - 02-shortest-path-to-fda.cypher
+        - 07-tcc-grant-overview.cypher
+      red_findings:
+        - rootstock.vector.tcc.fda_permission_pivot
+        - rootstock.check.tcc.preflight_summary
+      blue_detections:
+        - tcc_fda_grant
+    status: mapped
+
+  - id: rootstock.tech.tcc_inheritance
+    title: Child / third-party TCC inheritance (Electron, automation)
+    attack_techniques: ["T1559"]
+    surfaces: [tcc, electron, automation]
+    depth_notes: |
+      collector+graph: CHILD_INHERITS_TCC / automation inference
+      red: third-party inheritance + automation vectors
+      blue: TCC grants as timeline facts; inheritance is analytical
+    mappings:
+      graph_queries:
+        - 03-electron-tcc-inheritance.cypher
+        - 05-appleevent-tcc-cascade.cypher
+      red_findings:
+        - rootstock.vector.tcc.third_party_inheritance
+        - rootstock.vector.tcc.automation_execution_surface
+      blue_detections:
+        - tcc_camera_access
+    status: mapped
+
+  - id: rootstock.tech.injection_surface
+    title: Injection without hardened runtime / library validation
+    attack_techniques: ["T1055"]
+    surfaces: [codesign, inject, entitlements]
+    depth_notes: |
+      collector: CodeSigning + InjectionAssessment on apps
+      graph: CAN_INJECT_INTO inference
+      red: inject surface vectors/checks
+      blue: offline codesign inventory + unsigned persistence harden
+    mappings:
+      graph_queries:
+        - 06-injection-chain.cypher
+        - 11-multi-hop-injection-chain.cypher
+        - 18-unsigned-or-unhardened-with-grants.cypher
+      red_findings:
+        - rootstock.vector.inject.surface
+        - rootstock.check.codesign.inject_surface
+      blue_detections:
+        - unsigned_persistence_codesign
+    status: mapped
+
+  - id: rootstock.tech.mdm_overgrant
+    title: MDM / PPPC overgrant of privacy permissions
+    attack_techniques: ["T1484"]
+    surfaces: [mdm, tcc, pppc]
+    depth_notes: |
+      collector: MDM profiles + PPPC payloads
+      graph: infer_mdm_overgrant
+      red: MDM gap/channel/profile depth vectors
+      blue: config profile forensic + shell payload detection
+    mappings:
+      graph_queries:
+        - 10-mdm-managed-tcc.cypher
+        - 20-mdm-vs-user-grants.cypher
+        - 39-mdm-overgrant.cypher
+      red_findings:
+        - rootstock.vector.mdm.management_gap
+        - rootstock.check.mdm.profiles
+      blue_detections:
+        - config_profile_shell
+    status: mapped
+
+  - id: rootstock.tech.sudoers_nopasswd
+    title: Sudoers NOPASSWD / weak sudo configuration
+    attack_techniques: ["T1548.003"]
+    surfaces: [sudoers, privesc]
+    depth_notes: |
+      collector: parsed SudoersRule
+      graph: query 36
+      red: sudoers misconfig surface vector
+      blue: sudoers parser + detection
+    mappings:
+      graph_queries:
+        - 36-sudoers-nopasswd.cypher
+      red_findings:
+        - rootstock.vector.privesc.sudoers_misconfig_surface
+      blue_detections:
+        - sudoers_nopasswd
+    status: mapped
+
+  - id: rootstock.tech.auth_plugins
+    title: Non-Apple authorization plugins
+    attack_techniques: ["T1543", "T1556"]
+    surfaces: [auth, plugins]
+    depth_notes: |
+      collector: AuthorizationPlugins data source
+      graph: query 34
+      red: auth rights privilege surface
+      blue: AuthPluginsParser + unknown plugin detection
+    mappings:
+      graph_queries:
+        - 34-non-apple-auth-plugins.cypher
+        - 33-weak-authorization-rights.cypher
+      red_findings:
+        - rootstock.vector.auth.rights_privilege_surface
+      blue_detections:
+        - auth_plugin_unknown
+    status: mapped
+
+  - id: rootstock.tech.unsigned_persistence
+    title: Unsigned or weakly signed persistence binaries
+    attack_techniques: ["T1543.001", "T1543.004"]
+    surfaces: [persistence, codesign]
+    depth_notes: |
+      collector/graph: launch items + signing on apps/helpers
+      red: launchagent/system LD surfaces
+      blue: unsigned_persistence_codesign harden + detections
+    mappings:
+      graph_queries:
+        - 08-persistence-audit.cypher
+        - 29-hijackable-launch-daemons.cypher
+      red_findings:
+        - rootstock.vector.persist.user_writable_launchagents
+        - rootstock.vector.persist.system_launchdaemon_surface
+      blue_detections:
+        - unsigned_persistence_codesign
+        - persistence_launchagent
+    status: mapped
+
+  - id: rootstock.tech.btm_loginitems
+    title: BTM / login items honesty and inventory
+    attack_techniques: ["T1547.015"]
+    surfaces: [persistence, btm]
+    depth_notes: |
+      collector: login items / BTM path awareness in persistence
+      red: opaque BTM store evidence (no full binary parse claim)
+      blue: BTMParser + detections (deepest offline)
+    mappings:
+      graph_queries:
+        - 08-persistence-audit.cypher
+      red_findings:
+        - rootstock.check.persist.btm_loginitems
+        - rootstock.vector.persist.smapp_loginitem_honesty
+      blue_detections:
+        - btm_launch_item
+        - btm_tmp_executable
+        - login_item_tmp
+    status: mapped
+
+  - id: rootstock.tech.user_launchagents
+    title: User LaunchAgents present / writable
+    attack_techniques: ["T1543.001"]
+    surfaces: [persistence, launchd]
+    depth_notes: |
+      All three enumerate LaunchAgents paths with different output models
+    mappings:
+      graph_queries:
+        - 08-persistence-audit.cypher
+      red_findings:
+        - rootstock.check.persist.user_launchagents_present
+        - rootstock.vector.persist.user_writable_launchagents
+      blue_detections:
+        - persistence_launchagent
+        - autostart_run_at_load
+    status: mapped
+
+  - id: rootstock.tech.shell_hooks
+    title: Shell profile / DYLD injection hooks
+    attack_techniques: ["T1546.004"]
+    surfaces: [shell, persistence]
+    depth_notes: |
+      collector: ShellHooks data source
+      graph: shell-hook injection query
+      red: lab shellrc markers; LOL delivery vectors
+      blue: ShellProfilesParser + related detections
+    mappings:
+      graph_queries:
+        - 50-shell-hook-injection.cypher
+      red_findings:
+        - rootstock.vector.lool.execution_chain
+      blue_detections:
+        - folder_action_do_shell
+    status: mapped
+
+  - id: rootstock.tech.keychain_metadata
+    title: Keychain ACL / path surface (metadata only, no secrets)
+    attack_techniques: ["T1555.001"]
+    surfaces: [keychain]
+    depth_notes: |
+      All products refuse secret dump
+      collector: KeychainItem ACLs for graph
+      red: path-only keychain surface vector
+      blue: KeychainMetaParser + anomaly detection
+    mappings:
+      graph_queries:
+        - 09-keychain-acl-audit.cypher
+        - 40-injectable-shared-keychain.cypher
+      red_findings:
+        - rootstock.vector.auth.keychain_path_surface
+        - rootstock.check.auth.cred_paths_present
+      blue_detections:
+        - keychain_metadata_anomaly
+    status: mapped
+
+  - id: rootstock.tech.system_extensions
+    title: Non-Apple system extensions inventory
+    attack_techniques: ["T1543"]
+    surfaces: [system_extensions, edr]
+    depth_notes: |
+      collector: SystemExtension models
+      red: system extensions collector + privileged helper vectors
+      blue: SystemExtensionsParser + unknown extension detection; also includes a source-only ES system-extension target
+    mappings:
+      graph_queries:
+        - 35-non-apple-system-extensions.cypher
+      red_findings:
+        - rootstock.vector.persist.privileged_helper_sygext
+      blue_detections:
+        - system_extension_unknown
+    status: mapped
+
+  - id: rootstock.tech.kerberos_artifacts
+    title: Kerberos / credential cache exposure
+    attack_techniques: ["T1558"]
+    surfaces: [identity, kerberos]
+    depth_notes: |
+      collector+graph: KerberosArtifacts + infer_kerberos + BloodHound interop
+      red: identity posture / cred pivot vectors
+      blue: not first-class offline parsers today
+    mappings:
+      graph_queries:
+        - 73-kerberos-ticket-theft.cypher
+        - 78-weak-kerberos-encryption.cypher
+      red_findings:
+        - rootstock.vector.auth.cred_or_identity_pivot
+        - rootstock.check.identity.posture
+      blue_detections: []
+    status: mapped
+
+  - id: rootstock.tech.quarantine_gatekeeper
+    title: Quarantine / Gatekeeper trust gaps
+    attack_techniques: ["T1553.001"]
+    surfaces: [quarantine, gatekeeper, codesign]
+    depth_notes: |
+      collector: Quarantine data source
+      graph: unquarantined / bypass queries
+      red: quarantine xattr + gatekeeper trust vectors
+      blue: QuarantineParser + GatekeeperHistoryParser + detections
+    mappings:
+      graph_queries:
+        - 88-unquarantined-apps.cypher
+        - 89-quarantine-bypass-with-tcc.cypher
+      red_findings:
+        - rootstock.vector.codesign.quarantine_xattr_surface
+        - rootstock.vector.codesign.gatekeeper_trust_gap
+      blue_detections:
+        - quarantine_remote_download
+        - gatekeeper_override
+    status: mapped
+
+  - id: rootstock.tech.esf_sensor_gap
+    title: Endpoint Security / EDR sensor gap
+    attack_techniques: ["T1562"]
+    surfaces: [esf, edr]
+    depth_notes: |
+      graph: ESF monitoring gap queries
+      red: ESF sensor gap + security product gap vectors
+      blue: live ES kit optional; IR posture for products
+    mappings:
+      graph_queries:
+        - 99-esf-monitoring-gaps.cypher
+        - 55-injectable-esf-client.cypher
+      red_findings:
+        - rootstock.vector.esf.sensor_gap
+        - rootstock.vector.edr.security_product_gap
+        - rootstock.check.vuln.esf_edr_cluster
+      blue_detections:
+        - ir_sip_disabled
+    status: mapped
+
+  # Residual red↔blue pairs (base + red compounds + blue harden/detect)
+  - id: rootstock.tech.packagekit_installer_design
+    title: PackageKit installer design-based persistence posture
+    attack_techniques: ["T1546", "T1059", "T1072"]
+    surfaces: [packagekit, installer, persistence]
+    depth_notes: |
+      red : collect.packagekit_installer_design + base vector + lab plan
+      red : packagekit_receipt_script_compound path-to-impact depth
+      blue : PACKAGEKITDESIGN parser + harden control + detection
+      no graph query required for residual pair gate
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.packagekit_installer_design
+        - rootstock.vector.persist.packagekit_receipt_script_compound
+        - rootstock.check.vuln.wave10_residual_pair_cluster
+      blue_detections:
+        - packagekit_installer_design
+    status: mapped
+
+  - id: rootstock.tech.archive_quarantine_extractor
+    title: Archive / quarantine third-party extractor surface
+    attack_techniques: ["T1204", "T1553.001", "T1036"]
+    surfaces: [archive, quarantine, gatekeeper, extractors]
+    depth_notes: |
+      red : collect.archive_quarantine_extractor + base vector + lab plan
+      red : extractor_quarantine_compound (third-party × GK/quarantine)
+      blue : ARCHIVEEXTRACTOR parser + harden + detection
+      distinct from rootstock.tech.quarantine_gatekeeper (xattr/GK trust only)
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.codesign.archive_quarantine_extractor
+        - rootstock.vector.codesign.extractor_quarantine_compound
+      blue_detections:
+        - archive_quarantine_extractor
+    status: mapped
+
+  - id: rootstock.tech.infostealer_path_plane
+    title: Info-stealer multi-app collection path plane
+    attack_techniques: ["T1555", "T1005", "T1539"]
+    surfaces: [collection, browser, messaging, vault]
+    depth_notes: |
+      red : collect.infostealer_path_plane + base vector + lab plan
+      red : stealer_remote_compound (paths × FDA/remote)
+      blue : INFOSTEALERPATH parser + harden + detection
+      path inventory only - never secret/cookie/keychain dumps
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.infostealer_path_plane
+        - rootstock.vector.data.stealer_remote_compound
+      blue_detections:
+        - infostealer_path_plane
+    status: mapped
+
+  - id: rootstock.tech.tcc_esf_visibility_depth
+    title: TCC / ESF visibility-depth posture
+    attack_techniques: ["T1562.001", "T1083", "T1005"]
+    surfaces: [tcc, esf, visibility]
+    depth_notes: |
+      red : collect.tcc_esf_visibility_depth + base vector + lab plan
+      red : visibility_sensor_compound (thin visibility × sensor gap)
+      blue : TCCESFVISIBILITY parser + harden + detection
+      distinct from rootstock.tech.esf_sensor_gap (client installed vs observe-depth)
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.esf.tcc_visibility_depth
+        - rootstock.vector.esf.visibility_sensor_compound
+      blue_detections:
+        - tcc_esf_visibility_depth
+    status: mapped
+
+  # multi-plane red↔blue pairs (beyond /10 residual set)
+  - id: rootstock.tech.url_scheme_handler
+    title: Custom URL scheme / document-handler delivery surface
+    attack_techniques: ["T1204", "T1546", "T1559"]
+    surfaces: [url_scheme, launch_services, delivery]
+    depth_notes: |
+      red : collect.url_scheme_handler + base + remote compound + lab plan
+      blue : URLSCHEMEHANDLER parser + harden + detection
+      distinct from ClickFix paste-run () - focuses on LS/CFBundleURLTypes handlers
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.delivery.url_scheme_handler
+        - rootstock.vector.delivery.url_scheme_remote_compound
+        - rootstock.check.vuln.wave11_multi_plane_cluster
+      blue_detections:
+        - url_scheme_handler
+    status: mapped
+
+  - id: rootstock.tech.launchd_override_depth
+    title: Launchd disabled / override depth (security-product disable class)
+    attack_techniques: ["T1562.001", "T1489", "T1543.004"]
+    surfaces: [launchd, defense_evasion, edr]
+    depth_notes: |
+      red : collect.launchd_override_depth + base + security-disable compound + lab plan
+      blue : LAUNCHDOVERRIDEDEPTH parser + harden + detection
+      distinct from generic LAUNCHDOVERRIDES inventory - security-product disable depth
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.defense.launchd_override_depth
+        - rootstock.vector.defense.launchd_security_disable_compound
+      blue_detections:
+        - launchd_override_depth
+    status: mapped
+
+  - id: rootstock.tech.browser_extension_dualuse
+    title: Browser extension dual-use persistence / collection plane
+    attack_techniques: ["T1176", "T1555.003", "T1005"]
+    surfaces: [browser, extension, collection, persist]
+    depth_notes: |
+      red : collect.browser_extension_dualuse + base + collection compound + lab plan
+      blue : BROWSEREXTDUALUSE parser + harden + detection
+      path/meta only - never dumps extension secrets or cookies
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.browser_extension_dualuse
+        - rootstock.vector.persist.browser_extension_collection_compound
+      blue_detections:
+        - browser_extension_dualuse
+    status: mapped
+
+  - id: rootstock.tech.shortcuts_app_intents
+    title: Shortcuts / App Intents automation lateral surface
+    attack_techniques: ["T1059", "T1546", "T1559"]
+    surfaces: [shortcuts, app_intents, automation, lateral]
+    depth_notes: |
+      red : collect.shortcuts_app_intents + base + lateral compound + lab plan
+      blue : SHORTCUTSAPPINTENTS parser + harden + detection
+      never runs shortcuts or forges App Intents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.automation.shortcuts_app_intents
+        - rootstock.vector.automation.shortcuts_lateral_compound
+      blue_detections:
+        - shortcuts_app_intents
+    status: mapped
+
+  # multi-plane red↔blue pairs (beyond )
+
+  - id: rootstock.tech.webloc_inetloc_delivery
+    title: Webloc / Internet Location file delivery
+    attack_techniques: ["T1204", "T1566", "T1105"]
+    surfaces: ["webloc", "inetloc", "delivery"]
+    depth_notes: |
+      red : collect.webloc_inetloc_delivery + base vector + compound + lab plan
+      blue : WEBLOCINETLOC parser + harden + detection
+      never crafts phishing webloc/inetloc payloads or rewrites Internet Location files
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.delivery.webloc_inetloc
+        - rootstock.vector.delivery.webloc_remote_compound
+        - rootstock.check.vuln.wave12_multi_plane_cluster
+      blue_detections:
+        - webloc_inetloc_delivery
+    status: mapped
+
+  - id: rootstock.tech.mail_rules_automation
+    title: Mail rules / Apple Mail automation persistence
+    attack_techniques: ["T1114", "T1059", "T1546"]
+    surfaces: ["mail", "rules", "automation", "persist"]
+    depth_notes: |
+      red : collect.mail_rules_automation + base vector + compound + lab plan
+      blue : MAILRULESAUTO parser + harden + detection
+      never reads Mail contents or modifies user Mail rules
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.mail_rules_automation
+        - rootstock.vector.persist.mail_rules_script_compound
+        - rootstock.check.vuln.wave12_multi_plane_cluster
+      blue_detections:
+        - mail_rules_automation
+    status: mapped
+
+  - id: rootstock.tech.unified_log_observation
+    title: Unified log / logarchive observation depth
+    attack_techniques: ["T1083", "T1005", "T1562"]
+    surfaces: ["unified_log", "logarchive", "visibility", "dfir"]
+    depth_notes: |
+      red : collect.unified_log_observation + base vector + compound + lab plan
+      blue : UNIFIEDLOGOBS parser + harden + detection
+      never dumps private unified-log message bodies or force-collects other users' logarchives
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.esf.unified_log_observation
+        - rootstock.vector.esf.unified_log_sensor_compound
+        - rootstock.check.vuln.wave12_multi_plane_cluster
+      blue_detections:
+        - unified_log_observation
+    status: mapped
+
+  - id: rootstock.tech.dock_persistence_surface
+    title: Dock persistent apps / recent items dual-use
+    attack_techniques: ["T1547", "T1012", "T1083"]
+    surfaces: ["dock", "persistence", "recent_items"]
+    depth_notes: |
+      red : collect.dock_persistence_surface + base vector + compound + lab plan
+      blue : DOCKPERSIST parser + harden + detection
+      never modifies Dock.plist or plants malicious Dock entries
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.dock_persistence_surface
+        - rootstock.vector.persist.dock_remote_compound
+        - rootstock.check.vuln.wave12_multi_plane_cluster
+      blue_detections:
+        - dock_persistence_surface
+    status: mapped
+
+  - id: rootstock.tech.osascript_scpt_delivery
+    title: Compiled AppleScript / OSA delivery residual
+    attack_techniques: ["T1059.002", "T1204", "T1027"]
+    surfaces: ["osascript", "scpt", "delivery", "lolbin"]
+    depth_notes: |
+      red : collect.osascript_scpt_delivery + base vector + compound + lab plan
+      blue : OSASCRIPTSCPT parser + harden + detection
+      never compiles malicious .scpt payloads or executes third-party AppleScripts
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.delivery.osascript_scpt
+        - rootstock.vector.delivery.osascript_remote_compound
+        - rootstock.check.vuln.wave12_multi_plane_cluster
+      blue_detections:
+        - osascript_scpt_delivery
+    status: mapped
+
+  - id: rootstock.tech.network_share_mount
+    title: Network share / SMB mount dual-use lateral
+    attack_techniques: ["T1021.002", "T1135", "T1080"]
+    surfaces: ["smb", "network_share", "lateral", "mount"]
+    depth_notes: |
+      red : collect.network_share_mount + base vector + compound + lab plan
+      blue : NETWORKSHAREMOUNT parser + harden + detection
+      never mounts attacker shares or writes credentials to NetAuth
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.share_mount_surface
+        - rootstock.vector.network.share_remote_compound
+        - rootstock.check.vuln.wave12_multi_plane_cluster
+      blue_detections:
+        - network_share_mount
+    status: mapped
+
+  # multi-plane red↔blue pairs (beyond )
+
+  - id: rootstock.tech.calendar_reminders_automation
+    title: Calendar / Reminders automation lateral surface
+    attack_techniques: ["T1059", "T1546", "T1115"]
+    surfaces: ["calendar", "reminders", "automation", "lateral"]
+    depth_notes: |
+      red : collect.calendar_reminders_automation + base + compound + lab plan
+      blue : CALENDARREMINDERS parser + harden + detection
+      never reads event contents or creates malicious calendar invites
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.automation.calendar_reminders
+        - rootstock.vector.automation.calendar_remote_compound
+        - rootstock.check.vuln.wave13_multi_plane_cluster
+      blue_detections:
+        - calendar_reminders_automation
+    status: mapped
+
+  - id: rootstock.tech.gatekeeper_assessment_history
+    title: Gatekeeper assessment / syspolicyd history depth
+    attack_techniques: ["T1553.001", "T1204", "T1562"]
+    surfaces: ["gatekeeper", "syspolicyd", "assessment", "delivery"]
+    depth_notes: |
+      red : collect.gatekeeper_assessment_history + base + compound + lab plan
+      blue : GKASSESSMENTHIST parser + harden + detection
+      never clears Gatekeeper assessments or disables syspolicyd
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.codesign.gk_assessment_history
+        - rootstock.vector.codesign.gk_assessment_remote_compound
+        - rootstock.check.vuln.wave13_multi_plane_cluster
+      blue_detections:
+        - gatekeeper_assessment_history
+    status: mapped
+
+  - id: rootstock.tech.homebrew_package_dualuse
+    title: Homebrew / third-party package manager dual-use
+    attack_techniques: ["T1072", "T1546", "T1059"]
+    surfaces: ["homebrew", "package_manager", "dual_use", "dev"]
+    depth_notes: |
+      red : collect.homebrew_package_dualuse + base + compound + lab plan
+      blue : HOMEBREWPKG parser + harden + detection
+      never installs packages or modifies Homebrew formulae
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.dev.homebrew_package_dualuse
+        - rootstock.vector.dev.homebrew_remote_compound
+        - rootstock.check.vuln.wave13_multi_plane_cluster
+      blue_detections:
+        - homebrew_package_dualuse
+    status: mapped
+
+  - id: rootstock.tech.cups_print_dualuse
+    title: CUPS / printer dual-use residual surface
+    attack_techniques: ["T1040", "T1071", "T1204"]
+    surfaces: ["cups", "print", "dual_use"]
+    depth_notes: |
+      red : collect.cups_print_dualuse + base + compound + lab plan
+      blue : CUPSPRINTDUAL parser + harden + detection
+      never submits print jobs or reconfigures CUPS remotely
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.cups_print_dualuse
+        - rootstock.vector.network.cups_remote_compound
+        - rootstock.check.vuln.wave13_multi_plane_cluster
+      blue_detections:
+        - cups_print_dualuse
+    status: mapped
+
+  - id: rootstock.tech.screencapture_privacy_dualuse
+    title: ScreenCapture / screenshot privacy dual-use depth
+    attack_techniques: ["T1113", "T1125", "T1005"]
+    surfaces: ["screencapture", "privacy", "tcc", "collection"]
+    depth_notes: |
+      red : collect.screencapture_privacy_dualuse + base + compound + lab plan
+      blue : SCREENCAPTUREPRIV parser + harden + detection
+      never captures screens or dumps Screen Recording TCC rows
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.screencapture_privacy
+        - rootstock.vector.data.screencapture_fda_compound
+        - rootstock.check.vuln.wave13_multi_plane_cluster
+      blue_detections:
+        - screencapture_privacy_dualuse
+    status: mapped
+
+  # multi-plane red↔blue pairs (beyond )
+
+  - id: rootstock.tech.automator_workflow
+    title: Automator workflow delivery residual
+    attack_techniques: ["T1059", "T1204", "T1546"]
+    surfaces: ["automator", "workflow", "delivery"]
+    depth_notes: |
+      red : collect.automator_workflow + base + compound + lab plan
+      blue : AUTOMATORWF parser + harden + detection
+      never executes Automator workflows or plants malicious .workflow bundles
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.delivery.automator_workflow
+        - rootstock.vector.delivery.automator_workflow_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - automator_workflow
+    status: mapped
+
+  - id: rootstock.tech.icloud_drive_path
+    title: iCloud Drive / Mobile Documents path plane
+    attack_techniques: ["T1530", "T1005", "T1567"]
+    surfaces: ["icloud", "cloud", "collection", "sync"]
+    depth_notes: |
+      red : collect.icloud_drive_path + base + compound + lab plan
+      blue : ICLOUDDRIVEPATH parser + harden + detection
+      never enumerates iCloud file contents or exfiltrates Mobile Documents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.icloud_drive_path
+        - rootstock.vector.data.icloud_drive_path_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - icloud_drive_path
+    status: mapped
+
+  - id: rootstock.tech.bluetooth_continuity_depth
+    title: Bluetooth / Continuity proximity residual depth
+    attack_techniques: ["T1011", "T1200", "T1040"]
+    surfaces: ["bluetooth", "continuity", "proximity", "lateral"]
+    depth_notes: |
+      red : collect.bluetooth_continuity_depth + base + compound + lab plan
+      blue : BTCONTINUITY parser + harden + detection
+      never enables Bluetooth pairing or spoofs Continuity identities
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.bluetooth_continuity_depth
+        - rootstock.vector.network.bluetooth_continuity_depth_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - bluetooth_continuity_depth
+    status: mapped
+
+  - id: rootstock.tech.font_validation_dualuse
+    title: Font validation / ATS dual-use surface
+    attack_techniques: ["T1204", "T1189", "T1059"]
+    surfaces: ["font", "ats", "delivery", "dual_use"]
+    depth_notes: |
+      red : collect.font_validation_dualuse + base + compound + lab plan
+      blue : FONTVALIDATION parser + harden + detection
+      never installs malicious fonts or disables font validation
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.delivery.font_validation_dualuse
+        - rootstock.vector.delivery.font_validation_dualuse_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - font_validation_dualuse
+    status: mapped
+
+  - id: rootstock.tech.quicklook_cache_depth
+    title: QuickLook thumbnail cache residual depth
+    attack_techniques: ["T1005", "T1083", "T1552"]
+    surfaces: ["quicklook", "cache", "collection", "dfir"]
+    depth_notes: |
+      red : collect.quicklook_cache_depth + base + compound + lab plan
+      blue : QUICKLOOKCACHE parser + harden + detection
+      never dumps QuickLook thumbnail bitmap contents as secret material
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.quicklook_cache_depth
+        - rootstock.vector.data.quicklook_cache_depth_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - quicklook_cache_depth
+    status: mapped
+
+  - id: rootstock.tech.dns_resolver_dualuse
+    title: DNS resolver / mDNSResponder dual-use surface
+    attack_techniques: ["T1071.004", "T1568", "T1040"]
+    surfaces: ["dns", "mdns", "network", "dual_use"]
+    depth_notes: |
+      red : collect.dns_resolver_dualuse + base + compound + lab plan
+      blue : DNSRESOLVER parser + harden + detection
+      never rewrites resolver config or poisons DNS caches
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.dns_resolver_dualuse
+        - rootstock.vector.network.dns_resolver_dualuse_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - dns_resolver_dualuse
+    status: mapped
+
+  - id: rootstock.tech.ls_quarantine_db_depth
+    title: LaunchServices QuarantineEvents DB residual depth
+    attack_techniques: ["T1553.001", "T1074", "T1083"]
+    surfaces: ["quarantine", "launchservices", "delivery", "dfir"]
+    depth_notes: |
+      red : collect.ls_quarantine_db_depth + base + compound + lab plan
+      blue : LSQUARANTINEDB parser + harden + detection
+      never deletes QuarantineEvents rows or clears LS quarantine history
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.codesign.ls_quarantine_db_depth
+        - rootstock.vector.codesign.ls_quarantine_db_depth_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - ls_quarantine_db_depth
+    status: mapped
+
+  - id: rootstock.tech.pam_auth_module
+    title: PAM authentication module residual surface
+    attack_techniques: ["T1556", "T1543", "T1078"]
+    surfaces: ["pam", "auth", "persistence", "privesc"]
+    depth_notes: |
+      red : collect.pam_auth_module + base + compound + lab plan
+      blue : PAMAUTHMODULE parser + harden + detection
+      never installs PAM modules or modifies /etc/pam.d
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.auth.pam_auth_module
+        - rootstock.vector.auth.pam_auth_module_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - pam_auth_module
+    status: mapped
+
+  - id: rootstock.tech.cron_at_job_depth
+    title: Cron / at job dual-use residual depth
+    attack_techniques: ["T1053.003", "T1053", "T1543"]
+    surfaces: ["cron", "at", "persistence", "dual_use"]
+    depth_notes: |
+      red : collect.cron_at_job_depth + base + compound + lab plan
+      blue : CRONATJOB parser + harden + detection
+      never installs cron or at jobs outside the lab root
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.cron_at_job_depth
+        - rootstock.vector.persist.cron_at_job_depth_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - cron_at_job_depth
+    status: mapped
+
+  - id: rootstock.tech.notes_metadata_plane
+    title: Notes.app metadata collection path plane
+    attack_techniques: ["T1005", "T1114", "T1552"]
+    surfaces: ["notes", "collection", "metadata"]
+    depth_notes: |
+      red : collect.notes_metadata_plane + base + compound + lab plan
+      blue : NOTESMETADATA parser + harden + detection
+      never reads Notes body contents or exports note secrets
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.notes_metadata_plane
+        - rootstock.vector.data.notes_metadata_plane_remote_compound
+        - rootstock.check.vuln.wave14_multi_plane_cluster
+      blue_detections:
+        - notes_metadata_plane
+    status: mapped
+
+  # multi-plane red↔blue pairs (beyond )
+
+  - id: rootstock.tech.photos_library_path
+    title: Photos.app library collection path plane
+    attack_techniques: ["T1005", "T1119", "T1530"]
+    surfaces: ["photos", "library", "collection"]
+    depth_notes: |
+      red : collect.photos_library_path + base + compound + lab plan
+      blue : PHOTOSLIBRARY parser + harden + detection
+      never reads photo contents or exports Photo Library media
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.photos_library_path
+        - rootstock.vector.data.photos_library_path_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - photos_library_path
+    status: mapped
+
+  - id: rootstock.tech.vpn_config_dualuse
+    title: VPN configuration dual-use residual surface
+    attack_techniques: ["T1133", "T1572", "T1048"]
+    surfaces: ["vpn", "network", "config", "dual_use"]
+    depth_notes: |
+      red : collect.vpn_config_dualuse + base + compound + lab plan
+      blue : VPNCONFIGDUAL parser + harden + detection
+      never installs VPN profiles or rewrites network extension VPN configs
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.vpn_config_dualuse
+        - rootstock.vector.network.vpn_config_dualuse_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - vpn_config_dualuse
+    status: mapped
+
+  - id: rootstock.tech.sandbox_container_depth
+    title: App sandbox container residual depth
+    attack_techniques: ["T1611", "T1083", "T1005"]
+    surfaces: ["sandbox", "container", "dual_use"]
+    depth_notes: |
+      red : collect.sandbox_container_depth + base + compound + lab plan
+      blue : SANDBOXCONTAINER parser + harden + detection
+      never breaks app sandbox or forges container entitlements
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.sandbox.sandbox_container_depth
+        - rootstock.vector.sandbox.sandbox_container_depth_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - sandbox_container_depth
+    status: mapped
+
+  - id: rootstock.tech.xpc_mach_service_depth
+    title: XPC Mach service residual depth
+    attack_techniques: ["T1559", "T1543", "T1055"]
+    surfaces: ["xpc", "mach", "service", "dual_use"]
+    depth_notes: |
+      red : collect.xpc_mach_service_depth + base + compound + lab plan
+      blue : XPCMACHSERVICE parser + harden + detection
+      never registers XPC services or injects into Mach ports
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.inject.xpc_mach_service_depth
+        - rootstock.vector.inject.xpc_mach_service_depth_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - xpc_mach_service_depth
+    status: mapped
+
+  - id: rootstock.tech.tm_local_snapshot_depth
+    title: Time Machine local snapshot residual depth
+    attack_techniques: ["T1005", "T1530", "T1083"]
+    surfaces: ["timemachine", "snapshot", "collection", "backup"]
+    depth_notes: |
+      red : collect.tm_local_snapshot_depth + base + compound + lab plan
+      blue : TMLOCALSNAPSHOT parser + harden + detection
+      never mounts snapshots for data theft or deletes backup catalogs
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.tm_local_snapshot_depth
+        - rootstock.vector.data.tm_local_snapshot_depth_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - tm_local_snapshot_depth
+    status: mapped
+
+  - id: rootstock.tech.emond_legacy_depth
+    title: Emond legacy rules residual depth
+    attack_techniques: ["T1546.014", "T1546", "T1059"]
+    surfaces: ["emond", "legacy", "persistence"]
+    depth_notes: |
+      red : collect.emond_legacy_depth + base + compound + lab plan
+      blue : EMONDLEGACY parser + harden + detection
+      never installs emond rules or enables the legacy event monitor daemon
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.emond_legacy_depth
+        - rootstock.vector.persist.emond_legacy_depth_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - emond_legacy_depth
+    status: mapped
+
+  - id: rootstock.tech.screen_sharing_ard_depth
+    title: Screen Sharing / ARD residual depth
+    attack_techniques: ["T1021", "T1219", "T1133"]
+    surfaces: ["screensharing", "ard", "remote", "lateral"]
+    depth_notes: |
+      red : collect.screen_sharing_ard_depth + base + compound + lab plan
+      blue : SCREENSHARINGARD parser + harden + detection
+      never enables Screen Sharing or ARD, never connects to remote desktops
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.screen_sharing_ard_depth
+        - rootstock.vector.network.screen_sharing_ard_depth_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - screen_sharing_ard_depth
+    status: mapped
+
+  - id: rootstock.tech.keychain_acl_path
+    title: Keychain ACL path residual surface
+    attack_techniques: ["T1555.001", "T1555", "T1003"]
+    surfaces: ["keychain", "acl", "collection"]
+    depth_notes: |
+      red : collect.keychain_acl_path + base + compound + lab plan
+      blue : KEYCHAINACLPATH parser + harden + detection
+      never dumps keychain items, passwords, or private keys
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.keychain_acl_path
+        - rootstock.vector.data.keychain_acl_path_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - keychain_acl_path
+    status: mapped
+
+  - id: rootstock.tech.python_runtime_dualuse
+    title: Python runtime dual-use residual surface
+    attack_techniques: ["T1059.006", "T1059", "T1204"]
+    surfaces: ["python", "runtime", "lolbin", "dual_use"]
+    depth_notes: |
+      red : collect.python_runtime_dualuse + base + compound + lab plan
+      blue : PYTHONRUNTIME parser + harden + detection
+      never executes third-party Python payloads or drops malicious site-packages
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.lool.python_runtime_dualuse
+        - rootstock.vector.lool.python_runtime_dualuse_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - python_runtime_dualuse
+    status: mapped
+
+  - id: rootstock.tech.shell_plugin_manager
+    title: Shell plugin manager dual-use residual
+    attack_techniques: ["T1546.004", "T1059.004", "T1546"]
+    surfaces: ["shell", "plugin", "persistence", "dual_use"]
+    depth_notes: |
+      red : collect.shell_plugin_manager + base + compound + lab plan
+      blue : SHELLPLUGINMGR parser + harden + detection
+      never installs oh-my-zsh plugins or rewrites shell init for persistence
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.shell_plugin_manager
+        - rootstock.vector.persist.shell_plugin_manager_remote_compound
+        - rootstock.check.vuln.wave15_multi_plane_cluster
+      blue_detections:
+        - shell_plugin_manager
+    status: mapped
+
+  # Application data and continuity surfaces
+
+  - id: rootstock.tech.airplay_receiver_surface
+    title: AirPlay receiver dual-use residual
+    attack_techniques: ["T1040", "T1021", "T1200"]
+    surfaces: ["airplay", "receiver", "lateral"]
+    depth_notes: |
+      red : collect.airplay_receiver_surface + base + compound + lab
+      blue : AIRPLAYRX + harden + detection
+      never enables AirPlay Receiver or spoofs AirPlay targets
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.network.airplay_receiver_surface
+        - rootstock.vector.network.airplay_receiver_surface_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - airplay_receiver_surface
+    status: mapped
+
+  - id: rootstock.tech.handoff_clipboard_depth
+    title: Handoff / Universal Clipboard residual depth
+    attack_techniques: ["T1115", "T1020", "T1005"]
+    surfaces: ["handoff", "clipboard", "continuity", "collection"]
+    depth_notes: |
+      red : collect.handoff_clipboard_depth + base + compound + lab
+      blue : HANDOFFCB + harden + detection
+      never reads Universal Clipboard contents or forges Handoff activity
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.handoff_clipboard_depth
+        - rootstock.vector.data.handoff_clipboard_depth_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - handoff_clipboard_depth
+    status: mapped
+
+  - id: rootstock.tech.imessage_path_plane
+    title: iMessage / Messages path collection plane
+    attack_techniques: ["T1114", "T1005", "T1539"]
+    surfaces: ["imessage", "messages", "collection"]
+    depth_notes: |
+      red : collect.imessage_path_plane + base + compound + lab
+      blue : IMSGPATH + harden + detection
+      never reads Messages database contents or exports chat transcripts
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.imessage_path_plane
+        - rootstock.vector.data.imessage_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - imessage_path_plane
+    status: mapped
+
+  - id: rootstock.tech.facetime_camera_surface
+    title: FaceTime / camera pipeline dual-use surface
+    attack_techniques: ["T1125", "T1123", "T1113"]
+    surfaces: ["facetime", "camera", "privacy"]
+    depth_notes: |
+      red : collect.facetime_camera_surface + base + compound + lab
+      blue : FTCAM + harden + detection
+      never activates camera/mic or dumps FaceTime call history contents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.facetime_camera_surface
+        - rootstock.vector.data.facetime_camera_surface_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - facetime_camera_surface
+    status: mapped
+
+  - id: rootstock.tech.finder_sync_extension
+    title: Finder Sync extension dual-use surface
+    attack_techniques: ["T1546", "T1176", "T1059"]
+    surfaces: ["finder", "extension", "persistence"]
+    depth_notes: |
+      red : collect.finder_sync_extension + base + compound + lab
+      blue : FNDSYNC + harden + detection
+      never installs Finder Sync extensions or rewrites Finder preferences for abuse
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.finder_sync_extension
+        - rootstock.vector.persist.finder_sync_extension_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - finder_sync_extension
+    status: mapped
+
+  - id: rootstock.tech.fileprovider_domain
+    title: File Provider domain residual surface
+    attack_techniques: ["T1080", "T1530", "T1005"]
+    surfaces: ["fileprovider", "sync", "cloud"]
+    depth_notes: |
+      red : collect.fileprovider_domain + base + compound + lab
+      blue : FPDOM + harden + detection
+      never registers malicious File Provider domains or exfiltrates provider caches
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.fileprovider_domain
+        - rootstock.vector.data.fileprovider_domain_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - fileprovider_domain
+    status: mapped
+
+  - id: rootstock.tech.notification_center_depth
+    title: Notification Center residual depth
+    attack_techniques: ["T1518", "T1083", "T1005"]
+    surfaces: ["notification", "collection", "dfir"]
+    depth_notes: |
+      red : collect.notification_center_depth + base + compound + lab
+      blue : NOTICTR + harden + detection
+      never dumps notification body contents or forges notification payloads
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.notification_center_depth
+        - rootstock.vector.data.notification_center_depth_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - notification_center_depth
+    status: mapped
+
+  - id: rootstock.tech.siri_suggestions_plane
+    title: Siri / Suggestions data-access residual
+    attack_techniques: ["T1005", "T1083", "T1213"]
+    surfaces: ["siri", "suggestions", "collection"]
+    depth_notes: |
+      red : collect.siri_suggestions_plane + base + compound + lab
+      blue : SIRISUG + harden + detection
+      never dumps Siri transcripts or Suggestions databases contents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.siri_suggestions_plane
+        - rootstock.vector.data.siri_suggestions_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - siri_suggestions_plane
+    status: mapped
+
+  - id: rootstock.tech.spotlight_importer_depth
+    title: Spotlight importer residual depth
+    attack_techniques: ["T1083", "T1005", "T1213"]
+    surfaces: ["spotlight", "importer", "collection"]
+    depth_notes: |
+      red : collect.spotlight_importer_depth + base + compound + lab
+      blue : SPIMP + harden + detection
+      never installs malicious Spotlight importers or dumps mdworker index contents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.spotlight_importer_depth
+        - rootstock.vector.data.spotlight_importer_depth_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - spotlight_importer_depth
+    status: mapped
+
+  - id: rootstock.tech.contacts_path_plane
+    title: Contacts database path residual plane
+    attack_techniques: ["T1213", "T1005", "T1087"]
+    surfaces: ["contacts", "collection", "pii"]
+    depth_notes: |
+      red : collect.contacts_path_plane + base + compound + lab
+      blue : CTPATH + harden + detection
+      never exports contact cards or dumps AddressBook database contents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.contacts_path_plane
+        - rootstock.vector.data.contacts_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - contacts_path_plane
+    status: mapped
+
+  - id: rootstock.tech.calendar_server_path
+    title: Calendar server / CalDAV residual surface
+    attack_techniques: ["T1213", "T1005", "T1071"]
+    surfaces: ["calendar", "caldav", "collection"]
+    depth_notes: |
+      red : collect.calendar_server_path + base + compound + lab
+      blue : CALDAV + harden + detection
+      never reads calendar event bodies or credentials from CalDAV stores
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.calendar_server_path
+        - rootstock.vector.data.calendar_server_path_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - calendar_server_path
+    status: mapped
+
+  - id: rootstock.tech.reminders_cloud_path
+    title: Reminders cloud path residual plane
+    attack_techniques: ["T1005", "T1213", "T1083"]
+    surfaces: ["reminders", "cloud", "collection"]
+    depth_notes: |
+      red : collect.reminders_cloud_path + base + compound + lab
+      blue : REMCLOUD + harden + detection
+      never reads reminder titles/bodies or exports Reminders databases
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.reminders_cloud_path
+        - rootstock.vector.data.reminders_cloud_path_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - reminders_cloud_path
+    status: mapped
+
+  - id: rootstock.tech.maps_location_path
+    title: Maps / location services residual plane
+    attack_techniques: ["T1011", "T1083", "T1005"]
+    surfaces: ["maps", "location", "privacy"]
+    depth_notes: |
+      red : collect.maps_location_path + base + compound + lab
+      blue : MAPSLOC + harden + detection
+      never dumps location history or spoofs CoreLocation positions
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.maps_location_path
+        - rootstock.vector.data.maps_location_path_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - maps_location_path
+    status: mapped
+
+  - id: rootstock.tech.weather_widget_path
+    title: Weather / widget data residual plane
+    attack_techniques: ["T1005", "T1083", "T1518"]
+    surfaces: ["weather", "widget", "collection"]
+    depth_notes: |
+      red : collect.weather_widget_path + base + compound + lab
+      blue : WTHRWDG + harden + detection
+      never dumps weather personalization data or widget timeline contents
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.weather_widget_path
+        - rootstock.vector.data.weather_widget_path_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - weather_widget_path
+    status: mapped
+
+  - id: rootstock.tech.music_library_path
+    title: Music / media library path residual
+    attack_techniques: ["T1005", "T1083", "T1119"]
+    surfaces: ["music", "media", "collection"]
+    depth_notes: |
+      red : collect.music_library_path + base + compound + lab
+      blue : MUSLIB + harden + detection
+      never exports Music library media or DRM material
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.music_library_path
+        - rootstock.vector.data.music_library_path_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - music_library_path
+    status: mapped
+
+  - id: rootstock.tech.books_path_plane
+    title: Books / EPUB path residual plane
+    attack_techniques: ["T1005", "T1083", "T1119"]
+    surfaces: ["books", "epub", "collection"]
+    depth_notes: |
+      red : collect.books_path_plane + base + compound + lab
+      blue : BKPATH + harden + detection
+      never extracts EPUB contents or Books annotations as bulk export
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.books_path_plane
+        - rootstock.vector.data.books_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - books_path_plane
+    status: mapped
+
+  - id: rootstock.tech.podcasts_path_plane
+    title: Podcasts library path residual
+    attack_techniques: ["T1005", "T1083", "T1119"]
+    surfaces: ["podcasts", "media", "collection"]
+    depth_notes: |
+      red : collect.podcasts_path_plane + base + compound + lab
+      blue : PODPATH + harden + detection
+      never dumps podcast episode files or account tokens
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.podcasts_path_plane
+        - rootstock.vector.data.podcasts_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - podcasts_path_plane
+    status: mapped
+
+  - id: rootstock.tech.tv_app_path_plane
+    title: TV.app residual path plane
+    attack_techniques: ["T1005", "T1083", "T1119"]
+    surfaces: ["tv", "media", "collection"]
+    depth_notes: |
+      red : collect.tv_app_path_plane + base + compound + lab
+      blue : TVPATH + harden + detection
+      never dumps TV.app media caches or account material
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.tv_app_path_plane
+        - rootstock.vector.data.tv_app_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - tv_app_path_plane
+    status: mapped
+
+  - id: rootstock.tech.homekit_path_plane
+    title: HomeKit residual path plane
+    attack_techniques: ["T0883", "T1005", "T1083"]
+    surfaces: ["homekit", "iot", "collection"]
+    depth_notes: |
+      red : collect.homekit_path_plane + base + compound + lab
+      blue : HKPATH + harden + detection
+      never enumerates HomeKit accessory secrets or pairs devices
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.homekit_path_plane
+        - rootstock.vector.data.homekit_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - homekit_path_plane
+    status: mapped
+
+  - id: rootstock.tech.health_path_plane
+    title: Health app residual path plane
+    attack_techniques: ["T1005", "T1083", "T1213"]
+    surfaces: ["health", "medical", "collection"]
+    depth_notes: |
+      red : collect.health_path_plane + base + compound + lab
+      blue : HLTHPATH + harden + detection
+      never exports HealthKit samples or medical records
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.health_path_plane
+        - rootstock.vector.data.health_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - health_path_plane
+    status: mapped
+
+  - id: rootstock.tech.wallet_pass_path
+    title: Wallet / pass residual path plane
+    attack_techniques: ["T1005", "T1555", "T1083"]
+    surfaces: ["wallet", "passkit", "collection"]
+    depth_notes: |
+      red : collect.wallet_pass_path + base + compound + lab
+      blue : WLTPASS + harden + detection
+      never dumps pass contents, payment tokens, or card data
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.wallet_pass_path
+        - rootstock.vector.data.wallet_pass_path_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - wallet_pass_path
+    status: mapped
+
+  - id: rootstock.tech.findmy_path_plane
+    title: Find My residual path plane
+    attack_techniques: ["T1011", "T1083", "T1005"]
+    surfaces: ["findmy", "location", "privacy"]
+    depth_notes: |
+      red : collect.findmy_path_plane + base + compound + lab
+      blue : FMPATH + harden + detection
+      never queries Find My device locations or dumps owner tokens
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.data.findmy_path_plane
+        - rootstock.vector.data.findmy_path_plane_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - findmy_path_plane
+    status: mapped
+
+  - id: rootstock.tech.shortcuts_icloud_sync
+    title: Shortcuts iCloud sync residual depth
+    attack_techniques: ["T1059", "T1530", "T1083"]
+    surfaces: ["shortcuts", "icloud", "automation"]
+    depth_notes: |
+      red : collect.shortcuts_icloud_sync + base + compound + lab
+      blue : SCICLOUD + harden + detection
+      never executes Shortcuts or dumps iCloud-synced automation databases
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.automation.shortcuts_icloud_sync
+        - rootstock.vector.automation.shortcuts_icloud_sync_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - shortcuts_icloud_sync
+    status: mapped
+
+  - id: rootstock.tech.devicemanagement_profile
+    title: Device management profile residual depth
+    attack_techniques: ["T1484", "T1072", "T1562"]
+    surfaces: ["mdm", "profile", "management"]
+    depth_notes: |
+      red : collect.devicemanagement_profile + base + compound + lab
+      blue : MDMPROF + harden + detection
+      never installs configuration profiles or enrolls hosts in MDM
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.mdm.devicemanagement_profile
+        - rootstock.vector.mdm.devicemanagement_profile_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - devicemanagement_profile
+    status: mapped
+
+  - id: rootstock.tech.softwareupdate_catalog
+    title: Software Update catalog residual surface
+    attack_techniques: ["T1072", "T1195", "T1553"]
+    surfaces: ["softwareupdate", "catalog", "supply_chain"]
+    depth_notes: |
+      red : collect.softwareupdate_catalog + base + compound + lab
+      blue : SUCAT + harden + detection
+      never points SUS catalogs at attacker mirrors or tampers with update plists
+    mappings:
+      graph_queries: []
+      red_findings:
+        - rootstock.vector.persist.softwareupdate_catalog
+        - rootstock.vector.persist.softwareupdate_catalog_remote_compound
+        - rootstock.check.vuln.wave16_multi_plane_cluster
+      blue_detections:
+        - softwareupdate_catalog
+    status: mapped

@@ -1,0 +1,35 @@
+{
+  "items": [
+    {
+      "app": "Microsoft Word",
+      "path": "/Users/alice/Documents/secrets/passwords.docx",
+      "title": "passwords.docx",
+      "user": "alice",
+      "last_accessed": "2026-03-01T09:30:00Z",
+      "risk_tags": "sensitive_document"
+    },
+    {
+      "app": "Microsoft Excel",
+      "path": "/tmp/evil-payroll.xlsx",
+      "title": "evil-payroll.xlsx",
+      "user": "alice",
+      "last_accessed": "2026-03-01T08:00:00Z",
+      "risk_tags": "tmp_path,suspicious_path,sensitive_document"
+    },
+    {
+      "app": "Slack",
+      "path": "",
+      "title": "#incident-response",
+      "channel": "incident-response",
+      "user": "alice",
+      "last_accessed": "2026-03-01T07:00:00Z"
+    },
+    {
+      "app": "Microsoft Teams",
+      "path": "https://contoso.sharepoint.com/sites/hr/Shared%20Documents/W2_2025.pdf",
+      "title": "W2_2025.pdf",
+      "user": "alice",
+      "risk_tags": "cloud_document,sensitive_document"
+    }
+  ]
+}

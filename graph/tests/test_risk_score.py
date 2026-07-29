@@ -1,5 +1,5 @@
 """
-test_risk_score.py — Tests for graph-native risk scoring (infer_risk_score.py).
+test_risk_score.py - Tests for graph-native risk scoring (infer_risk_score.py).
 
 Unit tests use mocked Neo4j sessions; integration tests require a live Neo4j.
 """
@@ -11,6 +11,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import pytest
+from conftest import cleaned_neo4j_driver
 
 import infer_risk_score as risk_score
 from category_predicates import RISK_CATEGORY_PREDICATES
@@ -113,11 +114,8 @@ class TestRiskScoringBehavior:
     @pytest.fixture(autouse=True)
     def setup(self, neo4j_driver):
         self.driver = neo4j_driver
-        with self.driver.session() as session:
-            self._cleanup(session)
-        yield
-        with self.driver.session() as session:
-            self._cleanup(session)
+        with cleaned_neo4j_driver(self.driver, self._cleanup):
+            yield
 
     def _cleanup(self, session):
         session.run(

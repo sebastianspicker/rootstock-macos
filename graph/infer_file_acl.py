@@ -1,10 +1,10 @@
 """
-infer_file_acl.py — Infer attack paths from file ACL permissions.
+infer_file_acl.py - Infer attack paths from file ACL permissions.
 
 Creates edges:
   - (User)-[:CAN_WRITE]->(CriticalFile): user can write a security-critical file
   - (CriticalFile)-[:PROTECTS]->(TCC_Permission|Keychain_Item): file protects security resources
-  - (User)-[:CAN_MODIFY_TCC]->(TCC_Permission): transitive — user can write TCC.db → modify any TCC grant
+  - (User)-[:CAN_MODIFY_TCC]->(TCC_Permission): transitive - user can write TCC.db → modify any TCC grant
 
 All inferred edges carry {inferred: true} to distinguish from explicit data.
 """

@@ -1,0 +1,13 @@
+id: sample.network_share_mount
+title: Network share / SMB mount dual-use lateral surface present
+severity: high
+description: Network share mount markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1021.002
+  - T1135
+  - T1080
+match:
+  event_type: network.share_mount
+  field_contains:
+    share.risk_tags: "share_surface"
+fixture: network_share_mount.jsonl

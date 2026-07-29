@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rootstock — {{VIEWER_TITLE}}</title>
+<title>Rootstock - {{VIEWER_TITLE}}</title>
 <style>
 {{VIEWER_CSS}}
 </style>
@@ -11,70 +11,116 @@
 <body>
 <div id="app">
   <header id="status-bar">
-    <div class="brand">
+    <div class="brand" aria-label="Rootstock">
       <span class="brand-icon" aria-hidden="true">R</span>
-      <div><h1>Rootstock</h1><p class="meta" id="meta-info">Loading graph provenance…</p></div>
+      <strong class="brand-name">ROOTSTOCK</strong>
+      <span class="breadcrumb host" aria-label="Current snapshot">
+        <span class="meta" id="meta-info">loading provenance…</span>
+      </span>
     </div>
-    <div class="status-group" aria-label="Graph status">
-      <span class="status-chip" id="connection-status">Offline viewer</span>
-      <span><strong id="node-count">0</strong> nodes</span>
-      <span><strong id="edge-count">0</strong> edges</span>
-      <label for="theme-select">Theme</label>
-      <select id="theme-select"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+
+    <nav id="global-nav" aria-label="Primary workspace">
+      <button id="nav-overview" class="global-nav-item" type="button">Triage</button>
+      <button id="nav-paths" class="global-nav-item" type="button">Paths</button>
+      <button id="nav-graph" class="global-nav-item active" type="button" aria-current="page">Graph</button>
+      <button id="nav-queries" class="global-nav-item" type="button">Queries</button>
+    </nav>
+
+    <div class="status-group" aria-label="Session">
+      <span class="status-chip" id="connection-status">Local session</span>
+      <span class="chrome-secondary provenance-chip">Provenance: <strong id="provenance-status">Checking</strong></span>
+      <span class="chrome-secondary snapshot-status"><span>Snapshot</span><strong id="snapshot-time">Not recorded</strong></span>
+      <span class="chrome-secondary graph-counts"><strong id="node-count">0</strong> nodes · <strong id="edge-count">0</strong> edges</span>
+      <label class="sr-only" for="theme-select">Theme</label>
+      <select id="theme-select" class="chrome-secondary" aria-label="Theme">
+        <option value="system">System theme</option>
+        <option value="light">Light theme</option>
+        <option value="dark">Dark theme</option>
+      </select>
+      <button id="nav-settings" class="icon-button chrome-secondary" type="button" aria-label="Appearance settings">◐</button>
+      <button id="nav-exports" class="export-button" type="button">Export</button>
     </div>
   </header>
 
   <section id="connection-gate" class="connection-gate" hidden aria-labelledby="connection-title">
     <form id="connection-form">
-      <h2 id="connection-title">Connect to this Rootstock session</h2>
-      <p>The API token is kept in this browser tab only and is removed when the session expires.</p>
+      <p class="eyebrow">Protected workspace</p>
+      <h1 id="connection-title">Connect to this Rootstock session</h1>
+      <p>Use the token printed by the local server. It stays in this browser tab and is removed when the session expires.</p>
       <label for="api-token">API token</label>
-      <div class="field-row"><input id="api-token" name="api-token" type="password" autocomplete="off" required><button type="submit">Connect</button></div>
+      <div class="field-row">
+        <input id="api-token" name="api-token" type="password" autocomplete="off" required>
+        <button type="submit" class="primary-action">Connect</button>
+      </div>
       <p id="connection-error" class="inline-status error" role="alert" hidden></p>
     </form>
   </section>
 
-  <div id="workbench">
+  <div id="workspace-shell">
     <aside id="sidebar" aria-label="Analysis navigation">
-      <div id="sidebar-header">
-        <div class="tabs" role="tablist" aria-label="Workbench tools">
-          <button id="tab-explore" role="tab" aria-selected="true" aria-controls="explore-panel">Explore</button>
-          <button id="tab-queries" role="tab" aria-selected="false" aria-controls="queries-panel">Queries</button>
+      <div class="sidebar-lead">
+        <div class="search-field">
+          <label class="sr-only" for="search">Search nodes</label>
+          <div class="search-control">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" id="search" placeholder="Search" autocomplete="off">
+            <span class="search-trailing chrome-secondary">
+              <kbd aria-hidden="true">⌘K</kbd>
+              <button id="clear-search" type="button" aria-label="Clear search">×</button>
+            </span>
+          </div>
+          <p id="search-status" class="field-help" role="status" aria-live="polite"></p>
+        </div>
+        <div id="sidebar-header">
+          <div class="tabs" role="tablist" aria-label="Workbench tools">
+            <button id="tab-explore" role="tab" aria-selected="true" aria-controls="explore-panel">Explore</button>
+            <button id="tab-queries" role="tab" aria-selected="false" aria-controls="queries-panel">Queries</button>
+          </div>
         </div>
       </div>
 
       <section id="explore-panel" role="tabpanel" aria-labelledby="tab-explore">
-        <div class="search-field">
-          <label for="search">Search nodes</label>
-          <div class="field-row"><input type="search" id="search" placeholder="Name, type, path, or identifier" autocomplete="off"><button id="clear-search" type="button">Clear</button></div>
-          <p id="search-status" class="field-help" role="status" aria-live="polite"></p>
-        </div>
-        <div id="risk-posture" aria-label="Risk posture"><div class="risk-summary" id="risk-summary"></div></div>
         <div id="filters">
-          <details class="filter-section" open><summary>Node types</summary><div id="node-filters"></div></details>
-          <details class="filter-section" open><summary>Edges</summary><div id="edge-filters"></div></details>
-          <button id="clear-filters" type="button" class="secondary-button">Clear all filters</button>
+          <div class="section-heading filter-heading">
+            <h2>Filters</h2>
+            <button id="clear-filters" type="button" class="text-button">Clear</button>
+          </div>
+          <details class="filter-section">
+            <summary>Node types</summary>
+            <div id="node-filters"></div>
+          </details>
+          <details class="filter-section">
+            <summary>Relationships</summary>
+            <div id="edge-filters"></div>
+          </details>
         </div>
         <section id="node-list-section" aria-labelledby="node-list-title">
-          <div class="section-heading"><h2 id="node-list-title">Graph nodes</h2><span id="node-list-count">0 visible</span></div>
-          <p id="node-list-empty" class="empty-state" hidden>No nodes match the current search and filters.</p>
+          <div class="section-heading">
+            <h2 id="node-list-title">Nodes</h2>
+            <span id="node-list-count">0</span>
+          </div>
+          <p id="node-list-empty" class="empty-state" hidden>No nodes match this search. Clear a filter to restore the graph.</p>
           <ul id="node-list" aria-label="Visible graph nodes"></ul>
         </section>
       </section>
 
       <section id="queries-panel" role="tabpanel" aria-labelledby="tab-queries" hidden>
         <section id="query-section" class="filter-section" aria-labelledby="query-heading">
-          <h2 id="query-heading">Saved queries</h2>
+          <div class="section-heading"><h2 id="query-heading">Saved queries</h2></div>
           <div id="query-list"><p class="empty-state">Saved queries are available in live mode.</p></div>
         </section>
         <section id="custom-query-section" class="filter-section" hidden aria-labelledby="custom-query-heading">
-          <h2 id="custom-query-heading">Custom Cypher</h2>
-          <label for="cypher-input">Read-only Cypher</label>
+          <div class="section-heading"><h2 id="custom-query-heading">Custom Cypher</h2></div>
+          <label for="cypher-input">Read-only query</label>
           <textarea id="cypher-input" rows="7" placeholder="MATCH (n) RETURN n LIMIT 25" spellcheck="false"></textarea>
           <p class="field-help">Run with Command–Enter or Control–Enter.</p>
-          <div class="field-row"><button class="live-btn" id="run-cypher" type="button">Run query</button><label class="sr-only" for="cypher-history-select">Query history</label><select id="cypher-history-select"><option value="">Local history</option></select></div>
-          <button id="clear-history" type="button" class="text-button">Clear history</button>
-          <p class="field-help">History is stored only in this browser and is never sent until you run a query.</p>
+          <div class="field-row">
+            <button class="primary-action" id="run-cypher" type="button">Run query</button>
+            <label class="sr-only" for="cypher-history-select">Query history</label>
+            <select id="cypher-history-select"><option value="">Local history</option></select>
+          </div>
+          <button id="clear-history" type="button" class="text-button">Clear local history</button>
+          <p class="field-help">History remains in this browser until you clear it.</p>
         </section>
       </section>
 
@@ -83,36 +129,90 @@
         <button class="live-btn" id="live-tier" type="button">Classify tiers</button>
         <button class="live-btn" id="live-owned" type="button">Show owned</button>
       </div>
-      <div id="keyboard-hints" aria-label="Keyboard shortcuts"><span><kbd>P</kbd> Path</span><span><kbd>A</kbd> Attack paths</span><span><kbd>L</kbd> Labels</span><span><kbd>R</kbd> Reset</span></div>
+      <div id="keyboard-hints" class="chrome-secondary" aria-label="Keyboard shortcuts">
+        <span><kbd>P</kbd> Path</span><span><kbd>A</kbd> Paths</span><span><kbd>L</kbd> Labels</span><span><kbd>R</kbd> Reset</span>
+      </div>
     </aside>
+
+    <section id="risk-posture" role="region" aria-label="Risk posture" tabindex="0">
+      <div class="risk-heading">
+        <h1 id="workspace-title">Paths</h1>
+      </div>
+      <div class="risk-summary" id="risk-summary"></div>
+      <div class="coverage-metric">
+        <strong id="evidence-coverage">Unavailable</strong>
+        <span>Coverage</span>
+        <span class="coverage-track" aria-hidden="true"><span id="evidence-coverage-bar"></span></span>
+      </div>
+    </section>
 
     <main id="graph-container" aria-labelledby="graph-title">
       <h2 id="graph-title" class="sr-only">Attack graph</h2>
       <canvas id="graph-canvas" role="img" aria-label="Rootstock attack graph visualization" aria-describedby="graph-description"></canvas>
-      <p id="graph-description" class="sr-only">Visual attack graph. Use the synchronized Graph nodes list to select, inspect, and build paths without a pointer.</p>
+      <p id="graph-description" class="sr-only">Visual attack graph. Use the synchronized node list to select, inspect, and build paths without a pointer.</p>
       <div id="tooltip" role="tooltip" hidden></div>
-      <div id="focus-banner" role="status"><span id="focus-text"></span><button id="focus-exit" type="button">Show all</button></div>
-      <div id="path-banner" role="status" aria-live="polite"><span id="path-text">Choose a source node from the graph or node list.</span><button id="path-exit" type="button">Cancel</button></div>
+      <div id="focus-banner" role="status">
+        <span id="focus-text"></span><button id="focus-exit" type="button">Show all</button>
+      </div>
+      <div id="path-banner" role="status" aria-live="polite">
+        <strong>Modeled path</strong><span aria-hidden="true">·</span>
+        <span id="path-text">Choose a source node from the graph or node list.</span>
+        <span class="path-caveat">Preconditions, not proof</span>
+        <button id="path-exit" type="button">Cancel</button>
+      </div>
       <div id="context-menu" role="menu" aria-label="Node actions"></div>
       <div id="controls" role="toolbar" aria-label="Graph view and analysis controls">
-        <div role="group" aria-label="View"><button id="btn-reset" type="button">Reset view</button><button id="btn-labels" type="button" aria-pressed="true">Labels</button><button id="btn-cluster" type="button" aria-pressed="false">Cluster</button></div>
-        <div role="group" aria-label="Analysis"><button id="btn-attack" type="button" aria-pressed="false">Attack paths</button><button id="btn-path" type="button" aria-pressed="false">Build path</button><button id="btn-vuln" type="button" aria-pressed="false">Vulnerable only</button></div>
-        <button id="btn-export" type="button">Export PNG</button>
+        <div role="group" aria-label="View">
+          <button id="btn-reset" type="button">Fit</button>
+          <button id="btn-labels" type="button" aria-pressed="true">Labels</button>
+          <button id="btn-cluster" class="chrome-secondary" type="button" aria-pressed="false">Cluster</button>
+        </div>
+        <div role="group" aria-label="Analysis" class="chrome-secondary">
+          <button id="btn-attack" type="button" aria-pressed="false">Attack paths</button>
+          <button id="btn-path" type="button" aria-pressed="false">Build path</button>
+          <button id="btn-vuln" type="button" aria-pressed="false">Vulnerable only</button>
+        </div>
+        <button id="btn-export" class="chrome-secondary" type="button">Export</button>
+      </div>
+      <div id="zoom-controls" role="group" aria-label="Graph zoom controls">
+        <button id="btn-zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="btn-zoom-out" type="button" aria-label="Zoom out">−</button>
+        <button id="btn-zoom-fit" type="button" aria-label="Fit graph to view">⌗</button>
       </div>
       <div id="stats" aria-hidden="true"></div>
     </main>
 
-    <aside id="detail-dock" aria-label="Analysis details">
+    <aside id="detail-dock" aria-label="Evidence">
       <section id="results-panel" aria-labelledby="results-title">
-        <div id="results-header"><h2 id="results-title">Query results</h2><button id="results-close" type="button" aria-label="Close query results">×</button></div>
-        <div id="results-meta" role="status" aria-live="polite"></div><div id="results-body"></div>
+        <div id="results-header">
+          <div><p class="eyebrow">Query result</p><h2 id="results-title">Query results</h2></div>
+          <button id="results-close" type="button" aria-label="Close query results">×</button>
+        </div>
+        <div id="results-meta" role="status" aria-live="polite"></div>
+        <div id="results-body"></div>
       </section>
       <section id="inspector" aria-labelledby="inspector-title">
-        <div id="inspector-header"><h2 id="inspector-title">Node details</h2><button id="inspector-close" type="button" aria-label="Close details">×</button></div>
+        <div id="inspector-header">
+          <h2 id="inspector-title">Node details</h2>
+          <button id="inspector-close" type="button" aria-label="Close details">×</button>
+        </div>
         <div id="inspector-body"></div>
       </section>
-      <p id="detail-empty" class="empty-state">Select a node, build a path, or run a query to inspect evidence here.</p>
+      <div id="detail-empty" class="empty-state">
+        <h2>Evidence</h2>
+        <p>Select a node or path. Fields, relationships, and provenance stay here.</p>
+      </div>
     </aside>
+
+    <footer id="provenance-timeline" aria-label="Graph provenance timeline">
+      <ol>
+        <li><strong>Collected</strong><span id="timeline-collected">Not recorded</span></li>
+        <li><strong>Imported</strong><span id="timeline-imported">Not recorded</span></li>
+        <li><strong>Derived</strong><span id="timeline-derived">Not recorded</span></li>
+        <li><strong>Snapshot</strong><span id="timeline-snapshot">Not recorded</span></li>
+      </ol>
+      <p><span>Provenance</span><strong id="provenance-source">Unavailable</strong></p>
+    </footer>
   </div>
 
   <div id="live-status" class="live-status" role="status" aria-live="polite"></div>
@@ -120,5 +220,6 @@
 <script>
 {{VIEWER_JS}}
 </script>
+<script>{{VIEWER_BOOTSTRAP}}</script>
 </body>
 </html>

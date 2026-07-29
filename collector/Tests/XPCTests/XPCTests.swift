@@ -10,8 +10,7 @@ final class XPCTests: XCTestCase {
     /// Write plist XML to a temp file and return its path. Caller owns cleanup.
     private func writeTempPlist(_ xml: String, name: String, in dir: URL) throws -> String {
         let url = dir.appendingPathComponent(name)
-        let data = try XCTUnwrap(xml.data(using: .utf8))
-        try data.write(to: url)
+        try xml.write(to: url, atomically: false, encoding: .utf8)
         return url.path
     }
 
@@ -139,7 +138,7 @@ final class XPCTests: XCTestCase {
         let parser = LaunchdPlistParser()
         let (entries, errors) = parser.parseDirectory(at: "/this/directory/does/not/exist")
         XCTAssertTrue(entries.isEmpty)
-        XCTAssertTrue(errors.isEmpty, "Missing directory is normal — should not produce an error")
+        XCTAssertTrue(errors.isEmpty, "Missing directory is normal - should not produce an error")
     }
 
     func testMalformedPlistInDirectoryIsSkippedWithError() throws {
@@ -169,9 +168,40 @@ final class XPCTests: XCTestCase {
 
         let result = await ds.collect()
         // On a real Mac, we expect > 100 services from /System/Library/LaunchDaemons
-        // In CI or sandboxed environments, count may be 0 — just verify no crash
+        // In CI or sandboxed environments, count may be 0 - just verify no crash
         let services = result.nodes.compactMap { $0 as? XPCService }
         XCTAssertGreaterThanOrEqual(services.count, 0)
+    }
+
+    func testEntitlementAdmissionFailureIsUnknownWithDiagnostic() {
+        let source = XPCDataSource { _, _, _ in .admissionTimedOut }
+
+        let result = source.extractEntitlementKeys(from: "/usr/libexec/example")
+
+        XCTAssertTrue(result.keys.isEmpty)
+        XCTAssertTrue(result.error?.message.contains("admission timed out") == true)
+    }
+
+    func testUnsignedXPCBinaryHasDefinitivelyEmptyEntitlements() {
+        let source = XPCDataSource { _, _, _ in
+            .nonZeroExit(Self.shellResult(status: 1, stderr: "code object is not signed"))
+        }
+
+        let result = source.extractEntitlementKeys(from: "/usr/libexec/example")
+
+        XCTAssertTrue(result.keys.isEmpty)
+        XCTAssertNil(result.error)
+    }
+
+    func testSuccessfulXPCEntitlementsAreSorted() {
+        let source = XPCDataSource { _, _, _ in
+            .success(Self.shellResult(stdout: Self.unorderedEntitlementsXML))
+        }
+
+        let result = source.extractEntitlementKeys(from: "/usr/libexec/example")
+
+        XCTAssertEqual(result.keys, ["com.example.alpha", "com.example.zeta"])
+        XCTAssertNil(result.error)
     }
 
     func testXPCServiceNodeTypeIsCorrect() {
@@ -223,6 +253,19 @@ final class XPCTests: XCTestCase {
         XCTAssertNil(json["node_type"], "nodeType is a Swift abstraction and should not be serialized")
     }
 
+    private static func shellResult(
+        stdout: String = "",
+        status: Int32 = 0,
+        stderr: String = ""
+    ) -> ShellResult {
+        ShellResult(
+            stdout: stdout,
+            stderr: stderr,
+            terminationStatus: status,
+            timedOut: false
+        )
+    }
+
     private static let daemonWithMachServicesXML = """
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -238,6 +281,18 @@ final class XPCTests: XCTestCase {
                 <key>com.example.testdaemon.helper</key><true/>
             </dict>
         </dict></plist>
+        """
+
+    private static let unorderedEntitlementsXML = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>com.example.zeta</key><true/>
+          <key>com.example.alpha</key><true/>
+        </dict>
+        </plist>
         """
 
     private static let agentWithProgramArgumentsXML = """

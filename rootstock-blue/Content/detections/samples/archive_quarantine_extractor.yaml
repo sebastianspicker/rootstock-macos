@@ -1,0 +1,11 @@
+id: sample.archive_quarantine_extractor
+title: Third-party archive extractor quarantine risk
+severity: high
+description: Third-party archive extractor present - extracted payloads may not inherit com.apple.quarantine.
+attack_techniques:
+  - T1553.001
+match:
+  event_type: archive.extractor
+  field_contains:
+    archive.risk_tags: "third_party_extractor"
+fixture: archive_quarantine_extractor.jsonl

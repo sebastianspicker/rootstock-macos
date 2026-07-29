@@ -6,9 +6,13 @@ import Entitlements
 import CodeSigning
 import Export
 
+/// Validates CLI input, runs the selected collectors, and writes one JSON scan.
+///
+/// Output replacement is deliberately narrow: `--force` may replace a regular
+/// file, but the exporter always refuses symlinks.
 @main
 struct RootstockCommand: AsyncParsableCommand {
-    static let collectorVersion = "1.0.0"
+    static let collectorVersion = "0.1.0-alpha.1"
 
     static let configuration = CommandConfiguration(
         commandName: "rootstock-collector",
@@ -52,6 +56,8 @@ struct RootstockCommand: AsyncParsableCommand {
         }
     }
 
+    /// Classifies recoverable collection errors as partial output and any
+    /// non-recoverable error as a failed scan while preserving the JSON evidence.
     static func completionLines(for result: ScanResult, output: String) -> [String] {
         let entitlementCount = result.applications.flatMap(\.entitlements).count
         let warningCount = result.errors.filter(\.recoverable).count
@@ -67,9 +73,9 @@ struct RootstockCommand: AsyncParsableCommand {
         ]
 
         if errorCount > 0 {
-            lines.append("Error: \(errorCount) error(s), \(warningCount) warning(s) — scan failed; see 'errors' in output for details")
+            lines.append("Error: \(errorCount) error(s), \(warningCount) warning(s) - scan failed; see 'errors' in output for details")
         } else if warningCount > 0 {
-            lines.append("⚠ \(warningCount) warning(s) — scan is partial; see 'errors' in output for details")
+            lines.append("⚠ \(warningCount) warning(s) - scan is partial; see 'errors' in output for details")
         }
         return lines
     }

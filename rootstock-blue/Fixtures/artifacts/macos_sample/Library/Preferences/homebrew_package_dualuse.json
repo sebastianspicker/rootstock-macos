@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "path": "/opt/homebrew/bin/brew",
+      "name": "brew",
+      "risk_tags": "package_surface,homebrew,dual_use",
+      "user": "alice",
+      "timestamp": "2026-06-01T12:00:00Z",
+      "notes": "Homebrew package dual-use markers \u2014 never installs packages or modifies Homebrew formulae"
+    }
+  ]
+}

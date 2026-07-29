@@ -1,9 +1,16 @@
-"""Tests for report_diagrams.py — all pure functions, no Neo4j required."""
+"""Tests for report_diagrams.py - all pure functions, no Neo4j required."""
 
 from unittest import TestCase
 
 from report_diagrams import (
+    format_family_findings_section,
+    format_multi_plane_campaign_section,
+    format_multi_plane_severity_board,
+    format_purple_engagement_matrix,
+    format_kill_chain_stage_timeline,
+    format_fleet_campaign_dashboard,
     mermaid_attack_path,
+    mermaid_family_findings_block,
     mermaid_tcc_pie,
     sanitize_mermaid_id,
 )
@@ -98,3 +105,171 @@ class TestMermaidTccPie:
         diagram = mermaid_tcc_pie(rows, top_n=10)
         # Should not include all 19 entries
         checks.assertLessEqual(diagram.count('"'), 22)
+
+
+class TestMermaidFamilyFindings:
+    def test_red_blue_styles(self):
+        findings = [
+            {
+                "finding_id": "rootstock.vector.delivery.url_scheme_handler",
+                "name": "URL scheme handler",
+                "severity": "medium",
+                "source": "rootstock-red",
+            },
+            {
+                "finding_id": "harden.launchd_override_depth",
+                "name": "Launchd override depth",
+                "severity": "high",
+                "source": "rootstock-blue",
+            },
+            {
+                "finding_id": "rootstock.vector.persist.browser_extension_dualuse",
+                "name": "Browser extension dual-use",
+                "severity": "medium",
+                "source": "rootstock-red",
+            },
+            {
+                "finding_id": "harden.shortcuts_app_intents",
+                "name": "Shortcuts automation",
+                "severity": "medium",
+                "source": "rootstock-blue",
+            },
+        ]
+        diagram = mermaid_family_findings_block(findings)
+        checks.assertIn("flowchart TB", diagram)
+        checks.assertIn("fill:#c0392b", diagram)  # red
+        checks.assertIn("fill:#2471a3", diagram)  # blue
+        checks.assertIn("[R]", diagram)
+        checks.assertIn("[B]", diagram)
+
+    def test_empty_findings(self):
+        diagram = mermaid_family_findings_block([])
+        checks.assertIn("No family findings", diagram)
+
+    def test_format_section_nonempty(self):
+        findings = [
+            {
+                "finding_id": "rootstock.vector.defense.launchd_override_depth",
+                "name": "Launchd override depth",
+                "severity": "high",
+                "source": "rootstock-red",
+            },
+            {
+                "finding_id": "harden.url_scheme_handler",
+                "name": "URL scheme harden",
+                "severity": "medium",
+                "source": "rootstock-blue",
+            },
+        ]
+        section = format_family_findings_section(findings)
+        checks.assertIn("Family Red/Blue Findings", section)
+        checks.assertIn("rootstock.vector.defense.launchd_override_depth", section)
+        checks.assertIn("harden.url_scheme_handler", section)
+        checks.assertIn("```mermaid", section)
+        checks.assertTrue(len(section) > 100)
+
+
+class TestMultiPlaneCampaign:
+    def test_campaign_section_nonempty(self):
+        planes = [
+            {
+                "id": "webloc",
+                "title": "Webloc delivery",
+                "stage": "delivery",
+                "red_ids": ["rootstock.vector.delivery.webloc_inetloc"],
+                "blue_ids": ["webloc_inetloc_delivery"],
+            },
+            {
+                "id": "mail_rules",
+                "title": "Mail rules",
+                "stage": "persist",
+                "red_ids": ["rootstock.vector.persist.mail_rules_automation"],
+                "blue_ids": ["mail_rules_automation"],
+            },
+        ]
+        section = format_multi_plane_campaign_section(planes, campaign="Wave-12")
+        checks.assertIn("Wave-12 campaign", section)
+        checks.assertIn("webloc_inetloc", section)
+        checks.assertIn("mail_rules", section)
+        checks.assertIn("```mermaid", section)
+        checks.assertTrue(len(section) > 80)
+
+    def test_empty_campaign(self):
+        section = format_multi_plane_campaign_section([])
+        checks.assertIn("No multi-plane themes", section)
+
+
+class TestMultiPlaneSeverityBoard:
+    def test_board_ranks_and_diagrams(self):
+        findings = [
+            {"finding_id": "rootstock.vector.data.screencapture_privacy", "name": "ScreenCapture", "severity": "high", "source": "rootstock-red"},
+            {"finding_id": "harden.homebrew_package_dualuse", "name": "Homebrew", "severity": "medium", "source": "rootstock-blue"},
+            {"finding_id": "rootstock.vector.codesign.gk_assessment_history", "name": "GK history", "severity": "low", "source": "rootstock-red"},
+        ]
+        section = format_multi_plane_severity_board(findings)
+        checks.assertIn("Multi-plane severity board", section)
+        checks.assertIn("screencapture_privacy", section)
+        checks.assertIn("homebrew_package_dualuse", section)
+        checks.assertIn("```mermaid", section)
+        # high before medium in table order
+        hi = section.find("high")
+        med = section.find("medium")
+        checks.assertTrue(0 <= hi < med)
+
+    def test_empty_board(self):
+        checks.assertIn("No findings", format_multi_plane_severity_board([]))
+
+
+class TestPurpleEngagementMatrix:
+    def test_matrix_nonempty(self):
+        pairs = [
+            {"plane": "Automator", "stage": "delivery", "red_id": "rootstock.vector.delivery.automator_workflow", "blue_id": "automator_workflow"},
+            {"plane": "PAM", "stage": "auth", "red_id": "rootstock.vector.auth.pam_auth_module", "blue_id": "pam_auth_module"},
+        ]
+        section = format_purple_engagement_matrix(pairs)
+        checks.assertIn("Purple engagement matrix", section)
+        checks.assertIn("automator_workflow", section)
+        checks.assertIn("pam_auth_module", section)
+        checks.assertIn("```mermaid", section)
+        checks.assertTrue(len(section) > 100)
+
+    def test_empty_matrix(self):
+        checks.assertIn("No red↔blue pairs", format_purple_engagement_matrix([]))
+
+
+class TestKillChainStageTimeline:
+    def test_timeline_nonempty(self):
+        stages = [
+            {"stage": "delivery", "label": "Automator/webloc", "red_count": 3, "blue_count": 2},
+            {"stage": "collection", "label": "Photos/keychain paths", "red_count": 4, "blue_count": 3},
+            {"stage": "lateral", "label": "ARD/VPN dual-use", "red_count": 2, "blue_count": 2},
+        ]
+        section = format_kill_chain_stage_timeline(stages)
+        checks.assertIn("Kill-chain stage timeline", section)
+        checks.assertIn("```mermaid", section)
+        checks.assertIn("timeline", section)
+        checks.assertIn("delivery", section)
+        checks.assertIn("collection", section)
+        checks.assertTrue(len(section) > 80)
+
+    def test_empty_timeline(self):
+        checks.assertIn("No stages", format_kill_chain_stage_timeline([]))
+
+
+class TestFleetCampaignDashboard:
+    def test_dashboard_aggregates(self):
+        campaigns = [
+            {"name": "Wave-14", "theme_count": 10, "half_pairs": 20, "stages": ["delivery", "auth"], "highlight": "Automator/PAM"},
+            {"name": "Wave-15", "theme_count": 10, "half_pairs": 20, "stages": ["collection", "remote"], "highlight": "Photos/ARD"},
+            {"name": "Wave-16", "theme_count": 25, "half_pairs": 50, "stages": ["privacy", "media", "mdm"], "highlight": "25 planes"},
+        ]
+        section = format_fleet_campaign_dashboard(campaigns)
+        checks.assertIn("Fleet multi-plane campaign dashboard", section)
+        checks.assertIn("Wave-16", section)
+        checks.assertIn("50", section)
+        checks.assertIn("```mermaid", section)
+        checks.assertTrue("45" in section or "themes" in section.lower())
+        checks.assertTrue(len(section) > 120)
+
+    def test_empty_fleet(self):
+        checks.assertIn("No campaigns", format_fleet_campaign_dashboard([]))

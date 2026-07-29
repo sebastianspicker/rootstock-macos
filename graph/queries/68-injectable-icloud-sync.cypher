@@ -1,5 +1,5 @@
 // Name: Injectable Apps with iCloud Sync
-// Purpose: Find injectable applications with iCloud container entitlements on hosts where iCloud is signed in — data exfiltration risk across all synced devices
+// Purpose: Correlate iCloud entitlements, host state, and modeled injection conditions
 // Category: Red Team
 // Severity: High
 // Parameters: none

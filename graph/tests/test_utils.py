@@ -1,9 +1,11 @@
-"""test_utils.py — Tests for graph/utils.py helper functions."""
+"""test_utils.py - Tests for graph/utils.py helper functions."""
 
 from __future__ import annotations
 
 from unittest import TestCase
 from unittest.mock import MagicMock
+
+import pytest
 
 from utils import (
     first_cypher_statement,
@@ -25,7 +27,7 @@ def test_list_or_str_with_list():
 
 
 def test_list_or_str_with_none():
-    checks.assertEqual(list_or_str(None), "—")
+    checks.assertEqual(list_or_str(None), " - ")
 
 
 def test_list_or_str_with_custom_placeholder():
@@ -143,6 +145,19 @@ def test_run_query_returns_dicts():
     mock_session.run.assert_called_once_with("MATCH (n) RETURN n.name AS name", {})
 
 
+def test_run_query_honors_maximum_rows():
+    mock_session = MagicMock()
+    mock_session.run.return_value = [{"n": index} for index in range(5)]
+
+    result = run_query(
+        mock_session,
+        "MATCH (n) RETURN n",
+        maximum_rows=2,
+    )
+
+    checks.assertEqual(result, [{"n": 0}, {"n": 1}])
+
+
 # ── validate_read_only_cypher ───────────────────────────────────────────────
 
 
@@ -158,6 +173,53 @@ def test_validate_create_rejected():
     result = validate_read_only_cypher("CREATE (n:Test)")
     checks.assertIsNotNone(result)
     checks.assertIn("CREATE", result)
+
+
+def test_validate_insert_rejected():
+    result = validate_read_only_cypher("INSERT (n:Test)")
+    checks.assertIsNotNone(result)
+    checks.assertIn("INSERT", result)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "ALTER USER neo4j SET PASSWORD 'replacement'",
+        "RENAME USER neo4j TO operator",
+        "GRANT ROLE admin TO operator",
+        "DENY ACCESS ON DATABASE neo4j TO operator",
+        "REVOKE ROLE admin FROM operator",
+        "TERMINATE TRANSACTIONS 'fixture-id'",
+        "START DATABASE neo4j",
+        "STOP DATABASE neo4j",
+        "ENABLE SERVER 'fixture-id'",
+        "DEALLOCATE DATABASES FROM SERVER 'fixture-id'",
+        "REALLOCATE DATABASES",
+    ],
+)
+def test_validate_administrative_mutations_rejected(query: str):
+    checks.assertIsNotNone(validate_read_only_cypher(query))
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "START // split clause\nDATABASE neo4j",
+        "STOP // split clause\nDATABASE neo4j",
+        'LOAD // split clause\nCSV FROM "https://example.test/data" AS row RETURN row',
+        "ENABLE // split clause\nSERVER 'fixture-id'",
+        "DEALLOCATE // split clause\nDATABASES FROM SERVER 'fixture-id'",
+        "REALLOCATE // split clause\nDATABASES",
+    ],
+)
+def test_validate_inline_comments_cannot_split_mutation_keywords(query: str):
+    checks.assertIsNotNone(validate_read_only_cypher(query))
+
+
+def test_validate_comment_markers_inside_literals_and_identifiers():
+    query = 'RETURN "https://example.test/path//value" AS url, n.`grant//name`'
+
+    checks.assertIsNone(validate_read_only_cypher(query))
 
 
 def test_validate_merge_rejected():

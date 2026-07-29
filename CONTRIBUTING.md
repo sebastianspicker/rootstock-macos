@@ -1,11 +1,29 @@
 # Contributing Rootstock
 
-Thank you for your interest in contributing to Rootstock.
+This multi-component alpha repository contains Rootstock Core (`collector/`,
+`graph/`, and the optional `modules/cve-scan/` bridge), `rootstock-red/`,
+`rootstock-blue/`, and `packages/RootstockMacFacts/`. These components have
+separate executables, artifacts, and validation paths. See
+[docs/FAMILY.md](docs/FAMILY.md) before cross-component changes.
 
-Rootstock is a passive macOS attack-path discovery tool. Keep collector changes
-local-only and read-only. Do not include real scan output, graph exports,
-reports, screenshots, package inventories, tokens, hostnames, usernames, or
-infrastructure details in issues or pull requests.
+Core collection is local-only and host-read-only. Do not include real scan
+output, graph exports, reports, screenshots, package inventories, tokens,
+hostnames, usernames, or infrastructure details in issues or pull requests.
+Treat Red findings and Blue case packages as confidential in the same way.
+
+The repository has multiple license scopes. Do not infer or assign a license
+to `packages/RootstockMacFacts/`; its licensing is unresolved. See the root
+[README license section](README.md#license) and component license files before
+proposing distribution changes.
+
+Benchmark results default to ignored `docs/private/` storage, and release
+binaries default to the ignored root `release/` directory. Do not move either
+into the public documentation tree.
+
+Public release screenshots are the exception: the capture script must validate
+the interactive mockup against `scripts/release-screenshot-fixture.mjs`, the
+images must be reviewed for sensitive metadata, and they may live only in
+`docs/screenshots/`.
 
 Benchmark results default to ignored `docs/private/` storage, and release
 binaries default to the ignored root `release/` directory. Do not move either
@@ -16,8 +34,12 @@ into the public documentation tree.
 ### Prerequisites
 
 - macOS 14 Sonoma or later
-- Xcode 15+ / Swift 5.9+ toolchain
-- Python 3.10+
+- Xcode 26.6 / Swift 6.3 toolchain
+- Python 3.11+ for full-repository development; the graph package alone
+  supports Python 3.10+
+- Node.js 24.18.0 from `.node-version` and npm 11.17.0, for viewer development
+  and browser tests; install with `npm ci` after cloning
+- uv, for locked Python environments
 - Docker, for Neo4j-backed graph checks
 
 ### Building the Collector
@@ -32,22 +54,35 @@ swift test
 ### Setting Up the Graph Pipeline
 
 ```bash
-cd graph
-NEO4J_AUTH=neo4j/CHANGE_ME docker compose up -d
-pip3 install -r requirements.txt
-cd ..
-NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh examples/demo-scan.json
+uv sync --project graph --locked --all-extras
+NEO4J_AUTH=neo4j/CHANGE_ME docker compose -f graph/docker-compose.yml up -d
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  bash graph/pipeline.sh examples/demo-scan.json
 ```
 
 If graph changes affect import, inference, queries, reports, or the API, run the
-Neo4j lane instead of relying only on fast unit tests:
+Neo4j lane instead of relying only on fast unit tests. Run these commands from
+the repository root:
 
 ```bash
-(cd graph && ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME pytest tests -v --tb=short)
-NEO4J_PASSWORD=CHANGE_ME bash tests/integration/test_full_pipeline.sh
+ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME \
+  uv run --project graph --locked pytest graph/tests -v --tb=short
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  bash tests/integration/test_full_pipeline.sh
 ```
 
 ## Coding Style
+
+### Test organization
+
+- Keep Swift tests in each package's `Tests/` directory and match SwiftPM test
+  targets to the source module they exercise.
+- Keep graph and cve-scan pytest suites beside their Python packages.
+- Keep root Node contracts in `tests/viewer/`, Playwright tests in
+  `tests/browser/`, cross-component tests in `tests/integration/`, and
+  repository script tests in `tests/scripts/`.
+- Store fixture source with its owning suite. Keep only fixture generators at
+  the repository root when multiple packages consume their output.
 
 ### Swift Collector
 
@@ -63,6 +98,16 @@ NEO4J_PASSWORD=CHANGE_ME bash tests/integration/test_full_pipeline.sh
 - Add type hints to function signatures.
 - Use Pydantic v2 validation for graph models.
 
+### Source Documentation
+
+- Give every authored production module a brief responsibility docstring or
+  file-level comment; a documented primary type may serve this role in Swift.
+- Document exported or non-trivial functions when ordering, security
+  boundaries, resource limits, fallback behavior, or error semantics are not
+  obvious from the signature.
+- Explain intent and constraints rather than restating syntax. Built
+  bundles, lockfiles, fixtures, and trivial accessors do not need commentary.
+
 ### Cypher Queries
 
 - Keep one query per `.cypher` file in `graph/queries/`.
@@ -74,7 +119,11 @@ NEO4J_PASSWORD=CHANGE_ME bash tests/integration/test_full_pipeline.sh
 2. Add tests that prove the intended behavior and relevant failure boundaries.
 3. Run the narrowest relevant checks, then broader checks for high-risk changes.
 4. Update documentation when adding a data source, query, output contract, or operator workflow.
-5. Submit a PR that explains what changed, why it changed, and what was verified.
+5. Submit a PR that identifies the affected component, explains what changed,
+   and records what was verified or skipped.
+
+See [docs/RELEASING.md](docs/RELEASING.md) for version alignment, candidate
+gates, screenshot handling, and the approval-only publication sequence.
 
 ## Adding a Data Source
 
@@ -87,7 +136,8 @@ Use `.github/ISSUE_TEMPLATE/new_data_source.md` as the checklist:
 5. Update `collector/schema/scan-result.schema.json`.
 6. Add focused tests.
 7. Update the graph importer if the data source produces new node or edge types.
-8. Validate at least one synthetic fixture with `python3 scripts/validate-scan.py`.
+8. Validate at least one synthetic fixture with
+   `uv run --project graph --locked python scripts/validate-scan.py`.
 
 ## Reporting Security Issues
 

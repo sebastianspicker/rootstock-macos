@@ -1,8 +1,8 @@
 """
-infer_password.py — Infer CAN_CHANGE_PASSWORD edges from admin/sudo privileges.
+infer_password.py - Infer CAN_CHANGE_PASSWORD edges from admin/sudo privileges.
 
 macOS admin-group members can change any non-admin user's password via
-`dscl . -passwd`. Users with SUDO_NOPASSWD ALL can change *any* user's
+`dscl . -passwd`. Users with SUDO_NOPASSWD ALL can change any user's
 password. This is the macOS analog of BloodHound's ForceChangePassword edge.
 
 Edge: User -[:CAN_CHANGE_PASSWORD {inferred: true}]-> User

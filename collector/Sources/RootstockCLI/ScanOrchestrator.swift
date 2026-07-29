@@ -25,14 +25,16 @@ import Sandbox
 import Quarantine
 
 /// Coordinates all data source modules and assembles the final ScanResult.
-struct ScanOrchestrator {
+struct ScanOrchestrator: Sendable {
     let verbose: Bool
 
+    /// Runs independent collectors concurrently, then applies application
+    /// enrichments in dependency order before assembling the stable scan schema.
     func run(config: ModuleConfig) async -> ScanResult {
         var allErrors: [CollectionError] = []
         let scanStart = Date()
 
-        // Phase 1: Launch independent modules concurrently.
+        // Stage 1: Launch independent modules concurrently.
         // TCC, XPC, Persistence, Keychain, and MDM have no data dependencies.
         err("Collecting data sources...")
 
@@ -71,53 +73,93 @@ struct ScanOrchestrator {
     // MARK: - Private
 
     private func collectIndependentModules(config: ModuleConfig) async -> ModuleTaskResults {
-        async let tccTask = collectDataSourceIfIncluded(config, .tcc) { await TCCDataSource().collect() }
-        async let xpcTask = collectDataSourceIfIncluded(config, .xpc) { await XPCDataSource().collect() }
-        async let persistenceTask = collectDataSourceIfIncluded(config, .persistence) { await PersistenceDataSource().collect() }
-        async let keychainTask = collectDataSourceIfIncluded(config, .keychain) { await KeychainDataSource().collect() }
-        async let mdmTask = collectDataSourceIfIncluded(config, .mdm) { await MDMDataSource().collect() }
-        async let groupsTask = collectDataSourceIfIncluded(config, .groups) { await GroupDataSource().collect() }
-        async let remoteAccessTask = collectDataSourceIfIncluded(config, .remoteAccess) { await RemoteAccessDataSource().collect() }
-        async let firewallTask = collectDataSourceIfIncluded(config, .firewall) { await FirewallDataSource().collect() }
-        async let loginSessionsTask = collectDataSourceIfIncluded(config, .loginSessions) { await LoginSessionDataSource().collect() }
-        async let authorizationDBTask = collectDataSourceIfIncluded(config, .authorizationDB) { await AuthorizationDBDataSource().collect() }
-        async let authPluginsTask = collectDataSourceIfIncluded(config, .authorizationPlugins) { await AuthorizationPluginDataSource().collect() }
-        async let sysExtTask = collectDataSourceIfIncluded(config, .systemExtensions) { await SystemExtensionDataSource().collect() }
-        async let sudoersTask = collectDataSourceIfIncluded(config, .sudoers) { await SudoersDataSource().collect() }
-        async let fileACLsTask = collectDataSourceIfIncluded(config, .fileACLs) { await FileACLDataSource().collect() }
-        async let shellHooksTask = collectDataSourceIfIncluded(config, .shellHooks) { await ShellHookDataSource().collect() }
+        let selectedModules = Self.independentModules.filter {
+            config.includes($0.id)
+        }
+        async let dataSourceResultsTask = collectDataSourceResults(for: selectedModules)
         async let physicalSecurityTask = collectPhysicalSecurityIfIncluded(config)
         async let activeDirectoryTask = collectActiveDirectoryIfIncluded(config)
-        async let kerberosTask = collectDataSourceIfIncluded(config, .kerberos) { await KerberosArtifactDataSource().collect() }
+
         return await ModuleTaskResults(
-            tcc: tccTask,
-            xpc: xpcTask,
-            persistence: persistenceTask,
-            keychain: keychainTask,
-            mdm: mdmTask,
-            groups: groupsTask,
-            remoteAccess: remoteAccessTask,
-            firewall: firewallTask,
-            loginSessions: loginSessionsTask,
-            authorizationDB: authorizationDBTask,
-            authorizationPlugins: authPluginsTask,
-            systemExtensions: sysExtTask,
-            sudoers: sudoersTask,
-            fileACLs: fileACLsTask,
-            shellHooks: shellHooksTask,
+            dataSourceResults: dataSourceResultsTask,
             physicalSecurity: physicalSecurityTask,
-            activeDirectory: activeDirectoryTask,
-            kerberos: kerberosTask
+            activeDirectory: activeDirectoryTask
         )
     }
 
-    private func collectDataSourceIfIncluded(
-        _ config: ModuleConfig,
-        _ module: RootstockModuleID,
-        collect: () async -> DataSourceResult
-    ) async -> (DataSourceResult, Double)? {
-        guard config.includes(module) else { return nil }
-        return await timed { await collect() }
+    /// Registry entry for a collector that has no application-data dependency.
+    ///
+    /// The identifier must remain unique and compatible with `ModuleConfig`
+    /// because completed tasks are stored and consumed by module ID.
+    struct IndependentModule: Sendable {
+        let id: RootstockModuleID
+        private let collectData: @Sendable () async -> DataSourceResult
+
+        init(
+            id: RootstockModuleID,
+            collectData: @escaping @Sendable () async -> DataSourceResult
+        ) {
+            self.id = id
+            self.collectData = collectData
+        }
+
+        func collect() async -> DataSourceResult {
+            await collectData()
+        }
+    }
+
+    /// Extension seam for collectors that are safe to execute concurrently.
+    static var independentModules: [IndependentModule] {
+        [
+            IndependentModule(id: .tcc) { await TCCDataSource().collect() },
+            IndependentModule(id: .xpc) { await XPCDataSource().collect() },
+            IndependentModule(id: .persistence) { await PersistenceDataSource().collect() },
+            IndependentModule(id: .keychain) { await KeychainDataSource().collect() },
+            IndependentModule(id: .mdm) { await MDMDataSource().collect() },
+            IndependentModule(id: .groups) { await GroupDataSource().collect() },
+            IndependentModule(id: .remoteAccess) { await RemoteAccessDataSource().collect() },
+            IndependentModule(id: .firewall) { await FirewallDataSource().collect() },
+            IndependentModule(id: .loginSessions) { await LoginSessionDataSource().collect() },
+            IndependentModule(id: .authorizationDB) { await AuthorizationDBDataSource().collect() },
+            IndependentModule(id: .authorizationPlugins) {
+                await AuthorizationPluginDataSource().collect()
+            },
+            IndependentModule(id: .systemExtensions) {
+                await SystemExtensionDataSource().collect()
+            },
+            IndependentModule(id: .sudoers) { await SudoersDataSource().collect() },
+            IndependentModule(id: .fileACLs) { await FileACLDataSource().collect() },
+            IndependentModule(id: .shellHooks) { await ShellHookDataSource().collect() },
+            IndependentModule(id: .kerberos) { await KerberosArtifactDataSource().collect() },
+        ]
+    }
+
+    static var independentModuleIDs: [RootstockModuleID] {
+        independentModules.map(\.id)
+    }
+
+    private func collectDataSourceResults(
+        for modules: [IndependentModule]
+    ) async -> [RootstockModuleID: TimedDataSourceResult] {
+        await withTaskGroup(
+            of: (RootstockModuleID, TimedDataSourceResult).self,
+            returning: [RootstockModuleID: TimedDataSourceResult].self
+        ) { group in
+            for module in modules {
+                group.addTask {
+                    (module.id, await self.timed { await module.collect() })
+                }
+            }
+
+            var completedResults: [RootstockModuleID: TimedDataSourceResult] = [:]
+            for await (moduleID, result) in group {
+                completedResults[moduleID] = result
+            }
+
+            // Completion order is intentionally irrelevant: results are keyed by
+            // module ID and consumed later through explicit, fixed ID lookups.
+            return completedResults
+        }
     }
 
     private func collectPhysicalSecurityIfIncluded(
@@ -129,93 +171,9 @@ struct ScanOrchestrator {
 
     private func collectActiveDirectoryIfIncluded(
         _ config: ModuleConfig
-    ) async -> ((result: DataSourceResult, binding: ADBinding), Double)? {
+    ) async -> ((result: DataSourceResult, binding: ADBinding?), Double)? {
         guard config.includes(.activeDirectory) else { return nil }
-        return await timed { ActiveDirectoryDataSource().collectWithBinding() }
-    }
-
-    private func collectApplications(config: ModuleConfig) async -> ApplicationCollection {
-        let entitlementCollection = await collectEntitlementApplications(config: config)
-        let codeSigningCollection = await collectCodeSigningApplications(
-            config: config,
-            applications: entitlementCollection.applications
-        )
-        let applications = await collectApplicationEnrichments(
-            config: config,
-            applications: codeSigningCollection.applications
-        )
-        return ApplicationCollection(
-            applications: applications,
-            errors: entitlementCollection.errors + codeSigningCollection.errors
-        )
-    }
-
-    private func collectEntitlementApplications(config: ModuleConfig) async -> ApplicationCollection {
-        guard config.includes(.entitlements) else {
-            return ApplicationCollection(applications: [], errors: [])
-        }
-        let (result, elapsed) = await timed { await EntitlementDataSource().collect() }
-        let applications = result.nodes.compactMap { $0 as? Application }
-        if verbose {
-            err("  [Entitlements] completed in \(format(elapsed))  (\(applications.count) apps)")
-        }
-        return ApplicationCollection(applications: applications, errors: result.errors)
-    }
-
-    private func collectCodeSigningApplications(
-        config: ModuleConfig,
-        applications: [Application]
-    ) async -> ApplicationCollection {
-        guard config.includes(.codeSigning) else {
-            return ApplicationCollection(applications: applications, errors: [])
-        }
-        let ((enrichedApplications, errors), elapsed) = await timed {
-            CodeSigningDataSource().enriched(applications: applications)
-        }
-        if verbose {
-            err("  [CodeSigning]  completed in \(format(elapsed))  (\(enrichedApplications.count) apps)")
-        }
-        return ApplicationCollection(applications: enrichedApplications, errors: errors)
-    }
-
-    private func collectApplicationEnrichments(
-        config: ModuleConfig,
-        applications: [Application]
-    ) async -> [Application] {
-        guard config.includes(.entitlements),
-              config.includes(.sandbox) || config.includes(.quarantine) else {
-            return applications
-        }
-        if config.includes(.sandbox) && config.includes(.quarantine) {
-            return await collectSandboxAndQuarantine(applications)
-        }
-        let enrichStart = Date()
-        if config.includes(.sandbox) {
-            let (sandboxApps, sandboxCount) = SandboxDataSource().enriched(applications: applications)
-            let elapsed = Date().timeIntervalSince(enrichStart)
-            if verbose { err("  [Sandbox]      completed in \(format(elapsed))  (\(sandboxCount) profiles)") }
-            return sandboxApps
-        }
-        let (quarantineApps, quarantineCount) = QuarantineDataSource().enriched(applications: applications)
-        let elapsed = Date().timeIntervalSince(enrichStart)
-        if verbose { err("  [Quarantine]   completed in \(format(elapsed))  (\(quarantineCount) quarantined)") }
-        return quarantineApps
-    }
-
-    private func collectSandboxAndQuarantine(_ applications: [Application]) async -> [Application] {
-        let enrichStart = Date()
-        async let sandboxResult = { SandboxDataSource().enriched(applications: applications) }()
-        async let quarantineResult = { QuarantineDataSource().enriched(applications: applications) }()
-        let ((sandboxApps, sandboxCount), (quarantineApps, quarantineCount)) = await (sandboxResult, quarantineResult)
-        if verbose {
-            let elapsed = Date().timeIntervalSince(enrichStart)
-            err("  [Sandbox]      completed in \(format(elapsed))  (\(sandboxCount) profiles)")
-            err("  [Quarantine]   completed in \(format(elapsed))  (\(quarantineCount) quarantined)")
-        }
-        return Self.mergeApplicationEnrichments(
-            sandboxApplications: sandboxApps,
-            quarantineApplications: quarantineApps
-        )
+        return await timed { ActiveDirectoryDataSource().collectWithBindingOutcome() }
     }
 
     private func collectNodes<T>(
@@ -241,24 +199,24 @@ struct ScanOrchestrator {
         errors: inout [CollectionError]
     ) async -> ScanModuleCollection {
         ScanModuleCollection(
-            tccGrants: collectNodes(taskResults.tcc, as: TCCGrant.self, label: "TCC", noun: "grants", errors: &errors),
-            xpcServices: collectNodes(taskResults.xpc, as: XPCService.self, label: "XPC", noun: "services", errors: &errors),
-            keychainAcls: collectNodes(taskResults.keychain, as: KeychainItem.self, label: "Keychain", noun: "items", errors: &errors),
-            mdmProfiles: collectNodes(taskResults.mdm, as: MDMProfile.self, label: "MDM", noun: "profiles", errors: &errors),
-            launchItems: collectNodes(taskResults.persistence, as: LaunchItem.self, label: "Persistence", noun: "items", errors: &errors),
-            groupCollection: collectGroups(taskResults.groups, errors: &errors),
-            remoteAccessServices: collectNodes(taskResults.remoteAccess, as: RemoteAccessService.self, label: "RemoteAccess", noun: "services", errors: &errors),
-            firewallStatus: collectNodes(taskResults.firewall, as: FirewallStatus.self, label: "Firewall", noun: "policies", errors: &errors),
-            loginSessions: collectNodes(taskResults.loginSessions, as: LoginSession.self, label: "Sessions", noun: "sessions", errors: &errors),
-            authorizationRights: collectNodes(taskResults.authorizationDB, as: AuthorizationRight.self, label: "AuthDB", noun: "rights", errors: &errors),
-            authorizationPlugins: collectNodes(taskResults.authorizationPlugins, as: AuthorizationPlugin.self, label: "AuthPlugins", noun: "plugins", errors: &errors),
-            systemExtensions: collectNodes(taskResults.systemExtensions, as: SystemExtension.self, label: "SysExt", noun: "extensions", errors: &errors),
-            sudoersRules: collectNodes(taskResults.sudoers, as: SudoersRule.self, label: "Sudoers", noun: "rules", errors: &errors),
+            tccGrants: collectNodes(taskResults.result(for: .tcc), as: TCCGrant.self, label: "TCC", noun: "grants", errors: &errors),
+            xpcServices: collectNodes(taskResults.result(for: .xpc), as: XPCService.self, label: "XPC", noun: "services", errors: &errors),
+            keychainAcls: collectNodes(taskResults.result(for: .keychain), as: KeychainItem.self, label: "Keychain", noun: "items", errors: &errors),
+            mdmProfiles: collectNodes(taskResults.result(for: .mdm), as: MDMProfile.self, label: "MDM", noun: "profiles", errors: &errors),
+            launchItems: collectNodes(taskResults.result(for: .persistence), as: LaunchItem.self, label: "Persistence", noun: "items", errors: &errors),
+            groupCollection: collectGroups(taskResults.result(for: .groups), errors: &errors),
+            remoteAccessServices: collectNodes(taskResults.result(for: .remoteAccess), as: RemoteAccessService.self, label: "RemoteAccess", noun: "services", errors: &errors),
+            firewallStatus: collectNodes(taskResults.result(for: .firewall), as: FirewallStatus.self, label: "Firewall", noun: "policies", errors: &errors),
+            loginSessions: collectNodes(taskResults.result(for: .loginSessions), as: LoginSession.self, label: "Sessions", noun: "sessions", errors: &errors),
+            authorizationRights: collectNodes(taskResults.result(for: .authorizationDB), as: AuthorizationRight.self, label: "AuthDB", noun: "rights", errors: &errors),
+            authorizationPlugins: collectNodes(taskResults.result(for: .authorizationPlugins), as: AuthorizationPlugin.self, label: "AuthPlugins", noun: "plugins", errors: &errors),
+            systemExtensions: collectNodes(taskResults.result(for: .systemExtensions), as: SystemExtension.self, label: "SysExt", noun: "extensions", errors: &errors),
+            sudoersRules: collectNodes(taskResults.result(for: .sudoers), as: SudoersRule.self, label: "Sudoers", noun: "rules", errors: &errors),
             runningProcesses: await collectRunningProcesses(config: config, applications: applications, errors: &errors),
-            fileAcls: collectFileACLs(taskResults.fileACLs, shellHooks: taskResults.shellHooks, errors: &errors),
+            fileAcls: collectFileACLs(taskResults.result(for: .fileACLs), shellHooks: taskResults.result(for: .shellHooks), errors: &errors),
             physicalSecurity: collectPhysicalSecurity(taskResults.physicalSecurity, errors: &errors),
             activeDirectory: collectActiveDirectory(taskResults.activeDirectory, errors: &errors),
-            kerberosArtifacts: collectNodes(taskResults.kerberos, as: KerberosArtifact.self, label: "Kerberos", noun: "artifacts", errors: &errors)
+            kerberosArtifacts: collectNodes(taskResults.result(for: .kerberos), as: KerberosArtifact.self, label: "Kerberos", noun: "artifacts", errors: &errors)
         )
     }
 
@@ -322,7 +280,7 @@ struct ScanOrchestrator {
     }
 
     private func collectActiveDirectory(
-        _ timedResult: ((result: DataSourceResult, binding: ADBinding), Double)?,
+        _ timedResult: ((result: DataSourceResult, binding: ADBinding?), Double)?,
         errors: inout [CollectionError]
     ) -> ActiveDirectoryCollection {
         guard let (combined, elapsed) = timedResult else {
@@ -332,7 +290,8 @@ struct ScanOrchestrator {
         let groups = combined.result.nodes.compactMap { $0 as? LocalGroup }
         errors.append(contentsOf: combined.result.errors)
         if verbose {
-            err("  [AD]           completed in \(format(elapsed))  (bound: \(combined.binding.isBound), \(users.count) AD users, \(groups.count) AD-sourced groups, \(combined.result.errors.count) errors)")
+            let bound = combined.binding.map { String($0.isBound) } ?? "unknown"
+            err("  [AD]           completed in \(format(elapsed))  (bound: \(bound), \(users.count) AD users, \(groups.count) AD-sourced groups, \(combined.result.errors.count) errors)")
         }
         return ActiveDirectoryCollection(
             binding: combined.binding,
@@ -522,19 +481,19 @@ struct ScanOrchestrator {
     }
 
     /// Runs `block`, returning the result and wall-clock elapsed time in seconds.
-    private func timed<T>(_ block: () async -> T) async -> (T, Double) {
+    func timed<T>(_ block: () async -> T) async -> (T, Double) {
         let start = Date()
         let result = await block()
         return (result, Date().timeIntervalSince(start))
     }
 
     /// Formats elapsed seconds as "X.XXs".
-    private func format(_ seconds: Double) -> String {
+    func format(_ seconds: Double) -> String {
         String(format: "%.2fs", seconds)
     }
 
     /// Write a line to stderr.
-    private func err(_ text: String) {
+    func err(_ text: String) {
         FileHandle.standardError.write(Data((text + "\n").utf8))
     }
 }

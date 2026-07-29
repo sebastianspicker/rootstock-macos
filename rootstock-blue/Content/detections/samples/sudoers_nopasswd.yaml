@@ -1,0 +1,11 @@
+id: sample.sudoers_nopasswd
+title: sudoers NOPASSWD grant
+severity: high
+description: sudoers entry grants passwordless elevation (NOPASSWD).
+attack_techniques:
+  - T1548.003
+match:
+  event_type: privilege.sudoers
+  field_contains:
+    privilege.risk_tags: "nopasswd"
+fixture: sudoers_nopasswd.jsonl

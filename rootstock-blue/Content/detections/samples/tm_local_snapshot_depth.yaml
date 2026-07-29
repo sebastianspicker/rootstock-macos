@@ -1,0 +1,13 @@
+id: sample.tm_local_snapshot_depth
+title: Time Machine local snapshot residual depth surface present
+severity: high
+description: TM local snapshot depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1005
+  - T1530
+  - T1083
+match:
+  event_type: tm.local_snapshot
+  field_contains:
+    tmsnap.risk_tags: "tm_snapshot_surface"
+fixture: tm_local_snapshot_depth.jsonl

@@ -1,0 +1,6 @@
+// Change before distribution / Apple ES entitlement request
+ROOTSTOCK_BLUE_BUNDLE_PREFIX = dev.rootstock.blue
+PRODUCT_BUNDLE_IDENTIFIER = dev.rootstock.blue.app
+ROOTSTOCK_BLUE_ES_BUNDLE_ID = dev.rootstock.blue.es
+ROOTSTOCK_BLUE_HELPER_BUNDLE_ID = dev.rootstock.blue.helper
+ROOTSTOCK_BLUE_DAEMON_BUNDLE_ID = dev.rootstock.blue.daemon

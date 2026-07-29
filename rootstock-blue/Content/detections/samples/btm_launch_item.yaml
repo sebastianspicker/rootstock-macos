@@ -1,0 +1,10 @@
+id: sample.btm_launch_item
+title: BTM launch item add (ES notify)
+severity: medium
+description: Live ES NOTIFY_BTM_LAUNCH_ITEM_ADD (agent/daemon login item). Pair with offline BTM parser rule sample.btm_tmp_executable for artifact-root cases.
+attack_techniques:
+  - T1543.001
+  - T1547.015
+match:
+  event_type: NOTIFY_BTM_LAUNCH_ITEM_ADD
+fixture: btm_launch_item.jsonl

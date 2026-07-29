@@ -1,0 +1,13 @@
+id: sample.bluetooth_continuity_depth
+title: Bluetooth / Continuity proximity residual depth surface present
+severity: high
+description: Bluetooth Continuity depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1011
+  - T1200
+  - T1040
+match:
+  event_type: bluetooth.continuity
+  field_contains:
+    btcont.risk_tags: "bt_continuity_surface"
+fixture: bluetooth_continuity_depth.jsonl

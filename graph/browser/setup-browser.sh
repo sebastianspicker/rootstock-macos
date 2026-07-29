@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup-browser.sh — Rootstock Neo4j Browser Integration Setup
+# setup-browser.sh - Rootstock Neo4j Browser Integration Setup
 #
 # This script:
 #   1. Serves the Browser Guide and GraSS file over HTTP
@@ -34,14 +34,14 @@ info()   { echo -e "${CYAN}[INFO]${NC} $*"; }
 warn()   { echo -e "${YELLOW}[WARN]${NC} $*"; }
 
 header
-echo -e "${BLUE}  Rootstock — Neo4j Browser Setup${NC}"
+echo -e "${BLUE}  Rootstock - Neo4j Browser Setup${NC}"
 header
 
 # ── Check dependencies ────────────────────────────────────────────────────────
 info "Checking dependencies…"
 
 if ! command -v python3 &>/dev/null; then
-    warn "python3 not found — cannot start HTTP server."
+    warn "python3 not found - cannot start HTTP server."
     warn "Install Python 3 or manually copy files to Neo4j's import directory."
     exit 1
 fi

@@ -1,0 +1,11 @@
+name: triage-lite
+description: Minimal IR triage artifact set
+requires_fda: true
+requires_es: false
+artifacts:
+  - basicinfo
+  - users
+  - autostart
+  - tcc
+  - quarantine
+  - unifiedlog_export

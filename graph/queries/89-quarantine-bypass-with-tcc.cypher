@@ -1,5 +1,5 @@
-// Name: Quarantine Bypass Apps with TCC Grants
-// Purpose: Find unquarantined apps that hold TCC grants — Gatekeeper bypass with privileged access
+// Name: Quarantine Review for Apps with TCC Grants
+// Purpose: Correlate missing quarantine/notarization metadata with TCC grants
 // Category: Red Team
 // Severity: Critical
 // Parameters: none

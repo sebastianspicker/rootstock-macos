@@ -1,8 +1,8 @@
 """
-infer_accessibility.py — Infer Accessibility API abuse attack paths.
+infer_accessibility.py - Infer Accessibility API abuse attack paths.
 
 Apps with kTCCServiceAccessibility grants can simulate keyboard/mouse input
-and read any GUI element — a superset of Apple Events. An injectable app
+and read any GUI element - a superset of Apple Events. An injectable app
 with Accessibility permission can control any other running application.
 
 If the injectable app also has allowed TCC grants, it becomes a high-value
@@ -27,7 +27,7 @@ def infer(session: Session) -> int:
     grants to all apps with allowed TCC grants (valuable targets).
 
     Accessibility API can simulate keyboard/mouse input and read any GUI
-    element — it's a superset of Apple Events for GUI control.
+    element - it's a superset of Apple Events for GUI control.
 
     Returns the number of edges created or merged. Idempotent.
     """

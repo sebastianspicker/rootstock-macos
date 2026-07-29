@@ -1,0 +1,10 @@
+{
+  "assessments": [
+    {
+      "path": "/tmp/unsigned_tool",
+      "result": "rejected",
+      "override": true,
+      "cdhash": "deadbeef"
+    }
+  ]
+}

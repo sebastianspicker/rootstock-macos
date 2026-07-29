@@ -1,0 +1,14 @@
+{
+  "hooks": [
+    {
+      "hook_type": "login",
+      "script_path": "/tmp/evil_login_hook.sh",
+      "script_exists": true
+    },
+    {
+      "hook_type": "logout",
+      "script_path": "/usr/local/bin/evil_logout_hook.sh",
+      "script_exists": false
+    }
+  ]
+}

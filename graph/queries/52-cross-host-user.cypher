@@ -1,5 +1,5 @@
 // Name: Cross-Host User Presence (Lateral Movement Indicators)
-// Purpose: Find users present on multiple hosts — potential lateral movement paths
+// Purpose: Find users present on multiple hosts - potential lateral movement paths
 // Category: Red Team
 // Severity: High
 // Parameters: none

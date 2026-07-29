@@ -10,7 +10,7 @@ import Models
 ///   - 0x0040: User approved (Gatekeeper prompt accepted)
 ///   - 0x0020: App was translocated (moved to randomised read-only path)
 ///
-/// This data source enriches existing Application objects — it does not discover
+/// This data source enriches existing Application objects - it does not discover
 /// new applications. It should run after Entitlements and CodeSigning.
 public struct QuarantineDataSource {
     public let name = "Quarantine"

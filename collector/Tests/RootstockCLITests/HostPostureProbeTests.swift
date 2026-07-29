@@ -25,6 +25,23 @@ final class HostPostureProbeTests: XCTestCase {
         XCTAssertNil(result.error)
     }
 
+    func testGatekeeperAndSIPUseSharedMacFactsParsers() {
+        let gk = ScanOrchestrator.detectGatekeeper { _, _ in "assessments enabled" }
+        XCTAssertEqual(gk.value, true)
+        XCTAssertNil(gk.error)
+
+        let sip = ScanOrchestrator.detectSIP { _, _ in
+            "System Integrity Protection status: enabled."
+        }
+        XCTAssertEqual(sip.value, true)
+        XCTAssertNil(sip.error)
+
+        let fvDeferred = ScanOrchestrator.detectFileVault { _, _ in
+            "Deferred enablement appears to be active."
+        }
+        XCTAssertEqual(fvDeferred.value, true)
+    }
+
     func testUnreadableICloudPlistRecordsUnknownDiagnostic() {
         let result = ScanOrchestrator.detectICloudStatus { _ in nil }
 

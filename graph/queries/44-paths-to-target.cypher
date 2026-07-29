@@ -3,7 +3,7 @@
 // Category: Red Team
 // Severity: Critical
 // Parameters: $bundle_id (target application bundle_id, e.g. "com.apple.Terminal")
-// Attack: Asset-centric analysis — identify all ways an attacker can reach a specific high-value target
+// Attack: Asset-centric analysis - identify all ways an attacker can reach a specific high-value target
 // Prerequisites: import_scan.py + infer.py must have run; mark_owned.py to set owned nodes
 
 MATCH (target:Application {bundle_id: $bundle_id})

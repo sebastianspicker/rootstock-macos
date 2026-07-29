@@ -1,5 +1,5 @@
 """
-infer_mdm_overgrant.py — Flag MDM profiles that grant TCC permissions to scripting interpreters.
+infer_mdm_overgrant.py - Flag MDM profiles that grant TCC permissions to scripting interpreters.
 
 MDM profiles that grant any TCC permission to Terminal, Python, osascript, or
 other scripting interpreters effectively grant attackers unrestricted access

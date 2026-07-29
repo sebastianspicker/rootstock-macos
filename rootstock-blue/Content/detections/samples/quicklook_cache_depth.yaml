@@ -1,0 +1,13 @@
+id: sample.quicklook_cache_depth
+title: QuickLook thumbnail cache residual depth surface present
+severity: high
+description: QuickLook cache depth markers indicate IR surface for purple operators.
+attack_techniques:
+  - T1005
+  - T1083
+  - T1552
+match:
+  event_type: quicklook.cache
+  field_contains:
+    qlcache.risk_tags: "quicklook_surface"
+fixture: quicklook_cache_depth.jsonl

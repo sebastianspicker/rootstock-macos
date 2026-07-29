@@ -1,7 +1,7 @@
 """
-test_bloodhound_import.py — Tests for BloodHound SharpHound ZIP import.
+test_bloodhound_import.py - Tests for BloodHound SharpHound ZIP import.
 
-Pure unit tests for parsing and import logic — no Neo4j required for most tests.
+Pure unit tests for parsing and import logic - no Neo4j required for most tests.
 Integration tests require a running Neo4j instance.
 """
 

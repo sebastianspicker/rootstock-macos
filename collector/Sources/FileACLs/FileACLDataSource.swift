@@ -9,6 +9,7 @@ import Models
 public struct FileACLDataSource: DataSource {
     public let name = "File ACLs"
     public let requiresElevation = false
+    private let readACLEntries: (String) -> (entries: [String], error: String?)
 
     /// Critical paths to check, grouped by semantic category.
     static let criticalPaths: [(path: String, category: String)] = [
@@ -38,7 +39,13 @@ public struct FileACLDataSource: DataSource {
         "/usr/sbin/",
     ]
 
-    public init() {}
+    public init() {
+        readACLEntries = Self.readACLEntriesWithDiagnostic
+    }
+
+    init(readACLEntries: @escaping (String) -> (entries: [String], error: String?)) {
+        self.readACLEntries = readACLEntries
+    }
 
     public func collect() async -> DataSourceResult {
         var results: [FileACL] = []
@@ -65,9 +72,14 @@ public struct FileACLDataSource: DataSource {
 
     // MARK: - Internal
 
-    func collectPath(_ path: String, category: String, fm: FileManager) -> (FileACL?, String?) {
+    public func collectPath(
+        _ path: String,
+        category: String,
+        fm: FileManager,
+        reportsACLErrors: Bool = true
+    ) -> (FileACL?, String?) {
         guard fm.fileExists(atPath: path) else {
-            return (nil, nil)  // Missing file is not an error — it's expected on some systems
+            return (nil, nil)  // Missing file is not an error - it's expected on some systems
         }
 
         let attrs: [FileAttributeKey: Any]
@@ -82,7 +94,8 @@ public struct FileACLDataSource: DataSource {
         let posixPerms = attrs[.posixPermissions] as? Int ?? 0
         let mode = String(format: "%o", posixPerms)
 
-        let aclEntries = Self.readACLEntries(path: path)
+        let aclResult = readACLEntries(path)
+        let aclEntries = aclResult.entries
         let isSipProtected = Self.isSIPProtected(path)
         let isWritableByNonRoot = Self.checkWritableByNonRoot(posixPerms: posixPerms, owner: owner, aclEntries: aclEntries)
 
@@ -95,7 +108,7 @@ public struct FileACLDataSource: DataSource {
             isSipProtected: isSipProtected,
             isWritableByNonRoot: isWritableByNonRoot,
             category: category
-        ), nil)
+        ), reportsACLErrors ? aclResult.error : nil)
     }
 
     private func collectCriticalPath(
@@ -170,8 +183,20 @@ public struct FileACLDataSource: DataSource {
 
     /// Read extended ACL entries using `ls -le`.
     public static func readACLEntries(path: String) -> [String] {
-        guard let output = Shell.run("/bin/ls", ["-led", path]) else { return [] }
-        return parseACLOutput(output)
+        readACLEntriesWithDiagnostic(path: path).entries
+    }
+
+    private static func readACLEntriesWithDiagnostic(
+        path: String
+    ) -> (entries: [String], error: String?) {
+        let outcome = Shell.execute("/bin/ls", ["-led", path])
+        guard case .success(let result) = outcome else {
+            return (
+                [],
+                "Cannot read ACL entries for \(path): \(outcome.failureDescription ?? "command failure")"
+            )
+        }
+        return (parseACLOutput(result.stdout), nil)
     }
 
     /// Parse ACL entries from `ls -le` output.

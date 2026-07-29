@@ -1,0 +1,13 @@
+id: sample.maps_location_path
+title: Maps / location services residual plane surface present
+severity: high
+description: Maps location residual markers indicate IR surface.
+attack_techniques:
+  - T1011
+  - T1083
+  - T1005
+match:
+  event_type: maps.location
+  field_contains:
+    mapsloc.risk_tags: "maps_location_surface"
+fixture: maps_location_path.jsonl

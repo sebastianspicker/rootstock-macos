@@ -1,4 +1,4 @@
-// Name: Persistence Audit — High-Risk Third-Party Persistence
+// Name: Persistence Audit - High-Risk Third-Party Persistence
 // Purpose: Find third-party LaunchDaemons/Agents running as root or linked to injectable apps
 // Category: Blue Team
 // Severity: High

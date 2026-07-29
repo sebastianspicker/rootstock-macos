@@ -12,8 +12,8 @@ RETURN se.identifier      AS identifier,
        se.extension_type  AS type,
        se.enabled         AS enabled,
        CASE
-         WHEN se.extension_type = 'endpoint_security' THEN 'Endpoint Security Agent — high privilege'
-         WHEN se.extension_type = 'network' THEN 'Network Filter — can inspect/modify traffic'
-         WHEN se.extension_type = 'driver' THEN 'Driver Extension — kernel-level access'
+         WHEN se.extension_type = 'endpoint_security' THEN 'Endpoint Security Agent - high privilege'
+         WHEN se.extension_type = 'network' THEN 'Network Filter - can inspect/modify traffic'
+         WHEN se.extension_type = 'driver' THEN 'Driver Extension - kernel-level access'
        END AS risk_note
 ORDER BY se.extension_type ASC, se.identifier ASC

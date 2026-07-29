@@ -1,5 +1,5 @@
 """
-test_opengraph.py — Unit tests for the OpenGraph exporter.
+test_opengraph.py - Unit tests for the OpenGraph exporter.
 
 Tests format validation, node ID generation, and type mappings.
 No Neo4j connection required for these tests.
@@ -16,6 +16,10 @@ from opengraph_export import (
     NODE_TYPE_MAP,
     EDGE_TYPE_MAP,
     make_node_id,
+    map_edge_for_opengraph,
+    map_node_for_opengraph,
+    resolve_edge_type_info,
+    resolve_node_type_info,
     _sanitize,
     _node_key,
     _node_display_name,
@@ -232,12 +236,82 @@ class TestTypeMaps:
             checks.assertTrue(isinstance(info["traversable"], bool))
 
     def test_node_type_count(self):
-        """Verify Rootstock and cve-scan module node types are mapped."""
-        checks.assertEqual(len(NODE_TYPE_MAP), 44)
+        """Verify Rootstock, cve-scan, and family node labels are mapped."""
+        checks.assertEqual(len(NODE_TYPE_MAP), 45)
+        checks.assertIn("Protection", NODE_TYPE_MAP)
 
     def test_edge_type_count(self):
-        """Verify Rootstock and cve-scan module edge types are mapped."""
-        checks.assertEqual(len(EDGE_TYPE_MAP), 68)
+        """Verify Rootstock, cve-scan, and family edge types are mapped."""
+        checks.assertEqual(len(EDGE_TYPE_MAP), 70)
+        checks.assertIn("HAS_LAUNCH_ITEM", EDGE_TYPE_MAP)
+        checks.assertIn("HAS_PROTECTION", EDGE_TYPE_MAP)
+
+    def test_family_finding_kinds_disambiguate_from_cve(self):
+        cve = resolve_node_type_info("Finding", {"id": "f1"})
+        red = resolve_node_type_info(
+            "Finding",
+            {"id": "f2", "family_export": True, "source": "rootstock-red"},
+        )
+        blue = resolve_node_type_info(
+            "Finding",
+            {"id": "f3", "family_export": True, "source": "rootstock-blue"},
+        )
+        checks.assertEqual(cve["kind"], "rs_CveFinding")
+        checks.assertEqual(red["kind"], "rs_RedFinding")
+        checks.assertEqual(blue["kind"], "rs_BlueFinding")
+        checks.assertNotEqual(red["kind"], cve["kind"])
+        checks.assertNotEqual(blue["kind"], cve["kind"])
+
+    def test_family_has_finding_edge_kinds(self):
+        cve = resolve_edge_type_info("HAS_FINDING", {})
+        red = resolve_edge_type_info(
+            "HAS_FINDING",
+            {"family_export": True, "source": "rootstock-red"},
+        )
+        blue = resolve_edge_type_info(
+            "HAS_FINDING",
+            {"family_export": True, "source": "rootstock-blue"},
+        )
+        checks.assertEqual(cve["kind"], "rs_CveHasFinding")
+        checks.assertEqual(red["kind"], "rs_RedHasFinding")
+        checks.assertEqual(blue["kind"], "rs_BlueHasFinding")
+
+    def test_map_node_preserves_family_source_props(self):
+        node = map_node_for_opengraph(
+            "scope",
+            "Finding",
+            {
+                "id": "Finding:x",
+                "name": "Example",
+                "family_export": True,
+                "source": "rootstock-red",
+            },
+        )
+        checks.assertIsNotNone(node)
+        assert node is not None
+        checks.assertEqual(node["kind"], "rs_RedFinding")
+        checks.assertEqual(node["properties"]["source"], "rootstock-red")
+        checks.assertTrue(node["properties"]["family_export"])
+
+    def test_map_edge_host_to_finding(self):
+        edge = map_edge_for_opengraph(
+            "scope",
+            src_label="Host",
+            src_props={"id": "Host:h", "family_export": True, "source": "rootstock-blue"},
+            tgt_label="Finding",
+            tgt_props={
+                "id": "Finding:f",
+                "family_export": True,
+                "source": "rootstock-blue",
+            },
+            rel_type="HAS_FINDING",
+            rel_props={"family_export": True, "source": "rootstock-blue"},
+        )
+        checks.assertIsNotNone(edge)
+        assert edge is not None
+        checks.assertEqual(edge["kind"], "rs_BlueHasFinding")
+        checks.assertIn("Host", edge["source"])
+        checks.assertIn("Finding", edge["target"])
 
 
 # ── Primary label selection ─────────────────────────────────────────────────
