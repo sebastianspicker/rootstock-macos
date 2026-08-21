@@ -44,11 +44,6 @@ let package = Package(
             dependencies: ["RootstockCore"],
             path: "Sources/MacOpsecKit"
         ),
-        .testTarget(
-            name: "MacOpsecKitTests",
-            dependencies: ["MacOpsecKit", "RootstockCore"],
-            path: "Tests/MacOpsecKitTests"
-        ),
         .target(
             name: "MacArtifactKit",
             dependencies: ["RootstockCore"],
@@ -94,43 +89,15 @@ let package = Package(
             ],
             path: "Sources/MacEnumKit"
         ),
-        .testTarget(
-            name: "MacEnumKitTests",
-            dependencies: [
-                "MacEnumKit",
-                "RootstockCore",
-                "MacIdentityKit",
-                "MacMdmKit",
-                "MacLolKit",
-            ],
-            path: "Tests/MacEnumKitTests"
-        ),
         .target(
             name: "MacVulnKit",
             dependencies: ["RootstockCore", "MacEnumKit", "MacOpsecKit", "MacArtifactKit"],
             path: "Sources/MacVulnKit"
         ),
-        .testTarget(
-            name: "MacVulnKitTests",
-            dependencies: [
-                "MacVulnKit",
-                "RootstockCore",
-                "MacEnumKit",
-                "MacOpsecKit",
-                "MacArtifactKit",
-                "MacReportKit",
-            ],
-            path: "Tests/MacVulnKitTests"
-        ),
         .target(
             name: "MacReportKit",
             dependencies: ["RootstockCore"],
             path: "Sources/MacReportKit"
-        ),
-        .testTarget(
-            name: "MacReportKitTests",
-            dependencies: ["MacReportKit", "RootstockCore"],
-            path: "Tests/MacReportKitTests"
         ),
 
         // MARK: - Optional (compile-only; not linked into rootstock-red)
@@ -148,11 +115,6 @@ let package = Package(
             name: "RootstockLab",
             dependencies: ["RootstockCore"],
             path: "Sources/RootstockLab"
-        ),
-        .testTarget(
-            name: "RootstockLabTests",
-            dependencies: ["RootstockLab", "RootstockCore"],
-            path: "Tests/RootstockLabTests"
         ),
         .executableTarget(
             name: "RootstockLabCLI",

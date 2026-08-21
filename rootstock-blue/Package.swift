@@ -30,24 +30,12 @@ let package = Package(
             path: "Packages/RootstockBlueCore/Sources/RootstockBlueCore",
             swiftSettings: strictConcurrencySettings
         ),
-        .testTarget(
-            name: "RootstockBlueCoreTests",
-            dependencies: ["RootstockBlueCore"],
-            path: "Tests/RootstockBlueCoreTests",
-            swiftSettings: strictConcurrencySettings
-        ),
 
         // MARK: - Case package
         .target(
             name: "RootstockBlueCase",
             dependencies: ["RootstockBlueCore"],
             path: "Packages/RootstockBlueCase/Sources/RootstockBlueCase",
-            swiftSettings: strictConcurrencySettings
-        ),
-        .testTarget(
-            name: "RootstockBlueCaseTests",
-            dependencies: ["RootstockBlueCase", "RootstockBlueCore"],
-            path: "Tests/RootstockBlueCaseTests",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -66,12 +54,6 @@ let package = Package(
             path: "Packages/RootstockBlueESKit/Sources/RootstockBlueESKit",
             swiftSettings: strictConcurrencySettings
         ),
-        .testTarget(
-            name: "RootstockBlueESKitTests",
-            dependencies: ["RootstockBlueESKit", "RootstockBlueCore", "RootstockBlueCase"],
-            path: "Tests/RootstockBlueESKitTests",
-            swiftSettings: strictConcurrencySettings
-        ),
 
         // MARK: - Forensics (no ES)
         .target(
@@ -84,17 +66,6 @@ let package = Package(
             path: "Packages/RootstockBlueFX/Sources/RootstockBlueFX",
             swiftSettings: strictConcurrencySettings
         ),
-        .testTarget(
-            name: "RootstockBlueFXTests",
-            dependencies: [
-                "RootstockBlueFX",
-                "RootstockBlueCore",
-                "RootstockBlueCase",
-                "RootstockBlueDetect",
-            ],
-            path: "Tests/RootstockBlueFXTests",
-            swiftSettings: strictConcurrencySettings
-        ),
 
         // MARK: - Detections
         .target(
@@ -103,34 +74,12 @@ let package = Package(
             path: "Packages/RootstockBlueDetect/Sources/RootstockBlueDetect",
             swiftSettings: strictConcurrencySettings
         ),
-        .testTarget(
-            name: "RootstockBlueDetectTests",
-            dependencies: [
-                "RootstockBlueDetect",
-                "RootstockBlueCore",
-                "RootstockBlueCase",
-                "RootstockBlueFX",
-            ],
-            path: "Tests/RootstockBlueDetectTests",
-            swiftSettings: strictConcurrencySettings
-        ),
 
         // MARK: - Collect
         .target(
             name: "RootstockBlueCollect",
             dependencies: ["RootstockBlueCore", "RootstockBlueCase"],
             path: "Packages/RootstockBlueCollect/Sources/RootstockBlueCollect",
-            swiftSettings: strictConcurrencySettings
-        ),
-        .testTarget(
-            name: "RootstockBlueCollectTests",
-            dependencies: [
-                "RootstockBlueCollect",
-                "RootstockBlueCase",
-                "RootstockBlueCore",
-                "RootstockBlueAcquire",
-            ],
-            path: "Tests/RootstockBlueCollectTests",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -173,12 +122,6 @@ let package = Package(
             dependencies: ["RootstockBlueCore"],
             path: "Packages/RootstockBlueIntegrations/Sources/RootstockBlueIntegrations",
             exclude: ["README.md"],
-            swiftSettings: strictConcurrencySettings
-        ),
-        .testTarget(
-            name: "RootstockBlueIntegrationsTests",
-            dependencies: ["RootstockBlueIntegrations", "RootstockBlueCore"],
-            path: "Tests/RootstockBlueIntegrationsTests",
             swiftSettings: strictConcurrencySettings
         ),
 

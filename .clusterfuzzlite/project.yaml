@@ -1,9 +1,0 @@
-language: python
-base_os_version: ubuntu-24-04
-primary_contact: "security@example.invalid"
-auto_ccs:
-  - "security@example.invalid"
-fuzzing_engines:
-  - libfuzzer
-sanitizers:
-  - address

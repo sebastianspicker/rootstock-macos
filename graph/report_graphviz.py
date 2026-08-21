@@ -28,6 +28,7 @@ import sys
 from pathlib import Path
 
 from neo4j import GraphDatabase
+from neo4j.exceptions import DriverError, Neo4jError
 
 from utils import sanitize_id, truncate
 
@@ -261,7 +262,7 @@ def _edge_color(rel: str, *, is_inferred: bool) -> str:
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Export Rootstock graph to Graphviz DOT format"
     )
@@ -277,7 +278,7 @@ def _parse_args() -> argparse.Namespace:
         "--edge-limit", type=int, default=DEFAULT_EDGE_LIMIT,
         help=f"Max edges to fetch (default: {DEFAULT_EDGE_LIMIT})",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def _connect_driver(args: argparse.Namespace):
@@ -290,7 +291,7 @@ def _connect_driver(args: argparse.Namespace):
     driver = GraphDatabase.driver(args.neo4j, auth=(args.username, password))
     try:
         driver.verify_connectivity()
-    except Exception as e:
+    except (DriverError, Neo4jError) as e:
         print(f"Cannot connect to Neo4j at {args.neo4j}: {e}", file=sys.stderr)
         return None
     return driver

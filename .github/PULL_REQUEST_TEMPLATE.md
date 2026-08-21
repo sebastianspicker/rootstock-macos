@@ -26,7 +26,7 @@ Briefly describe what changed and why.
 - [ ] `uv run --project graph --locked ruff check ...` passes, if Python/docs changed
 - [ ] Graph pytest passes; the required Neo4j lane ran for graph runtime behavior
 - [ ] cve-scan locked lint/tests pass, if `modules/cve-scan/` changed
-- [ ] TypeScript type-check, bundle, viewer contracts, and relevant browser tests pass
+- [ ] TypeScript type-check, bundle, and viewer contracts pass
 - [ ] Focused regression tests cover the changed behavior and failure boundary
 - [ ] Synthetic fixture and JSON Schema stay aligned, if an output contract changed
 - [ ] Tested on macOS (version and architecture: ___)

@@ -9,53 +9,10 @@ import {renderNodeList} from "./view";
 export function inspectNode(controller: Controller, nodeId: NodeId): void {
   const node = controller.state.graph.nodeById.get(nodeId) ?? null;
   if (!node) return;
-  controller.state.selection.selectedId = nodeId;
-  controller.state.selection.pinnedId = nodeId;
-  controller.dom.resultsPanel.classList.remove("open");
-  controller.dom.inspectorBody.textContent = "";
-
-  const risk = nodeRisk(node);
-  const kindLabel = displayNodeKind(node.kind);
-  const shortId = node.id.length <= 40 ? node.id : "";
-  const subtitle = shortId ? `${kindLabel} · ${shortId}` : kindLabel;
-
-  const summary = element("div", {class: "inspector-summary"}, [
-    element("div", {class: "inspector-kicker", text: kindLabel}),
-    element("h3", {text: node.label ?? node.id}),
-    element("p", {class: "field-help", text: subtitle}),
-    element("span", {class: `severity-badge ${risk}`, text: risk.charAt(0).toUpperCase() + risk.slice(1)}),
-  ]);
-
-  const actions = element("div", {class: "inspector-actions"});
-  const focus = element("button", {type: "button", class: "secondary-action", text: "Focus neighborhood"});
-  focus.addEventListener("click", () => controller.actions.enterFocusMode(controller, node.id));
-  const path = element("button", {type: "button", class: "secondary-action", text: "Build path from node"});
-  path.addEventListener("click", () => controller.actions.togglePathMode(controller, node.id));
-  actions.append(focus, path);
-  if (controller.state.live.enabled) {
-    const owned = element("button", {
-      type: "button",
-      class: "secondary-action",
-      text: node.properties.owned === true ? "Clear owned" : "Mark owned",
-    });
-    owned.addEventListener("click", () => void toggleOwned(controller, node.id));
-    actions.appendChild(owned);
-  }
-
-  const properties = element("section", {
-    class: "prop-section inspector-panel",
-    role: "tabpanel",
-    "data-inspector-panel": "evidence",
-  });
-  for (const [key, value] of Object.entries(node.properties)
-    .filter(([entryKey]) => !entryKey.startsWith("_"))
-    .sort(([left], [right]) => left.localeCompare(right))) {
-    properties.appendChild(element("div", {class: "prop-row"}, [
-      element("span", {class: "prop-key", text: displayPropertyKey(key)}),
-      element("span", {class: "prop-val", text: propertyValue(value)}),
-    ]));
-  }
-  properties.append(provenanceChain(controller));
+  prepareInspector(controller, nodeId);
+  const summary = inspectorSummary(node);
+  const actions = inspectorActions(controller, node);
+  const properties = inspectorProperties(controller, node);
 
   const relationships = relationshipPanel(controller, node.id);
   const remediation = remediationPanel(controller, node.id);
@@ -66,14 +23,7 @@ export function inspectNode(controller: Controller, nodeId: NodeId): void {
     text: "Modeled preconditions do not prove exploitation.",
   });
 
-  const primary = element("button", {type: "button", class: "primary-action", text: "Add to path"});
-  primary.addEventListener("click", () => controller.actions.togglePathMode(controller, node.id));
-  const raw = element("button", {type: "button", class: "text-button raw-evidence", text: "Raw fields"});
-  raw.addEventListener("click", () => {
-    selectInspectorPanel(tabs, [properties, relationships, remediation], "evidence");
-    properties.scrollIntoView({block: "start", behavior: "smooth"});
-  });
-  const footer = element("div", {class: "inspector-footer"}, [primary, raw]);
+  const footer = inspectorFooter(controller, node.id, tabs, [properties, relationships, remediation], properties);
 
   controller.dom.inspectorBody.append(
     summary,
@@ -91,6 +41,82 @@ export function inspectNode(controller: Controller, nodeId: NodeId): void {
   controller.actions.markDirty(controller);
 }
 
+function prepareInspector(controller: Controller, nodeId: NodeId): void {
+  controller.state.selection.selectedId = nodeId;
+  controller.state.selection.pinnedId = nodeId;
+  controller.dom.resultsPanel.classList.remove("open");
+  controller.dom.inspectorBody.textContent = "";
+}
+
+function inspectorSummary(node: ViewerNode): HTMLElement {
+  const risk = nodeRisk(node);
+  const kindLabel = displayNodeKind(node.kind);
+  const shortId = node.id.length <= 40 ? node.id : "";
+  const subtitle = shortId ? `${kindLabel} · ${shortId}` : kindLabel;
+  return element("div", {class: "inspector-summary"}, [
+    element("div", {class: "inspector-kicker", text: kindLabel}),
+    element("h3", {text: node.label ?? node.id}),
+    element("p", {class: "field-help", text: subtitle}),
+    element("span", {class: `severity-badge ${risk}`, text: risk.charAt(0).toUpperCase() + risk.slice(1)}),
+  ]);
+}
+
+function inspectorActions(controller: Controller, node: ViewerNode): HTMLElement {
+  const actions = element("div", {class: "inspector-actions"});
+  const focus = element("button", {type: "button", class: "secondary-action", text: "Focus neighborhood"});
+  focus.addEventListener("click", () => controller.actions.enterFocusMode(controller, node.id));
+  const path = element("button", {type: "button", class: "secondary-action", text: "Build path from node"});
+  path.addEventListener("click", () => controller.actions.togglePathMode(controller, node.id));
+  actions.append(focus, path);
+  if (controller.state.live.enabled) actions.appendChild(ownedAction(controller, node));
+  return actions;
+}
+
+function ownedAction(controller: Controller, node: ViewerNode): HTMLButtonElement {
+  const owned = element("button", {
+    type: "button",
+    class: "secondary-action",
+    text: node.properties.owned === true ? "Clear owned" : "Mark owned",
+  });
+  owned.addEventListener("click", () => void toggleOwned(controller, node.id));
+  return owned;
+}
+
+function inspectorProperties(controller: Controller, node: ViewerNode): HTMLElement {
+  const properties = element("section", {
+    class: "prop-section inspector-panel",
+    role: "tabpanel",
+    "data-inspector-panel": "evidence",
+  });
+  for (const [key, value] of Object.entries(node.properties)
+    .filter(([entryKey]) => !entryKey.startsWith("_"))
+    .sort(([left], [right]) => left.localeCompare(right))) {
+    properties.appendChild(element("div", {class: "prop-row"}, [
+      element("span", {class: "prop-key", text: displayPropertyKey(key)}),
+      element("span", {class: "prop-val", text: propertyValue(value)}),
+    ]));
+  }
+  properties.append(provenanceChain(controller));
+  return properties;
+}
+
+function inspectorFooter(
+  controller: Controller,
+  nodeId: NodeId,
+  tabs: HTMLElement,
+  panels: HTMLElement[],
+  properties: HTMLElement,
+): HTMLElement {
+  const primary = element("button", {type: "button", class: "primary-action", text: "Add to path"});
+  primary.addEventListener("click", () => controller.actions.togglePathMode(controller, nodeId));
+  const raw = element("button", {type: "button", class: "text-button raw-evidence", text: "Raw fields"});
+  raw.addEventListener("click", () => {
+    selectInspectorPanel(tabs, panels, "evidence");
+    properties.scrollIntoView({block: "start", behavior: "smooth"});
+  });
+  return element("div", {class: "inspector-footer"}, [primary, raw]);
+}
+
 export function displayNodeKind(kind: string): string {
   return kind.replace(/^rs_/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
 }
@@ -104,14 +130,6 @@ export function nodeRisk(node: ViewerNode): string {
   return typeof risk === "string" && ["critical", "high", "medium", "low"].includes(risk.toLowerCase())
     ? risk.toLowerCase()
     : "informational";
-}
-
-export function nodeIcon(kind: string): string {
-  if (/keychain|credential/i.test(kind)) return "●";
-  if (/permission|file|configuration/i.test(kind)) return "◆";
-  if (/recommendation/i.test(kind)) return "✓";
-  if (/launch|persistence/i.test(kind)) return "◇";
-  return ">_";
 }
 
 export function inspectorTabs(...panels: HTMLElement[]): HTMLDivElement {
@@ -143,12 +161,7 @@ export function selectInspectorPanel(tabs: HTMLElement, panels: HTMLElement[], a
 }
 
 export function relationshipPanel(controller: Controller, nodeId: NodeId): HTMLElement {
-  const panel = element("section", {
-    class: "prop-section inspector-panel",
-    role: "tabpanel",
-    "data-inspector-panel": "relationships",
-  });
-  panel.hidden = true;
+  const panel = inspectorPanel("relationships");
   panel.appendChild(element("h4", {text: "Relationship summary"}));
   const incoming = controller.state.graph.incoming.get(nodeId) ?? [];
   const outgoing = controller.state.graph.outgoing.get(nodeId) ?? [];
@@ -192,15 +205,20 @@ function connectedRecommendations(controller: Controller, nodeId: NodeId): Viewe
 }
 
 export function remediationPanel(controller: Controller, nodeId: NodeId): HTMLElement {
-  const panel = element("section", {
-    class: "prop-section inspector-panel",
-    role: "tabpanel",
-    "data-inspector-panel": "remediation",
-  });
-  panel.hidden = true;
+  const panel = inspectorPanel("remediation");
   const connected = connectedRecommendations(controller, nodeId);
   appendEmptyRecommendationState(panel, connected.length);
   appendRecommendations(panel, connected);
+  return panel;
+}
+
+function inspectorPanel(name: string): HTMLElement {
+  const panel = element("section", {
+    class: "prop-section inspector-panel",
+    role: "tabpanel",
+    "data-inspector-panel": name,
+  });
+  panel.hidden = true;
   return panel;
 }
 

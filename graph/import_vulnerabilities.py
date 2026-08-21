@@ -236,27 +236,38 @@ def import_precise_affected_by_edges(session) -> tuple[int, int]:
     count = 0
     warning_count = 0
     for cve in precise_cves:
+        cve_count, cve_warning_count = _import_precise_cve_affected_by_edges(
+            session, cve
+        )
+        count += cve_count
+        warning_count += cve_warning_count
+
+    return count, warning_count
+
+
+def _import_precise_cve_affected_by_edges(session, cve: CveEntry) -> tuple[int, int]:
+    """Create precise AFFECTED_BY edges for one CVE and count its warnings."""
+    try:
+        records = _precise_match_records(session, cve)
+    except Exception as e:
+        print(f"  Warning: Precise match for {cve.cve_id} failed: {e}")
+        return 0, 1
+
+    count = 0
+    warning_count = 0
+    is_macos = _has_macos_version_constraint(cve.affected_versions)
+    for record in records:
+        if not _precise_record_is_affected(cve, record, is_macos=is_macos):
+            continue
         try:
-            records = _precise_match_records(session, cve)
+            count += _create_precise_affected_by_edge(
+                session,
+                app_id=record["app_id"],
+                cve_id=cve.cve_id,
+            )
         except Exception as e:
             warning_count += 1
-            print(f"  Warning: Precise match for {cve.cve_id} failed: {e}")
-            continue
-
-        is_macos = _has_macos_version_constraint(cve.affected_versions)
-
-        for record in records:
-            if not _precise_record_is_affected(cve, record, is_macos=is_macos):
-                continue
-            try:
-                count += _create_precise_affected_by_edge(
-                    session,
-                    app_id=record["app_id"],
-                    cve_id=cve.cve_id,
-                )
-            except Exception as e:
-                warning_count += 1
-                print(f"  Warning: Edge creation for {cve.cve_id} failed: {e}")
+            print(f"  Warning: Edge creation for {cve.cve_id} failed: {e}")
 
     return count, warning_count
 

@@ -97,13 +97,22 @@ def _summary_lines(summary: dict) -> list[str]:
     return lines + [""]
 
 
-def _application_lines(diff: PostureDiff) -> list[str]:
-    if not (diff.apps.added or diff.apps.removed):
+def _added_removed_section_lines(
+    heading: str,
+    added_lines: list[str],
+    removed_lines: list[str],
+) -> list[str]:
+    if not (added_lines or removed_lines):
         return []
-    lines = ["=== Application Changes ==="]
-    lines.extend(f"  [+] {app}" for app in diff.apps.added)
-    lines.extend(f"  [-] {app}" for app in diff.apps.removed)
-    return lines + [""]
+    return [heading, *added_lines, *removed_lines, ""]
+
+
+def _application_lines(diff: PostureDiff) -> list[str]:
+    return _added_removed_section_lines(
+        "=== Application Changes ===",
+        [f"  [+] {app}" for app in diff.apps.added],
+        [f"  [-] {app}" for app in diff.apps.removed],
+    )
 
 
 def _tcc_lines(diff: PostureDiff) -> list[str]:
@@ -151,12 +160,11 @@ def _injection_lines(diff: PostureDiff) -> list[str]:
 
 
 def _persistence_lines(diff: PostureDiff) -> list[str]:
-    if not (diff.persistence.added or diff.persistence.removed):
-        return []
-    lines = ["=== Persistence Changes ==="]
-    lines.extend(f"  [+] {item}" for item in diff.persistence.added)
-    lines.extend(f"  [-] {item}" for item in diff.persistence.removed)
-    return lines + [""]
+    return _added_removed_section_lines(
+        "=== Persistence Changes ===",
+        [f"  [+] {item}" for item in diff.persistence.added],
+        [f"  [-] {item}" for item in diff.persistence.removed],
+    )
 
 
 def _entitlement_lines(diff: PostureDiff) -> list[str]:
@@ -189,14 +197,14 @@ def _system_posture_lines(diff: PostureDiff) -> list[str]:
 
 
 def _physical_posture_lines(diff: PostureDiff) -> list[str]:
-    if not diff.physical_posture.changes:
-        return []
-    lines = ["=== Physical Security Posture Changes ==="]
-    lines.extend(
-        f"  [!] {key.replace('_', ' ').title()}: {change['before']} → {change['after']}"
-        for key, change in diff.physical_posture.changes.items()
+    return _added_removed_section_lines(
+        "=== Physical Security Posture Changes ===",
+        [
+            f"  [!] {key.replace('_', ' ').title()}: {change['before']} → {change['after']}"
+            for key, change in diff.physical_posture.changes.items()
+        ],
+        [],
     )
-    return lines + [""]
 
 
 def _remote_access_lines(diff: PostureDiff) -> list[str]:

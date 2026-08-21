@@ -108,6 +108,16 @@ def find_query(queries: list[dict], query_id: str) -> dict | None:
 # ── Query Execution ───────────────────────────────────────────────────────────
 
 
+def _coerce_param_value(value: str) -> int | float | str:
+    """Convert parameter values to numbers when possible."""
+    for converter in (int, float):
+        try:
+            return converter(value)
+        except ValueError:
+            continue
+    return value
+
+
 def _parse_params(param_args: list[str]) -> dict[str, Any]:
     """
     Parse --param key=value arguments into a dict suitable for neo4j driver.
@@ -122,14 +132,7 @@ def _parse_params(param_args: list[str]) -> dict[str, Any]:
             )
             continue
         key, _, value = arg.partition("=")
-        # Type coercion
-        try:
-            params[key] = int(value)
-        except ValueError:
-            try:
-                params[key] = float(value)
-            except ValueError:
-                params[key] = value
+        params[key] = _coerce_param_value(value)
     return params
 
 

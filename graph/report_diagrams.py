@@ -7,10 +7,19 @@ and return formatted diagram strings suitable for embedding in Markdown.
 
 from __future__ import annotations
 
-import html as html_mod
+import _report_campaign_diagrams as _campaign_diagrams
+from report_diagram_common import safe_label as _safe_label
+from utils import sanitize_id as sanitize_mermaid_id
 
-from family_finding_classification import is_red_family_finding
-from utils import sanitize_id as sanitize_mermaid_id, truncate as _truncate
+
+# Public compatibility exports retained after the campaign diagram split.
+format_family_findings_section = _campaign_diagrams.format_family_findings_section
+format_fleet_campaign_dashboard = _campaign_diagrams.format_fleet_campaign_dashboard
+format_kill_chain_stage_timeline = _campaign_diagrams.format_kill_chain_stage_timeline
+format_multi_plane_campaign_section = _campaign_diagrams.format_multi_plane_campaign_section
+format_multi_plane_severity_board = _campaign_diagrams.format_multi_plane_severity_board
+format_purple_engagement_matrix = _campaign_diagrams.format_purple_engagement_matrix
+mermaid_family_findings_block = _campaign_diagrams.mermaid_family_findings_block
 
 
 # ── TCC Node Detection ────────────────────────────────────────────────────────
@@ -32,11 +41,6 @@ _TCC_KEYWORDS = {
     "appleevents",
     "developer tools",
 }
-
-
-def _safe_label(value: object, max_len: int = 30) -> str:
-    label = _truncate(str(value), max_len).replace('"', "'")
-    return html_mod.escape(label, quote=True)
 
 
 def _is_tcc_node(name: str) -> bool:
@@ -120,6 +124,18 @@ def _append_attack_path_styles(
             lines.append(f"  style {node_id} fill:#ff9933,color:#fff")
 
 
+def _attack_path_text_fallback(row: dict) -> str:
+    """Render a path as text when it cannot be represented as Mermaid."""
+    names = row.get("node_names") or []
+    rel_types = row.get("rel_types") or []
+    steps: list[str] = []
+    for index, name in enumerate(names):
+        steps.append(f"`{_safe_label(name)}`")
+        if index < len(rel_types):
+            steps.append(f"→ _{_safe_label(rel_types[index])}_ →")
+    return " ".join(steps)
+
+
 def mermaid_attack_paths_block(path_rows: list[dict], max_paths: int = 3) -> str:
     """
     Generate Mermaid diagrams for the top N attack paths.
@@ -133,18 +149,7 @@ def mermaid_attack_paths_block(path_rows: list[dict], max_paths: int = 3) -> str
         hops = row.get("path_length", "?")
         parts.append(f"**Path {i + 1}** ({hops} hop{'s' if hops != 1 else ''})")
         diagram = mermaid_attack_path(row)
-        if diagram:
-            parts.append(diagram)
-        else:
-            # Text fallback for paths that can't be diagrammed
-            names = row.get("node_names") or []
-            rel_types = row.get("rel_types") or []
-            steps: list[str] = []
-            for j, name in enumerate(names):
-                steps.append(f"`{_safe_label(name)}`")
-                if j < len(rel_types):
-                    steps.append(f"→ _{_safe_label(rel_types[j])}_ →")
-            parts.append(" ".join(steps))
+        parts.append(diagram or _attack_path_text_fallback(row))
         parts.append("")
 
     return "\n".join(parts)
@@ -339,373 +344,3 @@ def mermaid_icloud_risk_flow(icloud_rows: list[dict]) -> str:
 
     lines.append("```")
     return "\n".join(lines)
-
-
-# ── Family red/blue findings (open-export / multi-plane narrative) ─────────────
-
-
-def mermaid_family_findings_block(
-    findings: list[dict],
-    *,
-    source: str | None = None,
-    max_findings: int = 8,
-) -> str:
-    """Render a Mermaid flowchart of family open-export findings.
-
-    Distinguishes red vs blue via source / kind so operators can map
-    red path-to-impact findings to blue harden/detect controls.
-
-    Each finding dict may include: id, name/title, severity, source/kind,
-    finding_id, category.
-    """
-    if not findings:
-        return "_No family findings to diagram._"
-
-    lines = ["```mermaid", "flowchart TB"]
-    lines.append('  subgraph FamilyFindings["Family findings (red / blue)"]')
-    red_ids: list[str] = []
-    blue_ids: list[str] = []
-
-    for index, finding in enumerate(findings[:max_findings]):
-        node_id, label, is_red = _family_finding_node(finding, index, source)
-        lines.append(f'    {node_id}["{label}"]')
-        if is_red:
-            red_ids.append(node_id)
-        else:
-            blue_ids.append(node_id)
-
-    lines.append("  end")
-    for nid in red_ids:
-        lines.append(f"  style {nid} fill:#c0392b,color:#fff,stroke:#7b241c")
-    for nid in blue_ids:
-        lines.append(f"  style {nid} fill:#2471a3,color:#fff,stroke:#1a5276")
-    lines.append("```")
-    return "\n".join(lines)
-
-
-def _family_finding_node(finding: dict, index: int, source: str | None) -> tuple[str, str, bool]:
-    finding_id = _family_finding_id(finding, index)
-    title = str(finding.get("name") or finding.get("title") or finding_id)
-    severity = str(finding.get("severity") or "info").lower()
-    is_red = is_red_family_finding(finding, finding_id, source)
-    node_id = sanitize_mermaid_id(f"f{index}_{finding_id}")[:48]
-    label = _safe_label(
-        f"{'[R] ' if is_red else '[B] '}{title} ({severity})", max_len=42
-    )
-    return node_id, label, is_red
-
-
-def _family_finding_id(finding: dict, index: int = 0) -> str:
-    return str(finding.get("finding_id") or finding.get("id") or finding.get("name") or f"finding_{index}")
-
-
-def _family_finding_row(finding: dict, source: str | None = None) -> str:
-    finding_id = _family_finding_id(finding)
-    title = str(finding.get("name") or finding.get("title") or finding_id).replace(
-        "|", "/"
-    )
-    severity = str(finding.get("severity") or "info")
-    side = "red" if is_red_family_finding(finding, finding_id, source) else "blue"
-    return f"| {side} | `{finding_id}` | {severity} | {title} |"
-
-
-def format_family_findings_section(
-    findings: list[dict],
-    *,
-    source: str | None = None,
-    max_findings: int = 12,
-) -> str:
-    """Markdown section: family findings table + mermaid diagram."""
-    if not findings:
-        return (
-            "## Family Red/Blue Findings\n\n"
-            "_No family open-export findings provided._\n"
-        )
-    parts = [
-        "## Family Red/Blue Findings",
-        "",
-        "> **Purple narrative:** Red findings are path-to-impact / assess surfaces; "
-        "blue findings are offline harden/detect/forensic controls. Distinct OpenGraph "
-        "kinds (`rs_RedFinding` / `rs_BlueFinding`) keep them legible in the viewer.",
-        "",
-        "| Side | Finding ID | Severity | Title |",
-        "|------|------------|----------|-------|",
-    ]
-    parts.extend(
-        _family_finding_row(finding, source) for finding in findings[:max_findings]
-    )
-    parts.append("")
-    parts.append("### Family findings diagram")
-    parts.append(
-        mermaid_family_findings_block(
-            findings, source=source, max_findings=max_findings
-        )
-    )
-    parts.append("")
-    return "\n".join(parts)
-
-
-def format_multi_plane_campaign_section(
-    planes: list[dict],
-    *,
-    campaign: str = "Wave multi-plane",
-    max_planes: int = 12,
-) -> str:
-    """Markdown section summarizing multi-plane red/blue campaign themes.
-
-    Each plane dict may include: id, title, red_ids (list), blue_ids (list),
-    stage (delivery|persist|visibility|lateral|collection).
-    """
-    if not planes:
-        return f"## {campaign} campaign\n\n_No multi-plane themes provided._\n"
-    parts = [
-        f"## {campaign} campaign",
-        "",
-        "> **Path-to-impact narrative:** each plane pairs red assess findings with blue "
-        "harden/detect controls. Diagrams below are engagement ranking aids - not auto-exploit chains.",
-        "",
-        "| Plane | Stage | Red findings | Blue controls |",
-        "|-------|-------|--------------|---------------|",
-    ]
-    mermaid_nodes: list[dict] = []
-    for plane in planes[:max_planes]:
-        row, nodes = _campaign_plane_row(plane)
-        parts.append(row)
-        mermaid_nodes.extend(nodes)
-    parts.append("")
-    parts.append("### Multi-plane family diagram")
-    parts.append(
-        mermaid_family_findings_block(mermaid_nodes, max_findings=max_planes * 2)
-    )
-    parts.append("")
-    return "\n".join(parts)
-
-
-def _campaign_plane_row(plane: dict) -> tuple[str, list[dict]]:
-    plane_id = str(plane.get("id") or plane.get("title") or "?")
-    title = str(plane.get("title") or plane_id).replace("|", "/")
-    stage = str(plane.get("stage") or "posture")
-    red_ids = plane.get("red_ids") or []
-    blue_ids = plane.get("blue_ids") or []
-    row = f"| {title} | {stage} | {_finding_id_list(red_ids)} | {_finding_id_list(blue_ids)} |"
-    return row, _campaign_plane_nodes(red_ids, blue_ids)
-
-
-def _finding_id_list(finding_ids: list[object]) -> str:
-    return ", ".join(f"`{item}`" for item in finding_ids[:3]) or " - "
-
-
-def _campaign_plane_nodes(red_ids: list[object], blue_ids: list[object]) -> list[dict]:
-    return [
-        *(
-            _family_node(item, "rootstock-red", str(item).split(".")[-1])
-            for item in red_ids[:2]
-        ),
-        *(_family_node(item, "rootstock-blue", str(item)) for item in blue_ids[:2]),
-    ]
-
-
-def _family_node(finding_id: object, source: str, name: str) -> dict:
-    return {
-        "finding_id": finding_id,
-        "name": name,
-        "severity": "medium",
-        "source": source,
-    }
-
-
-def format_multi_plane_severity_board(
-    findings: list[dict],
-    *,
-    title: str = "Multi-plane severity board",
-    max_items: int = 16,
-) -> str:
-    """Compact severity board for red/blue multi-plane findings in reports."""
-    if not findings:
-        return f"## {title}\n\n_No findings._\n"
-    order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
-    sorted_f = sorted(
-        findings,
-        key=lambda f: order.get(str(f.get("severity", "info")).lower(), 9),
-    )
-    parts = [
-        f"## {title}",
-        "",
-        "> Ranked for purple operators: red path-to-impact first within severity bands; "
-        "blue harden/detect second. Not an auto-exploit queue.",
-        "",
-        "| Sev | Side | ID | Title |",
-        "|-----|------|----|-------|",
-    ]
-    parts.extend(_severity_board_row(finding) for finding in sorted_f[:max_items])
-    parts.append("")
-    parts.append(mermaid_family_findings_block(sorted_f[:max_items]))
-    parts.append("")
-    return "\n".join(parts)
-
-
-def _severity_board_row(finding: dict) -> str:
-    finding_id = _family_finding_id(finding)
-    name = str(finding.get("name") or finding.get("title") or finding_id).replace(
-        "|", "/"
-    )
-    severity = str(finding.get("severity") or "info")
-    side = "red" if is_red_family_finding(finding, finding_id, None) else "blue"
-    return f"| {severity} | {side} | `{finding_id}` | {name} |"
-
-
-def format_purple_engagement_matrix(
-    pairs: list[dict],
-    *,
-    title: str = "Purple engagement matrix",
-    max_pairs: int = 20,
-) -> str:
-    """Red finding → blue control matrix for multi-plane purple ops reports.
-
-    Each pair dict: red_id, blue_id, plane, stage (optional).
-    """
-    if not pairs:
-        return f"## {title}\n\n_No red↔blue pairs provided._\n"
-    parts = [
-        f"## {title}",
-        "",
-        "> **Purple operator view:** map red path-to-impact findings to blue "
-        "offline parse/harden/detect controls. Assess-first - not auto-exploit.",
-        "",
-        "| Plane | Stage | Red assess ID | Blue defend ID |",
-        "|-------|-------|---------------|----------------|",
-    ]
-    findings = []
-    for pair in pairs[:max_pairs]:
-        row, pair_findings = _engagement_pair_row(pair)
-        parts.append(row)
-        findings.extend(pair_findings)
-    parts.append("")
-    parts.append("### Engagement matrix diagram")
-    parts.append(mermaid_family_findings_block(findings, max_findings=max_pairs * 2))
-    parts.append("")
-    return "\n".join(parts)
-
-
-def _engagement_pair_row(pair: dict) -> tuple[str, list[dict]]:
-    plane = str(pair.get("plane") or pair.get("title") or "?").replace("|", "/")
-    stage = str(pair.get("stage") or "posture")
-    red = str(pair.get("red_id") or "")
-    blue = str(pair.get("blue_id") or "")
-    row = f"| {plane} | {stage} | `{red}` | `{blue}` |"
-    return row, _engagement_findings(red, blue)
-
-
-def _engagement_findings(red: str, blue: str) -> list[dict]:
-    findings = []
-    if red:
-        findings.append(_family_node(red, "rootstock-red", red.split(".")[-1]))
-    if blue:
-        finding_id = blue if blue.startswith("harden.") else f"harden.{blue}"
-        findings.append(_family_node(finding_id, "rootstock-blue", blue))
-    return findings
-
-
-def format_kill_chain_stage_timeline(
-    stages: list[dict],
-    *,
-    title: str = "Kill-chain stage timeline",
-    max_stages: int = 12,
-) -> str:
-    """Mermaid timeline of multi-plane engagement stages for purple reports.
-
-    Each stage dict: stage, label, red_count (optional), blue_count (optional).
-    """
-    if not stages:
-        return f"## {title}\n\n_No stages provided._\n"
-    parts = [
-        f"## {title}",
-        "",
-        "> **Path-to-impact narrative only** - stage labels rank operator attention, "
-        "not automated exploit orchestration.",
-        "",
-        "```mermaid",
-        "timeline",
-        f"    title {title}",
-    ]
-    parts.extend(_timeline_mermaid_row(stage) for stage in stages[:max_stages])
-    parts.append("```")
-    parts.append("")
-    parts.append("| Stage | Red findings | Blue controls | Notes |")
-    parts.append("|-------|--------------|---------------|-------|")
-    parts.extend(_timeline_table_row(stage) for stage in stages[:max_stages])
-    parts.append("")
-    return "\n".join(parts)
-
-
-def _timeline_mermaid_row(stage: dict) -> str:
-    name = str(stage.get("stage") or stage.get("name") or "stage")
-    label = str(stage.get("label") or name)
-    red_count = stage.get("red_count", "")
-    blue_count = stage.get("blue_count", "")
-    detail = (
-        f"{label} (R:{red_count} B:{blue_count})"
-        if red_count != "" or blue_count != ""
-        else label
-    )
-    return f"    {name} : {detail}"
-
-
-def _timeline_table_row(stage: dict) -> str:
-    name = str(stage.get("stage") or "?")
-    red_count = stage.get("red_count", " - ")
-    blue_count = stage.get("blue_count", " - ")
-    notes = str(stage.get("label") or stage.get("notes") or "").replace("|", "/")
-    return f"| {name} | {red_count} | {blue_count} | {notes} |"
-
-
-def format_fleet_campaign_dashboard(
-    campaigns: list[dict],
-    *,
-    title: str = "Fleet multi-plane campaign dashboard",
-) -> str:
-    """Aggregate dashboard for multi-wave red|blue half-pair campaigns.
-
-    Each campaign dict: name, theme_count, half_pairs, stages (list[str]), highlight (optional).
-    """
-    if not campaigns:
-        return f"## {title}\n\n_No campaigns provided._\n"
-    total_themes = sum(int(c.get("theme_count") or 0) for c in campaigns)
-    total_half = sum(int(c.get("half_pairs") or 0) for c in campaigns)
-    parts = [
-        f"## {title}",
-        "",
-        f"> **Campaign fleet:** {len(campaigns)} waves · {total_themes} multi-plane themes · "
-        f"{total_half} red|blue half-pairs. Assess-first path-to-impact - not auto-exploit.",
-        "",
-        "| Campaign | Themes | Half-pairs | Stages | Highlight |",
-        "|----------|--------|------------|--------|-----------|",
-    ]
-    findings = []
-    for campaign in campaigns:
-        row, finding = _fleet_campaign_row(campaign)
-        parts.append(row)
-        findings.append(finding)
-    parts.append("")
-    parts.append("### Fleet diagram")
-    parts.append(
-        mermaid_family_findings_block(findings, max_findings=max(len(campaigns) * 2, 8))
-    )
-    parts.append("")
-    return "\n".join(parts)
-
-
-def _fleet_campaign_row(campaign: dict) -> tuple[str, dict]:
-    name = str(campaign.get("name") or "?")
-    themes = campaign.get("theme_count", " - ")
-    half_pairs = campaign.get("half_pairs", " - ")
-    stages = ", ".join(campaign.get("stages") or []) or " - "
-    highlight = str(campaign.get("highlight") or "").replace("|", "/")
-    row = f"| {name} | {themes} | {half_pairs} | {stages} | {highlight} |"
-    finding = {
-        "finding_id": f"campaign.{name}",
-        "name": name,
-        "severity": "high" if int(campaign.get("theme_count") or 0) >= 20 else "medium",
-        "source": "rootstock-red" if "Wave" in name else "rootstock-blue",
-    }
-    return row, finding

@@ -1,3 +1,0 @@
-# sudoers file.
-root ALL=(ALL) ALL
-%admin ALL=(ALL) ALL

@@ -18,9 +18,6 @@
     "allowImportingTsExtensions": true
   },
   "include": [
-    "graph/viewer-src/**/*.ts",
-    "tests/browser/**/*.ts",
-    "tests/viewer/**/*.ts",
-    "playwright.config.ts"
+    "graph/viewer-src/**/*.ts"
   ]
 }

@@ -12,11 +12,15 @@ public struct AuthDevPrivilegeClusterCheck: Check {
     public init() {}
 
     public func evaluate(state: CollectedState, context: EvaluationContext) async throws -> [Finding] {
-        var findings: [Finding] = []
-        if let f = Self.authdbPackageKit(state: state) { findings.append(f) }
-        if let f = Self.toolchainHighValue(state: state) { findings.append(f) }
-        if let f = Self.dualUseWithInject(state: state) { findings.append(f) }
-        return findings
+        Self.orderedFindings(for: state)
+    }
+
+    private static func orderedFindings(for state: CollectedState) -> [Finding] {
+        [
+            authdbPackageKit(state: state),
+            toolchainHighValue(state: state),
+            dualUseWithInject(state: state),
+        ].compactMap { $0 }
     }
 
     private static func authdbPackageKit(state: CollectedState) -> Finding? {
@@ -67,17 +71,21 @@ public struct AuthDevPrivilegeClusterCheck: Check {
                         "xcode=\((dev?.xcodePresent).rootstockDescribe) clt=\((dev?.commandLineToolsPresent).rootstockDescribe) "
                         + "dualUse=\(dev?.dualUseBinaries.count ?? 0)"
                 ),
-                Evidence(
-                    type: "high_value",
-                    detail:
-                        "adBound=\((state.identity?.adBound).rootstockDescribe) "
-                        + "platformSSO=\((state.identity?.platformSSO).rootstockDescribe) "
-                        + "credPaths=\(state.credPaths.filter(\.exists).count)"
-                ),
+                highValueEvidence(for: state),
             ], attackTechniques: ["T1127", "T1059", "T1588.002"], remediation: [
                 "Scope Xcode/CLT to approved developer roles",
                 "Increase process telemetry for codesign/clang/lldb on SSO-joined endpoints",
             ]), runtime: .init(confidence: .low, dryRunSafe: true, opsecScore: 18, esfExpected: ["EXEC"]))
+    }
+
+    private static func highValueEvidence(for state: CollectedState) -> Evidence {
+        let identity = state.identity
+        let detail = [
+            "adBound=\((identity?.adBound).rootstockDescribe)",
+            "platformSSO=\((identity?.platformSSO).rootstockDescribe)",
+            "credPaths=\(state.credPaths.filter(\.exists).count)",
+        ].joined(separator: " ")
+        return Evidence(type: "high_value", detail: detail)
     }
 
     private static func dualUseWithInject(state: CollectedState) -> Finding? {

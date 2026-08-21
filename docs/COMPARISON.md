@@ -28,7 +28,7 @@ version review.
 - Rootstock Core uses GPL-3.0 under the root `LICENSE`.
 - cve-scan uses MIT under `modules/cve-scan/LICENSE`.
 - Rootstock Red and Rootstock Blue use Apache-2.0 under their own license files.
-- `packages/RootstockMacFacts` does not yet have an explicit license scope.
+- `packages/RootstockMacFacts` uses Apache-2.0 under its own license file.
 
 Use [FAMILY.md](FAMILY.md) for Rootstock's own component and artifact
 boundaries. Consult the current BloodHound project documentation for its

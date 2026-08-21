@@ -223,6 +223,18 @@ def fetch_kev(force: bool = False) -> dict:
 # ── NVD CVSS vector fetch ───────────────────────────────────────────────
 
 
+def _select_nvd_metric_vector(metrics: dict) -> str | None:
+    """Return the first available CVSS 3.1 or 3.0 metric vector."""
+    for key in ("cvssMetricV31", "cvssMetricV30"):
+        entries = metrics.get(key, [])
+        if entries:
+            cvss_data = entries[0].get("cvssData", {})
+            vector = cvss_data.get("vectorString")
+            if vector:
+                return vector
+    return None
+
+
 def _fetch_nvd_single(cve_id: str) -> str | None:
     """Fetch CVSS vector string for a single CVE from NVD 2.0 API."""
     if requests is None:
@@ -240,14 +252,9 @@ def _fetch_nvd_single(cve_id: str) -> str | None:
         cve_data = vuln.get("cve", {})
         metrics = cve_data.get("metrics", {})
 
-        # Prefer CVSS 3.1, fall back to 3.0
-        for key in ("cvssMetricV31", "cvssMetricV30"):
-            entries = metrics.get(key, [])
-            if entries:
-                cvss_data = entries[0].get("cvssData", {})
-                vector = cvss_data.get("vectorString")
-                if vector:
-                    return vector
+        vector = _select_nvd_metric_vector(metrics)
+        if vector:
+            return vector
 
     return None
 

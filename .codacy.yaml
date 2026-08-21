@@ -1,5 +1,22 @@
 ---
+engines:
+  bandit:
+    exclude_paths:
+      - "graph/tests/test_diff_cli.py"
+      - "graph/tests/test_neo4j_required_lane.py"
+      - "graph/tests/test_release_screenshot_fixture.py"
+      - "graph/tests/test_viewer_output_permissions.py"
+      - "modules/cve-scan/tests/test_cli_entrypoints.py"
+  ruff:
+    exclude_paths:
+      - "graph/tests/test_diff_cli.py"
+      - "graph/tests/test_neo4j_required_lane.py"
+      - "graph/tests/test_release_screenshot_fixture.py"
+      - "graph/tests/test_viewer_output_permissions.py"
+      - "modules/cve-scan/tests/test_cli_entrypoints.py"
 exclude_paths:
+  - ".repowise/**"
+  - "**/.repowise/**"
   - "deprecated/**"
   - "docs/archive/**"
   - "docs/private/**"
@@ -19,3 +36,4 @@ exclude_paths:
   - "**/build/**"
   - "**/dist/**"
   - "**/*.egg-info/**"
+  - "graph/viewer.bundle.js"

@@ -31,8 +31,6 @@ Rootstock Red, and Rootstock Blue source trees.
   behavior. They are not compatibility guarantees.
 - [Benchmarks](benchmarks/) define public methods and acceptance thresholds.
   Machine-specific results remain local.
-- [Screenshots](screenshots/) contains four Playwright captures of the
-  maintained viewer using synthetic data.
 - [Interface design](../DESIGN.md) records viewer and report presentation rules.
 
 ## Documentation policy

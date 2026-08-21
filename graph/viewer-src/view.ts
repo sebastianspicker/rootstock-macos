@@ -83,10 +83,6 @@ export function addRiskCount(counts: Map<string, number>, risk: string): void {
   if (risk) counts.set(risk, (counts.get(risk) ?? 0) + 1);
 }
 
-export function appendRiskChip(container: HTMLDivElement, risk: string, count: number): void {
-  if (count > 0) container.appendChild(riskChip(risk, count));
-}
-
 export function riskLabel(value: unknown): string { return typeof value === "string" ? value.toLowerCase() : ""; }
 
 export function nodeColor(node: Controller["state"]["graph"]["nodes"][number]): string {

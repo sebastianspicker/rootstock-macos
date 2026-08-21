@@ -22,7 +22,6 @@ public struct ESFSensorGapVector: Check {
         // clientPaths = third-party EDR/ES clients only (Apple infra excluded by collector).
         let thirdPartyClientCount = esf?.clientPaths.count ?? 0
         let hints = esf?.edrHints ?? []
-        let thirdPartySysext = esf?.systemExtensionCount ?? 0
 
         // Thin third-party sensor: no product catalog hits, no third-party clients/hints.
         // Stock Apple ES infrastructure (endpointsecurityd / framework) must NOT suppress this.

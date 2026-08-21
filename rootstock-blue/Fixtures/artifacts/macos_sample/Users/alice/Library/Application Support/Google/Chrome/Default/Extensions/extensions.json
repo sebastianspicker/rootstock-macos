@@ -1,9 +1,0 @@
-[
-  {
-    "id": "evilbroadpermsext000000000000001",
-    "name": "Evil Broad",
-    "version": "1.0",
-    "permissions": ["<all_urls>", "webRequest", "tabs"],
-    "enabled": true
-  }
-]

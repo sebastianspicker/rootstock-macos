@@ -43,7 +43,6 @@ __all__ = [
     "get_context",
     "get_contexts_for_query",
     "get_cwe",
-    "get_cwe_summary",
 ]
 
 

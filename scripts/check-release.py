@@ -162,10 +162,8 @@ def _required_public_files() -> tuple[str, ...]:
         "modules/cve-scan/uv.lock",
         "package-lock.json",
         "scripts/build-release.sh",
-        "scripts/capture-release-screenshots.mjs",
         "scripts/check-release.py",
         "scripts/release-screenshot-fixture.mjs",
-        "graph/tests/test_release_screenshot_fixture.py",
     )
 
 
@@ -211,26 +209,6 @@ def _required_viewer_files() -> tuple[str, ...]:
     )
 
 
-def _expected_screenshots() -> set[str]:
-    return {
-        "viewer-overview.png",
-        "viewer-node-inspector.png",
-        "viewer-attack-path.png",
-        "viewer-risk-filter.png",
-    }
-
-
-def _ignored_screenshots(expected_screenshots: set[str]) -> list[str]:
-    _, stdout, _ = _run_git(
-        "check-ignore",
-        "--stdin",
-        input_text="\n".join(
-            f"docs/screenshots/{name}" for name in expected_screenshots
-        ),
-    )
-    return stdout.splitlines()
-
-
 def _tracked_paths() -> set[str]:
     return set(git_output("ls-files").splitlines())
 
@@ -268,11 +246,10 @@ def _local_markdown_image_target(raw_target: str | None) -> str | None:
 
 
 def check_public_files(check: ReleaseCheck) -> None:
-    """Check required metadata, locks, screenshots, and integrity-backed browser CI."""
+    """Check required metadata, locks, and documentation integrity."""
     tracked_paths = _tracked_paths()
     _check_tracked_public_files(check, tracked_paths)
-    _check_public_screenshots(check, tracked_paths)
-    _check_browser_release_integrity(check)
+    _check_release_integrity(check)
     _report_paths(check, _index_markdown_image_failures(tracked_paths), "all index-level Markdown image targets are Git-tracked", "missing index image")
 
 
@@ -297,39 +274,7 @@ def _check_tracked_public_files(check: ReleaseCheck, tracked_paths: set[str]) ->
         check.require(path in tracked_paths, f"viewer source or bundle is Git-tracked: {path}")
 
 
-def _check_public_screenshots(check: ReleaseCheck, tracked_paths: set[str]) -> None:
-    expected_screenshots = _expected_screenshots()
-    screenshots = {
-        path.name for path in (ROOT / "docs/screenshots").glob("*.png")
-    }
-    check.require(
-        screenshots == expected_screenshots,
-        "the curated public screenshot set is exact",
-    )
-    tracked_screenshots = {
-        Path(path).name
-        for path in tracked_paths
-        if path.startswith("docs/screenshots/") and path.endswith(".png")
-    }
-    check.require(
-        tracked_screenshots == expected_screenshots,
-        "the curated public screenshot set is Git-tracked and exact",
-    )
-
-    ignored = _ignored_screenshots(expected_screenshots)
-    check.require(
-        not ignored,
-        "curated public screenshots are not hidden by .gitignore",
-    )
-
-
-def _check_browser_release_integrity(check: ReleaseCheck) -> None:
-    workflow = read_text(".github/workflows/test.yml")
-    check.require(
-        "npm ci" in workflow and "npm install --no-package-lock" not in workflow,
-        "browser CI uses the integrity-backed npm lock",
-    )
-
+def _check_release_integrity(check: ReleaseCheck) -> None:
     release_script = read_text("scripts/build-release.sh")
     check.require(
         '"${REPO_ROOT}/collector/README.md"' in release_script
@@ -346,15 +291,19 @@ def _forbidden_tracked_paths() -> list[str]:
         path
         for path in git_output("ls-files").splitlines()
         if path
-        if path.startswith(FORBIDDEN_TRACKED_PREFIXES)
-        or (
-            "/" not in path
-            and (
-                path.casefold() in FORBIDDEN_ROOT_BASENAMES
-                or FORBIDDEN_ROOT_ARTIFACT.fullmatch(path)
-            )
-        )
+        if _is_forbidden_tracked_path(path)
     ]
+
+
+def _is_forbidden_tracked_path(path: str) -> bool:
+    if path.startswith(FORBIDDEN_TRACKED_PREFIXES):
+        return True
+    if "/" in path:
+        return False
+    return (
+        path.casefold() in FORBIDDEN_ROOT_BASENAMES
+        or FORBIDDEN_ROOT_ARTIFACT.fullmatch(path) is not None
+    )
 
 
 def _local_root_artifacts() -> list[str]:

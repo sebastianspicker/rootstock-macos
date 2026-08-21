@@ -17,13 +17,38 @@ final class FindingTests: XCTestCase {
         XCTAssertTrue(good.satisfies(policy))
     }
 
-    func testKillSwitchDetection() throws {
-        // Ensure ensureNotDisabled does not throw when kill switch absent (normal dev machines).
-        // If DISABLE exists, skip to avoid breaking local intentional disable.
-        if FileManager.default.fileExists(atPath: SafetyRails.killSwitchURL.path) {
-            throw XCTSkip("Kill switch present at ~/.rootstock-red/DISABLE")
+    func testLabConsentFailsClosedForKillSwitchAndIncompleteModeConsentMatrix() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("rootstock-consent-\(UUID().uuidString)", isDirectory: true)
+        let killSwitch = directory.appendingPathComponent("DISABLE")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let authorized = ConsentTokens(iAmAuthorized: true, scope: "ENG-TEST", operatorName: "alice")
+        for mode in RunMode.allCases {
+            let context = EvaluationContext(mode: mode, consent: authorized)
+            if mode == .lab || mode == .purple {
+                XCTAssertNoThrow(try SafetyRails.ensureLabConsent(context: context, killSwitchURL: killSwitch))
+            } else {
+                XCTAssertThrowsError(try SafetyRails.ensureLabConsent(context: context, killSwitchURL: killSwitch))
+            }
         }
-        try SafetyRails.ensureNotDisabled()
+        XCTAssertThrowsError(
+            try SafetyRails.ensureLabConsent(
+                context: EvaluationContext(mode: .lab),
+                killSwitchURL: killSwitch
+            )
+        )
+
+        try Data().write(to: killSwitch)
+        XCTAssertThrowsError(
+            try SafetyRails.ensureLabConsent(
+                context: EvaluationContext(mode: .purple, consent: authorized),
+                killSwitchURL: killSwitch
+            )
+        ) { error in
+            XCTAssertEqual(error as? RootstockError, .killSwitchActive(path: killSwitch.path))
+        }
     }
 
     func testRootstockDescribeTriState() {

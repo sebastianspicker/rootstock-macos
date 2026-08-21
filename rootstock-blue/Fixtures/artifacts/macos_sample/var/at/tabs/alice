@@ -1,2 +1,0 @@
-0 3 * * * /Users/alice/bin/backup.sh
-30 4 * * * /tmp/evil_at_job

@@ -15,11 +15,6 @@ updates:
     schedule:
       interval: "weekly"
 
-  - package-ecosystem: "pip"
-    directory: "/fuzz"
-    schedule:
-      interval: "weekly"
-
   - package-ecosystem: "npm"
     directory: "/"
     schedule:

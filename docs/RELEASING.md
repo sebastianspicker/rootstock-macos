@@ -52,22 +52,6 @@ Run every command in [QUALITY.md](QUALITY.md), including the shared, Red, and
 Blue Swift packages. Record exact failures and environment blocks. Do not treat
 fast tests or mocked browser tests as evidence for the live Neo4j lane.
 
-## Screenshots and privacy
-
-The public set contains only these Playwright captures of the maintained viewer
-using the synthetic static release fixture:
-
-- `viewer-overview.png`
-- `viewer-node-inspector.png`
-- `viewer-attack-path.png`
-- `viewer-risk-filter.png`
-
-Regenerate them with:
-
-```bash
-npm run screenshots:release
-```
-
 Review each image before publication. It must contain no real hostname,
 username, local path, token, scan identifier, package inventory, finding, or
 case data. These captures verify the production template, styles, bundle, and

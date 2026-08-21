@@ -1,2 +1,0 @@
-/tmp/delayed_payload.sh
-echo "at job ran" >> /tmp/at_ran.log

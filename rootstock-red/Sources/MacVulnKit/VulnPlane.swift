@@ -61,6 +61,17 @@ func presentPlaneNames(_ signals: [PlaneSignal]) -> [String] {
     signals.compactMap { $0.isPresent ? $0.name : nil }
 }
 
+func clusterAmplifierLabels(state: CollectedState) -> [String] {
+    var labels: [String] = []
+    if state.network?.remoteLoginSSH == true || state.network?.screenSharingARD == true { labels.append("remote") }
+    if state.tcc?.fullDiskAccessLikely == true { labels.append("fda") }
+    if state.protections?.sipEnabled == false { labels.append("sip_off") }
+    if state.protections?.gatekeeperEnabled == false { labels.append("gk_off") }
+    if let esf = state.esf, esf.clientPaths.isEmpty { labels.append("sensor_gap") }
+    if state.securityProducts.filter(\.present).isEmpty { labels.append("products_absent") }
+    return labels
+}
+
 func hasPlaneSurface<T>(
     _ surface: T?,
     isPresent: (T) -> Bool?,

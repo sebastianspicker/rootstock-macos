@@ -6,6 +6,7 @@ Extracted from viewer.py to keep layout logic separate from HTML generation.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 import math
 
 
@@ -74,6 +75,23 @@ def _position_kind_clusters(
             )
 
 
+def _apply_signed_force_vector(
+    fx: list[float],
+    fy: list[float],
+    i: int,
+    j: int,
+    dx: float,
+    dy: float,
+    force: float,
+) -> None:
+    fdx = dx * force
+    fdy = dy * force
+    fx[i] += fdx
+    fy[i] += fdy
+    fx[j] -= fdx
+    fy[j] -= fdy
+
+
 def _apply_repulsion_pair(
     nodes: list[dict],
     fx: list[float],
@@ -87,12 +105,7 @@ def _apply_repulsion_pair(
     dy = nodes[i]["y"] - nodes[j]["y"]
     dist_sq = max(dx * dx + dy * dy, min_dist * min_dist)
     force = effective_repulsion / dist_sq
-    fdx = dx * force
-    fdy = dy * force
-    fx[i] += fdx
-    fy[i] += fdy
-    fx[j] -= fdx
-    fy[j] -= fdy
+    _apply_signed_force_vector(fx, fy, i, j, dx, dy, force)
 
 
 def _apply_full_repulsion(
@@ -121,6 +134,16 @@ def _layout_grid(nodes: list[dict], cell_size: float) -> dict[tuple[int, int], l
     return grid
 
 
+def _nearby_grid_indices(
+    grid: dict[tuple[int, int], list[int]], gx: int, gy: int
+) -> Iterator[int]:
+    for dx_c in range(-2, 3):
+        for dy_c in range(-2, 3):
+            cell = grid.get((gx + dx_c, gy + dy_c))
+            if cell:
+                yield from cell
+
+
 def _apply_grid_repulsion(
     nodes: list[dict],
     fx: list[float],
@@ -133,16 +156,11 @@ def _apply_grid_repulsion(
     for i, node in enumerate(nodes):
         gx = int(node["x"] / cell_size)
         gy = int(node["y"] / cell_size)
-        for dx_c in range(-2, 3):
-            for dy_c in range(-2, 3):
-                cell = grid.get((gx + dx_c, gy + dy_c))
-                if not cell:
-                    continue
-                for j in cell:
-                    if j > i:
-                        _apply_repulsion_pair(
-                            nodes, fx, fy, i, j, effective_repulsion, min_dist
-                        )
+        for j in _nearby_grid_indices(grid, gx, gy):
+            if j > i:
+                _apply_repulsion_pair(
+                    nodes, fx, fy, i, j, effective_repulsion, min_dist
+                )
 
 
 def _apply_repulsion(
@@ -171,12 +189,7 @@ def _apply_attraction(
         dy = nodes[ti]["y"] - nodes[si]["y"]
         dist = math.sqrt(dx * dx + dy * dy) or min_dist
         force = attraction * dist
-        fdx = dx * force
-        fdy = dy * force
-        fx[si] += fdx
-        fy[si] += fdy
-        fx[ti] -= fdx
-        fy[ti] -= fdy
+        _apply_signed_force_vector(fx, fy, si, ti, dx, dy, force)
 
 
 def _apply_centering(

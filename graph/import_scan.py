@@ -16,50 +16,51 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from neo4j_connection import add_neo4j_args, connect_from_args
-from scan_loader import load_scan
 from import_nodes_core import (
     computer_import_context,
     import_applications,
-    import_tcc_grants,
-    import_entitlements,
-    import_signed_by_team,
     import_certificate_authorities,
     import_computer,
+    import_entitlements,
     import_installed_on,
     import_local_to,
     import_sandbox_profiles,
-)
-from import_nodes_services import (
-    import_xpc_services,
-    import_keychain_items,
-    import_mdm_profiles,
-    import_launch_items,
-)
-from import_nodes_security import (
-    import_local_groups,
-    import_remote_access_services,
-    import_firewall_status,
-    import_login_sessions,
-    import_authorization_rights,
-    import_authorization_plugins,
-    import_system_extensions,
-    import_sudoers_rules,
+    import_signed_by_team,
+    import_tcc_grants,
 )
 from import_nodes_enrichment import (
-    import_running_processes,
-    import_file_acls,
-    import_user_details,
     import_bluetooth_devices,
+    import_file_acls,
+    import_running_processes,
+    import_user_details,
+)
+from import_nodes_security import (
+    import_authorization_plugins,
+    import_authorization_rights,
+    import_firewall_status,
+    import_local_groups,
+    import_login_sessions,
+    import_remote_access_services,
+    import_sudoers_rules,
+    import_system_extensions,
 )
 from import_nodes_security_enterprise import (
     import_ad_binding,
     import_kerberos_artifacts,
 )
+from import_nodes_services import (
+    import_keychain_items,
+    import_launch_items,
+    import_mdm_profiles,
+    import_xpc_services,
+)
 from models import ComputerData
+from neo4j_connection import add_neo4j_args, connect_from_args
+from scan_loader import load_scan
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -150,26 +151,69 @@ class ImportSummary:
     security: dict
 
 
+def _query_present_counts(
+    session,
+    values: list[str],
+    *,
+    schema_query: str,
+    parameter_name: str,
+    record_key: str,
+    count_statement: Callable[[str], str],
+) -> dict[str, int]:
+    counts = {value: 0 for value in values}
+    present_values = {
+        record[record_key]
+        for record in session.run(schema_query, **{parameter_name: list(values)})
+    }
+    if not present_values:
+        return counts
+
+    count_query = " UNION ALL ".join(
+        count_statement(value) for value in values if value in present_values
+    )
+    for record in session.run(count_query):
+        counts[record[record_key]] = record["n"]
+    return counts
+
+
+def _node_count_statement(label: str) -> str:
+    return (
+        f"CALL () {{ MATCH (n:{label}) RETURN count(n) AS n }} "
+        f"RETURN '{label}' AS label, n"
+    )
+
+
+def _relationship_count_statement(rel_type: str) -> str:
+    return (
+        f"CALL () {{ MATCH ()-[r:{rel_type}]->() RETURN count(r) AS n }} "
+        f"RETURN '{rel_type}' AS rel_type, n"
+    )
+
+
 def query_stats(session) -> tuple[dict, dict]:
     """Query post-import node and relationship counts. Returns (node_counts, rel_counts)."""
-    # Batch node counts into a single UNION ALL query
-    node_query = " UNION ALL ".join(
-        f"MATCH (n:{label}) RETURN '{label}' AS label, count(n) AS n"
-        for label in _NODE_LABELS
+    node_counts = _query_present_counts(
+        session,
+        _NODE_LABELS,
+        schema_query=(
+            "CALL db.labels() YIELD label "
+            "WHERE label IN $node_labels RETURN label"
+        ),
+        parameter_name="node_labels",
+        record_key="label",
+        count_statement=_node_count_statement,
     )
-    node_counts = {label: 0 for label in _NODE_LABELS}
-    for record in session.run(node_query):
-        node_counts[record["label"]] = record["n"]
-
-    # Batch relationship counts into a single UNION ALL query
-    rel_query = " UNION ALL ".join(
-        f"MATCH ()-[r:{rel_type}]->() RETURN '{rel_type}' AS rel_type, count(r) AS n"
-        for rel_type in _REL_TYPES
+    rel_counts = _query_present_counts(
+        session,
+        _REL_TYPES,
+        schema_query=(
+            "CALL db.relationshipTypes() YIELD relationshipType AS rel_type "
+            "WHERE rel_type IN $relationship_types RETURN rel_type"
+        ),
+        parameter_name="relationship_types",
+        record_key="rel_type",
+        count_statement=_relationship_count_statement,
     )
-    rel_counts = {rel_type: 0 for rel_type in _REL_TYPES}
-    for record in session.run(rel_query):
-        rel_counts[record["rel_type"]] = record["n"]
-
     return node_counts, rel_counts
 
 

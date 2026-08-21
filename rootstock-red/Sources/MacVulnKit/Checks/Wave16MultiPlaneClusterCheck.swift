@@ -60,19 +60,9 @@ public struct Wave16MultiPlaneClusterCheck: Check {
             .init(name: "softwareupdate_catalog", isPresent: hasPlaneSurface(state.softwareupdateCatalog, isPresent: { $0.softwareUpdateSurfacePresent }, primaryCount: { $0.softwareUpdateToolPaths.count }, secondaryCount: { $0.softwareUpdatePrefPaths.count })),
         ])
     }
-    private static func amplifiers(state: CollectedState) -> [String] {
-        var amps: [String] = []
-        if state.network?.remoteLoginSSH == true || state.network?.screenSharingARD == true { amps.append("remote") }
-        if state.tcc?.fullDiskAccessLikely == true { amps.append("fda") }
-        if state.protections?.sipEnabled == false { amps.append("sip_off") }
-        if state.protections?.gatekeeperEnabled == false { amps.append("gk_off") }
-        if let esf = state.esf, esf.clientPaths.isEmpty { amps.append("sensor_gap") }
-        if state.securityProducts.filter(\.present).isEmpty { amps.append("products_absent") }
-        return amps
-    }
     private static func compoundFinding(planes: [String], state: CollectedState) -> Finding {
         let sorted = planes.sorted()
-        let amps = amplifiers(state: state).sorted()
+        let amps = clusterAmplifierLabels(state: state).sorted()
         let severity: Severity = (sorted.count >= 6 && amps.contains("remote") && amps.contains("fda")) ? .high
             : ((sorted.count >= 3 || (sorted.count >= 2 && amps.count >= 2)) ? .medium : .low)
         return Finding(id: "\(id).multi_plane", title: "Wave-16 multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category: .misconfig, resolution: .init(evidence: [

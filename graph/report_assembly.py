@@ -179,23 +179,17 @@ def _icloud_metadata_rows(metadata: dict) -> list[list[str]]:
 
 def _append_executive_summary(
     sections: list[str],
-    injectable_rows: list[dict],
-    path_rows: list[dict],
-    electron_rows: list[dict],
-    apple_event_rows: list[dict],
-    tier_counts: dict[str, int],
-    icloud_exposure_count: int,
-    certificate_risk_count: int,
+    rows: ReportRows,
 ) -> None:
     sections.append("## Executive Summary")
     sections.append(
         format_executive_summary(
-            len(injectable_rows) + len(path_rows),
-            len(electron_rows) + len(apple_event_rows),
-            _build_top_attack_paths(injectable_rows, electron_rows),
-            tier_counts=tier_counts or None,
-            icloud_exposure_count=icloud_exposure_count,
-            certificate_risk_count=certificate_risk_count,
+            len(rows.injectable) + len(rows.path),
+            len(rows.electron) + len(rows.apple_event),
+            _build_top_attack_paths(rows.injectable, rows.electron),
+            tier_counts=rows.tier_counts or None,
+            icloud_exposure_count=sum(len(group) for group in rows.icloud),
+            certificate_risk_count=sum(len(group) for group in rows.certificate),
         )
     )
     sections.append("")
@@ -267,19 +261,14 @@ def _vulnerability_intelligence_lines(summary: dict) -> list[str]:
 
 def _append_core_finding_sections(
     sections: list[str],
-    injectable_rows: list[dict],
-    path_rows: list[dict],
-    electron_rows: list[dict],
-    apple_event_rows: list[dict],
-    tcc_overview_rows: list[dict],
-    private_ent_rows: list[dict],
+    rows: ReportRows,
 ) -> None:
-    _append_critical_finding_section(sections, injectable_rows, path_rows)
-    _append_high_finding_sections(sections, electron_rows, apple_event_rows)
+    _append_critical_finding_section(sections, rows.injectable, rows.path)
+    _append_high_finding_sections(sections, rows.electron, rows.apple_event)
     _append_informational_finding_sections(
         sections,
-        tcc_overview_rows,
-        private_ent_rows,
+        rows.tcc_overview,
+        rows.private_entitlement,
     )
 
 
@@ -430,15 +419,7 @@ def _append_report_body(
 ) -> None:
     """Append sections in the stable public report order from normalized rows."""
     _append_vulnerability_intelligence(sections)
-    _append_core_finding_sections(
-        sections,
-        rows.injectable,
-        rows.path,
-        rows.electron,
-        rows.apple_event,
-        rows.tcc_overview,
-        rows.private_entitlement,
-    )
+    _append_core_finding_sections(sections, rows)
     _append_extended_query_sections(
         sections,
         query_results,
@@ -482,16 +463,7 @@ def assemble_report(
     sections.append(f"_Generated: {now}_")
     sections.append("")
     _append_scan_metadata(sections, metadata, now)
-    _append_executive_summary(
-        sections,
-        rows.injectable,
-        rows.path,
-        rows.electron,
-        rows.apple_event,
-        rows.tier_counts,
-        sum(len(group) for group in rows.icloud),
-        sum(len(group) for group in rows.certificate),
-    )
+    _append_executive_summary(sections, rows)
     _append_report_body(sections, query_results, queries, rows)
 
     _append_optional_family_sections(sections, metadata)

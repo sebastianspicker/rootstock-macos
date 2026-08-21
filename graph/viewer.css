@@ -663,7 +663,6 @@ kbd {
 #query-section, #custom-query-section { padding: 8px 16px 16px; }
 #query-list { margin-inline: -8px; }
 .query-item {
-  width: 100%;
   min-height: 44px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

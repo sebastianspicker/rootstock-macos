@@ -24,6 +24,8 @@ import socket
 import sys
 from pathlib import Path
 
+from neo4j.exceptions import DriverError, Neo4jError
+
 from neo4j_connection import add_neo4j_args, connect_from_args
 from query_runner import discover_queries
 from utils import first_cypher_statement, run_query
@@ -67,18 +69,23 @@ def run_all_queries(driver) -> dict[str, list[dict] | str]:
 
     with driver.session() as session:
         for q in queries:
-            filename = q["filename"]
-            try:
-                stmt = first_cypher_statement(q["cypher"])
-                params = _DEFAULT_PARAMS if _has_parameters(q) else {}
-                rows = run_query(session, stmt, params)
-                results[filename] = rows
-                print(f"  ✓ {filename}: {len(rows)} rows", file=sys.stderr)
-            except Exception as e:
-                results[filename] = f"Query failed: {e}"
-                print(f"  ✗ {filename}: {e}", file=sys.stderr)
+            filename, result = _run_report_query(session, q)
+            results[filename] = result
 
     return results
+
+
+def _run_report_query(session, query: dict) -> tuple[str, list[dict] | str]:
+    filename = query["filename"]
+    try:
+        statement = first_cypher_statement(query["cypher"])
+        params = _DEFAULT_PARAMS if _has_parameters(query) else {}
+        rows = run_query(session, statement, params)
+        print(f"  ✓ {filename}: {len(rows)} rows", file=sys.stderr)
+        return filename, rows
+    except (DriverError, Neo4jError, TypeError, ValueError) as error:
+        print(f"  ✗ {filename}: {error}", file=sys.stderr)
+        return filename, f"Query failed: {error}"
 
 
 # ── Scan Metadata ─────────────────────────────────────────────────────────────
@@ -100,7 +107,7 @@ def get_scan_metadata_from_neo4j(driver) -> dict:
             """).single()
                 or {}
             )
-        except Exception as e:
+        except (DriverError, Neo4jError) as e:
             print(f"  ⚠ Metadata query failed: {e}", file=sys.stderr)
             errors.append(f"metadata counts: {e}")
             row = {}
@@ -124,7 +131,7 @@ def get_scan_metadata_from_neo4j(driver) -> dict:
             """).single()
                 or {}
             )
-        except Exception as e:
+        except (DriverError, Neo4jError) as e:
             print(f"  ⚠ Scan metadata query failed: {e}", file=sys.stderr)
             errors.append(f"scan metadata: {e}")
             meta_row = {}
@@ -160,7 +167,7 @@ def get_scan_metadata_from_json(json_path: Path) -> dict:
             "icloud_drive_enabled": data.get("icloud_drive_enabled"),
             "icloud_keychain_enabled": data.get("icloud_keychain_enabled"),
         }
-    except Exception as e:
+    except (AttributeError, json.JSONDecodeError, OSError, TypeError) as e:
         raise ScanMetadataError(
             f"Cannot read scan metadata from {json_path}: {e}"
         ) from e
@@ -215,11 +222,19 @@ def _parser() -> argparse.ArgumentParser:
 
 def _report_metadata(args: argparse.Namespace, driver) -> dict | ScanMetadataError:
     if args.scan_json:
-        try:
-            return get_scan_metadata_from_json(Path(args.scan_json))
-        except ScanMetadataError as e:
-            return e
+        return _metadata_from_scan_json(Path(args.scan_json))
 
+    return _checked_neo4j_metadata(driver)
+
+
+def _metadata_from_scan_json(path: Path) -> dict | ScanMetadataError:
+    try:
+        return get_scan_metadata_from_json(path)
+    except ScanMetadataError as error:
+        return error
+
+
+def _checked_neo4j_metadata(driver) -> dict | ScanMetadataError:
     metadata = get_scan_metadata_from_neo4j(driver)
     if metadata.get("_metadata_errors"):
         return ScanMetadataError(str(metadata.get("_metadata_errors")))

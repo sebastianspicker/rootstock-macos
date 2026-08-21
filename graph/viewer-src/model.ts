@@ -15,6 +15,8 @@ import type {
   VisibilityResult,
 } from "./types";
 
+const unfilteredVisibilityByGraph = new WeakMap<GraphModel, VisibilityResult>();
+
 const DEFAULT_COLOR = "#8c99a8";
 const HEX_COLOR = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i;
 
@@ -31,7 +33,7 @@ export function percentage(value: string): boolean {
   return value.endsWith("%") && decimal(value.slice(0, -1)) && Number(value.slice(0, -1)) <= 100;
 }
 
-export function rgbChannel(value: string): boolean {
+function rgbChannel(value: string): boolean {
   return percentage(value) || (digits(value) && Number(value) <= 255);
 }
 
@@ -150,7 +152,7 @@ export function deterministicClusterOffset(id: NodeId): number {
   return ((hash >>> 0) % 101) - 50;
 }
 
-export function normalizeNode(node: GraphPayload["graph"]["nodes"][number], index: number): ViewerNode {
+function normalizeNode(node: GraphPayload["graph"]["nodes"][number], index: number): ViewerNode {
   const columns = Math.max(1, Math.ceil(Math.sqrt(1 + index)));
   return {
     ...node,
@@ -196,12 +198,12 @@ function buildEdgeIndexes(links: GraphEdge[]): Pick<GraphModel, "degreeById" | "
   const edgeMeta = new Map<string, EdgeMeta>();
   const outgoing = new Map<NodeId, OutgoingEdge[]>();
   const incoming = new Map<NodeId, IncomingEdge[]>();
-  for (const edge of links) {
+  links.forEach((edge, linkIndex) => {
     updateDegree(degreeById, edge);
     updateEdgeMeta(edgeMeta, edge);
-    appendDirectedEdge(outgoing, edge.source, {target: edge.target, edge});
-    appendDirectedEdge(incoming, edge.target, {source: edge.source, edge});
-  }
+    appendDirectedEdge(outgoing, edge.source, {target: edge.target, edge, linkIndex});
+    appendDirectedEdge(incoming, edge.target, {source: edge.source, edge, linkIndex});
+  });
   return {degreeById, edgeMeta, outgoing, incoming};
 }
 
@@ -341,8 +343,40 @@ export function computeVisibility(state: ViewerState): VisibilityResult {
   if (selection.focusedId) {
     return focusedVisibility(graph, selection.focusedId);
   }
+  if (filtersAreUnrestricted(filters, graph)) {
+    return unfilteredVisibility(graph);
+  }
   const nodeIds = filteredNodeIds(state);
   return {nodeIds, linkIndexes: filteredLinkIndexes(graph, filters, nodeIds)};
+}
+
+function filtersAreUnrestricted(filters: ViewerState["filters"], graph: GraphModel): boolean {
+  return [
+    hasAllKinds(filters.activeNodeKinds, graph.kindMeta),
+    hasAllKinds(filters.activeEdgeKinds, graph.edgeMeta),
+    !filters.searchTerm,
+    !filters.attackPathsOnly,
+    !filters.vulnerabilitiesOnly,
+  ].every(Boolean);
+}
+
+function hasAllKinds(activeKinds: ReadonlySet<string>, knownKinds: ReadonlyMap<string, unknown>): boolean {
+  if (activeKinds.size !== knownKinds.size) return false;
+  for (const kind of knownKinds.keys()) {
+    if (!activeKinds.has(kind)) return false;
+  }
+  return true;
+}
+
+function unfilteredVisibility(graph: GraphModel): VisibilityResult {
+  const cached = unfilteredVisibilityByGraph.get(graph);
+  if (cached) return cached;
+  const visibility = {
+    nodeIds: new Set(graph.nodes.map((node) => node.id)),
+    linkIndexes: new Set(graph.links.keys()),
+  };
+  unfilteredVisibilityByGraph.set(graph, visibility);
+  return visibility;
 }
 
 export function pathVisibility(graph: GraphModel, path: PathResult): VisibilityResult {
@@ -385,13 +419,27 @@ export function filteredLinkIndexes(
   nodeIds: Set<NodeId>,
 ): Set<number> {
   const linkIndexes = new Set<number>();
+  if (nodeIds.size < graph.nodes.length / 2) {
+    for (const nodeId of nodeIds) {
+      for (const candidate of graph.outgoing.get(nodeId) ?? []) {
+        if (!nodeIds.has(candidate.target)) continue;
+        if (!edgeMatchesFilters(candidate.edge, filters)) continue;
+        linkIndexes.add(candidate.linkIndex);
+      }
+    }
+    return linkIndexes;
+  }
   graph.links.forEach((edge, index) => {
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) return;
-    if (!filters.activeEdgeKinds.has(edge.kind)) return;
-    if (filters.attackPathsOnly && edge.properties?._traversable !== true) return;
+    if (!edgeMatchesFilters(edge, filters)) return;
     linkIndexes.add(index);
   });
   return linkIndexes;
+}
+
+function edgeMatchesFilters(edge: GraphEdge, filters: ViewerState["filters"]): boolean {
+  if (!filters.activeEdgeKinds.has(edge.kind)) return false;
+  return !filters.attackPathsOnly || edge.properties?._traversable === true;
 }
 
 export function nodeRadius(model: GraphModel, nodeId: NodeId): number {

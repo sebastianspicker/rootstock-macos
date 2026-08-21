@@ -11,35 +11,58 @@ import type {
 } from "./types";
 
 /** Hard caps bound client-side graph parsing and rendering work for a single response. */
-export const MAX_GRAPH_NODES = 10_000;
-export const MAX_GRAPH_EDGES = 50_000;
+const MAX_GRAPH_NODES = 10_000;
+const MAX_GRAPH_EDGES = 50_000;
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function isNode(value: unknown): value is GraphNodeInput {
+function isNode(value: unknown): value is GraphNodeInput {
   return isRecord(value) && typeof value.id === "string" && typeof value.kind === "string";
 }
 
-export function isEdge(value: unknown): value is GraphEdge {
+function isEdge(value: unknown): value is GraphEdge {
   return isRecord(value)
     && typeof value.source === "string"
     && typeof value.target === "string"
     && typeof value.kind === "string";
 }
 
+type ValidGraph = {
+  nodes: GraphNodeInput[];
+  edges: GraphEdge[];
+};
+
+type ValidGraphResponse = Record<string, unknown> & {graph: ValidGraph};
+
+function isValidGraphNodes(value: unknown): value is GraphNodeInput[] {
+  if (!Array.isArray(value)) return false;
+  if (value.length > MAX_GRAPH_NODES) return false;
+  return value.every(isNode);
+}
+
+function isValidGraphEdges(value: unknown): value is GraphEdge[] {
+  if (!Array.isArray(value)) return false;
+  if (value.length > MAX_GRAPH_EDGES) return false;
+  return value.every(isEdge);
+}
+
+function isValidGraph(value: unknown): value is ValidGraph {
+  if (!isRecord(value)) return false;
+  if (!isValidGraphNodes(value.nodes)) return false;
+  if (!isValidGraphEdges(value.edges)) return false;
+  return true;
+}
+
+function isValidGraphResponse(value: unknown): value is ValidGraphResponse {
+  if (!isRecord(value)) return false;
+  return isValidGraph(value.graph);
+}
+
 /** Accepts only structurally valid graph payloads within the graph-size caps. */
 export function parseGraphPayload(value: unknown): GraphPayload {
-  if (!isRecord(value) || !isRecord(value.graph)
-      || !Array.isArray(value.graph.nodes)
-      || value.graph.nodes.length > MAX_GRAPH_NODES
-      || !value.graph.nodes.every(isNode)
-      || !Array.isArray(value.graph.edges)
-      || value.graph.edges.length > MAX_GRAPH_EDGES
-      || !value.graph.edges.every(isEdge)) {
-    throw new TypeError("Malformed graph response");
-  }
+  if (!isValidGraphResponse(value)) throw new TypeError("Malformed graph response");
   return {
     metadata: isRecord(value.metadata) ? value.metadata : {},
     graph: {nodes: value.graph.nodes, edges: value.graph.edges},
@@ -124,14 +147,27 @@ export function parseTierResponse(value: unknown): TierResponse {
   return response;
 }
 
+type ValidOwnedListResponse = Record<string, unknown> & OwnedListResponse;
+
+function isOwnedItem(value: unknown): value is OwnedListResponse["owned"][number] {
+  if (!isRecord(value)) return false;
+  if (typeof value.name !== "string") return false;
+  return true;
+}
+
+function isValidOwnedListResponse(value: unknown): value is ValidOwnedListResponse {
+  if (!isRecord(value)) return false;
+  if (!Array.isArray(value.owned)) return false;
+  if (!value.owned.every(isOwnedItem)) return false;
+  if (typeof value.count !== "number") return false;
+  if (value.count !== value.owned.length) return false;
+  return true;
+}
+
 /** Validates ownership entries and requires the server count to match their list length. */
 export function parseOwnedList(value: unknown): OwnedListResponse {
-  if (!isRecord(value) || !Array.isArray(value.owned)
-      || !value.owned.every((item) => isRecord(item) && typeof item.name === "string")
-      || typeof value.count !== "number" || value.count !== value.owned.length) {
-    throw new TypeError("Malformed owned response");
-  }
-  return {owned: value.owned as OwnedListResponse["owned"], count: value.count};
+  if (!isValidOwnedListResponse(value)) throw new TypeError("Malformed owned response");
+  return {owned: value.owned, count: value.count};
 }
 
 /** Extracts the requested ownership mutation count from a structurally valid response. */

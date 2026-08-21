@@ -1,4 +1,0 @@
-{"user":"alice","tty":"console","host":"","type":"USER_PROCESS","pid":"123","timestamp":"2024-06-15T08:00:00Z","action":"login"}
-{"user":"alice","tty":"ttys001","host":"10.0.0.50","type":"USER_PROCESS","pid":"456","timestamp":"2024-06-15T09:30:00Z","action":"login"}
-{"user":"alice","tty":"ttys001","host":"10.0.0.50","type":"DEAD_PROCESS","pid":"456","timestamp":"2024-06-15T18:00:00Z","action":"logout"}
-{"user":"alice","tty":"ttys002","host":"evil-c2.example.com","type":7,"pid":"789","timestamp":"2024-06-16T03:00:00Z","remote":true}

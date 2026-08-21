@@ -73,7 +73,6 @@ from this candidate.
   separately controlled process.
 - Rootstock Red and Blue are source-only components in the Core alpha release
   procedure and retain independent versions.
-- The license scope of `packages/RootstockMacFacts` remains unresolved and must
-  be decided before public distribution of that shared package.
+- `packages/RootstockMacFacts` is licensed separately under Apache-2.0.
 
 [0.1.0-alpha.1]: https://github.com/sebastianspicker/rootstock

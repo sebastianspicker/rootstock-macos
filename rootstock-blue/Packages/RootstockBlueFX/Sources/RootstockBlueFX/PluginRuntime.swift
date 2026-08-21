@@ -181,34 +181,7 @@ public struct PluginRuntime: Sendable {
     }
 
     private static var wave16Parsers: [any ArtifactParser] {
-        [
-            // Wave-16 multi-plane red↔blue pair parsers (25)
-            AirplayReceiverSurfaceParser(),
-            HandoffClipboardDepthParser(),
-            ImessagePathPlaneParser(),
-            FacetimeCameraSurfaceParser(),
-            FinderSyncExtensionParser(),
-            FileproviderDomainParser(),
-            NotificationCenterDepthParser(),
-            SiriSuggestionsPlaneParser(),
-            SpotlightImporterDepthParser(),
-            ContactsPathPlaneParser(),
-            CalendarServerPathParser(),
-            RemindersCloudPathParser(),
-            MapsLocationPathParser(),
-            WeatherWidgetPathParser(),
-            MusicLibraryPathParser(),
-            BooksPathPlaneParser(),
-            PodcastsPathPlaneParser(),
-            TvAppPathPlaneParser(),
-            HomekitPathPlaneParser(),
-            HealthPathPlaneParser(),
-            WalletPassPathParser(),
-            FindmyPathPlaneParser(),
-            ShortcutsIcloudSyncParser(),
-            DevicemanagementProfileParser(),
-            SoftwareupdateCatalogParser(),
-        ]
+        Wave16ParserRegistry.parsers
     }
 
     /// Explicit post-incident forensic set (alias of full default for CLI messaging).

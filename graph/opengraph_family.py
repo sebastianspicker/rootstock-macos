@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 def family_export_to_opengraph(export) -> dict:
     """Convert a validated FamilyExport into an OpenGraph/viewer payload."""
     from import_family_export import build_edge_records, build_node_records
-    from opengraph_export import map_edge_for_opengraph, map_node_for_opengraph
+    from opengraph_mapping import map_edge_for_opengraph, map_node_for_opengraph
 
     hostname = export.scope_name or export.source
     nodes, records_by_id = _family_nodes(
@@ -93,7 +93,7 @@ def _family_payload(
 
 def export_cross_domain(session, hostname: str) -> dict:
     """Export Rootstock users and their matching Azure identity edges."""
-    from opengraph_export import _sanitize, _serialize_props, make_node_id
+    from opengraph_mapping import _sanitize, _serialize_props, make_node_id
 
     nodes: list[dict] = []
     edges: list[dict] = []

@@ -59,11 +59,13 @@ export interface EdgeMeta {
 export interface OutgoingEdge {
   target: NodeId;
   edge: GraphEdge;
+  linkIndex: number;
 }
 
 export interface IncomingEdge {
   source: NodeId;
   edge: GraphEdge;
+  linkIndex: number;
 }
 
 /** Holds normalized graph data plus the indexes that keep rendering and traversal consistent. */

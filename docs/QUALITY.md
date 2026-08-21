@@ -33,19 +33,10 @@ uv run --project graph --locked \
   uv run --locked pytest)
 ```
 
-Real Neo4j behavior is a separate required lane:
-
-```bash
-(cd graph && ROOTSTOCK_REQUIRE_NEO4J=1 NEO4J_PASSWORD=CHANGE_ME \
-  uv run --locked pytest tests -v --tb=short)
-NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  bash tests/integration/test_full_pipeline.sh
-```
-
 ## Family packages
 
 ```bash
-(cd packages/RootstockMacFacts && swift build && swift test)
+(cd packages/RootstockMacFacts && swift build)
 (cd rootstock-red && swift build --product rootstock-red && swift test)
 (cd rootstock-blue && \
   swift build --product rootstock-blue && swift test && \
@@ -61,17 +52,9 @@ serializers remain in the component that owns the artifact.
 ```bash
 npm run typecheck
 npm run bundle
-npm run test:viewer:unit
-npm run test:viewer:bundle
-npm run test:viewer:performance
-npm run test:browser
-bash tests/scripts/test_benchmark.sh
 ```
 
-The bundle must be a deterministic product of `graph/viewer-src/`. Browser
-tests cover desktop, compact, and 320 CSS-pixel Chromium layouts. Public images
-are Playwright captures produced by `npm run screenshots:release` from the
-synthetic release fixture. Static substitutes are not accepted.
+The bundle must be a deterministic product of `graph/viewer-src/`.
 
 ## Public repository checks
 

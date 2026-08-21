@@ -1,1 +1,0 @@
-{"id":"rootstock.check.host.identity","title":"Host identity inventory","severity":"info","confidence":"high","category":"host","evidence":[{"type":"host","detail":"hostname=example"}],"attackTechniques":["T1082"],"remediation":["Informational"],"dryRunSafe":true,"opsecScore":5,"tccDomains":[],"esfExpected":[]}

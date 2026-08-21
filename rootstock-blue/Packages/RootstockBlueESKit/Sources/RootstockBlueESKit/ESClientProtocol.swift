@@ -93,12 +93,25 @@ public final class MockESClient: ESClienting, Sendable {
     }
 }
 
-/// Endpoint Security factory that currently exposes only the mock client.
+/// Inert live-ES selection used until the application is signed and entitled for Endpoint Security.
+private final class UnavailableLiveESClient: ESClienting, Sendable {
+    var counters: LossCounters { LossCounters() }
+
+    func start(profile _: ESSubscriptionProfile) throws {
+        throw RootstockBlueError.notImplemented(
+            "Live Endpoint Security is unavailable: a signed and entitled ES client is required"
+        )
+    }
+
+    func stop() {}
+
+    func pollEvents() -> [EventEnvelope] { [] }
+}
+
+/// Endpoint Security factory with mock-by-default behavior and an explicit unavailable live path.
 public enum LiveESClientFactory {
-    /// Returns the mock client. Live access requires an entitlement, FDA, and root.
+    /// Returns the mock client by default. A preferred live client fails explicitly until it is signed and entitled.
     public static func make(preferLive: Bool = false) -> any ESClienting {
-        // Live EndpointSecurity requires a restricted entitlement.
-        _ = preferLive
-        return MockESClient()
+        preferLive ? UnavailableLiveESClient() : MockESClient()
     }
 }

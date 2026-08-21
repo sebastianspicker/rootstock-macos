@@ -1,4 +1,0 @@
-# Runtime dependencies for fuzz/fuzz_validate_scan.py.
-atheris==3.0.0
-pydantic==2.13.4
-typing-extensions==4.15.0

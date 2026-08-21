@@ -16,18 +16,16 @@ Exit code 0 on success, 1 on failure.
 
 from __future__ import annotations
 
+# ruff: noqa: F401
+
 import argparse
-import hmac
-import ipaddress
 import logging
 import math
 import os
-import re
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import SplitResult, urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,10 +39,21 @@ from neo4j.exceptions import AuthError, DriverError, Neo4jError, ServiceUnavaila
 
 from query_runner import discover_queries, find_query
 from utils import (
-    cypher_code_only,
     first_cypher_statement,
     run_query,
-    validate_read_only_cypher,
+)
+from server_validation import (
+    has_loopback_neo4j_host as _has_loopback_neo4j_host,
+    has_neo4j_uri_credentials as _has_neo4j_uri_credentials,
+    has_neo4j_uri_suffix as _has_neo4j_uri_suffix,
+    is_loopback_host as _is_loopback_host,
+    is_supported_neo4j_scheme as _is_supported_neo4j_scheme,
+    matches_api_token as _matches_api_token,
+    validate_adhoc_cypher as _validate_adhoc_cypher,
+    validate_api_cypher as _validate_api_cypher,
+    validate_api_token as _validate_api_token,
+    validate_bind_host as _validate_bind_host,
+    validate_neo4j_uri as _validate_neo4j_uri,
 )
 
 from opengraph_export import build_opengraph
@@ -137,8 +146,6 @@ logger = logging.getLogger("rootstock.api")
 MAX_ADHOC_CYPHER_LENGTH = 10_000
 MAX_ADHOC_CYPHER_ROWS = 1_000
 ADHOC_CYPHER_TIMEOUT_SECONDS = 5.0
-MIN_API_TOKEN_BYTES = 32
-_CALL_RE = re.compile(r"\bCALL\b", re.IGNORECASE)
 
 
 def get_session(request: Request):
@@ -183,16 +190,6 @@ async def require_api_token(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     return response
-
-
-def _matches_api_token(auth_header: str, token: str | None) -> bool:
-    scheme, separator, presented = auth_header.partition(" ")
-    return (
-        bool(token)
-        and separator == " "
-        and scheme == "Bearer"
-        and hmac.compare_digest(presented.encode(), token.encode())
-    )
 
 
 # ── Routes ──────────────────────────────────────────────────────────────────
@@ -472,70 +469,6 @@ def _empty_graph_payload() -> dict[str, Any]:
         },
         "graph": {"nodes": [], "edges": []},
     }
-
-
-def _validate_adhoc_cypher(cypher: str) -> str | None:
-    return _validate_api_cypher(cypher)
-
-
-def _validate_api_cypher(cypher: str) -> str | None:
-    """Apply the viewer API's stricter no-procedure read-only policy."""
-    cleaned = cypher_code_only(cypher)
-    if _CALL_RE.search(cleaned):
-        return "Procedures are not allowed through the viewer API"
-    return validate_read_only_cypher(cypher)
-
-
-def _is_loopback_host(host: str) -> bool:
-    if host == "localhost":
-        return True
-    try:
-        return ipaddress.ip_address(host).is_loopback
-    except ValueError:
-        return False
-
-
-def _validate_bind_host(host: str) -> None:
-    """Reject every non-loopback bind for the alpha release surface."""
-    if _is_loopback_host(host):
-        return
-    raise ValueError("Refusing non-loopback bind; alpha is loopback-only")
-
-
-def _is_supported_neo4j_scheme(scheme: str) -> bool:
-    return scheme in {"bolt", "neo4j", "bolt+s", "neo4j+s"}
-
-
-def _has_neo4j_uri_credentials(parsed: SplitResult) -> bool:
-    return bool(parsed.username or parsed.password)
-
-
-def _has_loopback_neo4j_host(parsed: SplitResult) -> bool:
-    return bool(parsed.hostname and _is_loopback_host(parsed.hostname))
-
-
-def _has_neo4j_uri_suffix(parsed: SplitResult) -> bool:
-    return bool(parsed.path not in {"", "/"} or parsed.query or parsed.fragment)
-
-
-def _validate_neo4j_uri(uri: str) -> None:
-    """Keep the alpha server's outbound database connection on loopback."""
-    parsed = urlsplit(uri)
-    if not _is_supported_neo4j_scheme(parsed.scheme):
-        raise ValueError("Neo4j URI must use a supported Bolt/Neo4j scheme")
-    if _has_neo4j_uri_credentials(parsed):
-        raise ValueError("Neo4j URI must not contain credentials")
-    if not _has_loopback_neo4j_host(parsed):
-        raise ValueError("Refusing non-loopback Neo4j URI; alpha is local-only")
-    if _has_neo4j_uri_suffix(parsed):
-        raise ValueError("Neo4j URI must not contain a path, query, or fragment")
-
-
-def _validate_api_token(token: str) -> None:
-    if len(token.encode("utf-8")) < MIN_API_TOKEN_BYTES:
-        raise ValueError(
-            f"ROOTSTOCK_API_TOKEN must be at least {MIN_API_TOKEN_BYTES} bytes"
-        )
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
