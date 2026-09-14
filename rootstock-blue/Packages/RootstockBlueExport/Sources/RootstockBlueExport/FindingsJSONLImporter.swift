@@ -8,13 +8,14 @@ import RootstockBlueCore
 public enum FindingsJSONLImporter: Sendable {
     @discardableResult
     public static func importIntoCase(findingsURL: URL, casePackage: CasePackage) throws -> Int {
-        let text = try String(contentsOf: findingsURL, encoding: .utf8)
-        var count = 0
-        for line in text.split(whereSeparator: \.isNewline) {
-            let s = String(line).trimmingCharacters(in: .whitespaces)
-            guard !s.isEmpty, let data = s.data(using: .utf8) else { continue }
+        var events: [EventEnvelope] = []
+        try JSONLRecordReader.forEachRecord(contentsOf: findingsURL) { record in
+            let text = try JSONLRecordReader.strictUTF8(record)
+                .trimmingCharacters(in: .whitespaces)
+            guard !text.isEmpty else { return }
+            let data = Data(text.utf8)
             guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                continue
+                throw RootstockBlueError.io("finding JSONL line is not an object")
             }
             let id = obj["id"] as? String ?? UUID().uuidString
             let title = obj["title"] as? String ?? id
@@ -39,18 +40,17 @@ public enum FindingsJSONLImporter: Sendable {
                 confidence: 0.85
                 )
             )
-            try casePackage.appendEventJSONL(event, stream: "es")
-            try casePackage.insertTimelineEvent(event)
-            count += 1
+            events.append(event)
         }
-        try casePackage.appendCustody(
-            CustodyEvent(
+        try casePackage.appendEventBatch(
+            events,
+            stream: "es",
+            custody: CustodyEvent(
                 actor: "rootstock-blue",
                 action: "import.findings_jsonl",
-                detail: "Imported \(count) findings from \(findingsURL.lastPathComponent)"
+                detail: "Imported \(events.count) findings from \(findingsURL.lastPathComponent)"
             )
         )
-        try casePackage.updateHashes()
-        return count
+        return events.count
     }
 }

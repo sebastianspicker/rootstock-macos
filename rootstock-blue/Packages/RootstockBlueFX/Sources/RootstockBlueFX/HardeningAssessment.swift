@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 
 /// Automated **hardening / defense assessment** - product feature, not docs-only.
 ///
@@ -53,7 +52,7 @@ public enum HardeningAssessment {
         ].flatMap { $0 }
     }
 
-    /// Offline assess from artifact tree: posture + wave-3/4/5/6/7/8 parsers.
+    /// Offline assess from artifact tree: posture + available parsers.
     public static func assessOffline(source: ImageSource) throws -> [Finding] {
         let eventGroups = try [
             offlineFoundationEvents(source),
@@ -106,27 +105,21 @@ public enum HardeningAssessment {
         }
     }
 
-    /// Write assessment events into a case package.
+    /// Emit assessment events through an application-provided sink.
     @discardableResult
-    public static func writeToCase(
+    public static func write(
         _ findings: [Finding],
-        package: CasePackage,
-        mode: String,
-        actor: String = NSUserName()
+        into sink: any EventSink,
+        mode: String
     ) throws -> Int {
         let events = toEvents(findings, mode: mode)
-        for event in events {
-            try package.appendEventJSONL(event, stream: "es")
-            try package.insertTimelineEvent(event)
-        }
-        try package.appendCustody(
-            CustodyEvent(
-                actor: actor,
+        try sink.append(
+            events,
+            custody: EventCustodyNote(
                 action: "harden_assess",
                 detail: "Hardening assessment (\(mode)) findings=\(findings.count) fail=\(findings.filter { $0.status == "fail" }.count)"
             )
         )
-        try package.updateHashes()
         return events.count
     }
 

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// VPN configuration dual-use residual surface markers (Wave-15 red↔blue pair).
+/// VPN configuration dual-use residual surface markers (red↔blue pair).
 /// Honesty: never installs VPN profiles or rewrites network extension VPN configs.
 public struct VpnConfigDualuseParser: ArtifactParser {
     public let manifest = PluginManifest(id: "VPNCONFIGDUAL", tier: .tier2, description: "VPN config dual-use markers")

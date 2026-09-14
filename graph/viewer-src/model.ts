@@ -8,14 +8,21 @@ import type {
   KindMeta,
   GraphPayload,
   NodeId,
-  OutgoingEdge,
   PathResult,
+  OutgoingEdge,
   ViewerNode,
   ViewerState,
-  VisibilityResult,
 } from "./types";
-
-const unfilteredVisibilityByGraph = new WeakMap<GraphModel, VisibilityResult>();
+import { linkKey } from "./filtering";
+export {
+  computeVisibility,
+  filteredLinkIndexes,
+  filteredNodeIds,
+  focusedVisibility,
+  linkKey,
+  nodeIsVulnerable,
+  pathVisibility,
+} from "./filtering";
 
 const DEFAULT_COLOR = "#8c99a8";
 const HEX_COLOR = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i;
@@ -46,12 +53,10 @@ export function alphaChannel(value: string): boolean {
 export function functionalColor(value: string): boolean {
   const parsed = colorComponents(value);
   if (!parsed) return false;
-  return parsed.name.startsWith("rgb")
-    ? rgbComponents(parsed.parts)
-    : hslComponents(parsed.parts);
+  return parsed.name.startsWith("rgb") ? rgbComponents(parsed.parts) : hslComponents(parsed.parts);
 }
 
-type FunctionalColor = {name: "rgb" | "rgba" | "hsl" | "hsla"; parts: string[]};
+type FunctionalColor = { name: "rgb" | "rgba" | "hsl" | "hsla"; parts: string[] };
 
 export function colorComponents(value: string): FunctionalColor | null {
   const parsed = parenthesizedValue(value);
@@ -59,14 +64,14 @@ export function colorComponents(value: string): FunctionalColor | null {
   const name = parsed.name.toLowerCase();
   if (!functionalName(name)) return null;
   const parts = parsed.body.split(",").map((part) => part.trim());
-  return expectedComponentCount(name, parts.length) ? {name, parts} : null;
+  return expectedComponentCount(name, parts.length) ? { name, parts } : null;
 }
 
-export function parenthesizedValue(value: string): {name: string; body: string} | null {
+export function parenthesizedValue(value: string): { name: string; body: string } | null {
   const open = value.indexOf("(");
   if (open < 1) return null;
   if (!value.endsWith(")")) return null;
-  return {name: value.slice(0, open), body: value.slice(open + 1, -1)};
+  return { name: value.slice(0, open), body: value.slice(open + 1, -1) };
 }
 
 export function functionalName(value: string): value is FunctionalColor["name"] {
@@ -86,11 +91,9 @@ export function hslComponents(parts: string[]): boolean {
 }
 
 export function hslTriplet(parts: string[]): boolean {
-  return [
-    hueChannel(parts[0] ?? ""),
-    percentage(parts[1] ?? ""),
-    percentage(parts[2] ?? ""),
-  ].every(Boolean);
+  return [hueChannel(parts[0] ?? ""), percentage(parts[1] ?? ""), percentage(parts[2] ?? "")].every(
+    Boolean,
+  );
 }
 
 export function optionalAlpha(parts: string[]): boolean {
@@ -107,13 +110,14 @@ export function hueChannel(value: string): boolean {
 export function safeNodeColor(value: unknown): string {
   if (typeof value !== "string") return DEFAULT_COLOR;
   const color = value.trim();
-  return HEX_COLOR.test(color) || functionalColor(color)
-    ? color
-    : DEFAULT_COLOR;
+  return HEX_COLOR.test(color) || functionalColor(color) ? color : DEFAULT_COLOR;
 }
 
 export function displayKind(kind: string): string {
-  return kind.replace(/^rs_/, "").replace(/([A-Z])/g, " $1").trim();
+  return kind
+    .replace(/^rs_/, "")
+    .replace(/([A-Z])/g, " $1")
+    .trim();
 }
 
 export function numericProperty(value: unknown): number | null {
@@ -134,13 +138,10 @@ export function searchableNodeText(node: ViewerNode): string {
     node.properties.severity,
     node.properties.category,
   ];
-  return values.filter((value): value is string => typeof value === "string")
+  return values
+    .filter((value): value is string => typeof value === "string")
     .join("\n")
     .toLowerCase();
-}
-
-export function linkKey(edge: GraphEdge): string {
-  return `${edge.source}>${edge.kind}>${edge.target}`;
 }
 
 export function deterministicClusterOffset(id: NodeId): number {
@@ -158,18 +159,20 @@ function normalizeNode(node: GraphPayload["graph"]["nodes"][number], index: numb
     ...node,
     x: numericProperty(node.x) ?? 120 + (index % columns) * 90,
     y: numericProperty(node.y) ?? 120 + Math.floor(index / columns) * 90,
-    properties: {...(node.properties ?? {})},
+    properties: { ...(node.properties ?? {}) },
   };
 }
 
 function normalizeEdges(payload: GraphPayload): GraphEdge[] {
   return payload.graph.edges.map((edge) => ({
     ...edge,
-    properties: {...(edge.properties ?? {})},
+    properties: { ...(edge.properties ?? {}) },
   }));
 }
 
-function buildNodeIndexes(nodes: ViewerNode[]): Pick<GraphModel, "nodeById" | "searchTextById" | "kindMeta"> {
+function buildNodeIndexes(
+  nodes: ViewerNode[],
+): Pick<GraphModel, "nodeById" | "searchTextById" | "kindMeta"> {
   const nodeById = new Map<NodeId, ViewerNode>(nodes.map((node) => [node.id, node]));
   const searchTextById = new Map<NodeId, string>();
   const kindMeta = new Map<string, KindMeta>();
@@ -177,7 +180,7 @@ function buildNodeIndexes(nodes: ViewerNode[]): Pick<GraphModel, "nodeById" | "s
     searchTextById.set(node.id, searchableNodeText(node));
     updateKindMeta(kindMeta, node);
   }
-  return {nodeById, searchTextById, kindMeta};
+  return { nodeById, searchTextById, kindMeta };
 }
 
 function updateKindMeta(kindMeta: Map<string, KindMeta>, node: ViewerNode): void {
@@ -193,7 +196,9 @@ function updateKindMeta(kindMeta: Map<string, KindMeta>, node: ViewerNode): void
   }
 }
 
-function buildEdgeIndexes(links: GraphEdge[]): Pick<GraphModel, "degreeById" | "edgeMeta" | "outgoing" | "incoming"> {
+function buildEdgeIndexes(
+  links: GraphEdge[],
+): Pick<GraphModel, "degreeById" | "edgeMeta" | "outgoing" | "incoming"> {
   const degreeById = new Map<NodeId, number>();
   const edgeMeta = new Map<string, EdgeMeta>();
   const outgoing = new Map<NodeId, OutgoingEdge[]>();
@@ -201,10 +206,10 @@ function buildEdgeIndexes(links: GraphEdge[]): Pick<GraphModel, "degreeById" | "
   links.forEach((edge, linkIndex) => {
     updateDegree(degreeById, edge);
     updateEdgeMeta(edgeMeta, edge);
-    appendDirectedEdge(outgoing, edge.source, {target: edge.target, edge, linkIndex});
-    appendDirectedEdge(incoming, edge.target, {source: edge.source, edge, linkIndex});
+    appendDirectedEdge(outgoing, edge.source, { target: edge.target, edge, linkIndex });
+    appendDirectedEdge(incoming, edge.target, { source: edge.source, edge, linkIndex });
   });
-  return {degreeById, edgeMeta, outgoing, incoming};
+  return { degreeById, edgeMeta, outgoing, incoming };
 }
 
 function updateDegree(degreeById: Map<NodeId, number>, edge: GraphEdge): void {
@@ -220,7 +225,7 @@ function updateEdgeMeta(edgeMeta: Map<string, EdgeMeta>, edge: GraphEdge): void 
     existing.traversable ||= traversable;
     return;
   }
-  edgeMeta.set(edge.kind, {count: 1, label: displayKind(edge.kind), traversable});
+  edgeMeta.set(edge.kind, { count: 1, label: displayKind(edge.kind), traversable });
 }
 
 function appendDirectedEdge<T>(index: Map<NodeId, T[]>, nodeId: NodeId, entry: T): void {
@@ -234,13 +239,15 @@ export function buildGraphModel(payload: GraphPayload): GraphModel {
   const nodes = payload.graph.nodes.map(normalizeNode);
   const edges = normalizeEdges(payload);
   const nodeIndexes = buildNodeIndexes(nodes);
-  const links = edges.filter((edge) => nodeIndexes.nodeById.has(edge.source) && nodeIndexes.nodeById.has(edge.target));
+  const links = edges.filter(
+    (edge) => nodeIndexes.nodeById.has(edge.source) && nodeIndexes.nodeById.has(edge.target),
+  );
   const edgeIndexes = buildEdgeIndexes(links);
 
   return {
     payload: {
-      metadata: {...(payload.metadata ?? {})},
-      graph: {nodes, edges},
+      metadata: { ...(payload.metadata ?? {}) },
+      graph: { nodes, edges },
     },
     nodes,
     edges,
@@ -250,9 +257,14 @@ export function buildGraphModel(payload: GraphPayload): GraphModel {
   };
 }
 
-export function createViewerState(payload: GraphPayload, live: boolean, apiBaseUrl: string): ViewerState {
+export function createViewerState(
+  payload: GraphPayload,
+  live: boolean,
+  apiBaseUrl: string,
+): ViewerState {
   const graph = buildGraphModel(payload);
   return {
+    workspace: "triage",
     graph,
     filters: {
       activeNodeKinds: new Set(graph.kindMeta.keys()),
@@ -266,22 +278,22 @@ export function createViewerState(payload: GraphPayload, live: boolean, apiBaseU
       hoveredId: null,
       pinnedId: null,
       focusedId: null,
-      path: {active: false, sourceId: null, targetId: null, result: null},
+      path: { active: false, sourceId: null, targetId: null, result: null },
       clustered: false,
       showLabels: true,
     },
     viewport: {
-      transform: {x: 0, y: 0, k: 1},
+      transform: { x: 0, y: 0, k: 1 },
       width: 1,
       height: 1,
       devicePixelRatio: 1,
     },
     pointer: {
       draggedId: null,
-      dragOffset: {x: 0, y: 0},
+      dragOffset: { x: 0, y: 0 },
       panning: false,
-      panStart: {x: 0, y: 0},
-      mouseDown: {x: 0, y: 0},
+      panStart: { x: 0, y: 0 },
+      mouseDown: { x: 0, y: 0 },
       didDrag: false,
       suppressClick: false,
     },
@@ -291,7 +303,7 @@ export function createViewerState(payload: GraphPayload, live: boolean, apiBaseU
       visibleNodeIds: new Set(),
       visibleLinkIndexes: new Set(),
     },
-    live: {enabled: live, apiBaseUrl, refreshGeneration: 0},
+    live: { enabled: live, apiBaseUrl, refreshGeneration: 0 },
   };
 }
 
@@ -317,129 +329,8 @@ export function resetSelection(state: ViewerState): void {
   state.selection.hoveredId = null;
   state.selection.pinnedId = null;
   state.selection.focusedId = null;
-  state.selection.path = {active: false, sourceId: null, targetId: null, result: null};
+  state.selection.path = { active: false, sourceId: null, targetId: null, result: null };
   state.selection.clustered = false;
-}
-
-export function nodeIsVulnerable(node: ViewerNode): boolean {
-  return vulnerableRisk(node) || node.properties.vulnerable === true || cveCount(node) > 0;
-}
-
-export function vulnerableRisk(node: ViewerNode): boolean {
-  const risk = node.properties.risk_level ?? node.properties.severity ?? "";
-  return typeof risk === "string" && ["critical", "high", "medium"].includes(risk.toLowerCase());
-}
-
-export function cveCount(node: ViewerNode): number {
-  return Number(node.properties.cve_count ?? 0);
-}
-
-/** Gives active path and focus modes precedence over ordinary filter visibility. */
-export function computeVisibility(state: ViewerState): VisibilityResult {
-  const {graph, filters, selection} = state;
-  if (selection.path.active && selection.path.result) {
-    return pathVisibility(graph, selection.path.result);
-  }
-  if (selection.focusedId) {
-    return focusedVisibility(graph, selection.focusedId);
-  }
-  if (filtersAreUnrestricted(filters, graph)) {
-    return unfilteredVisibility(graph);
-  }
-  const nodeIds = filteredNodeIds(state);
-  return {nodeIds, linkIndexes: filteredLinkIndexes(graph, filters, nodeIds)};
-}
-
-function filtersAreUnrestricted(filters: ViewerState["filters"], graph: GraphModel): boolean {
-  return [
-    hasAllKinds(filters.activeNodeKinds, graph.kindMeta),
-    hasAllKinds(filters.activeEdgeKinds, graph.edgeMeta),
-    !filters.searchTerm,
-    !filters.attackPathsOnly,
-    !filters.vulnerabilitiesOnly,
-  ].every(Boolean);
-}
-
-function hasAllKinds(activeKinds: ReadonlySet<string>, knownKinds: ReadonlyMap<string, unknown>): boolean {
-  if (activeKinds.size !== knownKinds.size) return false;
-  for (const kind of knownKinds.keys()) {
-    if (!activeKinds.has(kind)) return false;
-  }
-  return true;
-}
-
-function unfilteredVisibility(graph: GraphModel): VisibilityResult {
-  const cached = unfilteredVisibilityByGraph.get(graph);
-  if (cached) return cached;
-  const visibility = {
-    nodeIds: new Set(graph.nodes.map((node) => node.id)),
-    linkIndexes: new Set(graph.links.keys()),
-  };
-  unfilteredVisibilityByGraph.set(graph, visibility);
-  return visibility;
-}
-
-export function pathVisibility(graph: GraphModel, path: PathResult): VisibilityResult {
-  const nodeIds = new Set(path.nodeIds);
-  const linkIndexes = new Set<number>();
-  graph.links.forEach((edge, index) => {
-    if (path.linkKeys.has(linkKey(edge))) linkIndexes.add(index);
-  });
-  return {nodeIds, linkIndexes};
-}
-
-export function focusedVisibility(graph: GraphModel, focusedId: NodeId): VisibilityResult {
-  const nodeIds = new Set<NodeId>([focusedId]);
-  const linkIndexes = new Set<number>();
-  graph.links.forEach((edge, index) => {
-    if (edge.source === focusedId || edge.target === focusedId) {
-      nodeIds.add(edge.source);
-      nodeIds.add(edge.target);
-      linkIndexes.add(index);
-    }
-  });
-  return {nodeIds, linkIndexes};
-}
-
-export function filteredNodeIds(state: ViewerState): Set<NodeId> {
-  const {graph, filters} = state;
-  const nodeIds = new Set<NodeId>();
-  for (const node of graph.nodes) {
-    if (!filters.activeNodeKinds.has(node.kind)) continue;
-    if (filters.searchTerm && !graph.searchTextById.get(node.id)?.includes(filters.searchTerm)) continue;
-    if (filters.vulnerabilitiesOnly && !nodeIsVulnerable(node)) continue;
-    nodeIds.add(node.id);
-  }
-  return nodeIds;
-}
-
-export function filteredLinkIndexes(
-  graph: GraphModel,
-  filters: ViewerState["filters"],
-  nodeIds: Set<NodeId>,
-): Set<number> {
-  const linkIndexes = new Set<number>();
-  if (nodeIds.size < graph.nodes.length / 2) {
-    for (const nodeId of nodeIds) {
-      for (const candidate of graph.outgoing.get(nodeId) ?? []) {
-        if (!nodeIds.has(candidate.target)) continue;
-        if (!edgeMatchesFilters(candidate.edge, filters)) continue;
-        linkIndexes.add(candidate.linkIndex);
-      }
-    }
-    return linkIndexes;
-  }
-  graph.links.forEach((edge, index) => {
-    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) return;
-    if (!edgeMatchesFilters(edge, filters)) return;
-    linkIndexes.add(index);
-  });
-  return linkIndexes;
-}
-
-function edgeMatchesFilters(edge: GraphEdge, filters: ViewerState["filters"]): boolean {
-  if (!filters.activeEdgeKinds.has(edge.kind)) return false;
-  return !filters.attackPathsOnly || edge.properties?._traversable === true;
 }
 
 export function nodeRadius(model: GraphModel, nodeId: NodeId): number {
@@ -447,19 +338,27 @@ export function nodeRadius(model: GraphModel, nodeId: NodeId): number {
 }
 
 /** Finds the shortest directed path using edges unless they explicitly opt out of traversal. */
-export function shortestPath(model: GraphModel, sourceId: NodeId, targetId: NodeId): PathResult | null {
+export function shortestPath(
+  model: GraphModel,
+  sourceId: NodeId,
+  targetId: NodeId,
+): PathResult | null {
   if (!model.nodeById.has(sourceId) || !model.nodeById.has(targetId)) return null;
   if (sourceId === targetId) {
-    return {nodeIds: new Set([sourceId]), linkKeys: new Set(), orderedNodeIds: [sourceId]};
+    return { nodeIds: new Set([sourceId]), linkKeys: new Set(), orderedNodeIds: [sourceId] };
   }
   const previous = breadthFirstPrevious(model, sourceId, targetId);
   return previous ? reconstructPath(previous, sourceId, targetId) : null;
 }
 
-type PreviousStep = {nodeId: NodeId; edge: GraphEdge};
+type PreviousStep = { nodeId: NodeId; edge: GraphEdge };
 
 /** Performs FIFO directed traversal and records the first predecessor for deterministic path reconstruction. */
-export function breadthFirstPrevious(model: GraphModel, sourceId: NodeId, targetId: NodeId): Map<NodeId, PreviousStep> | null {
+export function breadthFirstPrevious(
+  model: GraphModel,
+  sourceId: NodeId,
+  targetId: NodeId,
+): Map<NodeId, PreviousStep> | null {
   const queue: NodeId[] = [sourceId];
   const previous = new Map<NodeId, PreviousStep>();
   const visited = new Set<NodeId>([sourceId]);
@@ -482,7 +381,7 @@ export function visitCandidates(
   for (const candidate of model.outgoing.get(current) ?? []) {
     if (!canVisit(candidate.target, candidate.edge, visited)) continue;
     visited.add(candidate.target);
-    previous.set(candidate.target, {nodeId: current, edge: candidate.edge});
+    previous.set(candidate.target, { nodeId: current, edge: candidate.edge });
     if (candidate.target === targetId) return true;
     queue.push(candidate.target);
   }
@@ -493,10 +392,14 @@ export function canVisit(targetId: NodeId, edge: GraphEdge, visited: Set<NodeId>
   return edge.properties?._traversable !== false && !visited.has(targetId);
 }
 
-export function reconstructPath(previous: Map<NodeId, PreviousStep>, sourceId: NodeId, targetId: NodeId): PathResult | null {
+export function reconstructPath(
+  previous: Map<NodeId, PreviousStep>,
+  sourceId: NodeId,
+  targetId: NodeId,
+): PathResult | null {
   const orderedNodeIds: NodeId[] = [targetId];
   const linkKeys = new Set<string>();
-  for (let cursor = targetId; cursor !== sourceId;) {
+  for (let cursor = targetId; cursor !== sourceId; ) {
     const step = previous.get(cursor);
     if (!step) return null;
     linkKeys.add(linkKey(step.edge));
@@ -504,5 +407,5 @@ export function reconstructPath(previous: Map<NodeId, PreviousStep>, sourceId: N
     orderedNodeIds.push(cursor);
   }
   orderedNodeIds.reverse();
-  return {nodeIds: new Set(orderedNodeIds), linkKeys, orderedNodeIds};
+  return { nodeIds: new Set(orderedNodeIds), linkKeys, orderedNodeIds };
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - Wave-11 2026 coverage multi-plane surfaces
+// MARK: - 2026 coverage multi-plane surfaces
 
 /// Custom URL scheme / document-handler delivery posture (never registers schemes or handlers).
 public struct URLSchemeHandlerState: Codable, Sendable, Equatable {
@@ -115,7 +115,7 @@ public struct ShortcutsAppIntentsState: Codable, Sendable, Equatable {
 }
 
 
-// MARK: - Wave-12 2026 coverage multi-plane surfaces
+// MARK: - 2026 coverage multi-plane surfaces
 
 /// Webloc / Internet Location file delivery (never crafts phishing webloc/inetloc payloads or rewrites Internet Location files).
 public struct WeblocInetlocDeliveryState: Codable, Sendable, Equatable {
@@ -261,7 +261,7 @@ public struct NetworkShareMountState: Codable, Sendable, Equatable {
 }
 
 
-// MARK: - Wave-13 2026 coverage multi-plane surfaces
+// MARK: - 2026 coverage multi-plane surfaces
 
 
 /// Calendar / Reminders automation lateral surface (never reads event contents or creates malicious calendar invites).

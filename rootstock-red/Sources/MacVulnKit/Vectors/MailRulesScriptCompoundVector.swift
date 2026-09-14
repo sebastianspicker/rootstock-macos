@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-12 compound: Mail rules automation × remote/FDA path-to-impact.
+/// Compound: Mail rules automation × remote/FDA path-to-impact.
 public struct MailRulesScriptCompoundVector: Check {
     public static let id = "rootstock.vector.persist.mail_rules_script_compound"
     public static let cost: CollectorCost = .low
@@ -50,7 +50,7 @@ public struct MailRulesScriptCompoundVector: Check {
                     ? "Mail rules automation × remote compound"
                     : "Mail rules automation × impact compound", severity: severity, category: .misconfig, resolution: .init(evidence: evidence, attackTechniques: ["T1114", "T1059", "T1546"], remediation: [
                     "Prioritize hosts co-locating Mail rules automation with remote/FDA amplifiers",
-                    "Use Wave-12 lab plans under ROE for purple validation",
+                    "Use corresponding lab plans under ROE for purple validation",
                     "OPSEC: path-to-impact ranking only - not an auto-exploit chain",
                 ], falsePositiveNotes: "Developer hosts may co-locate many dual-use paths; rank production remote hosts first."), runtime: .init(confidence: .medium, dryRunSafe: true, opsecScore: 27, esfExpected: ["OPEN", "EXEC", "READ"])),
         ]

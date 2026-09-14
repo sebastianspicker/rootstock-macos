@@ -26,11 +26,26 @@ import Quarantine
 
 /// Coordinates all data source modules and assembles the final ScanResult.
 struct ScanOrchestrator: Sendable {
+    enum Execution: Sendable {
+        case live
+        case injected(@Sendable (ModuleConfig) async -> ScanResult)
+    }
+
     let verbose: Bool
+    let execution: Execution
+
+    init(verbose: Bool, execution: Execution = .live) {
+        self.verbose = verbose
+        self.execution = execution
+    }
 
     /// Runs independent collectors concurrently, then applies application
     /// enrichments in dependency order before assembling the stable scan schema.
     func run(config: ModuleConfig) async -> ScanResult {
+        if case let .injected(makeScan) = execution {
+            return await makeScan(config)
+        }
+
         var allErrors: [CollectionError] = []
         let scanStart = Date()
 

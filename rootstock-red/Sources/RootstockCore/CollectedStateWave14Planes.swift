@@ -1,5 +1,5 @@
 import Foundation
-// MARK: - Wave-14 2026 coverage multi-plane surfaces
+// MARK: - 2026 coverage multi-plane surfaces
 
 
 /// Automator workflow delivery residual (never executes Automator workflows or plants malicious .workflow bundles).

@@ -23,8 +23,8 @@ fi
 echo "Building Rootstock Collector v${VERSION} (universal macOS binary)..."
 
 cd "${REPO_ROOT}/collector"
-swift build -c release --arch arm64 --arch x86_64
-BIN_DIR="$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)"
+swift build -c release --arch arm64 --arch x86_64 -Xswiftc -warnings-as-errors
+BIN_DIR="$(swift build -c release --arch arm64 --arch x86_64 -Xswiftc -warnings-as-errors --show-bin-path)"
 
 mkdir -p "${OUTPUT_DIR}"
 STAGING_DIR="$(mktemp -d "${OUTPUT_DIR}/.rootstock-release.XXXXXX")"

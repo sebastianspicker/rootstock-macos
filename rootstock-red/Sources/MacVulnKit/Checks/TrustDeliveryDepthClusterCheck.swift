@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Sandbox × notarization × quarantine/GK trust-delivery depth cluster (Wave-7).
+/// Sandbox × notarization × quarantine/GK trust-delivery depth cluster.
 ///
 /// Research basis: delivery-trust research across GK/notarization/entitlements.
 /// Safety and behavior: multi-rule ranked Findings; no bypass recipes.

@@ -1,17 +1,18 @@
 # Examples
 
-Synthetic fixtures and scripts for Rootstock. These files are the only
-assessment-shaped data that belong in the public tree. Real host scans, reports,
-viewers, and package inventories stay local and gitignored.
+This directory contains Rootstock's synthetic fixtures and example scripts.
+Only synthetic assessment data belongs in the public repository. Store real
+host scans, reports, viewers, and package inventories in a private directory
+outside the checkout.
 
 ## Included files
 
 ### `demo-scan.json`
 
-Synthetic scan data for a fictional Mac named `Acme Corp`. This file is the
-example source of truth. After editing it, validate it against the Pydantic
-models in `graph/models.py` and the JSON Schema in
-`collector/schema/scan-result.schema.json`:
+This maintained example describes the fictional host `acme-macbook-pro` with
+placeholder Acme Corp identifiers. After editing it, validate it against the
+Pydantic models in `graph/src/rootstock_graph/models.py` and the canonical JSON
+Schema in `contracts/collector-scan/legacy-unversioned.schema.json`:
 
 ```bash
 uv run --project graph --locked python scripts/validate-scan.py examples/demo-scan.json
@@ -21,19 +22,21 @@ Use this scan to test the graph pipeline without running the collector.
 
 ### `cve-scan-export.json`
 
-Synthetic `rootstock-export.json` bridge fixture for graph import of cve-scan
-evidence. See [docs/guides/cve-scan-module.md](../docs/guides/cve-scan-module.md).
+This synthetic `rootstock-export.json` fixture demonstrates the version 7 CVE
+graph export. See the [cve-scan README](../modules/cve-scan/README.md) and
+[product-family map](../docs/FAMILY.md).
 
 ### `family-export-blue.json` and `family-export-red.json`
 
-Synthetic family open-export fixtures used by the optional rootstock-blue and
-rootstock-red → Neo4j import path. See [docs/FAMILY.md](../docs/FAMILY.md) and
-`graph/import_family_export.py`.
+These synthetic family open exports exercise the optional Red and Blue import
+path into Neo4j. See the [product-family map](../docs/FAMILY.md) and the
+`rootstock-graph-import-family-export` command.
 
 ### `regenerate.sh`
 
-This script validates `demo-scan.json` and rebuilds the pipeline output. It
-does not rewrite `demo-scan.json` and requires a running Neo4j instance.
+This script validates `demo-scan.json` and rebuilds the derived pipeline
+output. It leaves `demo-scan.json` unchanged and requires a running Neo4j
+instance.
 
 ```bash
 # Run from the repository root. Start Neo4j if needed.
@@ -43,18 +46,22 @@ NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
   bash examples/regenerate.sh
 ```
 
-This runs schema setup, cached or static CVE enrichment, import, inference,
-vulnerability import, classification, and report output. It writes:
+The script sets up the graph schema, performs cached or static CVE enrichment,
+imports the scan and vulnerability data, runs inference and classification,
+and writes:
 
 - `generated/demo-report.md`: attack-path report
 - `generated/demo-graph.json`: OpenGraph JSON for the viewer
 - `generated/demo-viewer.html`: offline graph viewer
 
-`generated/` is a local output directory, not the source of truth. Keep demo
-data changes in `demo-scan.json`, then regenerate derived outputs.
+`generated/` contains local derived output. Make lasting fixture changes in
+`demo-scan.json`, then regenerate this directory.
 
-Environment variables: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`. The bundled
-Neo4j compose file requires `NEO4J_AUTH`, for example `neo4j/CHANGE_ME`.
+Graph import commands use `NEO4J_URI`, `NEO4J_USER`, and `NEO4J_PASSWORD`.
+The API also requires a separate read-only `NEO4J_READ_USER` and its
+`NEO4J_READ_PASSWORD`; see [configuration](../docs/CONFIGURATION.md) for the
+required Neo4j privileges. The bundled Neo4j compose file requires
+`NEO4J_AUTH`, for example `neo4j/CHANGE_ME`.
 
 ## Using example data
 
@@ -68,19 +75,21 @@ NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
 
 # Or step by step:
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  python graph/setup_schema.py
+  rootstock-graph-setup-schema
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  python graph/import_scan.py --input examples/demo-scan.json
-NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked python graph/infer.py
+  rootstock-graph-import-scan --input examples/demo-scan.json
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked rootstock-graph-infer
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  python graph/import_vulnerabilities.py
+  rootstock-graph-import-vulnerabilities
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  python graph/tier_classification.py
+  rootstock-graph-tier-classification
 
 # Start the API server + interactive viewer
 export ROOTSTOCK_API_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export NEO4J_READ_USER=rootstock_api_read
+export NEO4J_READ_PASSWORD=CHANGE_ME
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  python graph/server.py --port 8000
+  rootstock-graph-api --port 8000
 # Open http://localhost:8000
 ```
 

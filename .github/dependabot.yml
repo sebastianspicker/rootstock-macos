@@ -31,16 +31,6 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "swift"
-    directory: "/packages/RootstockMacFacts"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "swift"
     directory: "/rootstock-red"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "swift"
-    directory: "/rootstock-blue"
     schedule:
       interval: "weekly"

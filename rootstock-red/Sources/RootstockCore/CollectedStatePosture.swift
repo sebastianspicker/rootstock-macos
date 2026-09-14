@@ -137,7 +137,7 @@ public struct FileVaultEscrowState: Codable, Sendable, Equatable {
     }
 }
 
-// MARK: - Wave-8 2026 coverage residual surfaces
+// MARK: - 2026 coverage residual surfaces
 
 /// ClickFix / paste-and-run Terminal delivery posture (never builds lures/payloads).
 public struct ClickFixTerminalDeliveryState: Codable, Sendable, Equatable {
@@ -305,7 +305,7 @@ public struct SSHAgentKeyPathState: Codable, Sendable, Equatable {
     }
 }
 
-// MARK: - Wave-9 2026 coverage residual surfaces
+// MARK: - 2026 coverage residual surfaces
 
 /// PackageKit installer design-based persistence posture (never builds pkgs or invokes installd).
 public struct PackageKitInstallerDesignState: Codable, Sendable, Equatable {

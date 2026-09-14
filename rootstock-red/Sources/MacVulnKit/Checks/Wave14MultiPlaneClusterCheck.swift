@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-14 compound ranking (10 net-new themes beyond Wave-13).
+/// Multi-plane compound ranking (10 net-new themes beyond prior coverage).
 public struct Wave14MultiPlaneClusterCheck: Check {
     public static let id = "rootstock.check.vuln.wave14_multi_plane_cluster"
     public static let cost: CollectorCost = .low
@@ -40,17 +40,17 @@ public struct Wave14MultiPlaneClusterCheck: Check {
         let amps = clusterAmplifierLabels(state: state).sorted()
         let severity: Severity = (sorted.count >= 5 && amps.contains("remote") && amps.contains("fda")) ? .high
             : ((sorted.count >= 3 || (sorted.count >= 2 && amps.count >= 2)) ? .medium : .low)
-        return Finding(id: "\(id).multi_plane", title: "Wave-14 multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category: .misconfig, resolution: .init(evidence: [
+        return Finding(id: "\(id).multi_plane", title: "Multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category:.misconfig, resolution:.init(evidence: [
                 Evidence(type: "planes", detail: "planes=\(sorted.joined(separator: "|")) count=\(sorted.count)"),
                 Evidence(type: "amplifiers", detail: amps.isEmpty ? "amplifiers=none" : "amplifiers=\(amps.joined(separator: "|")) count=\(amps.count)"),
                 Evidence(type: "stage_labels", detail: "stages=delivery|collection|auth|network|persist (labels only - not auto-exploit)"),
                 Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"),
-                Evidence(type: "honesty", detail: "Wave-14 multi-plane ranking is path-to-impact narrative. Rootstock Red does not execute Automator, dump iCloud/Notes contents, spoof Continuity, install fonts, rewrite DNS/PAM/cron, or clear QuarantineEvents."),
+                Evidence(type: "honesty", detail: "Multi-plane ranking is path-to-impact narrative. Rootstock Red does not execute Automator, dump iCloud/Notes contents, spoof Continuity, install fonts, rewrite DNS/PAM/cron, or clear QuarantineEvents."),
             ], attackTechniques: ["T1059", "T1530", "T1556", "T1053.003", "T1071.004", "T1553.001"], remediation: [
-                "Prioritize hosts co-locating multiple Wave-14 planes with remote/FDA amplifiers",
+                "Prioritize hosts co-locating multiple planes with remote/FDA amplifiers",
                 "Close remote access before deep dual-use inventory",
-                "Use Wave-14 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: multi-plane compounds are engagement narrative, not exploit scripts",
-            ], falsePositiveNotes: "Developer workstations may co-locate many Wave-14 planes. Rank production remote hosts first."), runtime: .init(confidence: .low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ"]))
+            ], falsePositiveNotes: "Developer workstations may co-locate many planes. Rank production remote hosts first."), runtime:.init(confidence:.low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ"]))
     }
 }

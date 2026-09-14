@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Custom URL scheme / document-handler delivery posture (Wave-11).
+/// Custom URL scheme / document-handler delivery posture.
 ///
 /// Research basis: LS handlers / CFBundleURLTypes / open-url delivery research (2025–26 malware handlers).
 /// Safety and behavior: typed path inventory only; never registers schemes or rewrites handlers.

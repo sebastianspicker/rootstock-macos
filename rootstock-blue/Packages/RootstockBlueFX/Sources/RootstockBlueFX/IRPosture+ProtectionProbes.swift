@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 import RootstockMacFacts
 
 #if canImport(Darwin)

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// iCloud Drive / Mobile Documents path plane (Wave-14).
+/// iCloud Drive / Mobile Documents path plane.
 /// Research basis: 2025–26 macOS iCloud Drive path plane tradecraft.
 /// Safety and behavior: path inventory only; never enumerates iCloud file contents or exfiltrates Mobile Documents.
 public struct IcloudDrivePathCollector: Collector {

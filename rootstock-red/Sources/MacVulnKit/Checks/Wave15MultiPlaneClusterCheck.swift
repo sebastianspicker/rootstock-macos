@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-15 compound ranking (10 net-new themes beyond Wave-14).
+/// Multi-plane compound ranking (10 net-new themes beyond prior coverage).
 public struct Wave15MultiPlaneClusterCheck: Check {
     public static let id = "rootstock.check.vuln.wave15_multi_plane_cluster"
     public static let cost: CollectorCost = .low
@@ -40,17 +40,17 @@ public struct Wave15MultiPlaneClusterCheck: Check {
         let amps = clusterAmplifierLabels(state: state).sorted()
         let severity: Severity = (sorted.count >= 5 && amps.contains("remote") && amps.contains("fda")) ? .high
             : ((sorted.count >= 3 || (sorted.count >= 2 && amps.count >= 2)) ? .medium : .low)
-        return Finding(id: "\(id).multi_plane", title: "Wave-15 multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category: .misconfig, resolution: .init(evidence: [
+        return Finding(id: "\(id).multi_plane", title: "Multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category:.misconfig, resolution:.init(evidence: [
                 Evidence(type: "planes", detail: "planes=\(sorted.joined(separator: "|")) count=\(sorted.count)"),
                 Evidence(type: "amplifiers", detail: amps.isEmpty ? "amplifiers=none" : "amplifiers=\(amps.joined(separator: "|")) count=\(amps.count)"),
                 Evidence(type: "stage_labels", detail: "stages=collection|remote|sandbox|lolbin|persist (labels only - not auto-exploit)"),
                 Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"),
-                Evidence(type: "honesty", detail: "Wave-15 multi-plane ranking is path-to-impact narrative. Rootstock Red does not dump Photos/keychain secrets, enable ARD/VPN, break sandbox, install emond/cron, or run Python/shell plugin payloads."),
+                Evidence(type: "honesty", detail: "Multi-plane ranking is path-to-impact narrative. Rootstock Red does not dump Photos/keychain secrets, enable ARD/VPN, break sandbox, install emond/cron, or run Python/shell plugin payloads."),
             ], attackTechniques: ["T1005", "T1021", "T1555.001", "T1059.006", "T1546.004", "T1546.014"], remediation: [
-                "Prioritize hosts co-locating multiple Wave-15 planes with remote/FDA amplifiers",
+                "Prioritize hosts co-locating multiple planes with remote/FDA amplifiers",
                 "Close remote access before deep dual-use inventory",
-                "Use Wave-15 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: multi-plane compounds are engagement narrative, not exploit scripts",
-            ], falsePositiveNotes: "Developer workstations may co-locate many Wave-15 planes. Rank production remote hosts first."), runtime: .init(confidence: .low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ"]))
+            ], falsePositiveNotes: "Developer workstations may co-locate many planes. Rank production remote hosts first."), runtime:.init(confidence:.low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ"]))
     }
 }

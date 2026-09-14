@@ -10,10 +10,15 @@ public enum SantaBridge {
     /// Fixture shape:
     /// `{"decision":"DENY","path":"/tmp/evil_payload","sha256":"abc","reason":"BLOCKLIST","timestamp":"2026-01-15T12:00:00Z"}`
     public static func eventsFromSantaLog(at url: URL) throws -> [EventEnvelope] {
-        let text = try santaLogText(at: url)
         let dates = SantaDateParsers()
-        let events = try text.components(separatedBy: .newlines).enumerated().compactMap {
-            try santaEvent(rawLine: $0.element, lineNumber: $0.offset + 1, url: url, dates: dates)
+        var events: [EventEnvelope] = []
+        var lineNumber = 0
+        try JSONLRecordReader.forEachRecord(contentsOf: url) { record in
+            lineNumber += 1
+            let text = try JSONLRecordReader.strictUTF8(record)
+            if let event = try santaEvent(rawLine: text, lineNumber: lineNumber, url: url, dates: dates) {
+                events.append(event)
+            }
         }
         guard !events.isEmpty else { throw RootstockBlueError.io("No Santa decisions parsed from \(url.path)") }
         return events
@@ -27,12 +32,6 @@ public enum SantaBridge {
             fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             basic.formatOptions = [.withInternetDateTime]
         }
-    }
-
-    private static func santaLogText(at url: URL) throws -> String {
-        let data = try Data(contentsOf: url)
-        guard let text = String(data: data, encoding: .utf8) else { throw RootstockBlueError.io("Santa log is not UTF-8: \(url.path)") }
-        return text
     }
 
     private static func santaEvent(rawLine: String, lineNumber: Int, url: URL, dates: SantaDateParsers) throws -> EventEnvelope? {

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Third-party TCC-inheritance / embedded-interpreter class (Wave-8).
+/// Third-party TCC-inheritance / embedded-interpreter class.
 ///
 /// Research basis: Electron/TCC inheritance discussions; thick-client interpreter dual-use.
 /// Safety and behavior: typed `ThirdPartyTCCInheritanceState`; never forges TCC grants or strips entitlements.

@@ -18,7 +18,7 @@ extension RootstockBlueCLI {
           rootstock-blue collect <pack> --case <path.rsbcase> --source <tree> [--content-root PATH] [--offline]
           rootstock-blue import scan-json <scan.json> --case <path.rsbcase>
           rootstock-blue import findings-jsonl <findings.jsonl> --case <path.rsbcase>
-          rootstock-blue record inject --case <path.rsbcase> --jsonl <events.jsonl> [--profile ir|research|quiet]
+          rootstock-blue record inject --case <path.rsbcase> --jsonl <events.jsonl> [--profile triage|research|quiet]
           rootstock-blue timeline <path.rsbcase> [--limit N]
           rootstock-blue query <path.rsbcase> <SQL>
           rootstock-blue export jsonl <path.rsbcase> <out.jsonl>
@@ -53,15 +53,15 @@ extension RootstockBlueCLI {
         System Extensions / Screen Sharing / Remote Login / File Sharing /
         Guest+auto-login / Lockdown Mode / Software Update catalog (confidence + ir.mode).
         Hardening assessment: structured findings + remediation (not MDM/AV),
-        including Wave-7 cookie/bookmark/office/print/notes/idevice/msrdc/cloudsync and
-        Wave-8 packagekit/archive-extractor/stealer-path/tcc-esf-visibility controls.
+        including cookie/bookmark/office/print/notes/idevice/msrdc/cloudsync and
+        packagekit/archive-extractor/stealer-path/tcc-esf-visibility controls.
         Persistence inventory: Autostart + BTM + Cron + LoginItems + ShellProfiles +
         Emond + PrivilegedHelpers + FolderActions + LoginHooks + AuthPlugins + SavedState + SSH keys.
 
         Collect packs: triage-lite, forensic-triage, post-incident-ir, browser,
         collab, persistence, logs, network-context, access-surface.
 
-        Live ES mock inject works without FDA/entitlement; AUTH/block remains off.
+        Synthetic fixture injection works without FDA/entitlement; no live signed Endpoint Security implementation is included.
         Santa: integrate-only decision log ingest (JSONL) → case timeline; no rule engine.
         ULS requires ROOTSTOCK_BLUE_ULS_BINARY (Mandiant macos-unifiedlogs); honest fail if unset.
         Non-goals: FileVault/SE crack, multi-OS EDR, SIEM, MDM, RAM forensics.

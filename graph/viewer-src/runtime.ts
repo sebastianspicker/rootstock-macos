@@ -1,8 +1,15 @@
 /** Provides small DOM and display-safety primitives shared across viewer modules. */
 
-import type {ViewerDom} from "./dom";
-import type {SpatialGrid} from "./spatial";
-import type {GraphPayload, NodeId, Theme, ViewerNode, ViewerState} from "./types";
+import type { ViewerDom } from "./dom";
+import type { SpatialGrid } from "./spatial";
+import type {
+  GraphPayload,
+  NodeId,
+  Theme,
+  ViewerNode,
+  ViewerState,
+  ViewerWorkspace,
+} from "./types";
 
 export interface ViewerActions {
   applyTheme(controller: Controller, value: Theme): void;
@@ -18,6 +25,7 @@ export interface ViewerActions {
   replaceGraph(controller: Controller, payload: GraphPayload): void;
   resetPath(controller: Controller): void;
   resetViewport(controller: Controller): void;
+  transitionWorkspace(controller: Controller, workspace: ViewerWorkspace, focus?: boolean): void;
   selectNode(controller: Controller, nodeId: NodeId): void;
   selectTab(controller: Controller, tab: "explore" | "queries"): void;
   setClusteredLayout(controller: Controller, enabled: boolean): void;
@@ -32,7 +40,7 @@ export interface Controller {
   state: ViewerState;
   dom: ViewerDom;
   spatial: SpatialGrid<ViewerNode>;
-  unclusteredPositions: Map<NodeId, {x: number; y: number}> | null;
+  unclusteredPositions: Map<NodeId, { x: number; y: number }> | null;
   actions: ViewerActions;
 }
 
@@ -63,18 +71,26 @@ const MAX_PROPERTY_ENTRIES = 20;
 /** Serializes untrusted property values with depth, entry-count, and text-length bounds for the inspector. */
 export function propertyValue(value: unknown, depth = 0): string {
   if (depth >= MAX_PROPERTY_DEPTH) return "[…]";
-  if (Array.isArray(value)) {
-    const items = value.slice(0, MAX_PROPERTY_ENTRIES)
-      .map((item) => propertyValue(item, depth + 1));
-    return limitPropertyText(`${items.join(", ")}${value.length > MAX_PROPERTY_ENTRIES ? ", …" : ""}`);
-  }
   if (value === null || value === undefined) return "";
-  if (typeof value === "object") {
-    const entries = Object.entries(value).slice(0, MAX_PROPERTY_ENTRIES)
-      .map(([key, item]) => `${key}: ${propertyValue(item, depth + 1)}`);
-    return limitPropertyText(`{${entries.join(", ")}${Object.keys(value).length > MAX_PROPERTY_ENTRIES ? ", …" : ""}}`);
-  }
+  if (Array.isArray(value)) return propertyArrayValue(value, depth);
+  if (typeof value === "object") return propertyObjectValue(value, depth);
   return limitPropertyText(String(value));
+}
+
+function propertyArrayValue(items: unknown[], depth: number): string {
+  const values = items.slice(0, MAX_PROPERTY_ENTRIES).map((item) => propertyValue(item, depth + 1));
+  return limitPropertyText(`${values.join(", ")}${truncationSuffix(items.length)}`);
+}
+
+function propertyObjectValue(value: object, depth: number): string {
+  const entries = Object.entries(value)
+    .slice(0, MAX_PROPERTY_ENTRIES)
+    .map(([key, item]) => `${key}: ${propertyValue(item, depth + 1)}`);
+  return limitPropertyText(`{${entries.join(", ")}${truncationSuffix(Object.keys(value).length)}}`);
+}
+
+function truncationSuffix(length: number): string {
+  return length > MAX_PROPERTY_ENTRIES ? ", …" : "";
 }
 
 export function limitPropertyText(value: string): string {

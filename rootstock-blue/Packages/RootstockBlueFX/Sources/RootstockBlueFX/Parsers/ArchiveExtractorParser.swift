@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Third-party archive extractor / quarantine non-inheritance surface (Wave-8 residual pair).
+/// Third-party archive extractor / quarantine non-inheritance surface (Residual pair).
 ///
 /// Inventories extractor apps and drop hints from offline markers.
 /// Does not strip quarantine attributes or craft bypass archives.

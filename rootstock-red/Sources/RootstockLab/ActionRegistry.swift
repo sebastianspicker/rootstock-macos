@@ -36,7 +36,7 @@ public struct ActionRegistry: Sendable {
             QuarantinePlanLabAction(),
             KeychainPathPlanLabAction(),
             XattrDetectPairLabAction(),
-            // Wave-5 2026 coverage lab surface
+            // 2026 coverage lab surface
             ESFSensorPlanLabAction(),
             TCCGraphPlanLabAction(),
             PatchDebtPlanLabAction(),
@@ -47,13 +47,13 @@ public struct ActionRegistry: Sendable {
 
     private static var waveFiveToNineActions: [any Action] {
         [
-            // Wave-6 2026 coverage lab surface
+            // 2026 coverage lab surface
             NetworkExtensionPlanLabAction(),
             AuthRightsPlanLabAction(),
             DeveloperToolchainPlanLabAction(),
             TimeMachinePlanLabAction(),
             MobileconfigSideloadPlanLabAction(),
-            // Wave-7 2026 coverage lab surface
+            // 2026 coverage lab surface
             AppSandboxPlanLabAction(),
             NotarizationPlanLabAction(),
             VirtualizationPlanLabAction(),
@@ -64,38 +64,38 @@ public struct ActionRegistry: Sendable {
 
     private static var waveElevenToSixteenActions: [any Action] {
         [
-            // Wave-8 2026 coverage lab surface
+            // 2026 coverage lab surface
             ClickFixTerminalPlanLabAction(),
             RemoteAppleEventsPlanLabAction(),
             SpotlightAICachePlanLabAction(),
             SecurityMgmtPlanePlanLabAction(),
             ThirdPartyTCCInheritancePlanLabAction(),
             SSHAgentKeyPathPlanLabAction(),
-            // Wave-9 2026 coverage lab surface
+            // 2026 coverage lab surface
             PackageKitInstallerPlanLabAction(),
             ArchiveQuarantinePlanLabAction(),
             InfoStealerPathPlanLabAction(),
             TCCESFVisibilityPlanLabAction(),
             MDMProfileParsePlanLabAction(),
-            // Wave-11 2026 coverage lab surface
+            // 2026 coverage lab surface
             URLSchemeHandlerPlanLabAction(),
             LaunchdOverrideDepthPlanLabAction(),
             BrowserExtensionDualUsePlanLabAction(),
             ShortcutsAppIntentsPlanLabAction(),
-            // Wave-12 2026 coverage lab surface
+            // 2026 coverage lab surface
             WeblocInetlocPlanLabAction(),
             MailRulesAutomationPlanLabAction(),
             UnifiedLogObservationPlanLabAction(),
             DockPersistencePlanLabAction(),
             OsascriptScptPlanLabAction(),
             NetworkShareMountPlanLabAction(),
-            // Wave-13 2026 coverage lab surface
+            // 2026 coverage lab surface
             CalendarRemindersPlanLabAction(),
             GatekeeperAssessmentHistoryPlanLabAction(),
             HomebrewPackagePlanLabAction(),
             CupsPrintPlanLabAction(),
             ScreenCapturePrivacyPlanLabAction(),
-            // Wave-14 2026 coverage lab surface
+            // 2026 coverage lab surface
             AutomatorWorkflowPlanLabAction(),
             IcloudDrivePathPlanLabAction(),
             BluetoothContinuityDepthPlanLabAction(),
@@ -106,7 +106,7 @@ public struct ActionRegistry: Sendable {
             PamAuthModulePlanLabAction(),
             CronAtJobDepthPlanLabAction(),
             NotesMetadataPlanePlanLabAction(),
-            // Wave-15 2026 coverage lab surface
+            // 2026 coverage lab surface
             PhotosLibraryPathPlanLabAction(),
             VpnConfigDualusePlanLabAction(),
             SandboxContainerDepthPlanLabAction(),
@@ -117,7 +117,7 @@ public struct ActionRegistry: Sendable {
             KeychainAclPathPlanLabAction(),
             PythonRuntimeDualusePlanLabAction(),
             ShellPluginManagerPlanLabAction(),
-            // Wave-16 multi-plane lab surface
+            // Multi-plane lab surface
             AirplayReceiverSurfacePlanLabAction(),
             HandoffClipboardDepthPlanLabAction(),
             ImessagePathPlanePlanLabAction(),

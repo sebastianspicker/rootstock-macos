@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-12 compound: Webloc/inetloc delivery × remote/FDA path-to-impact.
+/// Compound: Webloc/inetloc delivery × remote/FDA path-to-impact.
 public struct WeblocRemoteCompoundVector: Check {
     public static let id = "rootstock.vector.delivery.webloc_remote_compound"
     public static let cost: CollectorCost = .low
@@ -50,7 +50,7 @@ public struct WeblocRemoteCompoundVector: Check {
                     ? "Webloc/inetloc delivery × remote compound"
                     : "Webloc/inetloc delivery × impact compound", severity: severity, category: .misconfig, resolution: .init(evidence: evidence, attackTechniques: ["T1204", "T1566", "T1105"], remediation: [
                     "Prioritize hosts co-locating Webloc/inetloc delivery with remote/FDA amplifiers",
-                    "Use Wave-12 lab plans under ROE for purple validation",
+                    "Use corresponding lab plans under ROE for purple validation",
                     "OPSEC: path-to-impact ranking only - not an auto-exploit chain",
                 ], falsePositiveNotes: "Developer hosts may co-locate many dual-use paths; rank production remote hosts first."), runtime: .init(confidence: .medium, dryRunSafe: true, opsecScore: 27, esfExpected: ["OPEN", "EXEC", "READ"])),
         ]

@@ -165,6 +165,10 @@ let package = Package(
             name: "ExportTests",
             dependencies: ["Export", "Models"]
         ),
+        .testTarget(
+            name: "RootstockCLITests",
+            dependencies: ["RootstockCLI", "Models", "Export"]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

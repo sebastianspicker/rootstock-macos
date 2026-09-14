@@ -21,7 +21,7 @@ extension RootstockBlueCLI {
     static func handleIRPosture(_ args: [String]) throws {
         let pkg = try casePackage(from: args, usage: "ir posture requires --case <path.rsbcase>")
         let result = try postureResult(args)
-        let count = try HostIRPosture.writeToCase(result.events, package: pkg, mode: result.mode)
+        let count = try HostIRPosture.write(result.events, into: CaseEventSink(package: pkg), mode: result.mode)
         print("ir_posture mode=\(result.mode) events_written=\(count)")
         for event in result.events.prefix(20) {
             let summary = event.fields["security.product"]
@@ -36,7 +36,7 @@ extension RootstockBlueCLI {
     static func handleIRHarden(_ args: [String]) throws {
         let pkg = try casePackage(from: args, usage: "ir harden requires --case <path.rsbcase> [--source <tree>] [--live]")
         let result = try hardeningResult(args)
-        let count = try HardeningAssessment.writeToCase(result.findings, package: pkg, mode: result.mode)
+        let count = try HardeningAssessment.write(result.findings, into: CaseEventSink(package: pkg), mode: result.mode)
         let failures = result.findings.filter { $0.status == "fail" }.count
         let warnings = result.findings.filter { $0.status == "warn" }.count
         print("ir_harden mode=\(result.mode) findings=\(count) fail=\(failures) warn=\(warnings)")
@@ -115,13 +115,14 @@ private struct TriageRun {
     let findings: [Finding]
 
     init(options: TriageOptions) throws {
-        parsed = try ForensicsEngine().parse(source: options.source, into: options.package)
+        let sink = CaseEventSink(package: options.package)
+        parsed = try ForensicsEngine().parse(source: options.source, into: sink)
         let posture = try HostIRPosture.enumerateOffline(source: options.source)
-        postureCount = try HostIRPosture.writeToCase(posture, package: options.package, mode: "offline")
+        postureCount = try HostIRPosture.write(posture, into: sink, mode: "offline")
         hardeningFindings = try HardeningAssessment.assessOffline(source: options.source)
-        hardeningCount = try HardeningAssessment.writeToCase(hardeningFindings, package: options.package, mode: "offline")
+        hardeningCount = try HardeningAssessment.write(hardeningFindings, into: sink, mode: "offline")
         let inventory = try PersistenceInventory.enumerate(source: options.source)
-        persistenceCount = try PersistenceInventory.writeToCase(inventory, package: options.package)
+        persistenceCount = try PersistenceInventory.write(inventory, into: sink)
         persistenceSummary = PersistenceInventory.summarize(inventory)
         timeline = try CaseTimeline.merged(from: options.package)
         findings = try TriageRun.evaluateFindings(timeline: timeline, contentRoot: options.contentRoot)

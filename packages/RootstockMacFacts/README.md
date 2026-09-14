@@ -1,31 +1,33 @@
 # RootstockMacFacts
 
-Shared macOS security vocabulary and read-only helpers for the Core collector,
-Rootstock Red, and Rootstock Blue.
+RootstockMacFacts provides shared macOS security vocabulary and read-only
+helpers for the Core collector, Rootstock Red, and Rootstock Blue.
 
 This package is licensed under Apache-2.0, consistent with its Rootstock Red
 and Rootstock Blue consumers. See [LICENSE](LICENSE).
 
-This source package has no independent runtime version. It follows the source
-state of the repository that consumes it.
+The package has no independent runtime version. Its version is the source
+revision used by each consumer.
 
 ## Requirements
 
 - macOS 13 or later
-- A Swift toolchain compatible with Swift tools 6.0
+- Swift 6.2 or later
 
-## Allowed
+## Package scope
 
-- Well-known paths (TCC.db, LaunchAgents, BTM, sudoers, PPPC, system extensions)
-- TCC service id → display name catalog
-- Launchd plist discovery / programArguments extraction
-- Optional live host posture probes (SIP / Gatekeeper / FileVault signals)
+- Well-known paths for TCC databases, LaunchAgents, BTM, sudoers, PPPC, and
+  system extensions
+- A catalog that maps TCC service identifiers to display names
+- Launchd property-list discovery and `ProgramArguments` extraction
+- Optional live posture checks for SIP, Gatekeeper, and FileVault signals
 
-## Forbidden
+## Outside its scope
 
 - Product serializers (`ScanResult`, `Finding`, `EventEnvelope`)
 - Neo4j / case SQLite / network clients
-- Keychain secret extraction or TCC.db row dumping policy (callers own depth)
+- Keychain secret extraction and product policy for reading TCC rows; each
+  caller decides how much data to collect
 
 ## Consumers
 

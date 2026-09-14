@@ -1,6 +1,7 @@
 # Rootstock Red architecture
 
-Rootstock Red has separate assessment and lab executables.
+Rootstock Red keeps assessment and lab behavior in separate executables and
+Swift targets.
 
 ```text
 rootstock-red
@@ -8,7 +9,7 @@ rootstock-red
     -> report or project bundle
 
 rootstock-red-lab
-    authorization and dry-run controls -> registered lab action
+    operator and scope record + dry-run controls -> registered lab action
 ```
 
 ## Assessment pipeline
@@ -21,9 +22,10 @@ rootstock-red-lab
 5. `AuditLog`, `ArtifactLedger`, and `ProjectBundle` record requested output.
 6. `ReportWriter` renders JSON, JSONL, SARIF, or Markdown.
 
-Network egress is disabled unless `--allow-network` is explicit. TCC denial and
-unreadable proprietary stores are recorded as limited evidence rather than a
-claim of complete parsing.
+The assessment pipeline has no network client today. `--allow-network` records
+the policy choice for a future or registered network-aware module. When TCC
+blocks a collector or a proprietary store cannot be read, the pipeline records
+the limitation in `CollectedState` and continues with the evidence it has.
 
 ## Module contracts
 
@@ -32,14 +34,13 @@ claim of complete parsing.
 | Collector | `collect.*` | Read-only host evidence into partial `CollectedState` |
 | Check | `rootstock.check.*` | Pure evaluation over collected state into findings |
 | Vector check | `rootstock.vector.*` | Technique-oriented assessment using the same check protocol |
-| Lab action | `lab.*` | Registered only in `rootstock-red-lab`, authorization-gated, dry-run by default |
+| Lab action | `lab.*` | Registered only in `rootstock-red-lab`; requires operator and scope metadata and starts in dry-run mode |
 
 ## Build boundaries
 
-The default executable does not link `RootstockLab`, `MacAgentKit`,
-`MacTransportKit`, or `RootstockMythicAdapter`. `rootstock-red-lab` links the
-lab library separately. The transport and adapter targets are source
-skeletons rather than supported runtime products.
+`rootstock-red` does not link `RootstockLab`. Only the separately built
+`rootstock-red-lab` executable links the lab library, so the assessment binary
+cannot dispatch a lab action.
 
 See [finding schema](FINDING_SCHEMA.md), [module API](MODULE_API.md),
 [acceptable use](../ACCEPTABLE_USE.md), and

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// ScreenCapture / screenshot privacy dual-use depth markers (Wave-13 red↔blue pair).
+/// ScreenCapture / screenshot privacy dual-use depth markers (red↔blue pair).
 /// Honesty: never captures screens or dumps Screen Recording TCC rows.
 public struct ScreenCapturePrivacyDualUseParser: ArtifactParser {
     public let manifest = PluginManifest(

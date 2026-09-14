@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Virtualization / container dual-use surface (Wave-7).
+/// Virtualization / container dual-use surface.
 ///
 /// Research basis: PEASS virt inventories; dual-use Docker/UTM research themes.
 /// Safety and behavior: typed `VirtualizationContainerState`; never starts VMs/containers or harvests image secrets.

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "source": "rootstock-red",
+  "generated_at": "not-an-ISO-timestamp",
+  "scope_name": "importer-contract",
+  "scan_profile": "minimal",
+  "node_types": ["Host", "Finding"],
+  "edge_vocabulary": ["HAS_FINDING"],
+  "nodes": [
+    {
+      "id": "host-1",
+      "type": "Host",
+      "producer_extension": { "retained": ["untyped", 1] }
+    },
+    {
+      "id": "finding-1",
+      "type": "Finding",
+      "details": { "ignored_by_neo4j_property_filter": true }
+    }
+  ],
+  "edges": [
+    {
+      "from": "host-1",
+      "to": "finding-1",
+      "type": "HAS_FINDING",
+      "edge_extension": ["accepted", "then discarded"]
+    }
+  ],
+  "unmodeled_top_level_extension": { "accepted": true }
+}

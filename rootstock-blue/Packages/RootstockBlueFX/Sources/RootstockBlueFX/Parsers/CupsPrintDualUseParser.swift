@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// CUPS / printer dual-use residual surface markers (Wave-13 red↔blue pair).
+/// CUPS / printer dual-use residual surface markers (red↔blue pair).
 /// Honesty: never submits print jobs or reconfigures CUPS remotely.
 public struct CupsPrintDualUseParser: ArtifactParser {
     public let manifest = PluginManifest(

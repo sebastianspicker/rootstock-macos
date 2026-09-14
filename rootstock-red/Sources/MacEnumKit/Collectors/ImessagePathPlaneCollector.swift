@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// iMessage / Messages path collection plane (Wave-16).
+/// iMessage / Messages path collection plane.
 /// Safety and behavior: path inventory only; never reads Messages database contents or exports chat transcripts.
 public struct ImessagePathPlaneCollector: Collector {
     public static let id = "collect.imessage_path_plane"

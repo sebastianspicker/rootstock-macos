@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
     static func assessAutomatorWorkflow(_ events: [EventEnvelope]) -> [Finding] {
         let rows = events.filter {
@@ -260,5 +259,5 @@ extension HardeningAssessment {
             evidence: sample
         )]
     }
-    // MARK: - Wave-15 multi-plane red↔blue pair assessments
+    // MARK: - Multi-plane red↔blue pair assessments
 }

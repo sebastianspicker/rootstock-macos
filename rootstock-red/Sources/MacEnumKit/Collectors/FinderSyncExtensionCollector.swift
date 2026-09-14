@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Finder Sync extension dual-use surface (Wave-16).
+/// Finder Sync extension dual-use surface.
 /// Safety and behavior: path inventory only; never installs Finder Sync extensions or rewrites Finder preferences for abuse.
 public struct FinderSyncExtensionCollector: Collector {
     public static let id = "collect.finder_sync_extension"

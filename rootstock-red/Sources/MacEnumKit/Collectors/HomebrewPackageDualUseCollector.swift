@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Homebrew / third-party package manager dual-use (Wave-13).
+/// Homebrew / third-party package manager dual-use.
 ///
 /// Research basis: public 2025–26 macOS Homebrew package dual-use tradecraft research.
 /// Safety and behavior: typed path inventory only; never installs packages or modifies Homebrew formulae.

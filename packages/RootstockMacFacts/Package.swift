@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 import PackageDescription
 
 /// Neutral macOS security vocabulary and read-only helpers shared by
@@ -20,6 +20,11 @@ let package = Package(
         .target(
             name: "RootstockMacFacts",
             path: "Sources/RootstockMacFacts"
+        ),
+        .testTarget(
+            name: "RootstockMacFactsTests",
+            dependencies: ["RootstockMacFacts"],
+            path: "Tests/RootstockMacFactsTests"
         ),
     ]
 )

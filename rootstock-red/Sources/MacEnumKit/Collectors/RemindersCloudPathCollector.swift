@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Reminders cloud path residual plane (Wave-16).
+/// Reminders cloud path residual plane.
 /// Safety and behavior: path inventory only; never reads reminder titles/bodies or exports Reminders databases.
 public struct RemindersCloudPathCollector: Collector {
     public static let id = "collect.reminders_cloud_path"

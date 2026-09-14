@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Time Machine local snapshot residual depth markers (Wave-15 red↔blue pair).
+/// Time Machine local snapshot residual depth markers (red↔blue pair).
 /// Honesty: never mounts snapshots for data theft or deletes backup catalogs.
 public struct TmLocalSnapshotDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "TMLOCALSNAPSHOT", tier: .tier2, description: "TM local snapshot depth markers")

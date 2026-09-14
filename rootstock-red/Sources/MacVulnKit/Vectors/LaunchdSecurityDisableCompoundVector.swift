@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-11 compound: launchd override × security-product disable depth.
+/// Compound: launchd override × security-product disable depth.
 public struct LaunchdSecurityDisableCompoundVector: Check {
     public static let id = "rootstock.vector.defense.launchd_security_disable_compound"
     public static let cost: CollectorCost = .low

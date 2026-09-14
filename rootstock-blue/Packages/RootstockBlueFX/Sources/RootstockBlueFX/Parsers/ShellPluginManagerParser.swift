@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Shell plugin manager dual-use residual markers (Wave-15 red↔blue pair).
+/// Shell plugin manager dual-use residual markers (red↔blue pair).
 /// Honesty: never installs oh-my-zsh plugins or rewrites shell init for persistence.
 public struct ShellPluginManagerParser: ArtifactParser {
     public let manifest = PluginManifest(id: "SHELLPLUGINMGR", tier: .tier2, description: "Shell plugin manager dual-use markers")

@@ -1,8 +1,8 @@
 # Detection content
 
-Every detection YAML file must name a synthetic JSONL fixture in the adjacent
-`fixtures/` directory. `make content-validate` fails when that fixture is
-missing.
+Each detection rule is a YAML file paired with a synthetic JSONL fixture in the
+ruleset's `fixtures/` directory. Name the fixture in the rule's `fixture`
+field. `make content-validate` checks that the file exists.
 
 ## Format
 
@@ -23,17 +23,17 @@ fixture: my_fixture.jsonl
 atomic_mapping: optional ART id
 ```
 
-Fixture mode evaluates the rule's named fixture:
+To evaluate each rule against its named fixture:
 
 ```bash
 rootstock-blue detect run --ruleset samples
 ```
 
-Case mode evaluates events already written to a case:
+To evaluate the same rules against events in a case:
 
 ```bash
 rootstock-blue detect run --ruleset samples --case ./incident.rsbcase
 ```
 
-Rules must state inspectable matching conditions. They must not depend on real
-host data committed to the repository.
+Keep matching conditions explicit and reviewable. Add only synthetic host data
+to the repository.

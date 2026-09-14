@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Photos.app library collection path plane markers (Wave-15 red↔blue pair).
+/// Photos.app library collection path plane markers (red↔blue pair).
 /// Honesty: never reads photo contents or exports Photo Library media.
 public struct PhotosLibraryPathParser: ArtifactParser {
     public let manifest = PluginManifest(id: "PHOTOSLIBRARY", tier: .tier2, description: "Photos library path plane markers")

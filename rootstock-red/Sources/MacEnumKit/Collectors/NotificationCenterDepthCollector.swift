@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Notification Center residual depth (Wave-16).
+/// Notification Center residual depth.
 /// Safety and behavior: path inventory only; never dumps notification body contents or forges notification payloads.
 public struct NotificationCenterDepthCollector: Collector {
     public static let id = "collect.notification_center_depth"

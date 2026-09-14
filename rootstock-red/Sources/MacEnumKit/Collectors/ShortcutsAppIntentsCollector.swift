@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Shortcuts / App Intents automation lateral posture (Wave-11).
+/// Shortcuts / App Intents automation lateral posture.
 ///
 /// Research basis: Shortcuts.app automation / App Intents 2024–26 lateral and execution research.
 /// Safety and behavior: path inventory + remote amplifiers; never runs shortcuts or forges intents.

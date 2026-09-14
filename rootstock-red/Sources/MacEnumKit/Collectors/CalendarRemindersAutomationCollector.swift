@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Calendar / Reminders automation lateral surface (Wave-13).
+/// Calendar / Reminders automation lateral surface.
 ///
 /// Research basis: public 2025–26 macOS Calendar/Reminders automation tradecraft research.
 /// Safety and behavior: typed path inventory only; never reads event contents or creates malicious calendar invites.

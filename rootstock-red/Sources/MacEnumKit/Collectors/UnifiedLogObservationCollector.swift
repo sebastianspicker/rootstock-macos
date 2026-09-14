@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Unified log / logarchive observation depth (Wave-12).
+/// Unified log / logarchive observation depth.
 ///
 /// Research basis: public 2025–26 macOS Unified log observation tradecraft research.
 /// Safety and behavior: typed path inventory only; never dumps private unified-log message bodies or force-collects other users' logarchives.

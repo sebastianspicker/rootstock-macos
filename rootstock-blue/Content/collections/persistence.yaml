@@ -1,7 +1,6 @@
 name: persistence
 description: Unified persistence surface (launchd + BTM + cron + login items + shell profiles + emond + privileged helpers + folder actions + login hooks + auth plugins + codesign + SSH keys)
 requires_fda: true
-requires_es: false
 artifacts:
   - autostart
   - btm

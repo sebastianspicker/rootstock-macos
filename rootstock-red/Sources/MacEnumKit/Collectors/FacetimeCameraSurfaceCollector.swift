@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// FaceTime / camera pipeline dual-use surface (Wave-16).
+/// FaceTime / camera pipeline dual-use surface.
 /// Safety and behavior: path inventory only; never activates camera/mic or dumps FaceTime call history contents.
 public struct FacetimeCameraSurfaceCollector: Collector {
     public static let id = "collect.facetime_camera_surface"

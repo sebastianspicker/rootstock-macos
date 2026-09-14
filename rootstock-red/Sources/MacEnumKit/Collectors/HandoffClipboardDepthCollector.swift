@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Handoff / Universal Clipboard residual depth (Wave-16).
+/// Handoff / Universal Clipboard residual depth.
 /// Safety and behavior: path inventory only; never reads Universal Clipboard contents or forges Handoff activity.
 public struct HandoffClipboardDepthCollector: Collector {
     public static let id = "collect.handoff_clipboard_depth"

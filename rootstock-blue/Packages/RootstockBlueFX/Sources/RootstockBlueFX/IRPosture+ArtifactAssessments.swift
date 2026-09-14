@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 import RootstockMacFacts
 
 #if canImport(Darwin)
@@ -69,7 +68,7 @@ extension HostIRPosture {
         return boolish(json[key]) == nil
     }
 
-    /// Wave-4: Guest / auto-login / kcpassword markers from loginwindow + etc/kcpassword.
+    /// Guest / auto-login / kcpassword markers from loginwindow + etc/kcpassword.
     static func offlineAccountAndLoginwindow(root: ArtifactRoot) -> [EventEnvelope] {
         var events = kcpasswordAutoLoginEvents(root: root)
         events.append(contentsOf: loginwindowAccountEvents(root: root))
@@ -103,7 +102,7 @@ extension HostIRPosture {
         return [accountPostureEvent(kind: "auto_login", enabled: "true", extra: ["account.auto_login_enabled": "true", "account.auto_login_user": user, "user.name": user, "protection.source": "com.apple.loginwindow.plist"], rawRef: rawRef)]
     }
 
-    /// Wave-4: SMB / File Sharing prefs markers.
+    /// SMB / File Sharing prefs markers.
     static func offlineFileSharingMarkers(root: ArtifactRoot) -> [EventEnvelope] {
         if root.exists("Library/Preferences/security_posture.json"),
            !rootPostureMissingBool(root, key: "file_sharing_enabled") {
@@ -137,7 +136,7 @@ extension HostIRPosture {
         ]
     }
 
-    /// Wave-4: Software Update catalog / auto-check honesty.
+    /// Software Update catalog / auto-check honesty.
     static func offlineSoftwareUpdateMarkers(root: ArtifactRoot) -> [EventEnvelope] {
         guard !securityPostureCoversSoftwareUpdate(root: root),
               let url = root.firstExisting(["Library/Preferences/com.apple.SoftwareUpdate.plist"]),
@@ -167,7 +166,7 @@ extension HostIRPosture {
         )]
     }
 
-    /// Wave-4: Lockdown Mode LDMGlobalEnabled from user GlobalPreferences.
+    /// Lockdown Mode LDMGlobalEnabled from user GlobalPreferences.
     static func offlineLockdownModeMarkers(root: ArtifactRoot) -> [EventEnvelope] {
         guard !securityPostureCoversLockdownMode(root: root) else { return [] }
         return root.enumerate(matching: isGlobalPreferencesFile)

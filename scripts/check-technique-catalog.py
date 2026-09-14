@@ -3,7 +3,7 @@
 
 Checks:
   - YAML parses and has >= 15 techniques
-  - graph_queries basenames exist under graph/queries/
+  - graph_queries basenames exist under the packaged graph query resources
   - blue_detections basenames exist under rootstock-blue/Content/detections/samples/
   - red_findings IDs appear as string literals under rootstock-red/Sources/
 
@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "docs" / "references" / "technique-catalog.yaml"
-QUERIES = ROOT / "graph" / "queries"
+QUERIES = ROOT / "graph" / "src" / "rootstock_graph" / "resources" / "queries"
 BLUE_DET = ROOT / "rootstock-blue" / "Content" / "detections" / "samples"
 RED_SRC = ROOT / "rootstock-red" / "Sources"
 MIN_TECHNIQUES = 15
@@ -55,7 +55,9 @@ class _MinimalCatalogParser:
         self.in_depth = False
 
     def parse(self, text: str) -> dict:
-        for raw in (line for line in text.splitlines() if not line.strip().startswith("#")):
+        for raw in (
+            line for line in text.splitlines() if not line.strip().startswith("#")
+        ):
             self._consume(raw)
         self._flush_depth()
         self._finish_technique()
@@ -112,7 +114,9 @@ class _MinimalCatalogParser:
     def _consume_depth_text(self, raw: str) -> bool:
         if not self.in_depth:
             return False
-        if re.match(r"^\s{4}(title|attack_techniques|surfaces|mappings|status|id):", raw):
+        if re.match(
+            r"^\s{4}(title|attack_techniques|surfaces|mappings|status|id):", raw
+        ):
             self._flush_depth()
             return False
         self.depth_lines.append(raw.strip())
@@ -126,13 +130,22 @@ class _MinimalCatalogParser:
         return True
 
     def _append_mapping_value(self, raw: str) -> None:
-        key_match = re.match(r"^\s+(graph_queries|red_findings|blue_detections):\s*$", raw)
+        key_match = re.match(
+            r"^\s+(graph_queries|red_findings|blue_detections):\s*$", raw
+        )
         if key_match:
             self.list_key = key_match.group(1)
             return
         value_match = re.match(r"^\s+-\s+(.+)\s*$", raw)
-        if value_match and self.list_key and self.section == "mappings" and self.current:
-            self.current["mappings"][self.list_key].append(self._unquote(value_match.group(1)))
+        if (
+            value_match
+            and self.list_key
+            and self.section == "mappings"
+            and self.current
+        ):
+            self.current["mappings"][self.list_key].append(
+                self._unquote(value_match.group(1))
+            )
 
     def _append_depth_blank(self) -> None:
         if self.in_depth:
@@ -162,9 +175,7 @@ def collect_red_ids() -> set[str]:
     ids: set[str] = set()
     if not RED_SRC.is_dir():
         return ids
-    pat = re.compile(
-        r'["\'](rootstock\.(?:vector|check)\.[a-zA-Z0-9_.]+)["\']'
-    )
+    pat = re.compile(r'["\'](rootstock\.(?:vector|check)\.[a-zA-Z0-9_.]+)["\']')
     for path in RED_SRC.rglob("*.swift"):
         try:
             text = path.read_text(encoding="utf-8")
@@ -195,12 +206,18 @@ def _validate_technique(
     if technique.get("status", "mapped") == "planned":
         return
     mappings = technique.get("mappings") or {}
-    _validate_mapping_paths(technique_id, mappings, "graph_queries", QUERIES, "", errors)
-    _validate_mapping_paths(technique_id, mappings, "blue_detections", BLUE_DET, ".yaml", errors)
+    _validate_mapping_paths(
+        technique_id, mappings, "graph_queries", QUERIES, "", errors
+    )
+    _validate_mapping_paths(
+        technique_id, mappings, "blue_detections", BLUE_DET, ".yaml", errors
+    )
     _validate_red_findings(technique_id, mappings, red_ids, errors)
 
 
-def _record_technique_id(technique: dict, seen_ids: set[str], errors: list[str]) -> str | None:
+def _record_technique_id(
+    technique: dict, seen_ids: set[str], errors: list[str]
+) -> str | None:
     technique_id = technique.get("id")
     if not technique_id:
         errors.append("technique missing id")
@@ -211,7 +228,9 @@ def _record_technique_id(technique: dict, seen_ids: set[str], errors: list[str])
     return technique_id
 
 
-def _validate_technique_title(technique: dict, technique_id: str, errors: list[str]) -> None:
+def _validate_technique_title(
+    technique: dict, technique_id: str, errors: list[str]
+) -> None:
     if not technique.get("title"):
         errors.append(f"{technique_id}: missing title")
 
@@ -221,7 +240,9 @@ def _validate_red_findings(
 ) -> None:
     for finding_id in mappings.get("red_findings") or []:
         if finding_id not in red_ids:
-            errors.append(f"{technique_id}: red finding id not found in Sources: {finding_id}")
+            errors.append(
+                f"{technique_id}: red finding id not found in Sources: {finding_id}"
+            )
 
 
 def _validate_mapping_paths(

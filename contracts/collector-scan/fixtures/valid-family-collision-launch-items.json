@@ -1,0 +1,15 @@
+{
+  "scan_id": "family-collision-launch-items-001",
+  "timestamp": "2026-08-27T00:00:00Z",
+  "hostname": "fixture-mac",
+  "macos_version": "macOS fixture",
+  "collector_version": "0.0.0-fixture",
+  "elevation": { "is_root": false, "has_fda": false },
+  "applications": [],
+  "tcc_grants": [],
+  "launch_items": [
+    { "label": "a/b", "path": "/Library/LaunchAgents/a-b-one.plist", "program": "/tmp/a-b-one", "type": "agent" },
+    { "label": "a?b", "path": "/Library/LaunchAgents/a-b-two.plist", "program": "/tmp/a-b-two", "type": "agent" }
+  ],
+  "errors": []
+}

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Font validation / ATS dual-use surface (Wave-14).
+/// Font validation / ATS dual-use surface.
 /// Research basis: 2025–26 macOS Font validation dual-use tradecraft.
 /// Safety and behavior: path inventory only; never installs malicious fonts or disables font validation.
 public struct FontValidationDualuseCollector: Collector {

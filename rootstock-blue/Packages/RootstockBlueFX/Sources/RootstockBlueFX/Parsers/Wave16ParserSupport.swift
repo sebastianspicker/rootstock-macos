@@ -1,11 +1,11 @@
 import Foundation
 import RootstockBlueCore
 
-/// Fixed event contract for the Wave-16 parser family.
+/// Fixed event contract for the parser family.
 ///
-/// This is intentionally separate from `SurfaceMarkerEventBuilder`: Wave-16
+/// This is intentionally separate from `SurfaceMarkerEventBuilder`; it
 /// accepts only its documented input keys and emits only its stable envelope
-/// fields. Keeping those policies explicit prevents later marker waves from
+/// fields. Keeping those policies explicit prevents later parser additions from
 /// accidentally widening this forensic surface.
 struct Wave16ParserSpec: Sendable, Equatable {
     let fileStem: String
@@ -18,7 +18,7 @@ struct Wave16ParserSpec: Sendable, Equatable {
     let defaultNotes: String
 }
 
-/// Immutable inputs used to build one Wave-16 parser registration.
+/// Immutable inputs used to build one parser registration.
 private struct Wave16ParserDescriptor: Sendable {
     let manifest: PluginManifest
     let spec: Wave16ParserSpec
@@ -27,7 +27,7 @@ private struct Wave16ParserDescriptor: Sendable {
     let makeParser: @Sendable () -> any ArtifactParser
 }
 
-/// Immutable registration metadata shared by the default runtime and Wave-16
+/// Immutable registration metadata shared by the default runtime and
 /// contract tests. Individual parser implementations remain the production
 /// source for their exact parsing behavior; this keeps their registration,
 /// ordering, and test expectations from drifting apart.
@@ -57,7 +57,7 @@ struct Wave16ParserRegistration: Sendable {
     }
 }
 
-/// Internal implementation shared by the 25 public Wave-16 parser wrappers.
+/// Internal implementation shared by the 25 public parser wrappers.
 /// The wrappers retain only their stable ID and public initializer; all mutable
 /// behavior is resolved from the registry below.
 protocol Wave16RegisteredArtifactParser: ArtifactParser {
@@ -77,7 +77,7 @@ extension Wave16RegisteredArtifactParser {
     }
 }
 
-/// Wave-16's single registration and expectation source. Declaration order is
+/// The parser family's single registration and expectation source. Declaration order is
 /// runtime order and is part of the default parser contract.
 enum Wave16ParserRegistry {
     static let registrations: [Wave16ParserRegistration] = [
@@ -122,7 +122,7 @@ enum Wave16ParserRegistry {
 
     static func registration(for id: String) -> Wave16ParserRegistration {
         guard let registration = registrationsByID[id] else {
-            preconditionFailure("Unknown Wave-16 parser ID: \(id)")
+            preconditionFailure("Unknown parser ID: \(id)")
         }
         return registration
     }

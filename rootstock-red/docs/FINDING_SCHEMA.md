@@ -1,6 +1,7 @@
 # Finding schema 1.0.0
 
-`RootstockCore.schemaVersion` is `1.0.0`.
+Rootstock Red serializes findings with `RootstockCore.schemaVersion`, currently
+`1.0.0`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -13,14 +14,14 @@
 | `attackTechniques` | string array | ATT&CK identifiers where applicable |
 | `remediation` | string array | Operator guidance |
 | `falsePositiveNotes` | optional string | Conditions that can explain the result |
-| `dryRunSafe` | boolean | True for assessment checks |
-| `opsecScore` | optional integer | Annotation from 0 to 100, with higher values representing more observable assessment behavior |
+| `dryRunSafe` | boolean | Whether the finding came from behavior safe to evaluate in dry-run or assessment mode |
+| `opsecScore` | optional integer | Observability annotation from 0 to 100; higher values mean noisier assessment behavior |
 | `tccDomains` | string array | Related TCC domains |
 | `esfExpected` | string array | Expected Endpoint Security event names |
 | `osRange` | optional string | Applicable macOS version range |
 
-Writers support JSON arrays, one-finding-per-line JSONL, SARIF 2.1.0, and
-Markdown.
+Report writers can produce a JSON array, one finding per line as JSONL, SARIF
+2.1.0, or Markdown.
 
 Additive optional fields may be introduced within schema 1.x. Removing or
 renaming a field requires a schema-major change.

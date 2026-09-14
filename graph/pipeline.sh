@@ -16,9 +16,10 @@
 #     NEO4J_PASSWORD   required unless NEO4J_AUTH=none
 #
 # For interactive visualization after pipeline completes (Canvas-based, pre-computed layout):
-#     python3 graph/opengraph_export.py -o graph.json && python3 graph/viewer.py -i graph.json -o viewer.html
+#     uv run --project graph --locked rootstock-graph-opengraph-export -o graph.json
+#     uv run --project graph --locked rootstock-graph-viewer -i graph.json -o viewer.html
 #
-# Note: infer.py internally runs risk scoring (infer_risk_score) and recommendation
+# Note: rootstock-graph-infer internally runs risk scoring (infer_risk_score) and recommendation
 # generation (infer_recommendations) as part of its inference engine pipeline.
 #
 # Exit code 0 on success, non-zero on first failure.
@@ -26,6 +27,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GRAPH_RUN=(uv run --project "$SCRIPT_DIR" --locked)
 
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
@@ -111,14 +113,14 @@ echo ""
 # ── Step 1/7: Schema ─────────────────────────────────────────────────────────
 
 echo "── Step 1/7: Setting up schema ──"
-python3 "$SCRIPT_DIR/setup_schema.py" "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-setup-schema "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 2/7: CVE Enrichment ─────────────────────────────────────────────────
 
 echo "── Step 2/7: Enriching CVE data ──"
 if [[ "$REFRESH_CVE" = true ]]; then
-    python3 "$SCRIPT_DIR/cve_enrichment.py" --fetch
+    "${GRAPH_RUN[@]}" rootstock-graph-cve-enrichment --fetch
     echo "  CVE enrichment refreshed"
 else
     echo "  Using cached CVE enrichment and static registry (--refresh-cve to fetch)"
@@ -128,34 +130,34 @@ echo ""
 # ── Step 3/7: Import ─────────────────────────────────────────────────────────
 
 echo "── Step 3/7: Importing scan data ──"
-python3 "$SCRIPT_DIR/import_scan.py" --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-import-scan --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Optional: cve-scan artifact import ───────────────────────────────────────
 
 if [[ -n "$CVE_SCAN_EXPORT" ]]; then
     echo "── Optional: Importing cve-scan artifact ──"
-    python3 "$SCRIPT_DIR/import_cve_scan.py" --input "$CVE_SCAN_EXPORT" "${NEO4J_ARGS[@]}"
+    "${GRAPH_RUN[@]}" rootstock-graph-import-cve-scan --input "$CVE_SCAN_EXPORT" "${NEO4J_ARGS[@]}"
     echo ""
 fi
 
 # ── Step 4/7: Inference ──────────────────────────────────────────────────────
-# Note: infer.py runs all inference modules including risk scoring and recommendations
+# Note: rootstock-graph-infer runs all inference modules including risk scoring and recommendations
 
 echo "── Step 4/7: Running inference engine ──"
-python3 "$SCRIPT_DIR/infer.py" "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-infer "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 5/7: Vulnerability import ───────────────────────────────────────────
 
 echo "── Step 5/7: Importing vulnerability data ──"
-python3 "$SCRIPT_DIR/import_vulnerabilities.py" "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-import-vulnerabilities "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 6/7: Tier classification ────────────────────────────────────────────
 
 echo "── Step 6/7: Classifying tiers ──"
-python3 "$SCRIPT_DIR/tier_classification.py" "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-tier-classification "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 7/7: Report (optional) ──────────────────────────────────────────────
@@ -164,16 +166,12 @@ if [[ "$SKIP_REPORT" = true ]]; then
     echo "── Step 7/7: Report generation skipped ──"
 else
     echo "── Step 7/7: Generating report ──"
-    if [[ ! -f "$SCRIPT_DIR/report.py" ]]; then
-        echo "ERROR: report.py not found: $SCRIPT_DIR/report.py" >&2
-        exit 1
-    fi
     # Default report output path if not specified
     if [[ -z "$REPORT_FILE" ]]; then
         REPORT_FILE="rootstock-report-$(date +%Y%m%d-%H%M%S).md"
     fi
     REPORT_ARGS=("${NEO4J_ARGS[@]}" --output "$REPORT_FILE" --scan-json "$SCAN_FILE")
-    python3 "$SCRIPT_DIR/report.py" "${REPORT_ARGS[@]}"
+    "${GRAPH_RUN[@]}" rootstock-graph-report "${REPORT_ARGS[@]}"
 fi
 
 echo ""
@@ -190,5 +188,5 @@ echo "╚═══════════════════════�
 if [[ "$SERVE" = true ]]; then
     echo ""
     echo "── Starting API server on port $SERVE_PORT ──"
-    python3 "$SCRIPT_DIR/server.py" --port "$SERVE_PORT" --neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER"
+    "${GRAPH_RUN[@]}" rootstock-graph-api --port "$SERVE_PORT" --neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER"
 fi

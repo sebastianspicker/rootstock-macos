@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Siri / Suggestions data-access residual (Wave-16).
+/// Siri / Suggestions data-access residual.
 /// Safety and behavior: path inventory only; never dumps Siri transcripts or Suggestions databases contents.
 public struct SiriSuggestionsPlaneCollector: Collector {
     public static let id = "collect.siri_suggestions_plane"

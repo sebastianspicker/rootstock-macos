@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Music / media library path residual (Wave-16).
+/// Music / media library path residual.
 /// Safety and behavior: path inventory only; never exports Music library media or DRM material.
 public struct MusicLibraryPathCollector: Collector {
     public static let id = "collect.music_library_path"

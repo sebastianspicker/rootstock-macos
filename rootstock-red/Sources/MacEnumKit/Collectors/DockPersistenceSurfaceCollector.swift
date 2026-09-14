@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Dock persistent apps / recent items dual-use (Wave-12).
+/// Dock persistent apps / recent items dual-use.
 ///
 /// Research basis: public 2025–26 macOS Dock persistence dual-use tradecraft research.
 /// Safety and behavior: typed path inventory only; never modifies Dock.plist or plants malicious Dock entries.

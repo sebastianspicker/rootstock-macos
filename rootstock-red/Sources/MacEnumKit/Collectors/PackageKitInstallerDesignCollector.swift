@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// PackageKit installer design-based persistence posture (Wave-9).
+/// PackageKit installer design-based persistence posture.
 ///
 /// Research basis: PackageKit design-based research (installd / package_script_service /
 /// InstallerSandboxes class); pkg receipt inventory ideas from MacPEAS-class tools.

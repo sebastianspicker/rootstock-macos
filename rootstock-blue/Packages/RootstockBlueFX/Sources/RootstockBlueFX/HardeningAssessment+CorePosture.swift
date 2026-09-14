@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
     static func assessProtections(_ events: [EventEnvelope]) -> [Finding] {
         let protections = events.filter {
@@ -265,5 +264,5 @@ extension HardeningAssessment {
         return []
     }
 
-    // MARK: - Wave-4 assessments
+    // MARK: - assessments
 }

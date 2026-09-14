@@ -32,13 +32,13 @@ public enum AttackVectorPlane {
         GatekeeperTrustGapVector.id,
         AutomationExecutionSurfaceVector.id,
         ElectronDevtoolsSurfaceVector.id,
-        // Wave-4: quarantine xattr, keychain paths, MDM channel, screen/AX TCC, security CLIs.
+        // quarantine xattr, keychain paths, MDM channel, screen/AX TCC, security CLIs.
         QuarantineXattrSurfaceVector.id,
         KeychainPathSurfaceVector.id,
         MDMManagementChannelSurfaceVector.id,
         ScreenAccessibilitySurfaceVector.id,
         SecurityCLIDualUseVector.id,
-        // Wave-5 2026 coverage: ESF, CVE/patch-debt, TCC graph, XPC trust, LC inject, LOOBin multi-stage.
+        // 2026 coverage: ESF, CVE/patch-debt, TCC graph, XPC trust, LC inject, LOOBin multi-stage.
         ESFSensorGapVector.id,
         CVEPatchDebtSuggesterVector.id,
         TCCPermissionGraphDepthVector.id,
@@ -70,7 +70,7 @@ public enum AttackVectorPlane {
         InfoStealerPathPlaneVector.id,
         TCCESFVisibilityDepthVector.id,
         MDMProfileParseDepthVector.id,
-        // Wave-10 residual pair compounds: receipt×script, extractor×quarantine, stealer×remote, visibility×sensor.
+        // Residual pair compounds: receipt×script, extractor×quarantine, stealer×remote, visibility×sensor.
         PackageKitReceiptScriptCompoundVector.id,
         ExtractorQuarantineCompoundVector.id,
         StealerRemoteCompoundVector.id,
@@ -84,7 +84,7 @@ public enum AttackVectorPlane {
         LaunchdSecurityDisableCompoundVector.id,
         BrowserExtensionCollectionCompoundVector.id,
         ShortcutsLateralCompoundVector.id,
-        // Wave-12 multi-plane (6 net-new themes).
+        // Multi-plane (6 net-new themes).
         WeblocInetlocDeliveryVector.id,
         WeblocRemoteCompoundVector.id,
         MailRulesAutomationVector.id,
@@ -97,7 +97,7 @@ public enum AttackVectorPlane {
         OsascriptRemoteCompoundVector.id,
         NetworkShareMountVector.id,
         NetworkShareRemoteCompoundVector.id,
-        // Wave-13 multi-plane (5 net-new themes).
+        // Multi-plane (5 net-new themes).
         CalendarRemindersAutomationVector.id,
         CalendarRemoteCompoundVector.id,
         GatekeeperAssessmentHistoryVector.id,
@@ -108,7 +108,7 @@ public enum AttackVectorPlane {
         CupsRemoteCompoundVector.id,
         ScreenCapturePrivacyDualUseVector.id,
         ScreenCaptureFdaCompoundVector.id,
-        // Wave-14 multi-plane (10 net-new themes).
+        // Multi-plane (10 net-new themes).
         AutomatorWorkflowVector.id,
         AutomatorWorkflowRemoteCompoundVector.id,
         IcloudDrivePathVector.id,
@@ -129,7 +129,7 @@ public enum AttackVectorPlane {
         CronAtJobDepthRemoteCompoundVector.id,
         NotesMetadataPlaneVector.id,
         NotesMetadataPlaneRemoteCompoundVector.id,
-        // Wave-15 multi-plane (10 net-new themes).
+        // Multi-plane (10 net-new themes).
         PhotosLibraryPathVector.id,
         PhotosLibraryPathRemoteCompoundVector.id,
         VpnConfigDualuseVector.id,
@@ -150,7 +150,7 @@ public enum AttackVectorPlane {
         PythonRuntimeDualuseRemoteCompoundVector.id,
         ShellPluginManagerVector.id,
         ShellPluginManagerRemoteCompoundVector.id,
-        // Wave-16 multi-plane (25 themes).
+        // Multi-plane (25 themes).
         AirplayReceiverSurfaceVector.id,
         AirplayReceiverSurfaceRemoteCompoundVector.id,
         HandoffClipboardDepthVector.id,

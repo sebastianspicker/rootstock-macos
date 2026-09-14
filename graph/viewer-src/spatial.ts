@@ -1,6 +1,6 @@
 /** Indexes rendered nodes for fast canvas hit testing. */
 
-import type {NodeId} from "./types";
+import type { NodeId } from "./types";
 
 export interface PositionedNode {
   id: NodeId;
@@ -11,30 +11,45 @@ export interface PositionedNode {
 export interface SpatialGridOptions<T extends PositionedNode> {
   isVisible?: (node: T) => boolean;
   radiusFor?: (node: T) => number;
-  positionFor?: (node: T) => {x: number; y: number};
+  positionFor?: (node: T) => { x: number; y: number };
   cellSize?: number;
 }
 
-/** Is rebuilt by callers whenever positions or visibility rules change, keeping hit tests aligned with the frame. */
+/** Tracks position changes incrementally; visibility is evaluated at hit-test time. */
 export class SpatialGrid<T extends PositionedNode> {
   private readonly cellSize: number;
-  private readonly cells = new Map<string, T[]>();
+  private maxRadius = 0;
+  private readonly cells = new Map<string, Set<T>>();
+  private readonly memberships = new Map<NodeId, { key: string; node: T }>();
   private readonly isVisible: (node: T) => boolean;
   private readonly radiusFor: (node: T) => number;
-  private readonly positionFor: (node: T) => {x: number; y: number};
+  private readonly positionFor: (node: T) => { x: number; y: number };
 
   constructor(nodes: readonly T[], options: SpatialGridOptions<T> = {}) {
     this.cellSize = options.cellSize ?? 64;
     this.isVisible = options.isVisible ?? (() => true);
     this.radiusFor = options.radiusFor ?? (() => 8);
     this.positionFor = options.positionFor ?? ((node) => node);
-    for (const node of nodes) {
-      const position = this.positionFor(node);
-      const key = this.key(position.x, position.y);
-      const values = this.cells.get(key) ?? [];
-      values.push(node);
-      this.cells.set(key, values);
+    for (const node of nodes) this.update(node);
+  }
+
+  update(node: T): void {
+    this.maxRadius = Math.max(this.maxRadius, this.radiusFor(node));
+    const position = this.positionFor(node);
+    const key = this.key(position.x, position.y);
+    const previous = this.memberships.get(node.id);
+    if (previous?.key === key && previous.node === node) return;
+    if (previous) {
+      const cell = this.cells.get(previous.key);
+      if (cell) {
+        cell.delete(previous.node);
+        if (cell.size === 0) this.cells.delete(previous.key);
+      }
     }
+    const cell = this.cells.get(key) ?? new Set<T>();
+    cell.add(node);
+    this.cells.set(key, cell);
+    this.memberships.set(node.id, { key, node });
   }
 
   private key(x: number, y: number): string {
@@ -42,7 +57,7 @@ export class SpatialGrid<T extends PositionedNode> {
   }
 
   private candidatesNear(px: number, py: number, maxDistance: number): T[] {
-    const radius = Math.ceil((maxDistance + 24) / this.cellSize);
+    const radius = Math.ceil((maxDistance + this.maxRadius) / this.cellSize);
     const cx = Math.floor(px / this.cellSize);
     const cy = Math.floor(py / this.cellSize);
     const candidates: T[] = [];
@@ -63,8 +78,10 @@ export class SpatialGrid<T extends PositionedNode> {
       const centerDistance = Math.hypot(position.x - px, position.y - py);
       if (centerDistance > this.radiusFor(node) + maxDistance) continue;
       const distance = Math.max(0, centerDistance - this.radiusFor(node));
-      if (distance < bestDistance
-          || (distance === bestDistance && best !== null && node.id < best.id)) {
+      if (
+        distance < bestDistance ||
+        (distance === bestDistance && best !== null && node.id < best.id)
+      ) {
         best = node;
         bestDistance = distance;
       }

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Compiled AppleScript / OSA delivery residual markers (Wave-12 red↔blue pair).
+/// Compiled AppleScript / OSA delivery residual markers (red↔blue pair).
 ///
 /// Honesty: never compiles malicious .scpt payloads or executes third-party AppleScripts.
 public struct OsascriptScptDeliveryParser: ArtifactParser {

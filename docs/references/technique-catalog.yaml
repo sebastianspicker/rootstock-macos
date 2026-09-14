@@ -3,7 +3,7 @@
 #   python3 scripts/check-technique-catalog.py
 #
 # status: mapped | red_only | blue_only | graph_only | planned
-# mappings.graph_queries: basenames under graph/queries/
+# mappings.graph_queries: basenames under the packaged graph query resources
 # mappings.red_findings: rootstock.vector.* / rootstock.check.* string IDs
 # mappings.blue_detections: basenames under rootstock-blue/Content/detections/samples/ (no .yaml)
 
@@ -285,7 +285,7 @@ techniques:
     depth_notes: |
       graph: ESF monitoring gap queries
       red: ESF sensor gap + security product gap vectors
-      blue: live ES kit optional; IR posture for products
+      blue: read-only IR posture for installed security products; synthetic event fixtures only
     mappings:
       graph_queries:
         - 99-esf-monitoring-gaps.cypher

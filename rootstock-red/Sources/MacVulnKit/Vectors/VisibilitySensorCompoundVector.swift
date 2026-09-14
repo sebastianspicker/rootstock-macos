@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-10 compound depth: thin TCC/ESF visibility × missing sensors.
+/// Compound depth: thin TCC/ESF visibility × missing sensors.
 ///
 /// Research basis: eslogger / Unified Logging / TCC.db path visibility literature.
 /// Safety and behavior: thin/partial visibility compounded with empty ESF clients or absent products; never dumps TCC.db.

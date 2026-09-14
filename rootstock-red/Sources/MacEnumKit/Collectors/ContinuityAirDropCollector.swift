@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Continuity / AirDrop proximity transfer posture (Wave-7).
+/// Continuity / AirDrop proximity transfer posture.
 ///
 /// Research basis: HackTricks / PEASS AirDrop preference checks.
 /// Safety and behavior: typed `ContinuityAirDropState`; never scrapes pasteboard or forces AirDrop sends.

@@ -3,6 +3,7 @@
 export type NodeId = string;
 export type ViewerMode = "static" | "live";
 export type Theme = "system" | "light" | "dark";
+export type ViewerWorkspace = "triage" | "graph" | "paths" | "queries";
 
 export interface Point {
   x: number;
@@ -97,6 +98,8 @@ export interface VisibilityResult {
 
 /** Owns all mutable viewer state so actions can update the UI through one model. */
 export interface ViewerState {
+  /** The single visible analysis workspace; selection and a completed path survive transitions. */
+  workspace: ViewerWorkspace;
   graph: GraphModel;
   filters: {
     activeNodeKinds: Set<string>;
@@ -120,7 +123,7 @@ export interface ViewerState {
     showLabels: boolean;
   };
   viewport: {
-    transform: {x: number; y: number; k: number};
+    transform: { x: number; y: number; k: number };
     width: number;
     height: number;
     devicePixelRatio: number;

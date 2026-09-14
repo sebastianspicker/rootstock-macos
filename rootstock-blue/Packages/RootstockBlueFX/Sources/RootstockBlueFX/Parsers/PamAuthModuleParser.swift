@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// PAM authentication module residual surface markers (Wave-14 red↔blue pair).
+/// PAM authentication module residual surface markers (red↔blue pair).
 /// Honesty: never installs PAM modules or modifies /etc/pam.d.
 public struct PamAuthModuleParser: ArtifactParser {
     public let manifest = PluginManifest(id: "PAMAUTHMODULE", tier: .tier2, description: "PAM auth module surface markers")

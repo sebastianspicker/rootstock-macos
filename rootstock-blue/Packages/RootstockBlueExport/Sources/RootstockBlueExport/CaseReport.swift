@@ -49,6 +49,7 @@ public enum CaseReport {
         from package: CasePackage,
         findings: [Finding] = []
     ) throws -> Stats {
+        try package.verifyIntegrity()
         let events = try package.loadAllEvents()
         var pluginCounts: [String: Int] = [:]
         var typeCounts: [String: Int] = [:]
@@ -139,12 +140,13 @@ public enum CaseReport {
         findings: [Finding] = [],
         actor: String = NSUserName()
     ) throws -> Stats {
+        try package.verifyIntegrity()
         let stats = try collectStats(from: package, findings: findings)
         let body = renderMarkdown(stats)
-        try body.write(to: url, atomically: true, encoding: .utf8)
+        try CaseOutputWriter.write(Data(body.utf8), from: package, to: url)
         // Also copy into case artifacts for package integrity
         let destName = "reports/\(url.lastPathComponent)"
-        _ = try? package.copyArtifact(from: url, relativeName: destName)
+        _ = try package.copyArtifact(from: url, relativeName: destName)
         try package.appendCustody(
             CustodyEvent(
                 actor: actor,
@@ -152,7 +154,6 @@ public enum CaseReport {
                 detail: "Exported markdown report events=\(stats.eventCount) findings=\(findings.count) path=\(url.path)"
             )
         )
-        try package.updateHashes()
         return stats
     }
 }

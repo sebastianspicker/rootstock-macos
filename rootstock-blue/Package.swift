@@ -10,8 +10,7 @@ let package = Package(
     products: [
         .library(name: "RootstockBlueCore", targets: ["RootstockBlueCore"]),
         .library(name: "RootstockBlueCase", targets: ["RootstockBlueCase"]),
-        .library(name: "RootstockBlueXPC", targets: ["RootstockBlueXPC"]),
-        .library(name: "RootstockBlueESKit", targets: ["RootstockBlueESKit"]),
+        .library(name: "RootstockBlueSyntheticEvents", targets: ["RootstockBlueSyntheticEvents"]),
         .library(name: "RootstockBlueFX", targets: ["RootstockBlueFX"]),
         .library(name: "RootstockBlueDetect", targets: ["RootstockBlueDetect"]),
         .library(name: "RootstockBlueCollect", targets: ["RootstockBlueCollect"]),
@@ -39,19 +38,11 @@ let package = Package(
             swiftSettings: strictConcurrencySettings
         ),
 
-        // MARK: - XPC allowlist
+        // MARK: - Synthetic event fixtures (no FX)
         .target(
-            name: "RootstockBlueXPC",
+            name: "RootstockBlueSyntheticEvents",
             dependencies: ["RootstockBlueCore"],
-            path: "Packages/RootstockBlueXPC/Sources/RootstockBlueXPC",
-            swiftSettings: strictConcurrencySettings
-        ),
-
-        // MARK: - ES kit (mock-first; no FX)
-        .target(
-            name: "RootstockBlueESKit",
-            dependencies: ["RootstockBlueCore"],
-            path: "Packages/RootstockBlueESKit/Sources/RootstockBlueESKit",
+            path: "Packages/RootstockBlueSyntheticEvents/Sources/RootstockBlueSyntheticEvents",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -60,7 +51,6 @@ let package = Package(
             name: "RootstockBlueFX",
             dependencies: [
                 "RootstockBlueCore",
-                "RootstockBlueCase",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ],
             path: "Packages/RootstockBlueFX/Sources/RootstockBlueFX",
@@ -89,7 +79,6 @@ let package = Package(
             dependencies: [
                 "RootstockBlueCore",
                 "RootstockBlueCase",
-                "RootstockBlueFX",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ],
             path: "Packages/RootstockBlueExport/Sources/RootstockBlueExport",
@@ -103,6 +92,10 @@ let package = Package(
                 "RootstockBlueFX",
                 "RootstockBlueCore",
                 "RootstockBlueDetect",
+                "RootstockBlueCollect",
+                "RootstockBlueAcquire",
+                "RootstockBlueIntegrations",
+                "RootstockBlueSyntheticEvents",
             ],
             path: "Tests/RootstockBlueExportTests",
             swiftSettings: strictConcurrencySettings
@@ -131,7 +124,7 @@ let package = Package(
             dependencies: [
                 "RootstockBlueCore",
                 "RootstockBlueCase",
-                "RootstockBlueESKit",
+                "RootstockBlueSyntheticEvents",
                 "RootstockBlueFX",
                 "RootstockBlueDetect",
                 "RootstockBlueCollect",

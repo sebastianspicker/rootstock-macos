@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Calendar server / CalDAV residual surface (Wave-16).
+/// Calendar server / CalDAV residual surface.
 /// Safety and behavior: path inventory only; never reads calendar event bodies or credentials from CalDAV stores.
 public struct CalendarServerPathCollector: Collector {
     public static let id = "collect.calendar_server_path"

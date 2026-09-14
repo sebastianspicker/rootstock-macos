@@ -2,17 +2,17 @@
 
 #app {
   display: grid;
-  grid-template-rows: 52px minmax(0, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr);
   height: 100dvh;
   min-width: 0;
 }
 
-/* Quiet column widths: ~248 | fluid | 320 */
+/* Bench column widths: analysis index | fluid stage | evidence dossier. */
 #workspace-shell {
   position: relative;
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr) 320px;
-  grid-template-rows: auto minmax(0, 1fr) 40px;
+  grid-template-columns: 264px minmax(0, 1fr) 336px;
+  grid-template-rows: auto minmax(0, 1fr) 34px;
   min-width: 0;
   min-height: 0;
   background: var(--ink);

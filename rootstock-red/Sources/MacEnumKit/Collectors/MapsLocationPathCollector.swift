@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Maps / location services residual plane (Wave-16).
+/// Maps / location services residual plane.
 /// Safety and behavior: path inventory only; never dumps location history or spoofs CoreLocation positions.
 public struct MapsLocationPathCollector: Collector {
     public static let id = "collect.maps_location_path"

@@ -1,7 +1,6 @@
 name: collab
 description: Collaboration / Office MRU, print jobs, Notes metadata, remote desktop, multi-cloud sync
 requires_fda: true
-requires_es: false
 artifacts:
   - office_mru
   - print_jobs

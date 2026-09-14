@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Shell plugin manager dual-use residual (Wave-15).
+/// Shell plugin manager dual-use residual.
 /// Safety and behavior: path inventory only; never installs oh-my-zsh plugins or rewrites shell init for persistence.
 public struct ShellPluginManagerCollector: Collector {
     public static let id = "collect.shell_plugin_manager"

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "source": "rootstock-blue",
+  "generated_at": "2026-08-27T00:00:00Z",
+  "scope_name": "contract-fixture",
+  "scan_profile": "offline-dfir",
+  "node_types": ["Host"],
+  "edge_vocabulary": ["HAS_FINDING"],
+  "nodes": [
+    { "id": "finding-1", "type": "Finding" }
+  ],
+  "edges": []
+}

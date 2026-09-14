@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Python runtime dual-use residual surface (Wave-15).
+/// Python runtime dual-use residual surface.
 /// Safety and behavior: path inventory only; never executes third-party Python payloads or drops malicious site-packages.
 public struct PythonRuntimeDualuseCollector: Collector {
     public static let id = "collect.python_runtime_dualuse"

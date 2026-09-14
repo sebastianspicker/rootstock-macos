@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Dock persistent apps / recent items dual-use markers (Wave-12 red↔blue pair).
+/// Dock persistent apps / recent items dual-use markers (red↔blue pair).
 ///
 /// Honesty: never modifies Dock.plist or plants malicious Dock entries.
 public struct DockPersistenceSurfaceParser: ArtifactParser {

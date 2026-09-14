@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 
 /// KnockKnock-class unified persistence inventory across autostart, BTM, cron,
 /// login items, shell profiles, emond, privileged helpers, folder actions,
@@ -114,25 +113,19 @@ public enum PersistenceInventory {
         return counts
     }
 
-    /// Write inventory events into a case package.
+    /// Emit inventory events through an application-provided sink.
     @discardableResult
-    public static func writeToCase(
+    public static func write(
         _ events: [EventEnvelope],
-        package: CasePackage,
-        actor: String = NSUserName()
+        into sink: any EventSink
     ) throws -> Int {
-        for event in events {
-            try package.appendEventJSONL(event, stream: "es")
-            try package.insertTimelineEvent(event)
-        }
-        try package.appendCustody(
-            CustodyEvent(
-                actor: actor,
+        try sink.append(
+            events,
+            custody: EventCustodyNote(
                 action: "persistence_inventory",
                 detail: "Persistence inventory wrote \(events.count) events sources=autostart,btm,cron,login_item,shell_profile,emond,privileged_helper,folder_action,login_hook,authorization_plugin,saved_state,ssh"
             )
         )
-        try package.updateHashes()
         return events.count
     }
 

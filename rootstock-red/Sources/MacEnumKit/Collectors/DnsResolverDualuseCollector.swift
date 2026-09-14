@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// DNS resolver / mDNSResponder dual-use surface (Wave-14).
+/// DNS resolver / mDNSResponder dual-use surface.
 /// Research basis: 2025–26 macOS DNS resolver dual-use tradecraft.
 /// Safety and behavior: path inventory only; never rewrites resolver config or poisons DNS caches.
 public struct DnsResolverDualuseCollector: Collector {

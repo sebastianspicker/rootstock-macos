@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Cron / at job dual-use residual depth (Wave-14).
+/// Cron / at job dual-use residual depth.
 /// Research basis: 2025–26 macOS Cron/at job depth tradecraft.
 /// Safety and behavior: path inventory only; never installs cron or at jobs outside the lab root.
 public struct CronAtJobDepthCollector: Collector {

@@ -1,5 +1,6 @@
 /// CustodyLog - Rootstock product source (see package README for product doctrine).
 import Foundation
+import RootstockBlueCore
 
 public struct CustodyEvent: Codable, Sendable {
     public var timestamp: Date
@@ -30,6 +31,28 @@ public enum CustodyLog {
             try handle.write(contentsOf: line)
         } else {
             try line.write(to: url)
+        }
+    }
+
+    /// Strictly decode every custody JSONL record. Any malformed record invalidates the package.
+    public static func decode(contentsOf url: URL) throws -> [CustodyEvent] {
+        var events: [CustodyEvent] = []
+        try forEach(contentsOf: url) { events.append($0) }
+        return events
+    }
+
+    /// Strictly stream custody records in file order without retaining the log.
+    public static func forEach(
+        contentsOf url: URL,
+        _ body: (CustodyEvent) throws -> Void
+    ) throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        try JSONLRecordReader.forEachRecord(contentsOf: url) { record in
+            let text = try JSONLRecordReader.strictUTF8(record)
+                .trimmingCharacters(in: .whitespaces)
+            guard !text.isEmpty else { return }
+            try body(decoder.decode(CustodyEvent.self, from: Data(text.utf8)))
         }
     }
 }

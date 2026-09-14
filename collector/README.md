@@ -1,12 +1,12 @@
 # Rootstock Collector
 
-The Rootstock Collector reads local macOS security metadata and writes one JSON
-scan artifact. It does not upload the artifact or perform collection over the
-network.
+The Rootstock Collector reads security metadata from the Mac on which it runs
+and writes a single JSON scan. It neither uploads the scan nor collects data
+from other hosts.
 
-This is alpha software. The output schema, module set, and command behavior may
-change before a stable release. The current release procedure does not sign or
-notarize the binary archive.
+This is alpha software, so the output schema, available modules, and command
+behavior may change before a stable release. Current release archives are not
+signed or notarized.
 
 ## Requirements
 
@@ -14,10 +14,15 @@ notarize the binary archive.
 - Swift 6.3 from Xcode 26.6 when building from source
 - Full Disk Access for complete access to protected TCC databases
 
-Collection can complete with recoverable errors. Treat an output containing
-warnings as partial and review its `errors` array before analysis.
+Full Disk Access and Unix root privileges are separate macOS controls. Running
+as root does not grant TCC access by itself. Start without elevation, inspect
+the `errors` array, and grant only the access required by the modules you need.
 
-## Run an archive binary
+The collector can finish after a recoverable error. If the scan contains
+warnings, treat it as partial evidence and review its `errors` array before
+analysis.
+
+## Run a release archive
 
 ```bash
 ./rootstock-collector --output scan.json
@@ -62,10 +67,12 @@ The source build executable is `.build/release/RootstockCLI`.
 
 ## Artifact handling
 
-Scan output can contain hostnames, usernames, application paths, bundle
-identifiers, signing metadata, permissions, and security posture. Keep it out
-of public issues, source control, and shared screenshots. Redact diagnostics
-before sharing them.
+A scan can contain hostnames, usernames, application paths, bundle identifiers,
+signing metadata, permissions, and security posture. Keep scans out of public
+issues, source control, and shared screenshots, and redact diagnostics before
+sharing them. The collector creates output files for the owner only, refuses
+symlink destinations, and replaces an existing regular file only when you pass
+`--force`.
 
 ## License
 

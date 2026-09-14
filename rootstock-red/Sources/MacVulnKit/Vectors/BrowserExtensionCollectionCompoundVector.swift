@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-11 compound: browser extensions × FDA / remote collection impact.
+/// Compound: browser extensions × FDA / remote collection impact.
 public struct BrowserExtensionCollectionCompoundVector: Check {
     public static let id = "rootstock.vector.persist.browser_extension_collection_compound"
     public static let cost: CollectorCost = .low

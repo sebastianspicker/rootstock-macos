@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
     static func assessAirplayReceiverSurface(_ events: [EventEnvelope]) -> [Finding] {
         let rows = events.filter {

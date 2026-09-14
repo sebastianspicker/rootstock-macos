@@ -1,129 +1,84 @@
-# Contributing Rootstock
+# Contributing to Rootstock
 
-This multi-component alpha repository contains Rootstock Core (`collector/`,
-`graph/`, and the optional `modules/cve-scan/` bridge), `rootstock-red/`,
-`rootstock-blue/`, and `packages/RootstockMacFacts/`. These components have
-separate executables, artifacts, and validation paths. See
-[docs/FAMILY.md](docs/FAMILY.md) before cross-component changes.
+Choose the component you want to change and start with its README. The
+[product map](docs/FAMILY.md) explains how the tools fit together. If your
+change affects a file passed between tools, also read the
+[artifact contracts](contracts/README.md).
 
-Core collection is local-only and host-read-only. Do not include real scan
-output, graph exports, reports, screenshots, package inventories, tokens,
-hostnames, usernames, or infrastructure details in issues or pull requests.
-Treat Red findings and Blue case packages as confidential in the same way.
+Do not commit real scan output, graph exports, reports, cases, findings,
+screenshots, package inventories, tokens, hostnames, usernames, or
+infrastructure details. Treat all of them as confidential. The benchmark script
+defaults to ignored private storage, and release binaries use the ignored
+`release/` directory. Put any alternate sensitive output outside the checkout.
 
-The repository has multiple license scopes. `packages/RootstockMacFacts/` is
-Apache-2.0; see the root [README license section](README.md#license) and each
-component license file before proposing distribution changes.
+## Setup
 
-Benchmark results default to ignored `docs/private/` storage, and release
-binaries default to the ignored root `release/` directory. Do not move either
-into the public documentation tree.
+- macOS 14+ and Xcode 26.6 / Swift 6.3 for the collector
+- Python 3.11+, `uv`, and Neo4j 5.x for full graph development
+- Node.js from `.node-version` and npm 11.17.0 for the viewer
+- Docker only when exercising the Neo4j lane
 
-## Development Setup
+Install only the environments relevant to your work. For example:
 
-### Prerequisites
-
-- macOS 14 Sonoma or later
-- Xcode 26.6 / Swift 6.3 toolchain
-- Python 3.11+ for full-repository development; the graph package alone
-  supports Python 3.10+
-- Node.js 24.18.0 from `.node-version` and npm 11.17.0, for viewer development
-  and browser tests; install with `npm ci` after cloning
-- uv, for locked Python environments
-- Docker, for Neo4j-backed graph checks
-
-### Building the Collector
-
-```bash
-cd collector
-swift build
-swift build -c release
-swift test
-```
-
-### Setting Up the Graph Pipeline
-
-```bash
+```sh
 uv sync --project graph --locked --all-extras
-NEO4J_AUTH=neo4j/CHANGE_ME docker compose -f graph/docker-compose.yml up -d
-NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
-  bash graph/pipeline.sh examples/demo-scan.json
+uv sync --project modules/cve-scan --locked --all-extras
+npm ci --ignore-scripts
 ```
 
-## Coding Style
+## Verification
 
-Keep tracked, maintained source, test, and script files at or below 600
-physical lines. Generated bundles, fixture or data files, vendored and build
-content, and archives are excluded. Run the same guard used by CI from the
-repository root:
+Run the verification lane for the component you changed:
 
-```bash
-python3 scripts/check-source-size.py --max-lines 600
+```sh
+sh scripts/verify graph  # example: graph package changes
 ```
 
-### Test organization
+[Quality gates](docs/QUALITY.md) lists every lane and its requirements. Use
+`release` for public docs or release-file changes and `full` for all checks.
+The `neo4j` lane requires a running local database and separate writer and
+reader credentials. Missing tools or services fail the selected lane. Record
+any relevant check you could not run and explain why.
 
-Keep only direct, behavior-focused unit contracts beside their owning package.
-Use inline data or temporary directories rather than fixture trees, and avoid
-browser, workflow, and environment-specific automation.
+## Contract changes
 
-### Swift Collector
+`contracts/` owns checked-in cross-runtime schemas and fixtures. A contract
+change must update the owning producer, all supported consumers, valid and
+invalid fixtures, the appropriate checker, and its documented compatibility
+rule. Do not replace the legacy collector scan schema with an unversioned
+breaking change. Add a versioned contract instead.
 
-- Use `UpperCamelCase` for types and `lowerCamelCase` for functions and variables.
-- Keep scan models `Codable` with explicit `snake_case` JSON keys.
-- Prefer immutable values.
-- Make each data source conform to the existing `DataSource` pattern.
-- Report recoverable module errors; do not crash the whole collector.
+The graph package is implemented in `graph/src/rootstock_graph/` and exposed
+through `rootstock-graph-*` console commands declared in `graph/pyproject.toml`.
+Do not recreate root-level Python command adapters. Keep the graph API
+loopback-only, bearer-token protected, and read-only for ad-hoc Cypher.
 
-### Python Graph
+## Product-specific rules
 
-- Follow PEP 8 and use `snake_case`.
-- Add type hints to function signatures.
-- Use Pydantic v2 validation for graph models.
+- Collector sources are local and read-only. Report protected
+  evidence that could not be read so users can see gaps in the scan.
+- The graph imports cve-scan's completed export. Keep scanner internals out of
+  graph code.
+- Red Lab actions remain separate, operator-confirmation gated, and dry-run by
+  default. Do not describe self-attestation as external authorization.
+- Blue event ingestion is synthetic/offline only. Do not present fixture tests
+  as live Endpoint Security, signing, entitlement, or deployment validation.
+- `RootstockMacFacts` contains neutral facts and parsers, not product models,
+  serializers, graph state, or network clients.
 
-### Source Documentation
+Keep maintained authored source, test, and script files at or below 600
+physical lines. Use focused behavior tests, preserve public command and
+artifact contracts, and update operator documentation with any real behavior
+change.
 
-- Give every authored production module a brief responsibility docstring or
-  file-level comment; a documented primary type may serve this role in Swift.
-- Document exported or non-trivial functions when ordering, security
-  boundaries, resource limits, fallback behavior, or error semantics are not
-  obvious from the signature.
-- Explain intent and constraints rather than restating syntax. Built
-  bundles, lockfiles, fixtures, and trivial accessors do not need commentary.
+Follow the [Code of Conduct](CODE_OF_CONDUCT.md) in project discussions.
 
-### Cypher Queries
+## Pull requests
 
-- Keep one query per `.cypher` file in `graph/queries/`.
-- Include a short comment header with name, purpose, category, and severity.
+Keep each pull request focused on one product or contract boundary. Describe
+the behavior that changed, the checks you ran, and any relevant check you could
+not run. Include synthetic fixtures for new evidence shapes; never attach real
+host or case data.
 
-## Pull Request Process
-
-1. Fork the repository and create a feature branch.
-2. Add tests that prove the intended behavior and relevant failure boundaries.
-3. Run the narrowest relevant checks, then broader checks for high-risk changes.
-4. Update documentation when adding a data source, query, output contract, or operator workflow.
-5. Submit a PR that identifies the affected component, explains what changed,
-   and records what was verified or skipped.
-
-See [docs/RELEASING.md](docs/RELEASING.md) for version alignment, candidate
-gates, screenshot handling, and the approval-only publication sequence.
-
-## Adding a Data Source
-
-Use `.github/ISSUE_TEMPLATE/new_data_source.md` as the checklist:
-
-1. Create a module in `collector/Sources/<ModuleName>/`.
-2. Define Codable models in `collector/Sources/Models/`.
-3. Implement the `DataSource` protocol.
-4. Add the data source to `ScanOrchestrator` and `ScanResult`.
-5. Update `collector/schema/scan-result.schema.json`.
-6. Add focused tests.
-7. Update the graph importer if the data source produces new node or edge types.
-8. Validate at least one synthetic fixture with
-   `uv run --project graph --locked python scripts/validate-scan.py`.
-
-## Reporting Security Issues
-
-If you discover a security vulnerability in Rootstock itself, not in macOS
-systems analyzed by Rootstock, report it privately through GitHub Security
-Advisories instead of opening a public issue.
+Report vulnerabilities in Rootstock itself through the private process in
+[SECURITY.md](SECURITY.md), rather than a public issue.

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-14 compound: DNS resolver dual-use × remote/FDA path-to-impact.
+/// Compound: DNS resolver dual-use × remote/FDA path-to-impact.
 public struct DnsResolverDualuseRemoteCompoundVector: Check {
     public static let id = "rootstock.vector.network.dns_resolver_dualuse_remote_compound"
     public static let cost: CollectorCost = .low
@@ -12,7 +12,7 @@ public struct DnsResolverDualuseRemoteCompoundVector: Check {
         let b = s?.resolverConfigPaths.count ?? 0
         guard a >= 1, b >= 1 || a >= 2 else { return [] }
         let compound = RemoteCompoundSignals(state: state)
-        guard compound.hasAmplifier || a + b >= 3 else { return [] }
+        guard admitsRemoteCompound(compound, primaryCount: a, secondaryCount: b) else { return [] }
         var evidence: [Evidence] = [
             Evidence(type: "dns_resolver_dualuse_compound", detail: "a=\(a) b=\(b) remote=\(compound.remote) fda=\(compound.fullDiskAccess) sensorThin=\(compound.sensorThin)"),
         ]
@@ -25,7 +25,7 @@ public struct DnsResolverDualuseRemoteCompoundVector: Check {
         let severity = compound.severity
         return [Finding(id: Self.id, title: compound.remote ? "DNS resolver dual-use × remote compound" : "DNS resolver dual-use × impact compound", severity: severity, category: .misconfig, resolution: .init(evidence: evidence, attackTechniques: ["T1071.004", "T1568", "T1040"], remediation: [
                 "Prioritize hosts co-locating DNS resolver dual-use with remote/FDA amplifiers",
-                "Use Wave-14 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: path-to-impact ranking only - not an auto-exploit chain",
             ], falsePositiveNotes: "Developer hosts may co-locate dual-use paths; rank production remote hosts first."), runtime: .init(confidence: .medium, dryRunSafe: true, opsecScore: 27, esfExpected: ["OPEN", "EXEC", "READ"]))]
     }

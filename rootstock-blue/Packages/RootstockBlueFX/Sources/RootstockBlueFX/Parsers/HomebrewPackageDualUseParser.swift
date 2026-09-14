@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Homebrew / third-party package manager dual-use markers (Wave-13 red↔blue pair).
+/// Homebrew / third-party package manager dual-use markers (red↔blue pair).
 /// Honesty: never installs packages or modifies Homebrew formulae.
 public struct HomebrewPackageDualUseParser: ArtifactParser {
     public let manifest = PluginManifest(

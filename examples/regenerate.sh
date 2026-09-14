@@ -105,11 +105,13 @@ bash graph/pipeline.sh examples/demo-scan.json \
 
 # 3. Export OpenGraph JSON
 echo "==> Exporting graph JSON ..."
-python3 graph/opengraph_export.py "${NEO4J_ARGS[@]}" -o "$OUTPUT_DIR/demo-graph.json"
+uv run --project graph --locked rootstock-graph-opengraph-export \
+	"${NEO4J_ARGS[@]}" -o "$OUTPUT_DIR/demo-graph.json"
 
 # 4. Generate self-contained HTML viewer
 echo "==> Generating viewer HTML ..."
-python3 graph/viewer.py -i "$OUTPUT_DIR/demo-graph.json" -o "$OUTPUT_DIR/demo-viewer.html"
+uv run --project graph --locked rootstock-graph-viewer \
+	-i "$OUTPUT_DIR/demo-graph.json" -o "$OUTPUT_DIR/demo-viewer.html"
 
 echo ""
 echo "Done! Generated:"

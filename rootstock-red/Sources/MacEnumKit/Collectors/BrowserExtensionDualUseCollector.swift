@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Browser extension dual-use persistence / collection plane (Wave-11).
+/// Browser extension dual-use persistence / collection plane.
 ///
 /// Research basis: Chromium/Safari extension persistence and broad-permission collection research.
 /// Safety and behavior: multi-browser path plane + compound with FDA/remote; never dumps extension storage secrets.

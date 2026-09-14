@@ -1,0 +1,47 @@
+{
+  "path": [
+    "collector",
+    "packages/RootstockMacFacts",
+    "rootstock-red",
+    "rootstock-blue",
+    "graph",
+    "modules/cve-scan",
+    "scripts",
+    "examples"
+  ],
+  "format": ["python", "swift", "typescript", "javascript"],
+  "minLines": 10,
+  "minTokens": 75,
+  "maxLines": 2500,
+  "mode": "mild",
+  "threshold": 2.0,
+  "reporters": ["threshold"],
+  "skipIsolated": [
+    [
+      "collector",
+      "packages/RootstockMacFacts",
+      "rootstock-red",
+      "rootstock-blue",
+      "graph",
+      "modules/cve-scan",
+      "scripts",
+      "examples"
+    ]
+  ],
+  "ignore": [
+    "**/.build/**",
+    "**/.venv/**",
+    "**/node_modules/**",
+    "**/__pycache__/**",
+    "**/.pytest_cache/**",
+    "**/.ruff_cache/**",
+    "**/archive/**",
+    "**/archives/**",
+    "contracts/**/fixtures/**",
+    "rootstock-blue/Content/detections/samples/fixtures/**",
+    "**/generated/**",
+    "graph/src/rootstock_graph/resources/viewer/**"
+  ],
+  "gitignore": true,
+  "noTips": true
+}

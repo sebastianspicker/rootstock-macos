@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// PackageKit installer **design surface** markers (Wave-8 residual red↔blue pair).
+/// PackageKit installer **design surface** markers (Residual red↔blue pair).
 ///
 /// Inventories installer services, receipts, and plugin paths from offline markers.
 /// Honesty: path/presence posture only - never builds pkgs or invokes installd.

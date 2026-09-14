@@ -1,4 +1,4 @@
-.PHONY: bootstrap test content-validate cli xcode help check-non-goals sample-case
+.PHONY: bootstrap test content-validate cli help check-field-taxonomy check-non-goals
 
 help:
 	@echo "rootstock-blue targets:"
@@ -6,20 +6,18 @@ help:
 	@echo "  make test              - swift test"
 	@echo "  make content-validate  - rules must have fixtures"
 	@echo "  make cli               - build rootstock-blue CLI"
-	@echo "  make sample-case       - create Fixtures/cases/sample.rsbcase"
-	@echo "  make xcode             - generate Xcode project (requires xcodegen)"
 	@echo "  make check-non-goals   - scan product docs for forbidden claims"
 
 bootstrap:
 	@bash Tools/scripts/bootstrap.sh
 
 test:
-	swift test
+	swift test -Xswiftc -warnings-as-errors
 
 cli:
-	swift build --product rootstock-blue
+	swift build --product rootstock-blue -Xswiftc -warnings-as-errors
 
-content-validate:
+content-validate: check-field-taxonomy
 	@set -e; \
 	missing=0; \
 	for f in Content/detections/*/*.yaml Content/detections/*/*.yml; do \
@@ -33,13 +31,8 @@ content-validate:
 	if [ "$$missing" -ne 0 ]; then exit 1; fi; \
 	echo "content-validate OK"
 
-sample-case:
-	@bash Tools/scripts/package_case_sample.sh
+check-field-taxonomy:
+	@python3 ../scripts/check-blue-field-taxonomy.py
 
 check-non-goals:
 	@bash Tools/scripts/check_non_goals.sh
-
-xcode:
-	@command -v xcodegen >/dev/null || { echo "install xcodegen: brew install xcodegen"; exit 1; }
-	cd Apps && xcodegen generate
-	@echo "Generated Apps/RootstockBlue.xcodeproj"

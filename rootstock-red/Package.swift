@@ -17,9 +17,6 @@ let package = Package(
         .library(name: "MacReportKit", targets: ["MacReportKit"]),
         // Optional kits (not linked into default rootstock-red executable):
         .library(name: "RootstockLab", targets: ["RootstockLab"]),
-        .library(name: "MacAgentKit", targets: ["MacAgentKit"]),
-        .library(name: "MacTransportKit", targets: ["MacTransportKit"]),
-        .library(name: "RootstockMythicAdapter", targets: ["RootstockMythicAdapter"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
@@ -102,19 +99,14 @@ let package = Package(
 
         // MARK: - Optional (compile-only; not linked into rootstock-red)
         .target(
-            name: "MacTransportKit",
-            dependencies: ["RootstockCore"],
-            path: "Sources/MacTransportKit"
-        ),
-        .target(
-            name: "MacAgentKit",
-            dependencies: ["RootstockCore", "MacTransportKit"],
-            path: "Sources/MacAgentKit"
-        ),
-        .target(
             name: "RootstockLab",
             dependencies: ["RootstockCore"],
             path: "Sources/RootstockLab"
+        ),
+        .testTarget(
+            name: "RootstockLabTests",
+            dependencies: ["RootstockCore", "RootstockLab"],
+            path: "Tests/RootstockLabTests"
         ),
         .executableTarget(
             name: "RootstockLabCLI",
@@ -125,12 +117,6 @@ let package = Package(
             ],
             path: "Sources/RootstockLabCLI"
         ),
-        .target(
-            name: "RootstockMythicAdapter",
-            dependencies: ["RootstockCore"],
-            path: "Sources/RootstockMythicAdapter"
-        ),
-
         // MARK: - CLI (assess-only deps)
         .executableTarget(
             name: "RootstockRedCLI",

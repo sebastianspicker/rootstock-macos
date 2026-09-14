@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// QuickLook thumbnail cache residual depth markers (Wave-14 red↔blue pair).
+/// QuickLook thumbnail cache residual depth markers (red↔blue pair).
 /// Honesty: never dumps QuickLook thumbnail bitmap contents as secret material.
 public struct QuicklookCacheDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "QUICKLOOKCACHE", tier: .tier2, description: "QuickLook cache depth markers")

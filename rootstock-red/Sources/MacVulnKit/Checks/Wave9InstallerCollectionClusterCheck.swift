@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-9 installer × collection × visibility compound ranking.
+/// Multi-plane installer × collection × visibility compound ranking.
 ///
 /// Research basis: engagement narrative across installer design, extractors, stealer paths, visibility, MDM parse.
 /// Safety and behavior: deterministic compounds over CollectedState; not automated exploit orchestration.
@@ -98,16 +98,16 @@ public struct Wave9InstallerCollectionClusterCheck: Check {
 
     private static func title(for planes: [String]) -> String {
         let suffix = planes.count > 5 ? ", …" : ""
-        return "Wave-9 installer×collection compound: \(planes.count) planes (\(planes.prefix(5).joined(separator: ", "))\(suffix))"
+        return "installer×collection compound: \(planes.count) planes (\(planes.prefix(5).joined(separator: ", "))\(suffix))"
     }
 
     private static func evidence(for planes: [String], state: CollectedState) -> [Evidence] {
         let stages = stageLabels(for: planes)
-        return [Evidence(type: "planes", detail: "planes=\(planes.joined(separator: "|")) count=\(planes.count)"), Evidence(type: "stage_labels", detail: "stages=\(stages.joined(separator: "|")) (labels only - not auto-exploit)"), Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"), Evidence(type: "honesty", detail: "Wave-9 compound ranking is path-to-impact narrative for operators. Rootstock Red does not build pkgs, craft Gatekeeper bypass archives, dump stealer secrets, dump TCC.db, or install profiles.")]
+        return [Evidence(type: "planes", detail: "planes=\(planes.joined(separator: "|")) count=\(planes.count)"), Evidence(type: "stage_labels", detail: "stages=\(stages.joined(separator: "|")) (labels only - not auto-exploit)"), Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"), Evidence(type: "honesty", detail: "Compound ranking is path-to-impact narrative for operators. Rootstock Red does not build pkgs, craft Gatekeeper bypass archives, dump stealer secrets, dump TCC.db, or install profiles.")]
     }
 
     private static func resolution(for planes: [String], state: CollectedState) -> Finding.Resolution {
-        .init(evidence: evidence(for: planes, state: state), attackTechniques: ["T1546", "T1553.001", "T1555", "T1562.001"], remediation: ["Prioritize co-occurring installer-design + stealer-paths + FDA/remote planes on tier-0 hosts", "Close remote access and harden package/archive user workflows before lower-tier inventory", "Use Wave-9 lab plans under ROE for purple validation of expected telemetry", "OPSEC: treat multi-plane compounds as engagement narrative, not an exploit script"], falsePositiveNotes: "Developer workstations may legitimately co-locate many Wave-9 planes. Rank production hosts first.")
+        .init(evidence: evidence(for: planes, state: state), attackTechniques: ["T1546", "T1553.001", "T1555", "T1562.001"], remediation: ["Prioritize co-occurring installer-design + stealer-paths + FDA/remote planes on tier-0 hosts", "Close remote access and harden package/archive user workflows before lower-tier inventory", "Use corresponding lab plans under ROE for purple validation of expected telemetry", "OPSEC: treat multi-plane compounds as engagement narrative, not an exploit script"], falsePositiveNotes: "Developer workstations may legitimately co-locate many planes. Rank production hosts first.")
     }
 
     private static let runtime = Finding.Runtime(confidence: .low, dryRunSafe: true, opsecScore: 24, esfExpected: ["OPEN", "EXEC", "READ"])

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// App sandbox container residual depth (Wave-15).
+/// App sandbox container residual depth.
 /// Safety and behavior: path inventory only; never breaks app sandbox or forges container entitlements.
 public struct SandboxContainerDepthCollector: Collector {
     public static let id = "collect.sandbox_container_depth"

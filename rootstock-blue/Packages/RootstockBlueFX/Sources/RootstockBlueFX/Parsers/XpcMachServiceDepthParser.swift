@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// XPC Mach service residual depth markers (Wave-15 red↔blue pair).
+/// XPC Mach service residual depth markers (red↔blue pair).
 /// Honesty: never registers XPC services or injects into Mach ports.
 public struct XpcMachServiceDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "XPCMACHSERVICE", tier: .tier2, description: "XPC Mach service depth markers")

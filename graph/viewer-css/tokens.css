@@ -4,26 +4,27 @@
 
 :root {
   color-scheme: dark;
-  --ink: #090b0f;
-  --ink-deep: #0c0e13;
-  --pane: #10131a;
-  --pane-raised: #151922;
-  --pane-selected: #1a2434;
-  --rule: rgba(255, 255, 255, 0.06);
-  --rule-strong: rgba(255, 255, 255, 0.12);
-  --text: #eceef2;
-  --muted: #a4adbf;
-  --subtle: #8b93a7;
-  --action: #6aafff;
-  --action-strong: #4a92e8;
-  --critical: #f07178;
-  --high: #d9a04a;
-  --medium: #c9b44a;
-  --low: #6a9fd8;
-  --verified: #5cbc80;
-  --path: #6ecfbc;
-  --overlay: rgba(9, 11, 15, 0.94);
-  --focus-ring: #6aafff;
+  --ink: #08090d;
+  --ink-deep: #08090d;
+  --pane: #0e1118;
+  --pane-raised: #151a25;
+  --pane-selected: #1c2434;
+  --rule: rgba(148, 163, 190, 0.09);
+  --rule-strong: rgba(148, 163, 190, 0.18);
+  --text: #e9ecf2;
+  --muted: #9aa4b8;
+  --subtle: #8993a8;
+  --action: #5ea2ff;
+  --action-strong: #438de8;
+  --oxide: #e0563c;
+  --critical: #f0655d;
+  --high: #e0a34e;
+  --medium: #d3c04f;
+  --low: #6f9fe0;
+  --verified: #58c184;
+  --path: #4fd6b8;
+  --overlay: rgba(8, 9, 13, 0.94);
+  --focus-ring: #5ea2ff;
   --radius: 8px;
   --font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -33,11 +34,12 @@
   --z-drawer: 40;
   --z-status: 50;
   --z-tooltip: 60;
-  --signal-dim: rgba(106, 175, 255, 0.12);
-  --path-dim: rgba(110, 207, 188, 0.14);
+  --signal-dim: rgba(94, 162, 255, 0.14);
+  --path-dim: rgba(79, 214, 184, 0.16);
 }
 
-:root[data-theme="light"], body[data-theme="light"] {
+:root[data-theme="light"],
+body[data-theme="light"] {
   color-scheme: light;
   --ink: #eef0f4;
   --ink-deep: #f7f8fa;
@@ -91,28 +93,30 @@
   }
 }
 
-:root[data-theme="dark"], body[data-theme="dark"] {
+:root[data-theme="dark"],
+body[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #090b0f;
-  --ink-deep: #0c0e13;
-  --pane: #10131a;
-  --pane-raised: #151922;
-  --pane-selected: #1a2434;
-  --rule: rgba(255, 255, 255, 0.06);
-  --rule-strong: rgba(255, 255, 255, 0.12);
-  --text: #eceef2;
-  --muted: #a4adbf;
-  --subtle: #8b93a7;
-  --action: #6aafff;
-  --action-strong: #4a92e8;
-  --critical: #f07178;
-  --high: #d9a04a;
-  --medium: #c9b44a;
-  --low: #6a9fd8;
-  --verified: #5cbc80;
-  --path: #6ecfbc;
-  --overlay: rgba(9, 11, 15, 0.94);
-  --focus-ring: #6aafff;
-  --signal-dim: rgba(106, 175, 255, 0.12);
-  --path-dim: rgba(110, 207, 188, 0.14);
+  --ink: #08090d;
+  --ink-deep: #08090d;
+  --pane: #0e1118;
+  --pane-raised: #151a25;
+  --pane-selected: #1c2434;
+  --rule: rgba(148, 163, 190, 0.09);
+  --rule-strong: rgba(148, 163, 190, 0.18);
+  --text: #e9ecf2;
+  --muted: #9aa4b8;
+  --subtle: #8993a8;
+  --action: #5ea2ff;
+  --action-strong: #438de8;
+  --oxide: #e0563c;
+  --critical: #f0655d;
+  --high: #e0a34e;
+  --medium: #d3c04f;
+  --low: #6f9fe0;
+  --verified: #58c184;
+  --path: #4fd6b8;
+  --overlay: rgba(8, 9, 13, 0.94);
+  --focus-ring: #5ea2ff;
+  --signal-dim: rgba(94, 162, 255, 0.14);
+  --path-dim: rgba(79, 214, 184, 0.16);
 }

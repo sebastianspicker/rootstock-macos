@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Gatekeeper assessment / syspolicyd history depth (Wave-13).
+/// Gatekeeper assessment / syspolicyd history depth.
 ///
 /// Research basis: public 2025–26 macOS Gatekeeper assessment history tradecraft research.
 /// Safety and behavior: typed path inventory only; never clears Gatekeeper assessments or disables syspolicyd.

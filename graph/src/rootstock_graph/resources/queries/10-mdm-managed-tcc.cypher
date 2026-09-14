@@ -1,0 +1,38 @@
+// Name: MDM-Managed TCC Permissions
+// Purpose: Find TCC grants represented as managed by MDM profiles
+// Category: Blue Team
+// Severity: Informational
+// Parameters: none
+// Prerequisites: rootstock-graph-import-scan must have run
+//
+// Finds TCC permissions associated with imported MDM configuration profiles.
+// Validate the effective policy and user controls on the relevant macOS version.
+//
+// A result that also has modeled injection conditions is a review candidate. It
+// does not establish injection success or permission inheritance.
+//
+// Usage:
+//   rootstock-graph-query --run 10
+//   Or paste into Neo4j Browser.
+// ATT&CK: T1548.004
+
+MATCH (m:MDM_Profile)-[c:CONFIGURES]->(t:TCC_Permission)
+
+// Check if the target app is also known and injectable
+OPTIONAL MATCH (a:Application {bundle_id: c.bundle_id})
+
+WITH m, c, t, a,
+     a IS NOT NULL AND size(a.injection_methods) > 0 AS app_is_injectable
+
+RETURN
+    m.identifier        AS profile_identifier,
+    m.display_name      AS profile_name,
+    m.organization      AS organization,
+    c.bundle_id         AS target_bundle_id,
+    a.name              AS app_name,
+    t.service           AS tcc_service,
+    c.allowed           AS mdm_allowed,
+    app_is_injectable
+
+ORDER BY app_is_injectable DESC, m.identifier, c.bundle_id
+LIMIT 100

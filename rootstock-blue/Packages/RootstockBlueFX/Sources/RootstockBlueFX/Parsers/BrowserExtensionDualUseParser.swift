@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Browser extension dual-use markers (Wave-11 red↔blue pair).
+/// Browser extension dual-use markers (red↔blue pair).
 ///
 /// Complements BROWSEREXTENSIONS inventory with dual-use risk tags for residual pairs.
 /// Honesty: never dumps extension storage secrets or cookies.

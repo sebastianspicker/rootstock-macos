@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "rootstock-red",
+  "generated_at": "2026-08-27T00:00:00Z",
+  "scope_name": "contract-fixture",
+  "scan_profile": "standard",
+  "node_types": ["Finding", "Host", "LaunchItem", "Protection"],
+  "edge_types": ["HAS_PROTECTION"],
+  "edge_vocabulary": ["HAS_FINDING", "HAS_LAUNCH_ITEM", "HAS_PROTECTION"],
+  "nodes": [
+    {
+      "id": "Host:fixture-mac",
+      "type": "Host",
+      "name": "fixture-mac",
+      "hostname": "fixture-mac",
+      "os_version": "macOS fixture"
+    }
+  ],
+  "edges": [
+    { "from": "Host:fixture-mac", "to": "Protection:missing", "type": "HAS_PROTECTION" }
+  ]
+}

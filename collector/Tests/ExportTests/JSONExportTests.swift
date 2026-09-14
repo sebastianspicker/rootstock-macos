@@ -251,6 +251,62 @@ final class JSONExportTests: XCTestCase {
         XCTAssertEqual(info.st_mode & 0o777, 0o600)
     }
 
+    func testForcedOverwriteFailurePreservesExistingBytes() throws {
+        let path = try existingOutputPath()
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let originalBytes = try Data(contentsOf: URL(fileURLWithPath: path))
+        let exporter = JSONExporter(testFailure: .beforePublish)
+
+        XCTAssertThrowsError(
+            try exporter.write(makeSampleScanResult(), to: path, force: true)
+        ) { error in
+            XCTAssertTrue(String(describing: error).contains("test-injected failure"))
+        }
+
+        XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: path)), originalBytes)
+        let directory = (path as NSString).deletingLastPathComponent
+        let filename = (path as NSString).lastPathComponent
+        let temporaryFiles = try FileManager.default.contentsOfDirectory(atPath: directory)
+            .filter { $0.hasPrefix(".\(filename).") && $0.hasSuffix(".tmp") }
+        XCTAssertTrue(temporaryFiles.isEmpty)
+    }
+
+    func testNonForcePublishDoesNotOverwriteDestinationCreatedDuringExport() throws {
+        let path = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let exporter = JSONExporter(testFailure: .createDestinationBeforePublish)
+
+        XCTAssertThrowsError(try exporter.write(makeSampleScanResult(), to: path)) { error in
+            XCTAssertTrue(String(describing: error).contains("outputExists"))
+        }
+        XCTAssertEqual(try String(contentsOfFile: path), "racer")
+    }
+
+    func testPostPublishDurabilityFailureKeepsNewCompleteOutput() throws {
+        let path = try existingOutputPath()
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let exporter = JSONExporter(testFailure: .afterPublishBeforeDirectorySync)
+
+        XCTAssertThrowsError(try exporter.write(makeSampleScanResult(), to: path, force: true)) { error in
+            XCTAssertTrue(String(describing: error).contains("output was published"))
+        }
+        let data = try Data(contentsOf: URL(fileURLWithPath: path))
+        XCTAssertNotNil(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
+    func testWriteRefusesDirectoryDestinationWithForce() throws {
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("rootstock-export-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        XCTAssertThrowsError(
+            try JSONExporter().write(makeSampleScanResult(), to: directory.path, force: true)
+        ) { error in
+            XCTAssertTrue(String(describing: error).contains("outputIsNotRegularFile"))
+        }
+    }
+
     private func roundTrippedSampleScanResult() throws -> (original: ScanResult, decoded: ScanResult) {
         let original = makeSampleScanResult()
         let data = try JSONExporter().encode(original)

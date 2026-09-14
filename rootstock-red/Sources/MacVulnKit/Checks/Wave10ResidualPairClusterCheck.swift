@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-10 residual pair compound ranking (installer × extractor × stealer × visibility).
+/// Multi-plane residual pair compound ranking (installer × extractor × stealer × visibility).
 ///
 /// Research basis: engagement narrative across residual red↔blue pair themes.
 /// Safety and behavior: deterministic compounds over CollectedState; not automated exploit orchestration.
@@ -87,7 +87,7 @@ public struct Wave10ResidualPairClusterCheck: Check {
     }
 
     private static func compoundTitle(planes: [String]) -> String {
-        "Wave-10 residual-pair compound: \(planes.count) planes (\(planes.joined(separator: ", ")))"
+        "Residual-pair compound: \(planes.count) planes (\(planes.joined(separator: ", ")))"
     }
 
     private static func compoundEvidence(planes: [String], amplifiers: [String], state: CollectedState) -> [Evidence] {
@@ -98,14 +98,14 @@ public struct Wave10ResidualPairClusterCheck: Check {
             Evidence(type: "amplifiers", detail: amplifierDetail),
             Evidence(type: "stage_labels", detail: "stages=\(stages.joined(separator: "|")) (labels only - not auto-exploit)"),
             Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"),
-            Evidence(type: "honesty", detail: "Wave-10 residual-pair ranking is path-to-impact narrative for operators. Rootstock Red does not build pkgs, craft Gatekeeper bypass archives, dump stealer secrets, dump TCC.db, or strip quarantine."),
+            Evidence(type: "honesty", detail: "Residual-pair ranking is path-to-impact narrative for operators. Rootstock Red does not build pkgs, craft Gatekeeper bypass archives, dump stealer secrets, dump TCC.db, or strip quarantine."),
         ]
     }
 
     private static let compoundRemediation = [
         "Prioritize hosts co-locating installer-design + stealer-paths + visibility-depth planes",
         "Close remote access and harden package/archive workflows before lower-tier inventory",
-        "Use Wave-9 lab plans under ROE for purple validation of expected telemetry",
+        "Use corresponding lab plans under ROE for purple validation of expected telemetry",
         "OPSEC: treat multi-plane compounds as engagement narrative, not an exploit script",
     ]
 

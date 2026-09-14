@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
 
     static func assessPrivHelpers(_ events: [EventEnvelope]) -> [Finding] {
@@ -205,7 +204,7 @@ extension HardeningAssessment {
         return []
     }
 
-    // MARK: - Wave-5 assessments
+    // MARK: - assessments
 
     private static func isRiskyPrivilegedHelper(_ event: EventEnvelope) -> Bool {
         let fields = event.fields

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane kill-chain compound ranking (Wave-7).
+/// Multi-plane kill-chain compound ranking.
 ///
 /// Research basis: engagement narrative ranking across foothold/trust/privilege/collection.
 /// Safety and behavior: deterministic compounds over CollectedState; not automated exploit orchestration.

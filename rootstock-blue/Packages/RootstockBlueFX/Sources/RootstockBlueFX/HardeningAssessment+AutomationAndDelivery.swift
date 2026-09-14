@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
 
     static func assessWeblocInetloc(_ events: [EventEnvelope]) -> [Finding] {
@@ -187,7 +186,7 @@ extension HardeningAssessment {
             ),
         ]
     }
-    // MARK: - Wave-13 multi-plane red↔blue pair assessments
+    // MARK: - Multi-plane red↔blue pair assessments
 
     static func assessCalendarRemindersAutomation(_ events: [EventEnvelope]) -> [Finding] {
         let rows = events.filter {
@@ -317,6 +316,6 @@ extension HardeningAssessment {
             evidence: sample
         )]
     }
-    // MARK: - Wave-14 multi-plane red↔blue pair assessments
+    // MARK: - Multi-plane red↔blue pair assessments
 
 }

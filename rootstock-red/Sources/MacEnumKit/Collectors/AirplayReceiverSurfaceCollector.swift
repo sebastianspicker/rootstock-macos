@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// AirPlay receiver dual-use residual (Wave-16).
+/// AirPlay receiver dual-use residual.
 /// Safety and behavior: path inventory only; never enables AirPlay Receiver or spoofs AirPlay targets.
 public struct AirplayReceiverSurfaceCollector: Collector {
     public static let id = "collect.airplay_receiver_surface"

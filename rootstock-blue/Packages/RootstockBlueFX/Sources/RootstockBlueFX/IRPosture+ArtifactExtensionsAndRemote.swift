@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 import RootstockMacFacts
 
 #if canImport(Darwin)
@@ -58,7 +57,7 @@ extension HostIRPosture {
         )
     }
 
-    /// Wave-5: emit explicit `ard.all_local_users` when RemoteManagement plist sets ARD_AllLocalUsers.
+    /// emit explicit `ard.all_local_users` when RemoteManagement plist sets ARD_AllLocalUsers.
     static func offlineARDMarkers(root: ArtifactRoot) -> [EventEnvelope] {
         guard let marker = root.firstExisting(["Library/Preferences/com.apple.RemoteManagement.plist", "Library/Preferences/com.apple.RemoteDesktop.plist", "Library/Preferences/ard_inventory.json"]),
               let values = ardMarkerValues(marker),

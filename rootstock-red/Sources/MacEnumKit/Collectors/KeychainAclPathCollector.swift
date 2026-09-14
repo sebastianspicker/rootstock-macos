@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Keychain ACL path residual surface (Wave-15).
+/// Keychain ACL path residual surface.
 /// Safety and behavior: path inventory only; never dumps keychain items, passwords, or private keys.
 public struct KeychainAclPathCollector: Collector {
     public static let id = "collect.keychain_acl_path"

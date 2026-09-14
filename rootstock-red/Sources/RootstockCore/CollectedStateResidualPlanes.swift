@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - Wave-15 2026 coverage multi-plane surfaces
+// MARK: - 2026 coverage multi-plane surfaces
 
 
 /// Photos.app library collection path plane (never reads photo contents or exports Photo Library media).

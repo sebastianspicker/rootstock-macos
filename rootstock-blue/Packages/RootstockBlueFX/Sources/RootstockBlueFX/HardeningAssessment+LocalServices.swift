@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
 
     static func assessPhotosLibraryPath(_ events: [EventEnvelope]) -> [Finding] {
@@ -261,6 +260,6 @@ extension HardeningAssessment {
             evidence: sample
         )]
     }
-    // MARK: - Wave-16 multi-plane red↔blue pair assessments
+    // MARK: - Multi-plane red↔blue pair assessments
 
 }

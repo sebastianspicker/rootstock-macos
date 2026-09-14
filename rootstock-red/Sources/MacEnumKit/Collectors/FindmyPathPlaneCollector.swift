@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Find My residual path plane (Wave-16).
+/// Find My residual path plane.
 /// Safety and behavior: path inventory only; never queries Find My device locations or dumps owner tokens.
 public struct FindmyPathPlaneCollector: Collector {
     public static let id = "collect.findmy_path_plane"

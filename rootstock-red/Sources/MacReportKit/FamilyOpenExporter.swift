@@ -1,9 +1,10 @@
+import CryptoKit
 import Foundation
 import RootstockCore
 
 /// Optional DD-011 family open-export (schema v1) for Neo4j import.
 ///
-/// Not a full `scan.json`. Nodes/edges are allowlisted for `graph/import_family_export.py`.
+/// Not a full `scan.json`. Nodes and edges are allowlisted by the family graph importer.
 public enum FamilyOpenExporter: Sendable {
     public static let schemaVersion = 1
     public static let source = "rootstock-red"
@@ -21,7 +22,7 @@ public enum FamilyOpenExporter: Sendable {
     ) -> [String: Any] {
         let hostname = state.host?.hostname ?? "unknown-host"
         let osVersion = state.host?.osVersion ?? ""
-        let hostId = "Host:\(sanitize(hostname.isEmpty ? "unknown-host" : hostname))"
+        let hostId = nodeID(type: "Host", rawKey: hostname.isEmpty ? "unknown-host" : hostname)
         var nodes: [[String: Any]] = [
             [
                 "id": hostId,
@@ -32,10 +33,11 @@ public enum FamilyOpenExporter: Sendable {
             ],
         ]
         var edges: [[String: String]] = []
+        var seen = Set([hostId])
 
-        appendProtections(state, hostId: hostId, nodes: &nodes, edges: &edges)
-        appendLaunchItems(state, hostId: hostId, nodes: &nodes, edges: &edges)
-        appendFindings(findings, hostId: hostId, nodes: &nodes, edges: &edges)
+        appendProtections(state, hostId: hostId, nodes: &nodes, edges: &edges, seen: &seen)
+        appendLaunchItems(state, hostId: hostId, nodes: &nodes, edges: &edges, seen: &seen)
+        appendFindings(findings, hostId: hostId, nodes: &nodes, edges: &edges, seen: &seen)
 
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
@@ -54,22 +56,26 @@ public enum FamilyOpenExporter: Sendable {
         ]
     }
 
-    private static func appendProtections(_ state: CollectedState, hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]]) {
+    private static func appendProtections(_ state: CollectedState, hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]], seen: inout Set<String>) {
         guard let protections = state.protections else { return }
-        [("SIP", protections.sipEnabled), ("Gatekeeper", protections.gatekeeperEnabled), ("FileVault", protections.fileVaultOn)].forEach { appendProtection(name: $0.0, enabled: $0.1, hostId: hostId, nodes: &nodes, edges: &edges) }
+        [("SIP", protections.sipEnabled), ("Gatekeeper", protections.gatekeeperEnabled), ("FileVault", protections.fileVaultOn)].forEach { appendProtection(name: $0.0, enabled: $0.1, hostId: hostId, nodes: &nodes, edges: &edges, seen: &seen) }
     }
 
-    private static func appendLaunchItems(_ state: CollectedState, hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]]) {
+    private static func appendLaunchItems(_ state: CollectedState, hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]], seen: inout Set<String>) {
         for item in state.launchAgents.prefix(50) {
-            let id = "LaunchItem:\(sanitize(item.label ?? item.path))"
-            nodes.append(["id": id, "type": "LaunchItem", "name": item.label ?? item.path, "label": item.label ?? "", "path": item.path, "program": item.programArguments.first ?? ""])
+            let label = nonEmpty(item.label) ?? item.path
+            let program = item.programArguments.first ?? ""
+            let id = nodeID(type: "LaunchItem", rawKey: [label, item.path, program].joined(separator: "\u{1F}"))
+            guard seen.insert(id).inserted else { continue }
+            nodes.append(["id": id, "type": "LaunchItem", "name": label, "label": item.label ?? "", "path": item.path, "program": program])
             edges.append(["from": hostId, "to": id, "type": "HAS_LAUNCH_ITEM"])
         }
     }
 
-    private static func appendFindings(_ findings: [Finding], hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]]) {
+    private static func appendFindings(_ findings: [Finding], hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]], seen: inout Set<String>) {
         for finding in findings.prefix(200) {
-            let id = "Finding:\(sanitize(finding.id))"
+            let id = nodeID(type: "Finding", rawKey: finding.id)
+            guard seen.insert(id).inserted else { continue }
             nodes.append(["id": id, "type": "Finding", "name": finding.title, "finding_id": finding.id, "severity": finding.severity.rawValue, "category": finding.category.rawValue, "confidence": finding.confidence.rawValue])
             edges.append(["from": hostId, "to": id, "type": "HAS_FINDING"])
         }
@@ -97,9 +103,11 @@ public enum FamilyOpenExporter: Sendable {
         enabled: Bool?,
         hostId: String,
         nodes: inout [[String: Any]],
-        edges: inout [[String: String]]
+        edges: inout [[String: String]],
+        seen: inout Set<String>
     ) {
-        let id = "Protection:\(sanitize(name.lowercased()))"
+        let id = nodeID(type: "Protection", rawKey: name.lowercased())
+        guard seen.insert(id).inserted else { return }
         let label: String
         switch enabled {
         case .some(true): label = "true"
@@ -117,9 +125,26 @@ public enum FamilyOpenExporter: Sendable {
         edges.append(["from": hostId, "to": id, "type": "HAS_PROTECTION"])
     }
 
-    private static func sanitize(_ value: String) -> String {
+    /// Family open-export v1 identity rule: a readable normalized prefix plus
+    /// SHA-256 of the canonical raw key. The digest avoids collisions caused by
+    /// replacing distinct punctuation with the same readable character.
+    private static func nodeID(type: String, rawKey: String) -> String {
+        "\(type):\(readablePrefix(rawKey))--\(sha256(rawKey))"
+    }
+
+    private static func readablePrefix(_ value: String) -> String {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
         let scalars = value.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" }
-        return String(scalars)
+        let normalized = String(scalars)
+        return normalized.isEmpty ? "item" : String(normalized.prefix(80))
+    }
+
+    private static func sha256(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func nonEmpty(_ value: String?) -> String? {
+        guard let value, !value.isEmpty else { return nil }
+        return value
     }
 }

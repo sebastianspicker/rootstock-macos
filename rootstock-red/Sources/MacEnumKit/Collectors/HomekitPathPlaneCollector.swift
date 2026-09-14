@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// HomeKit residual path plane (Wave-16).
+/// HomeKit residual path plane.
 /// Safety and behavior: path inventory only; never enumerates HomeKit accessory secrets or pairs devices.
 public struct HomekitPathPlaneCollector: Collector {
     public static let id = "collect.homekit_path_plane"

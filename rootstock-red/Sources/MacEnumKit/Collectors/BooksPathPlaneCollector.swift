@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Books / EPUB path residual plane (Wave-16).
+/// Books / EPUB path residual plane.
 /// Safety and behavior: path inventory only; never extracts EPUB contents or Books annotations as bulk export.
 public struct BooksPathPlaneCollector: Collector {
     public static let id = "collect.books_path_plane"

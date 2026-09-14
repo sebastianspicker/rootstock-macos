@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
 
     static func assessTrashSensitive(_ events: [EventEnvelope]) -> [Finding] {

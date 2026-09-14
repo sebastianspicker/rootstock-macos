@@ -4,20 +4,20 @@
 validation on authorized lab hosts. It is not linked into the default
 `rootstock-red` assessment executable.
 
-Lab actions require authorization metadata and default to dry-run behavior.
-Some actions can create or remove state after the operator explicitly selects a
-non-dry-run path. These actions are intended to produce observable,
-documented artifacts for purple-team validation, not stealth persistence.
+Lab actions require the operator to provide their identity and engagement
+scope. They start in dry-run mode. This information records who invoked the
+tool; it neither authenticates the operator nor proves authorization.
 
-The following packages are outside the supported default assessment runtime:
+When an operator explicitly disables dry-run mode, some actions can create or
+remove state at a selected path. Before running one, review its plan, resolved
+paths, and cleanup instructions. The actions create observable artifacts for
+purple-team validation and are not designed for stealth or persistence on a
+production host.
+
+The lab implementation lives in a package that the default assessment
+executable does not link:
 
 - `RootstockLab`
-- `MacAgentKit`
-- `MacTransportKit`
-- `RootstockMythicAdapter`
-
-The transport packages are unlinked skeletons. They are not a
-supported C2, implant, or transport product.
 
 Use Red Lab only under written rules of engagement. See
 [Acceptable use](ACCEPTABLE_USE.md) and [Security policy](SECURITY.md).

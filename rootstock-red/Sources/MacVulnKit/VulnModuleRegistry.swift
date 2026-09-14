@@ -34,7 +34,7 @@ public enum VulnModuleRegistry {
             TrustChainClusterCheck(),
             // Delivery-trust cluster: quarantine × XProtect inventory × GK+remote compound.
             DeliveryTrustClusterCheck(),
-            // Wave-5 2026 coverage clusters.
+            // 2026 coverage clusters.
             ESFEDRPostureClusterCheck(),
             CVEPatchDebtClusterCheck(),
             TCCGraphClusterCheck(),
@@ -50,19 +50,19 @@ public enum VulnModuleRegistry {
             Wave8DeliveryLateralClusterCheck(),
             // installer × collection × visibility compound.
             Wave9InstallerCollectionClusterCheck(),
-            // Wave-10 residual pair cluster: installer × extractor × stealer × visibility compounds.
+            // Residual pair cluster: installer × extractor × stealer × visibility compounds.
             Wave10ResidualPairClusterCheck(),
-            // Wave-11 multi-plane cluster: URL handlers × launchd overrides × browser extensions × Shortcuts.
+            // Multi-plane cluster: URL handlers × launchd overrides × browser extensions × Shortcuts.
             Wave11MultiPlaneClusterCheck(),
-            // Wave-12 multi-plane cluster (6 net-new themes beyond Wave-11).
+            // Multi-plane cluster (6 net-new themes beyond prior coverage).
             Wave12MultiPlaneClusterCheck(),
-            // Wave-13 multi-plane cluster (5 net-new themes beyond Wave-12).
+            // Multi-plane cluster (5 net-new themes beyond prior coverage).
             Wave13MultiPlaneClusterCheck(),
-            // Wave-14 multi-plane cluster (10 net-new themes beyond Wave-13).
+            // Multi-plane cluster (10 net-new themes beyond prior coverage).
             Wave14MultiPlaneClusterCheck(),
-            // Wave-15 multi-plane cluster (10 net-new themes beyond Wave-14).
+            // Multi-plane cluster (10 net-new themes beyond prior coverage).
             Wave15MultiPlaneClusterCheck(),
-            // Wave-16 multi-plane cluster (25 themes / 50 red|blue half-pairs).
+            // Multi-plane cluster (25 themes / 50 red|blue half-pairs).
             Wave16MultiPlaneClusterCheck(),
         ] + AttackVectorPlane.allChecks()
     }
@@ -72,7 +72,7 @@ public enum VulnModuleRegistry {
     }
 }
 
-/// End-to-end assess pipeline for tests and embedders (no CLI).
+/// Complete assess pipeline for tests and embedders (no CLI).
 public struct AssessPipelineResult: Sendable {
     public let state: CollectedState
     public let findings: [Finding]

@@ -1,10 +1,9 @@
 # Threat model
 
-This document describes the current trust boundaries of the Core, cve-scan,
-Rootstock Red, and Rootstock Blue source trees. It does not assert that all
-components have the same runtime or risk profile.
+This page describes what Rootstock trusts, what data it produces, and where
+its protections stop. The products run separately and have different risks.
 
-## Operator assumptions
+## Assumptions
 
 1. The operator owns the analyzed systems or has explicit authorization.
 2. Local collection runs on a cooperative macOS endpoint. The tools do not
@@ -15,23 +14,22 @@ components have the same runtime or risk profile.
 5. Findings and inferred paths require analyst validation. They are not proof
    that exploitation occurred or will succeed.
 
-## Component boundaries
+## What each component can change
 
-| Component | Default network behavior | Host mutation boundary |
+| Component | Default network behavior | Local changes |
 |---|---|---|
 | Core collector | No collection-side network path | Reads host metadata and writes the requested scan artifact |
 | Core graph and API | Connects to configured Neo4j; API is restricted to loopback in this alpha | Writes graph data, reports, and viewer artifacts |
 | cve-scan | Network collection and feed refresh require explicit scope or flags | Writes run artifacts and caches; does not modify scanned services |
-| Rootstock Red assessment | Network egress disabled unless `--allow-network` is supplied | Reads posture and writes findings, state, and audit artifacts |
-| Rootstock Red Lab | Network disabled in the current lab context | Separate executable; defaults to dry-run and can create or remove documented lab state only after authorization and non-dry-run selection |
-| Rootstock Blue | Offline case analysis is the default tested path | Writes case packages, timelines, detections, custody records, and reports; selected live posture commands read the running host |
+| Rootstock Red assessment | No current network client; `--allow-network` is an policy flag for future or registered network modules | Reads posture and writes findings, state, and audit artifacts |
+| Rootstock Red Lab | Network disabled in the current lab context | Separate executable; defaults to dry-run and can create or remove documented state after operator self-attestation and non-dry-run selection |
+| Rootstock Blue | Offline case analysis by default | Writes case packages, timelines, detections, custody records, and reports; selected live posture commands read the running host |
 
-Rootstock Blue's Endpoint Security client is a mock-backed alpha surface. Live
-operation requires Apple entitlements, Full Disk Access, root or system
-extension approval as applicable, and a separately validated deployment path.
-AUTH or blocking mode is not enabled by default.
+Rootstock Blue ships no Endpoint Security client, subscription path, system
+extension, or blocking mode. Its event-session API accepts synthetic fixtures;
+its separate posture commands perform documented read-only local probes.
 
-## Data sensitivity
+## Sensitive data
 
 Real output can expose security-relevant host and organization data:
 
@@ -48,15 +46,26 @@ Treat real scans, exports, reports, case packages, findings, screenshots,
 tokens, local Neo4j volumes, and browser query history as confidential. They
 must not be committed to the public repository.
 
-No component is intended to export passwords, private keys, Keychain secret
+Collectors are not intended to export passwords, private keys, Keychain secret
 values, session tokens, or recovery keys. Metadata and presence indicators can
 still be sensitive.
 
-## Service exposure
+Scope YAML, detection content, imported artifacts, feed mirrors, environment
+files, and external sidecar executables are trusted inputs. In particular,
+cve-scan credential commands and the configured Blue unified-log sidecar can
+execute another program with the current process privileges. Review these inputs
+as code before use. See [Configuration](CONFIGURATION.md).
+
+## API and database access
 
 - The bundled Neo4j Compose configuration binds Browser and Bolt to loopback
   and requires authentication.
 - Every `/api/*` route requires a bearer token of at least 32 bytes.
+- The same token authorizes graph reads and the implemented owned-marker and
+  tier-classification state changes. It is not a read-only credential.
+- API read routes use a distinct `NEO4J_READ_USER` principal. That principal
+  must receive only Neo4j `MATCH` and `SHOW` privileges, never `WRITE` or
+  `DBMS`; API mutation routes continue to use the writer principal.
 - The alpha API refuses non-loopback listen addresses and non-loopback Neo4j
   URIs. There is no command-line override.
 - The viewer fetches live graph data through the authenticated API. The `/`
@@ -80,7 +89,7 @@ real data without a separate access-control and deployment review.
 - The repository does not provide real-time fleet monitoring, a multi-platform
   endpoint monitor, a SIEM, an MDM system, or automated incident containment.
 
-## Responsible operation
+## Using and sharing results
 
 Run collection and Red Lab actions only within written authorization. Review
 outputs before sharing them. If a result indicates a third-party vulnerability,

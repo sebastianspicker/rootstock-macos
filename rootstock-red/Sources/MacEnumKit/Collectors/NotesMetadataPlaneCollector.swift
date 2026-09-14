@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Notes.app metadata collection path plane (Wave-14).
+/// Notes.app metadata collection path plane.
 /// Research basis: 2025–26 macOS Notes metadata plane tradecraft.
 /// Safety and behavior: path inventory only; never reads Notes body contents or exports note secrets.
 public struct NotesMetadataPlaneCollector: Collector {

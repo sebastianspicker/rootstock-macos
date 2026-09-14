@@ -11,7 +11,6 @@ public enum RootstockBlueError: Error, LocalizedError, Sendable {
     case detectionRuleInvalid(String)
     case fixtureMissing(String)
     case notImplemented(String)
-    case xpcDenied(String)
     case secretsRequired(String)
 
     public var errorDescription: String? {
@@ -34,8 +33,6 @@ public enum RootstockBlueError: Error, LocalizedError, Sendable {
             return "Detection fixture missing: \(path)"
         case .notImplemented(let feature):
             return "Not implemented: \(feature)"
-        case .xpcDenied(let op):
-            return "XPC operation not allowlisted: \(op)"
         case .secretsRequired(let detail):
             return "User/org secrets required (no crack path): \(detail)"
         }

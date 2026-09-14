@@ -1,4 +1,8 @@
+import { showConnectionGate, hideConnectionGate } from "./connection";
+export { showConnectionGate, hideConnectionGate } from "./connection";
 /** Coordinates viewer lifecycle, state transitions, and UI-facing graph actions. */
+import { mountFolio, refreshFolio } from "./folio";
+import { invalidateCanvasColors } from "./canvas-cache";
 
 import {
   computeVisibility,
@@ -9,30 +13,44 @@ import {
   safeNodeColor,
   shortestPath,
 } from "./model";
-import {drawFrame, resizeCanvas, wireCanvas} from "./canvas";
-import {wireControls} from "./controls";
-import {collectDom} from "./dom";
-import type {ViewerDom} from "./dom";
-import {parseGraphPayload} from "./protocol";
-import {buildFilters, renderMetadata, renderNodeList, renderRiskSummary, renderStats} from "./view";
-import {readHistory, renderHistory, startLiveSession} from "./live";
-import {SESSION_STORAGE_NAME} from "./storage";
-import {element, setPressed} from "./runtime";
-import type {Controller, ViewerActions} from "./runtime";
-import {inspectNode} from "./inspector";
-export {inspectNode} from "./inspector";
-import {SpatialGrid} from "./spatial";
+import { drawFrame, resizeCanvas, wireCanvas } from "./canvas";
+import { wireControls } from "./controls";
+import { collectDom } from "./dom";
+import type { ViewerDom } from "./dom";
+import { parseGraphPayload } from "./protocol";
+import {
+  buildFilters,
+  renderMetadata,
+  renderNodeList,
+  resetNodeList,
+  renderRiskSummary,
+  renderStats,
+} from "./view";
+import { readHistory, renderHistory, startLiveSession } from "./live";
+import { SESSION_STORAGE_NAME } from "./storage";
+import { element, setPressed } from "./runtime";
+import type { Controller, ViewerActions } from "./runtime";
+import { inspectNode } from "./inspector";
+import { renderTriageQueue } from "./triage";
+import { renderPathWorkspace } from "./paths";
+import { syncWorkspaceDom } from "./workspace";
+export { inspectNode } from "./inspector";
+import { SpatialGrid } from "./spatial";
 import type {
   GraphPayload,
   NodeId,
   Theme,
+  ViewerWorkspace,
   ViewerNode,
   ViewerOptions,
 } from "./types";
 
-const THEME_STORAGE_NAME = "rootstock.theme";
+import { applyTheme, THEME_STORAGE_NAME } from "./theme";
+export { applyTheme } from "./theme";
 
-export function nodeColor(node: ViewerNode): string { return safeNodeColor(node.properties._color); }
+export function nodeColor(node: ViewerNode): string {
+  return safeNodeColor(node.properties._color);
+}
 
 export function rebuildSpatial(controller: Controller): void {
   controller.spatial = new SpatialGrid(controller.state.graph.nodes, {
@@ -46,9 +64,8 @@ export function updateVisibility(controller: Controller): void {
   const visibility = computeVisibility(controller.state);
   controller.state.render.visibleNodeIds = visibility.nodeIds;
   controller.state.render.visibleLinkIndexes = visibility.linkIndexes;
-  renderNodeList(controller);
+  resetNodeList(controller);
   renderStats(controller);
-  rebuildSpatial(controller);
   markDirty(controller);
 }
 
@@ -59,14 +76,16 @@ export function markDirty(controller: Controller): void {
   requestAnimationFrame(() => drawFrame(controller, worldPosition));
 }
 
-export function worldPosition(_controller: Controller, node: ViewerNode): {x: number; y: number} {
-  return {x: node.x, y: node.y};
+export function worldPosition(_controller: Controller, node: ViewerNode): { x: number; y: number } {
+  return { x: node.x, y: node.y };
 }
 
 export function fitViewport(controller: Controller): void {
-  const nodes = controller.state.graph.nodes.filter((node) => controller.state.render.visibleNodeIds.has(node.id));
+  const nodes = controller.state.graph.nodes.filter((node) =>
+    controller.state.render.visibleNodeIds.has(node.id),
+  );
   if (nodes.length === 0) {
-    controller.state.viewport.transform = {x: 0, y: 0, k: 1};
+    controller.state.viewport.transform = { x: 0, y: 0, k: 1 };
     markDirty(controller);
     return;
   }
@@ -88,7 +107,10 @@ export function fitViewport(controller: Controller): void {
   const padding = 56;
   const width = Math.max(1, controller.state.viewport.width - padding * 2);
   const height = Math.max(1, controller.state.viewport.height - padding * 2);
-  const k = Math.min(2, Math.max(0.08, Math.min(width / Math.max(1, maxX - minX), height / Math.max(1, maxY - minY))));
+  const k = Math.min(
+    2,
+    Math.max(0.08, Math.min(width / Math.max(1, maxX - minX), height / Math.max(1, maxY - minY))),
+  );
   controller.state.viewport.transform = {
     x: controller.state.viewport.width / 2 - ((minX + maxX) / 2) * k,
     y: controller.state.viewport.height / 2 - ((minY + maxY) / 2) * k,
@@ -98,21 +120,29 @@ export function fitViewport(controller: Controller): void {
 }
 
 export function setClusteredLayout(controller: Controller, enabled: boolean): void {
-  const {state} = controller;
+  const { state } = controller;
   if (enabled) {
-    controller.unclusteredPositions = new Map(state.graph.nodes.map((node) => [node.id, {x: node.x, y: node.y}]));
+    controller.unclusteredPositions = new Map(
+      state.graph.nodes.map((node) => [node.id, { x: node.x, y: node.y }]),
+    );
     const kinds = [...state.graph.kindMeta.keys()].sort();
     const ringRadius = Math.max(240, 150 * Math.sqrt(Math.max(1, kinds.length)));
     for (const [kindIndex, kind] of kinds.entries()) {
-      const members = state.graph.nodes.filter((node) => node.kind === kind).sort((left, right) => left.id.localeCompare(right.id));
+      const members = state.graph.nodes
+        .filter((node) => node.kind === kind)
+        .sort((left, right) => left.id.localeCompare(right.id));
       const kindAngle = (kindIndex / Math.max(1, kinds.length)) * Math.PI * 2;
       const centerX = 1_000 + Math.cos(kindAngle) * ringRadius;
       const centerY = 1_000 + Math.sin(kindAngle) * ringRadius;
       for (const [index, node] of members.entries()) {
         const angle = (index / Math.max(1, members.length)) * Math.PI * 2;
         const localRadius = 42 + Math.min(120, Math.sqrt(members.length) * 15);
-        node.x = centerX + Math.cos(angle) * localRadius + deterministicClusterOffset(node.id) * 0.25;
-        node.y = centerY + Math.sin(angle) * localRadius + deterministicClusterOffset(`${node.id}:y`) * 0.25;
+        node.x =
+          centerX + Math.cos(angle) * localRadius + deterministicClusterOffset(node.id) * 0.25;
+        node.y =
+          centerY +
+          Math.sin(angle) * localRadius +
+          deterministicClusterOffset(`${node.id}:y`) * 0.25;
       }
     }
   } else if (controller.unclusteredPositions) {
@@ -126,7 +156,6 @@ export function setClusteredLayout(controller: Controller, enabled: boolean): vo
   rebuildSpatial(controller);
   fitViewport(controller);
 }
-
 
 export function closeInspector(controller: Controller): void {
   controller.state.selection.selectedId = null;
@@ -165,15 +194,11 @@ export function exitFocusMode(controller: Controller): void {
 }
 
 export function resetPath(controller: Controller): void {
-  controller.state.selection.path = {active: false, sourceId: null, targetId: null, result: null};
+  controller.state.selection.path = { active: false, sourceId: null, targetId: null, result: null };
   controller.dom.pathBanner.classList.remove("visible");
-  controller.dom.pathText.textContent = "Choose a source node from the graph or node list.";
+  controller.dom.pathText.textContent = "Choose an explicit source and destination in Paths.";
   setPressed(controller.dom.path, false);
-  controller.dom.navPaths.classList.remove("active");
-  controller.dom.navPaths.removeAttribute("aria-current");
-  if (!controller.dom.queriesPanel.hidden) return;
-  controller.dom.navGraph.classList.add("active");
-  controller.dom.navGraph.setAttribute("aria-current", "page");
+  renderPathWorkspace(controller);
 }
 
 export function togglePathMode(controller: Controller, sourceId: NodeId | null = null): void {
@@ -182,24 +207,22 @@ export function togglePathMode(controller: Controller, sourceId: NodeId | null =
     updateVisibility(controller);
     return;
   }
-  controller.state.selection.path = {active: true, sourceId, targetId: null, result: null};
-  controller.dom.pathBanner.classList.add("visible");
+  controller.state.selection.path = { active: true, sourceId, targetId: null, result: null };
   controller.dom.pathText.textContent = sourceId
-    ? "Choose a destination node."
-    : "Choose a source node from the graph or node list.";
+    ? "Choose a destination in Paths."
+    : "Choose explicit endpoints in Paths.";
   setPressed(controller.dom.path, true);
-  controller.dom.navGraph.classList.remove("active");
-  controller.dom.navGraph.removeAttribute("aria-current");
-  controller.dom.navPaths.classList.add("active");
-  controller.dom.navPaths.setAttribute("aria-current", "page");
+  transitionWorkspace(controller, "paths", true);
+  renderPathWorkspace(controller);
   updateVisibility(controller);
 }
 
 export function startPathTo(controller: Controller, targetId: NodeId): void {
-  controller.state.selection.path = {active: true, sourceId: null, targetId, result: null};
-  controller.dom.pathBanner.classList.add("visible");
-  controller.dom.pathText.textContent = "Choose a source node.";
+  controller.state.selection.path = { active: true, sourceId: null, targetId, result: null };
+  controller.dom.pathText.textContent = "Choose an explicit source in Paths.";
   setPressed(controller.dom.path, true);
+  transitionWorkspace(controller, "paths", true);
+  renderPathWorkspace(controller);
   updateVisibility(controller);
 }
 
@@ -222,7 +245,8 @@ export function handlePathSelection(controller: Controller, nodeId: NodeId): voi
   path.targetId = nodeId;
   path.result = shortestPath(controller.state.graph, path.sourceId, nodeId);
   if (!path.result) {
-    controller.dom.pathText.textContent = "No traversable path found. Choose another destination or cancel.";
+    controller.dom.pathText.textContent =
+      "No traversable path found. Choose another destination or cancel.";
     return;
   }
   const hops = Math.max(0, path.result.orderedNodeIds.length - 1);
@@ -250,10 +274,10 @@ export function hideContextMenu(controller: Controller): void {
 
 export function showContextMenu(controller: Controller, event: MouseEvent, node: ViewerNode): void {
   event.preventDefault();
-  const {contextMenu, graphContainer} = controller.dom;
+  const { contextMenu, graphContainer } = controller.dom;
   contextMenu.replaceChildren();
   const action = (label: string, handler: () => void): HTMLButtonElement => {
-    const button = element("button", {class: "ctx-item", type: "button", text: label});
+    const button = element("button", { class: "ctx-item", type: "button", text: label });
     button.addEventListener("click", () => {
       hideContextMenu(controller);
       handler();
@@ -267,15 +291,19 @@ export function showContextMenu(controller: Controller, event: MouseEvent, node:
     action("Center on this node", () => centerOnNode(controller, node)),
   );
   for (const tier of [0, 1, 2]) {
-    contextMenu.append(action(`Set local tier ${tier}`, () => {
-      node.properties.tier = tier;
-      inspectNode(controller, node.id);
-    }));
+    contextMenu.append(
+      action(`Set local tier ${tier}`, () => {
+        node.properties.tier = tier;
+        inspectNode(controller, node.id);
+      }),
+    );
   }
-  contextMenu.append(action("Clear local tier", () => {
-    delete node.properties.tier;
-    inspectNode(controller, node.id);
-  }));
+  contextMenu.append(
+    action("Clear local tier", () => {
+      delete node.properties.tier;
+      inspectNode(controller, node.id);
+    }),
+  );
   const rect = graphContainer.getBoundingClientRect();
   contextMenu.style.left = `${event.clientX - rect.left}px`;
   contextMenu.style.top = `${event.clientY - rect.top}px`;
@@ -283,7 +311,7 @@ export function showContextMenu(controller: Controller, event: MouseEvent, node:
 }
 
 export function selectNode(controller: Controller, nodeId: NodeId): void {
-  if (controller.state.selection.path.active) {
+  if (controller.state.workspace === "paths" && controller.state.selection.path.active) {
     handlePathSelection(controller, nodeId);
     return;
   }
@@ -308,57 +336,35 @@ export function replaceGraph(controller: Controller, payload: GraphPayload): voi
   replaceGraphModel(controller.state, payload);
   controller.unclusteredPositions = null;
   resetInteractionUi(controller);
+  rebuildSpatial(controller);
   renderMetadata(controller);
   renderRiskSummary(controller);
   buildFilters(controller);
   updateVisibility(controller);
   fitViewport(controller);
+  refreshFolio(controller);
 }
 
-export function applyTheme(controller: Controller, value: Theme): void {
-  if (value === "system") {
-    document.documentElement.removeAttribute("data-theme");
-    document.body.removeAttribute("data-theme");
-  } else {
-    document.documentElement.setAttribute("data-theme", value);
-    document.body.setAttribute("data-theme", value);
-  }
-  localStorage.setItem(THEME_STORAGE_NAME, value);
+export function transitionWorkspace(
+  controller: Controller,
+  workspace: ViewerWorkspace,
+  focus = false,
+): void {
+  controller.state.workspace = workspace;
+  syncWorkspaceDom(controller, workspace);
+  if (workspace === "triage") renderTriageQueue(controller);
+  if (workspace === "paths") renderPathWorkspace(controller);
+  if (focus) requestAnimationFrame(() => controller.dom.workspaceTitle.focus());
   markDirty(controller);
 }
 
 export function selectTab(controller: Controller, tab: "explore" | "queries"): void {
-  const explore = tab === "explore";
-  controller.dom.tabExplore.setAttribute("aria-selected", String(explore));
-  controller.dom.tabQueries.setAttribute("aria-selected", String(!explore));
-  controller.dom.explorePanel.hidden = !explore;
-  controller.dom.queriesPanel.hidden = explore;
-  controller.dom.navOverview.classList.remove("active");
-  controller.dom.navPaths.classList.toggle("active", explore && controller.state.selection.path.active);
-  controller.dom.navGraph.classList.toggle("active", explore && !controller.state.selection.path.active);
-  controller.dom.navQueries.classList.toggle("active", !explore);
-  controller.dom.navPaths.toggleAttribute("aria-current", explore && controller.state.selection.path.active);
-  controller.dom.navGraph.toggleAttribute("aria-current", explore && !controller.state.selection.path.active);
-  controller.dom.navQueries.toggleAttribute("aria-current", !explore);
+  transitionWorkspace(controller, tab === "queries" ? "queries" : "graph");
 }
 
 export function setLiveStatus(controller: Controller, message: string, state = ""): void {
   controller.dom.liveStatus.textContent = message;
   controller.dom.liveStatus.className = `live-status${state ? ` ${state}` : ""}`;
-}
-
-export function showConnectionGate(controller: Controller, message = ""): void {
-  controller.dom.connectionGate.hidden = false;
-  controller.dom.connectionError.textContent = message;
-  controller.dom.connectionError.hidden = message.length === 0;
-  controller.dom.connectionStatus.textContent = message ? "Connection required" : "Not connected";
-  controller.dom.connectionStatus.className = `status-chip${message ? " error" : ""}`;
-}
-
-export function hideConnectionGate(controller: Controller): void {
-  controller.dom.connectionGate.hidden = true;
-  controller.dom.connectionStatus.textContent = "Live · connected";
-  controller.dom.connectionStatus.className = "status-chip connected";
 }
 
 export function resetViewport(controller: Controller): void {
@@ -389,6 +395,9 @@ export function configureMode(controller: Controller): void {
   if (!controller.state.live.enabled) {
     controller.dom.connectionStatus.textContent = "Local session · offline";
     controller.dom.connectionGate.hidden = true;
+    controller.dom.queryList.textContent =
+      "Saved queries require a local live connection. Static snapshots remain read-only and do not execute queries.";
+    controller.dom.queryList.className = "empty-state";
     return;
   }
   controller.dom.liveActions.classList.add("live");
@@ -399,14 +408,36 @@ export function configureMode(controller: Controller): void {
 
 export function viewerActions(): ViewerActions {
   return {
-    applyTheme, closeInspector, closeResults, enterFocusMode, exitFocusMode, exportPng,
-    hideConnectionGate, hideContextMenu, inspectNode, markDirty, replaceGraph,
-    resetPath, resetViewport, selectNode, selectTab, setClusteredLayout,
-    setLiveStatus, showConnectionGate, togglePathMode, updateVisibility, zoomViewport,
+    applyTheme,
+    closeInspector,
+    closeResults,
+    enterFocusMode,
+    exitFocusMode,
+    exportPng,
+    hideConnectionGate,
+    hideContextMenu,
+    inspectNode,
+    markDirty,
+    replaceGraph,
+    resetPath,
+    resetViewport,
+    selectNode,
+    selectTab,
+    setClusteredLayout,
+    transitionWorkspace,
+    setLiveStatus,
+    showConnectionGate,
+    togglePathMode,
+    updateVisibility,
+    zoomViewport,
   };
 }
 
-function controllerForPayload(payload: ReturnType<typeof parseGraphPayload>, options: ViewerOptions, dom: ViewerDom): Controller {
+function controllerForPayload(
+  payload: ReturnType<typeof parseGraphPayload>,
+  options: ViewerOptions,
+  dom: ViewerDom,
+): Controller {
   const state = createViewerState(payload, options.mode === "live", options.apiBaseUrl ?? "");
   return {
     state,
@@ -422,18 +453,32 @@ export function createController(input: unknown, options: ViewerOptions): Contro
 }
 
 export function initializeController(controller: Controller): void {
+  rebuildSpatial(controller);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    invalidateCanvasColors();
+    markDirty(controller);
+  });
   renderMetadata(controller);
   renderRiskSummary(controller);
   buildFilters(controller);
   renderHistory(controller, readHistory());
   wireControls(controller);
-  wireCanvas(controller, {closeInspector, hideContextMenu, markDirty, rebuildSpatial, selectNode, showContextMenu, worldPosition});
+  wireCanvas(controller, {
+    closeInspector,
+    hideContextMenu,
+    markDirty,
+    rebuildSpatial,
+    selectNode,
+    showContextMenu,
+    worldPosition,
+  });
   const savedTheme = localStorage.getItem(THEME_STORAGE_NAME);
   const theme: Theme = savedTheme === "light" || savedTheme === "system" ? savedTheme : "dark";
   controller.dom.themeSelect.value = theme;
   applyTheme(controller, theme);
   updateVisibility(controller);
   configureMode(controller);
+  transitionWorkspace(controller, "triage");
 }
 
 export function observeViewport(controller: Controller): void {
@@ -450,4 +495,11 @@ export function mount(input: unknown, options: ViewerOptions = {}): void {
   const controller = controllerForPayload(payload, options, dom);
   initializeController(controller);
   observeViewport(controller);
+  mountFolio(controller);
+  const toggle = document.getElementById("graph-tools-toggle");
+  toggle?.addEventListener("click", () => {
+    document.body.classList.remove("graph-tools-open");
+    toggle.setAttribute("aria-expanded", "false");
+    document.querySelector<HTMLElement>(".folio-topbar button")?.focus();
+  });
 }

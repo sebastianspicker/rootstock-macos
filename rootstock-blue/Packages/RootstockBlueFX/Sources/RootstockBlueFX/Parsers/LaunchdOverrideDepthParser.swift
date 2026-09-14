@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Launchd override depth markers (Wave-11 red↔blue pair).
+/// Launchd override depth markers (red↔blue pair).
 ///
 /// Distinct from LAUNCHDOVERRIDES stock parser: focuses on **security-product disable depth**.
 /// Honesty: never disables jobs or writes overrides.

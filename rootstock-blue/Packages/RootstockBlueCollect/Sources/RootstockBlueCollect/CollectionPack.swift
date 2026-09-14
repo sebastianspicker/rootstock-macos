@@ -6,27 +6,23 @@ public struct CollectionPack: Codable, Sendable {
     public var name: String
     public var description: String
     public var requiresFDA: Bool
-    public var requiresES: Bool
     public var artifacts: [String]
 
     public init(
         name: String,
         description: String,
         requiresFDA: Bool = true,
-        requiresES: Bool = false,
         artifacts: [String]
     ) {
         self.name = name
         self.description = description
         self.requiresFDA = requiresFDA
-        self.requiresES = requiresES
         self.artifacts = artifacts
     }
 
     enum CodingKeys: String, CodingKey {
         case name, description, artifacts
         case requiresFDA = "requires_fda"
-        case requiresES = "requires_es"
     }
 }
 
@@ -36,14 +32,15 @@ public enum CollectionPackLoader {
         for line in try String(contentsOf: url, encoding: .utf8).components(separatedBy: .newlines) {
             parser.consume(line)
         }
-        return parser.pack
+        let pack = parser.pack
+        try validate(pack)
+        return pack
     }
 
     private struct PackParser {
         var name: String
         var description = ""
         var requiresFDA = true
-        var requiresES = false
         var artifacts: [String] = []
         var inArtifacts = false
 
@@ -52,7 +49,7 @@ public enum CollectionPackLoader {
         }
 
         var pack: CollectionPack {
-            CollectionPack(name: name, description: description, requiresFDA: requiresFDA, requiresES: requiresES, artifacts: artifacts)
+            CollectionPack(name: name, description: description, requiresFDA: requiresFDA, artifacts: artifacts)
         }
 
         mutating func consume(_ rawLine: String) {
@@ -77,7 +74,6 @@ public enum CollectionPackLoader {
             case "name": name = value; inArtifacts = false
             case "description": description = value; inArtifacts = false
             case "requires_fda": requiresFDA = value.lowercased() != "false"; inArtifacts = false
-            case "requires_es": requiresES = value.lowercased() == "true"; inArtifacts = false
             case "artifacts": inArtifacts = true
             default: break
             }
@@ -93,5 +89,18 @@ public enum CollectionPackLoader {
             .filter { $0.pathExtension == "yaml" || $0.pathExtension == "yml" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .map { try load(from: $0) }
+    }
+
+    private static func validate(_ pack: CollectionPack) throws {
+        let permittedName = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
+        guard !pack.name.isEmpty, pack.name.unicodeScalars.allSatisfy(permittedName.contains) else {
+            throw RootstockBlueError.io("collection pack name must use only letters, numbers, dot, underscore, or hyphen")
+        }
+        for artifact in pack.artifacts {
+            let components = artifact.split(separator: "/", omittingEmptySubsequences: false)
+            guard !artifact.isEmpty, !artifact.hasPrefix("/"), components.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." }) else {
+                throw RootstockBlueError.io("collection pack artifact must be a safe relative path")
+            }
+        }
     }
 }

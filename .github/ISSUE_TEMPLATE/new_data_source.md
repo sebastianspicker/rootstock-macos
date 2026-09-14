@@ -1,57 +1,44 @@
 ---
-name: New Data Source
-about: Propose a bounded macOS data source for the Rootstock Core collector
+name: New data source
+about: Propose a macOS data source for the Core collector
 title: "[data-source] "
 labels: data-source
 ---
 
-## Data Source Name
+## Data source
 
-Name the macOS subsystem or security boundary.
+Name the macOS subsystem and explain the security question this evidence
+would help answer. This template covers the Core collector; use a feature
+request for Red or Blue extensions.
 
-This template is for the Rootstock Core collector. Red and Blue use separate
-artifacts and extension paths; describe any optional bridge impact below.
+## Evidence to collect
 
-## What It Collects
+- APIs or files to read:
+- Metadata to retain:
+- Secret values or personal data that must be excluded:
 
-- What security-relevant metadata would it extract?
-- What macOS APIs or files does it read?
-- Does it read metadata only, or could it expose secret values?
+## Graph representation
 
-## Graph Model
-
-- Node type, for example `ESF_Event`:
+- Node type, such as `Application`:
 - Properties:
 - Relationships to existing nodes:
+- Example query the new evidence would support:
 
-## Elevation Requirements
+## Permissions and platform support
 
-- Works without elevation?
-- Requires root?
-- Requires Full Disk Access?
+- Minimum macOS version and known version differences:
+- Required privileges and Full Disk Access:
+- Result to report when access is unavailable:
 
-## Passive Collection Boundary
+The Core collector is read-only and local. Explain any proposed network
+request or host write so its effect can be reviewed.
 
-- Does it require network calls, telemetry, active probing, exploitation, or writes to the target system?
-- If elevated access is needed but missing, what user-visible failure state should be emitted?
+## Compatibility and tests
 
-## macOS Version Support
-
-- Minimum macOS version:
-- Known version differences:
-
-## Attack Paths Enabled
-
-What new queries or attack paths would this data source enable?
-
-## Contract Verification
-
-- Collector models/schema change:
-- Graph importer/model changes:
-- Optional Red or Blue bridge impact, if any:
-- Suggested fixture regression test:
+Describe changes needed in the collector schema, graph importer, and any Blue
+scan import. Suggest synthetic fixtures for success, missing access, and
+unsupported data.
 
 ## References
 
-- Apple documentation links
-- Research papers or blog posts
+Link relevant Apple documentation or research.

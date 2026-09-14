@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Automator workflow delivery residual markers (Wave-14 red↔blue pair).
+/// Automator workflow delivery residual markers (red↔blue pair).
 /// Honesty: never executes Automator workflows or plants malicious .workflow bundles.
 public struct AutomatorWorkflowParser: ArtifactParser {
     public let manifest = PluginManifest(id: "AUTOMATORWF", tier: .tier2, description: "Automator workflow delivery markers")

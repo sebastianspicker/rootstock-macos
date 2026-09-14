@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-12 compound: Network share mount × remote/FDA path-to-impact.
+/// Compound: Network share mount × remote/FDA path-to-impact.
 public struct NetworkShareRemoteCompoundVector: Check {
     public static let id = "rootstock.vector.network.share_remote_compound"
     public static let cost: CollectorCost = .low
@@ -50,7 +50,7 @@ public struct NetworkShareRemoteCompoundVector: Check {
                     ? "Network share mount × remote compound"
                     : "Network share mount × impact compound", severity: severity, category: .misconfig, resolution: .init(evidence: evidence, attackTechniques: ["T1021.002", "T1135", "T1080"], remediation: [
                     "Prioritize hosts co-locating Network share mount with remote/FDA amplifiers",
-                    "Use Wave-12 lab plans under ROE for purple validation",
+                    "Use corresponding lab plans under ROE for purple validation",
                     "OPSEC: path-to-impact ranking only - not an auto-exploit chain",
                 ], falsePositiveNotes: "Developer hosts may co-locate many dual-use paths; rank production remote hosts first."), runtime: .init(confidence: .medium, dryRunSafe: true, opsecScore: 27, esfExpected: ["OPEN", "EXEC", "READ"])),
         ]

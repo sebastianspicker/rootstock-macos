@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-15 compound: Keychain ACL path plane × remote/FDA path-to-impact.
+/// Compound: Keychain ACL path plane × remote/FDA path-to-impact.
 public struct KeychainAclPathRemoteCompoundVector: Check {
     public static let id = "rootstock.vector.data.keychain_acl_path_remote_compound"
     public static let cost: CollectorCost = .low
@@ -12,7 +12,7 @@ public struct KeychainAclPathRemoteCompoundVector: Check {
         let b = s?.securityToolPaths.count ?? 0
         guard a >= 1, b >= 1 || a >= 2 else { return [] }
         let compound = RemoteCompoundSignals(state: state)
-        guard compound.hasAmplifier || a + b >= 3 else { return [] }
+        guard admitsRemoteCompound(compound, primaryCount: a, secondaryCount: b) else { return [] }
         var evidence: [Evidence] = [
             Evidence(type: "keychain_acl_path_compound", detail: "a=\(a) b=\(b) remote=\(compound.remote) fda=\(compound.fullDiskAccess) sensorThin=\(compound.sensorThin)"),
         ]
@@ -25,7 +25,7 @@ public struct KeychainAclPathRemoteCompoundVector: Check {
         let severity = compound.severity
         return [Finding(id: Self.id, title: compound.remote ? "Keychain ACL path plane × remote compound" : "Keychain ACL path plane × impact compound", severity: severity, category: .misconfig, resolution: .init(evidence: evidence, attackTechniques: ["T1555.001", "T1555", "T1003"], remediation: [
                 "Prioritize hosts co-locating Keychain ACL path plane with remote/FDA amplifiers",
-                "Use Wave-15 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: path-to-impact ranking only - not an auto-exploit chain",
             ], falsePositiveNotes: "Developer hosts may co-locate dual-use paths; rank production remote hosts first."), runtime: .init(confidence: .medium, dryRunSafe: true, opsecScore: 27, esfExpected: ["OPEN", "EXEC", "READ"]))]
     }

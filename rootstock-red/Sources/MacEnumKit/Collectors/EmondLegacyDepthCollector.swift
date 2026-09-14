@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Emond legacy rules residual depth (Wave-15).
+/// Emond legacy rules residual depth.
 /// Safety and behavior: path inventory only; never installs emond rules or enables the legacy event monitor daemon.
 public struct EmondLegacyDepthCollector: Collector {
     public static let id = "collect.emond_legacy_depth"

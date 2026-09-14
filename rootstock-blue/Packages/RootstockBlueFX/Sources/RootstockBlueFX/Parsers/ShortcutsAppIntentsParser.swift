@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Shortcuts / App Intents automation markers (Wave-11 red↔blue pair).
+/// Shortcuts / App Intents automation markers (red↔blue pair).
 ///
 /// Inventories Shortcuts database / App Intents framework path markers for IR.
 /// Honesty: never runs shortcuts or forges intents.
