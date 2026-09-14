@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Screen Sharing / ARD residual depth markers (Wave-15 red↔blue pair).
+/// Screen Sharing / ARD residual depth markers (red↔blue pair).
 /// Honesty: never enables Screen Sharing or ARD, never connects to remote desktops.
 public struct ScreenSharingArdDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "SCREENSHARINGARD", tier: .tier2, description: "Screen Sharing ARD depth markers")

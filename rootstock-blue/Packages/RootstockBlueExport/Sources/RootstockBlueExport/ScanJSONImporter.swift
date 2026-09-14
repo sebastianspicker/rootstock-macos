@@ -62,7 +62,7 @@ public enum ScanJSONImporter: Sendable {
                     "collector.macos_version": root["macos_version"] as? String ?? "",
                     "collector.version": root["collector_version"] as? String ?? "",
                     "family.source": "collector",
-                    FieldTaxonomy.eventType: "collector.scan_meta",
+                    FieldTaxonomy.eventType: EventVocabulary.collectorScanMeta,
                 ],
                 provenance: "scan_id:\(context.id)"
             )
@@ -96,7 +96,7 @@ public enum ScanJSONImporter: Sendable {
             "tcc.auth_value": grant["auth_value"].map { "\($0)" } ?? "",
             "collector.scan_id": scanID,
             "family.source": "collector",
-            FieldTaxonomy.eventType: "tcc.grant",
+            FieldTaxonomy.eventType: EventVocabulary.tccGrant,
         ]
     }
 
@@ -120,13 +120,13 @@ public enum ScanJSONImporter: Sendable {
 
     private static func launchProperties(_ item: [String: Any], scanID: String, label: String, path: String) -> [String: String] {
         [
-            "persist.label": label,
-            "persist.path": path,
-            "persist.program": item["program"] as? String ?? "",
+            FieldTaxonomy.persistenceLabel: label,
+            FieldTaxonomy.persistencePath: path,
+            FieldTaxonomy.persistenceProgram: item["program"] as? String ?? "",
             "persist.type": item["type"] as? String ?? "",
             "collector.scan_id": scanID,
             "family.source": "collector",
-            FieldTaxonomy.eventType: "persistence.launch_item",
+            FieldTaxonomy.eventType: EventVocabulary.persistenceLaunchItem,
         ]
     }
 
@@ -135,18 +135,15 @@ public enum ScanJSONImporter: Sendable {
     public static func importIntoCase(scanURL: URL, casePackage: CasePackage) throws -> Summary {
         let data = try Data(contentsOf: scanURL)
         let (events, summary) = try events(from: data)
-        for event in events {
-            try casePackage.appendEventJSONL(event, stream: "es")
-            try casePackage.insertTimelineEvent(event)
-        }
-        try casePackage.appendCustody(
-            CustodyEvent(
+        try casePackage.appendEventBatch(
+            events,
+            stream: "es",
+            custody: CustodyEvent(
                 actor: "rootstock-blue",
                 action: "import.scan_json",
                 detail: "Imported \(summary.totalEvents) events from \(scanURL.lastPathComponent)"
             )
         )
-        try casePackage.updateHashes()
         return summary
     }
 

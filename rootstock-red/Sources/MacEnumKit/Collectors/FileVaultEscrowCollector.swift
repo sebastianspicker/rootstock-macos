@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// FileVault / recovery escrow posture (Wave-7).
+/// FileVault / recovery escrow posture.
 ///
 /// Research basis: PEASS FV status; MDM recovery escrow research.
 /// Safety and behavior: typed `FileVaultEscrowState`; escrow paths only - never recovery keys or unlock recipes.

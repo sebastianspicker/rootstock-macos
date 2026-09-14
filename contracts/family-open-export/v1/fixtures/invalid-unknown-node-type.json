@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "source": "rootstock-red",
+  "generated_at": "2026-08-27T00:00:00Z",
+  "scope_name": "contract-fixture",
+  "scan_profile": "standard",
+  "node_types": ["Host"],
+  "edge_vocabulary": ["HAS_FINDING"],
+  "nodes": [
+    { "id": "unsupported-1", "type": "Unsupported" }
+  ],
+  "edges": []
+}

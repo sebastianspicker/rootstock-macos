@@ -1,28 +1,31 @@
 # Rootstock Blue
 
-Rootstock Blue is a Swift package for macOS incident-response and offline
-forensic workflows. Its CLI stores normalized events and custody records in a
-`.rsbcase` case package, supports timeline and SQL review, evaluates local
-detection content, and writes JSONL or Markdown output.
+Rootstock Blue is a Swift toolkit for macOS incident response and offline
+forensics. Its command-line interface stores normalized events and custody
+records in a `.rsbcase` directory, builds timelines, runs read-only SQL queries,
+evaluates local detection rules, and exports JSONL or Markdown.
 
-> Alpha status: the runtime label is `0.4.0-dfir` and the bundle marketing
-> version is `0.4.0`. The case schema, parsers, detection format, and CLI may
-> change. The package does not claim evidentiary certification or compatibility
-> with every macOS artifact version.
+> Rootstock Blue is alpha software at runtime version `0.4.0-dfir`. The case
+> schema, parsers, detection format, and CLI may change between releases. Case checks do not
+> certify where evidence came from. Parser compatibility varies by macOS and
+> artifact version. A write journal makes interrupted case updates
+> fail verification; it does not make a multi-file update atomic or durable
+> across power loss.
 
-## Current capabilities
+## What it does
 
-- Create, open, and verify `.rsbcase` packages with custody hashes
-- Parse fixture-backed offline macOS artifacts into normalized event envelopes
+- Create, open, and verify `.rsbcase` packages with a custody log and checksum
+  inventory
+- Parse supported macOS artifacts from a copied or mounted tree into normalized
+  event envelopes
 - Merge events into a case timeline and query the case database
 - Collect bounded artifact packs from an explicit source tree
 - Import core `scan.json` and Red JSONL findings
 - Run bundled detection rules against case events
 - Produce posture, hardening, timeline, JSONL, and Markdown output
-- Import Santa decision logs and expose limited interchange helpers
+- Import Santa decision logs
 - Export an optional family artifact for the core graph
-- Inject mock Endpoint Security event data into a case for tests and controlled
-  exercises
+- Inject synthetic fixture events into a case for tests and controlled exercises
 
 Parser coverage includes TCC, quarantine, persistence, browser history,
 knowledgeC, recent items, package and application metadata, selected network and
@@ -34,10 +37,11 @@ Coverage is fixture-backed and varies by artifact format and macOS release.
 - macOS 14 or later
 - Swift 6.2 or later
 - A copied or mounted artifact tree for offline parsing
-- Full Disk Access and system approvals for applicable live collection paths
+- Full Disk Access when the supplied evidence tree contains paths protected by
+  macOS privacy controls
 
-The default tested path is offline analysis. Live Endpoint Security operation
-also requires signing, entitlements, and user or MDM approval.
+Offline analysis is the supported and tested path. `record inject` reads
+synthetic fixture input; it does not connect to Endpoint Security.
 
 ## Build and test
 
@@ -55,7 +59,7 @@ The debug CLI is `.build/debug/rootstock-blue`.
 
 ## Case workflow
 
-The bundled fixture provides a privacy-safe starting point:
+The bundled synthetic artifact tree is a safe way to try the complete workflow:
 
 ```bash
 BIN=.build/debug/rootstock-blue
@@ -92,38 +96,40 @@ $BIN import findings-jsonl ../rootstock-red/Fixtures/sample_findings.jsonl \
   --case "$CASE"
 ```
 
+The Red findings importer expects one JSON object on each non-blank line. It
+validates the complete input before writing to the case, so a malformed line
+does not leave a partial import. Fix or remove the line and retry.
+
 Export a family artifact for validation or import by the core graph:
 
 ```bash
 $BIN export family "$CASE" /tmp/rootstock-blue-family.json
-python3 ../graph/import_family_export.py \
+uv run --project ../graph --locked rootstock-graph-import-family-export \
   --export /tmp/rootstock-blue-family.json --validate-only
 ```
 
-These bridges are optional. Blue does not use Neo4j or the core collector
-schema as its default case model. See [Product family](../docs/FAMILY.md).
+These bridges are optional. A Blue case has its own model and does not require
+Neo4j or the core collector schema. See the
+[product family map](../docs/FAMILY.md).
 
 ## Artifact and privacy boundaries
 
-- Keychain, notification, browser, and communication parsers are designed to
-  retain metadata required for investigation without exporting secret values
-  or message bodies.
+- Keychain, notification, browser, and communication parsers retain selected
+  investigative metadata while omitting secret values and message bodies.
 - The fixture tree is synthetic. Files with sensitive-looking names contain
   non-secret sentinels or deterministic test data.
-- Real case packages, collected files, reports, browser data, and live Endpoint
-  Security output are confidential.
-- Optional sidecars are not bundled unless explicitly documented.
+- Real case packages, collected files, reports, and browser data are confidential.
+- Optional sidecars are installed and configured separately.
 
 ## Known limitations
 
 - Parser support is selective and does not replace a complete forensic suite.
-- ZIP archive import is disabled. Prepare an already-extracted collection tree
-  in a separate, isolated process, then use `parse` with that tree.
-- Proprietary or unstable artifact formats may use bounded metadata-only
-  handling.
+- For proprietary or unstable formats, a parser may report only the metadata it
+  can handle safely.
 - The acquisition package does not unlock FileVault or acquire physical memory
   from Apple silicon.
-- Live Endpoint Security coverage is not equivalent to the offline test matrix.
+- Synthetic event injection is profile-driven and offline-only; it does not
+  implement Endpoint Security.
 - Rootstock Blue is not an EDR, SIEM, MDM, disk imager, or password-recovery
   tool.
 - Windows and Linux collection are out of scope.
@@ -131,12 +137,16 @@ schema as its default case model. See [Product family](../docs/FAMILY.md).
 See [Limitations](docs/limitations.md), [Non-goals](docs/non-goals.md), and
 [Architecture](docs/architecture.md).
 
-## Fixture layout and detections
+## Documentation
 
-- [Fixture layout](Fixtures/artifacts/macos_sample/FORENSICS_LAYOUT.md)
 - [Detection content](Content/detections/README.md)
+- [Synthetic event profiles](docs/synthetic-event-profiles.md)
 - [Case format](docs/case-package-v0.md)
-- [Integration notes](docs/integrate/)
+- [Integration package](Packages/RootstockBlueIntegrations/Sources/RootstockBlueIntegrations/README.md)
+- [Santa integration](docs/integrate/santa.md)
+- [Fleet and osquery integration](docs/integrate/fleet-osquery.md)
+- [Unified Log sidecar](Tools/sidecars/macos-unifiedlogs/README.md)
+- [Contributor guide](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 
 ## License

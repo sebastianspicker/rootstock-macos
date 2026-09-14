@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// TV.app residual path plane (Wave-16).
+/// TV.app residual path plane.
 /// Safety and behavior: path inventory only; never dumps TV.app media caches or account material.
 public struct TvAppPathPlaneCollector: Collector {
     public static let id = "collect.tv_app_path_plane"

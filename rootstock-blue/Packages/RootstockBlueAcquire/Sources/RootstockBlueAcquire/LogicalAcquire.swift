@@ -1,3 +1,5 @@
+import CryptoKit
+import Darwin
 import Foundation
 import RootstockBlueCore
 import RootstockBlueCase
@@ -61,13 +63,53 @@ public enum LogicalAcquire {
         to destination: URL,
         actor: String = NSUserName()
     ) throws -> AcquisitionMaterializeResult {
+        try materializeFixtureBundle(
+            from: sourceTree,
+            to: destination,
+            actor: actor,
+            afterSourceValidation: nil,
+            afterSourceFileOpen: nil
+        )
+    }
+
+    /// Test-only deterministic race seam. It is internal to the module and is
+    /// not exposed by the product library or CLI.
+    static func materializeFixtureBundleForTesting(
+        from sourceTree: URL,
+        to destination: URL,
+        actor: String = NSUserName(),
+        afterSourceValidation: (() throws -> Void)? = nil,
+        afterSourceFileOpen: ((String) throws -> Void)? = nil
+    ) throws -> AcquisitionMaterializeResult {
+        try materializeFixtureBundle(
+            from: sourceTree,
+            to: destination,
+            actor: actor,
+            afterSourceValidation: afterSourceValidation,
+            afterSourceFileOpen: afterSourceFileOpen
+        )
+    }
+
+    private static func materializeFixtureBundle(
+        from sourceTree: URL,
+        to destination: URL,
+        actor: String,
+        afterSourceValidation: (() throws -> Void)?,
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws -> AcquisitionMaterializeResult {
         let fileManager = FileManager.default
         let source = sourceTree.standardizedFileURL
-        try validateMaterialization(source: source, destination: destination, sourceTree: sourceTree, fileManager: fileManager)
+        let sourceSnapshot = try validateMaterialization(source: source, destination: destination, sourceTree: sourceTree, fileManager: fileManager)
+        try afterSourceValidation?()
         let staging = stagingDirectory(for: destination)
         do {
             try prepareStaging(staging, fileManager: fileManager)
-            let copied = try copyEvidence(from: source, into: staging, fileManager: fileManager)
+            let copied = try copyEvidence(
+                from: source,
+                expectedSnapshot: sourceSnapshot,
+                into: staging,
+                afterSourceFileOpen: afterSourceFileOpen
+            )
             let manifest = try writeBundleMetadata(staging: staging, sourceTree: sourceTree, actor: actor, copied: copied)
             try publishStaging(staging, to: destination, fileManager: fileManager)
             return AcquisitionMaterializeResult(destination: destination, filesCopied: copied.files, custodyHashes: copied.hashes, manifestURL: destination.appendingPathComponent(manifest.lastPathComponent))
@@ -77,14 +119,17 @@ public enum LogicalAcquire {
         }
     }
 
-    private static func validateMaterialization(source: URL, destination: URL, sourceTree: URL, fileManager: FileManager) throws {
+    private static func validateMaterialization(source: URL, destination: URL, sourceTree: URL, fileManager: FileManager) throws -> FileSnapshot {
         let resolvedSource = source.resolvingSymlinksInPath()
         let resolvedDestination = destination.standardizedFileURL.resolvingSymlinksInPath()
         guard pathEntryExistsOrIsSymlink(source, fileManager: fileManager) else { throw RootstockBlueError.io("Source tree not found: \(sourceTree.path)") }
         guard !isSymbolicLink(source, fileManager: fileManager), isDirectory(source, fileManager: fileManager) else { throw RootstockBlueError.io("Source tree must be a real directory, not a symbolic link or file: \(sourceTree.path)") }
+        guard source.path == resolvedSource.path else { throw RootstockBlueError.io("Source tree must not traverse a symbolic link: \(sourceTree.path)") }
         guard !pathsOverlap(resolvedSource, resolvedDestination) else { throw RootstockBlueError.io("Source and destination must not overlap: \(sourceTree.path) and \(destination.path)") }
         guard !pathEntryExistsOrIsSymlink(destination, fileManager: fileManager) else { throw RootstockBlueError.io("Destination already exists and will not be modified: \(destination.path)") }
-        try validateSourceTree(source, fileManager: fileManager)
+        return try openDirectoryNoFollow(at: source) { descriptor in
+            try fileSnapshot(of: descriptor, label: "source tree")
+        }
     }
 
     private static func prepareStaging(_ staging: URL, fileManager: FileManager) throws {
@@ -93,19 +138,28 @@ public enum LogicalAcquire {
         try fileManager.createDirectory(at: staging.appendingPathComponent("evidence", isDirectory: true), withIntermediateDirectories: true)
     }
 
-    private static func copyEvidence(from source: URL, into staging: URL, fileManager: FileManager) throws -> (files: Int, hashes: [String: String]) {
-        guard let enumerator = fileManager.enumerator(at: source, includingPropertiesForKeys: [.isSymbolicLinkKey, .isRegularFileKey, .isDirectoryKey], options: []) else { throw RootstockBlueError.io("Unable to enumerate source tree: \(source.path)") }
-        var copyState = EvidenceCopyState(fileManager: fileManager)
+    private static func copyEvidence(
+        from source: URL,
+        expectedSnapshot: FileSnapshot,
+        into staging: URL,
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws -> (files: Int, hashes: [String: String]) {
+        var copyState = EvidenceCopyState()
         let evidence = staging.appendingPathComponent("evidence", isDirectory: true)
-        while let item = enumerator.nextObject() as? URL {
-            let relative = relativePath(of: item, under: source)
-            let destination = evidence.appendingPathComponent(relative)
-            if try classify(item, fileManager: fileManager) == .directory {
-                try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
-            } else {
-                try copyState.copyFile(item, relative: relative, to: destination)
+        try openDirectoryNoFollow(at: source) { descriptor in
+            guard try fileSnapshot(of: descriptor, label: "source tree") == expectedSnapshot else {
+                throw RootstockBlueError.io("Source tree changed before acquisition")
             }
+            try copyDirectoryContents(
+                directoryFD: descriptor,
+                expectedSnapshot: expectedSnapshot,
+                relativeComponents: [],
+                destinationDirectory: evidence,
+                copyState: &copyState,
+                afterSourceFileOpen: afterSourceFileOpen
+            )
         }
+        try requirePathSnapshot(source, expected: expectedSnapshot, label: "source tree")
         return (copyState.files, copyState.hashes)
     }
 
@@ -128,14 +182,6 @@ public enum LogicalAcquire {
         try fileManager.moveItem(at: staging, to: destination)
     }
 
-    /// Legacy entry - requires destination; does not implement FV unlock.
-    public static func acquire(to destination: URL, actor: String = NSUserName()) throws -> URL {
-        _ = actor
-        throw RootstockBlueError.notImplemented(
-            "Logical acquire(to:) requires a source tree. Use plan(destination:) with materializeFixtureBundle(from:to:), or a dedicated disk-imaging tool. Destination: \(destination.path). FileVault unlock requires credentials."
-        )
-    }
-
     /// Explicit fail path: never crack FileVault.
     public static func unlockFileVault(volumeUUID: String, password: String?) throws {
         guard let password, !password.isEmpty else {
@@ -151,55 +197,285 @@ public enum LogicalAcquire {
 
     // MARK: - Private
 
-    private enum SourceItemKind {
-        case directory
-        case regularFile
+    private struct FileIdentity: Equatable {
+        let device: dev_t
+        let inode: ino_t
+    }
+
+    /// A descriptor snapshot catches ordinary in-place changes as well as path
+    /// replacement. The same descriptor is used for bytes and SHA-256, so the
+    /// manifest always describes the copied bytes even if a hostile writer
+    /// races us; a detected mutation fails the acquisition before publish.
+    private struct FileSnapshot: Equatable {
+        let identity: FileIdentity
+        let size: off_t
+        let modificationSeconds: Int
+        let modificationNanoseconds: Int
     }
 
     private struct EvidenceCopyState {
-        let fileManager: FileManager
         var files = 0
         var hashes: [String: String] = [:]
 
-        mutating func copyFile(_ source: URL, relative: String, to destination: URL) throws {
-            try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-            guard !LogicalAcquire.pathEntryExistsOrIsSymlink(destination, fileManager: fileManager) else {
-                throw RootstockBlueError.io("Source paths collide at destination: \(relative)")
-            }
-            try fileManager.copyItem(at: source, to: destination)
+        mutating func record(relativeComponents: [String], hash: String) {
             files += 1
-            hashes["evidence/\(relative)"] = try Hashing.sha256File(at: destination)
+            hashes["evidence/\(relativeComponents.joined(separator: "/"))"] = hash
         }
     }
 
-    private static func validateSourceTree(_ source: URL, fileManager: FileManager) throws {
-        guard let enumerator = fileManager.enumerator(
-            at: source,
-            includingPropertiesForKeys: [.isSymbolicLinkKey, .isRegularFileKey, .isDirectoryKey],
-            options: []
-        ) else {
-            throw RootstockBlueError.io("Unable to enumerate source tree: \(source.path)")
+    private static func copyDirectoryContents(
+        directoryFD: Int32,
+        expectedSnapshot: FileSnapshot,
+        relativeComponents: [String],
+        destinationDirectory: URL,
+        copyState: inout EvidenceCopyState,
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws {
+        guard try fileSnapshot(of: directoryFD, label: "source directory") == expectedSnapshot else {
+            throw RootstockBlueError.io("Source directory was replaced during acquisition")
         }
+        let enumerationFD = dup(directoryFD)
+        guard enumerationFD >= 0, let directory = fdopendir(enumerationFD) else {
+            if enumerationFD >= 0 { _ = close(enumerationFD) }
+            throw RootstockBlueError.io("Unable to enumerate source directory safely")
+        }
+        defer { closedir(directory) }
 
-        while let item = enumerator.nextObject() as? URL {
-            _ = try classify(item, fileManager: fileManager)
+        while let entry = readdir(directory) {
+            let name = directoryEntryName(entry)
+            guard name != ".", name != ".." else { continue }
+            var entryInfo = stat()
+            guard fstatat(directoryFD, name, &entryInfo, AT_SYMLINK_NOFOLLOW) == 0 else {
+                throw RootstockBlueError.io("Source entry disappeared during acquisition: \(displayPath(relativeComponents, name))")
+            }
+            try copyDirectoryEntry(
+                parentFD: directoryFD,
+                name: name,
+                info: entryInfo,
+                parentComponents: relativeComponents,
+                destinationDirectory: destinationDirectory,
+                copyState: &copyState,
+                afterSourceFileOpen: afterSourceFileOpen
+            )
         }
     }
 
-    private static func classify(_ item: URL, fileManager: FileManager) throws -> SourceItemKind {
-        guard pathEntryExistsOrIsSymlink(item, fileManager: fileManager) else {
-            throw RootstockBlueError.io("Source item disappeared during acquisition preflight: \(item.path)")
+    private static func copyDirectoryEntry(
+        parentFD: Int32,
+        name: String,
+        info: stat,
+        parentComponents: [String],
+        destinationDirectory: URL,
+        copyState: inout EvidenceCopyState,
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws {
+        let relative = parentComponents + [name]
+        switch info.st_mode & S_IFMT {
+        case S_IFDIR:
+            try copyChildDirectory(
+                parentFD: parentFD, name: name, info: info, relative: relative,
+                destinationDirectory: destinationDirectory, copyState: &copyState,
+                afterSourceFileOpen: afterSourceFileOpen
+            )
+        case S_IFREG:
+            try copyRegularFile(
+                parentFD: parentFD, name: name, expected: fileSnapshot(of: info),
+                relativeComponents: relative, destinationDirectory: destinationDirectory,
+                copyState: &copyState, afterSourceFileOpen: afterSourceFileOpen
+            )
+        case S_IFLNK:
+            throw RootstockBlueError.io("Source tree contains a symbolic link, which is not acquired: \(displayPath(parentComponents, name))")
+        default:
+            throw RootstockBlueError.io("Source tree contains a non-regular item, which is not acquired: \(displayPath(parentComponents, name))")
         }
-        if isSymbolicLink(item, fileManager: fileManager) {
-            throw RootstockBlueError.io("Source tree contains a symbolic link, which is not acquired: \(item.path)")
+    }
+
+    private static func copyChildDirectory(
+        parentFD: Int32,
+        name: String,
+        info: stat,
+        relative: [String],
+        destinationDirectory: URL,
+        copyState: inout EvidenceCopyState,
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws {
+        let label = relative.joined(separator: "/")
+        let childFD = try openChildDirectory(parentFD: parentFD, name: name, label: label)
+        defer { _ = close(childFD) }
+        let childSnapshot = try validatedChildSnapshot(childFD, info: info, label: label)
+        let destination = destinationDirectory.appendingPathComponent(name, isDirectory: true)
+        try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        try copyDirectoryContents(
+            directoryFD: childFD, expectedSnapshot: childSnapshot, relativeComponents: relative,
+            destinationDirectory: destination, copyState: &copyState,
+            afterSourceFileOpen: afterSourceFileOpen
+        )
+        try requireEntrySnapshot(parentFD, name: name, expected: childSnapshot, label: label)
+    }
+
+    private static func openChildDirectory(parentFD: Int32, name: String, label: String) throws -> Int32 {
+        let childFD = openat(parentFD, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        guard childFD >= 0 else {
+            throw RootstockBlueError.io("Cannot open source directory without following links: \(label)")
         }
-        if isDirectory(item, fileManager: fileManager) {
-            return .directory
+        return childFD
+    }
+
+    private static func validatedChildSnapshot(_ descriptor: Int32, info: stat, label: String) throws -> FileSnapshot {
+        let childSnapshot = try fileSnapshot(of: descriptor, label: label)
+        guard childSnapshot == fileSnapshot(of: info) else {
+            throw RootstockBlueError.io("Source directory changed during acquisition: \(label)")
         }
-        if isRegularFile(item, fileManager: fileManager) {
-            return .regularFile
+        return childSnapshot
+    }
+
+    private static func copyRegularFile(
+        parentFD: Int32,
+        name: String,
+        expected: FileSnapshot,
+        relativeComponents: [String],
+        destinationDirectory: URL,
+        copyState: inout EvidenceCopyState,
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws {
+        let label = relativeComponents.joined(separator: "/")
+        let sourceFD = try openExpectedSourceFile(parentFD: parentFD, name: name, expected: expected, label: label)
+        defer { _ = close(sourceFD) }
+        try afterSourceFileOpen?(label)
+        let destinationFD = try openStagedDestination(destinationDirectory.appendingPathComponent(name), label: label)
+        defer { _ = close(destinationFD) }
+        let digest = try copyBytes(sourceFD: sourceFD, destinationFD: destinationFD, label: label)
+        try requireUnchangedSourceFile(sourceFD, parentFD: parentFD, name: name, expected: expected, label: label)
+        copyState.record(relativeComponents: relativeComponents, hash: digest)
+    }
+
+    private static func openExpectedSourceFile(parentFD: Int32, name: String, expected: FileSnapshot, label: String) throws -> Int32 {
+        let descriptor = openat(parentFD, name, O_RDONLY | O_NOFOLLOW)
+        guard descriptor >= 0 else {
+            throw RootstockBlueError.io("Cannot open source file without following links: \(label)")
         }
-        throw RootstockBlueError.io("Source tree contains a non-regular item, which is not acquired: \(item.path)")
+        do {
+            guard try fileSnapshot(of: descriptor, label: label) == expected else {
+                throw RootstockBlueError.io("Source file changed during acquisition: \(label)")
+            }
+            return descriptor
+        } catch {
+            _ = close(descriptor)
+            throw error
+        }
+    }
+
+    private static func openStagedDestination(_ url: URL, label: String) throws -> Int32 {
+        let descriptor = open(url.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
+        guard descriptor >= 0 else {
+            throw RootstockBlueError.io("Cannot safely stage source file: \(label)")
+        }
+        return descriptor
+    }
+
+    private static func copyBytes(sourceFD: Int32, destinationFD: Int32, label: String) throws -> String {
+        var hasher = SHA256()
+        var buffer = [UInt8](repeating: 0, count: 64 * 1024)
+        while let bytes = try readChunk(sourceFD, into: &buffer, label: label) {
+            try writeChunk(buffer, count: bytes, to: destinationFD, label: label)
+            hasher.update(data: Data(buffer.prefix(bytes)))
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func readChunk(_ descriptor: Int32, into buffer: inout [UInt8], label: String) throws -> Int? {
+        while true {
+            let count = read(descriptor, &buffer, buffer.count)
+            if count >= 0 { return count == 0 ? nil : Int(count) }
+            if errno != EINTR { throw RootstockBlueError.io("Cannot read source file: \(label)") }
+        }
+    }
+
+    private static func writeChunk(_ buffer: [UInt8], count: Int, to descriptor: Int32, label: String) throws {
+        var written = 0
+        while written < count {
+            let result = buffer.withUnsafeBytes { rawBuffer in
+                write(descriptor, rawBuffer.baseAddress!.advanced(by: written), count - written)
+            }
+            if result >= 0 {
+                written += Int(result)
+            } else if errno != EINTR {
+                throw RootstockBlueError.io("Cannot stage source file: \(label)")
+            }
+        }
+    }
+
+    private static func requireUnchangedSourceFile(
+        _ descriptor: Int32, parentFD: Int32, name: String, expected: FileSnapshot, label: String
+    ) throws {
+        guard try fileSnapshot(of: descriptor, label: label) == expected else {
+            throw RootstockBlueError.io("Source file changed during acquisition: \(label)")
+        }
+        try requireEntrySnapshot(parentFD, name: name, expected: expected, label: label)
+    }
+
+    private static func openDirectoryNoFollow<T>(at url: URL, _ body: (Int32) throws -> T) throws -> T {
+        let components = url.standardizedFileURL.pathComponents
+        guard components.first == "/" else {
+            throw RootstockBlueError.io("Source tree must use an absolute path: \(url.path)")
+        }
+        var descriptor = open("/", O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        guard descriptor >= 0 else { throw RootstockBlueError.io("Cannot open filesystem root") }
+        for component in components.dropFirst() where !component.isEmpty && component != "." {
+            let child = openat(descriptor, component, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+            guard child >= 0 else {
+                _ = close(descriptor)
+                throw RootstockBlueError.io("Cannot open source tree without following links: \(url.path)")
+            }
+            _ = close(descriptor)
+            descriptor = child
+        }
+        defer { _ = close(descriptor) }
+        return try body(descriptor)
+    }
+
+    private static func fileSnapshot(of descriptor: Int32, label: String) throws -> FileSnapshot {
+        var info = stat()
+        guard fstat(descriptor, &info) == 0, (info.st_mode & S_IFMT) == S_IFDIR || (info.st_mode & S_IFMT) == S_IFREG else {
+            throw RootstockBlueError.io("Expected a regular source filesystem object: \(label)")
+        }
+        return fileSnapshot(of: info)
+    }
+
+    private static func fileSnapshot(of info: stat) -> FileSnapshot {
+        FileSnapshot(
+            identity: FileIdentity(device: info.st_dev, inode: info.st_ino),
+            size: info.st_size,
+            modificationSeconds: Int(info.st_mtimespec.tv_sec),
+            modificationNanoseconds: Int(info.st_mtimespec.tv_nsec)
+        )
+    }
+
+    private static func requireEntrySnapshot(_ parentFD: Int32, name: String, expected: FileSnapshot, label: String) throws {
+        var info = stat()
+        guard fstatat(parentFD, name, &info, AT_SYMLINK_NOFOLLOW) == 0,
+              fileSnapshot(of: info) == expected else {
+            throw RootstockBlueError.io("Source entry changed during acquisition: \(label)")
+        }
+    }
+
+    private static func requirePathSnapshot(_ url: URL, expected: FileSnapshot, label: String) throws {
+        var info = stat()
+        guard lstat(url.path, &info) == 0,
+              (info.st_mode & S_IFMT) == S_IFDIR,
+              fileSnapshot(of: info) == expected else {
+            throw RootstockBlueError.io("Source tree changed during acquisition: \(label)")
+        }
+    }
+
+    private static func directoryEntryName(_ entry: UnsafeMutablePointer<dirent>) -> String {
+        withUnsafePointer(to: &entry.pointee.d_name) { names in
+            names.withMemoryRebound(to: CChar.self, capacity: Int(MAXNAMLEN)) { String(cString: $0) }
+        }
+    }
+
+    private static func displayPath(_ parent: [String], _ name: String) -> String {
+        (parent + [name]).joined(separator: "/")
     }
 
     private static func stagingDirectory(for destination: URL) -> URL {

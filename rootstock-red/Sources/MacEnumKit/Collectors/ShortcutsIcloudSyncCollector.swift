@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Shortcuts iCloud sync residual depth (Wave-16).
+/// Shortcuts iCloud sync residual depth.
 /// Safety and behavior: path inventory only; never executes Shortcuts or dumps iCloud-synced automation databases.
 public struct ShortcutsIcloudSyncCollector: Collector {
     public static let id = "collect.shortcuts_icloud_sync"

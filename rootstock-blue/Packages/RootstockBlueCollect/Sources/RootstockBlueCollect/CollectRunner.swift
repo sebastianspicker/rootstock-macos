@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import RootstockBlueCore
 import RootstockBlueCase
@@ -24,6 +25,24 @@ public struct CollectRunner: Sendable {
         into package: CasePackage,
         actor: String = NSUserName()
     ) throws -> Result {
+        try run(
+            pack: pack,
+            sourceRoot: sourceRoot,
+            into: package,
+            actor: actor,
+            afterSourceFileOpen: nil
+        )
+    }
+
+    /// Internal synchronization seam for regression coverage. The hook runs
+    /// only after `openat` has anchored the regular source file descriptor.
+    func run(
+        pack: CollectionPack,
+        sourceRoot: URL,
+        into package: CasePackage,
+        actor: String = NSUserName(),
+        afterSourceFileOpen: ((String) throws -> Void)?
+    ) throws -> Result {
         let preflight = Preflight.check(for: pack, offlineFixtureMode: skipStrictPreflight)
         if !skipStrictPreflight {
             try Preflight.enforce(preflight)
@@ -31,14 +50,17 @@ public struct CollectRunner: Sendable {
 
         let collection = try Self.collectArtifactEvents(
             pack: pack,
-            sourceRoot: sourceRoot,
-            package: package
+            sourceRoot: try Self.validatedSourceRoot(sourceRoot),
+            package: package,
+            afterSourceFileOpen: afterSourceFileOpen
         )
         let events = collection.events + [Self.summaryEvent(for: pack, filesCopied: collection.filesCopied)]
-        try Self.record(events, in: package, actor: actor)
-        try CaseEventSink(package: package, actor: actor).noteCustody(
-            action: "collect",
-            detail: "pack=\(pack.name) files=\(collection.filesCopied) events=\(events.count) root=\(sourceRoot.path)"
+        try CaseEventSink(package: package, actor: actor).append(
+            events,
+            custody: EventCustodyNote(
+                action: "collect",
+                detail: "pack=\(pack.name) files=\(collection.filesCopied) events=\(events.count) root=\(sourceRoot.path)"
+            )
         )
 
         return Result(
@@ -52,29 +74,157 @@ public struct CollectRunner: Sendable {
     private static func collectArtifactEvents(
         pack: CollectionPack,
         sourceRoot: URL,
-        package: CasePackage
+        package: CasePackage,
+        afterSourceFileOpen: ((String) throws -> Void)?
     ) throws -> (filesCopied: Int, events: [EventEnvelope]) {
-        let fileManager = FileManager.default
         var filesCopied = 0
         var events: [EventEnvelope] = []
+        var plannedPaths = Set<String>()
 
         for artifact in pack.artifacts {
             for relativePath in artifactPaths(for: artifact) {
-                let sourceURL = sourceRoot.appendingPathComponent(relativePath)
-                guard fileManager.fileExists(atPath: sourceURL.path) else { continue }
+                guard plannedPaths.insert(relativePath).inserted else { continue }
+                guard let source = try openValidatedSourceFile(
+                    relativePath: relativePath,
+                    under: sourceRoot
+                ) else { continue }
+                defer { _ = close(source.descriptor) }
+                try afterSourceFileOpen?(relativePath)
                 let destinationName = "\(pack.name)/\(relativePath)"
-                _ = try package.copyArtifact(from: sourceURL, relativeName: destinationName)
+                _ = try package.copyArtifact(
+                    fromFileDescriptor: source.descriptor,
+                    relativeName: destinationName
+                )
                 filesCopied += 1
                 events.append(artifactEvent(
                     pack: pack,
                     artifact: artifact,
-                    sourceURL: sourceURL,
+                    sourceURL: source.url,
                     relativePath: relativePath,
                     destinationName: destinationName
                 ))
             }
         }
         return (filesCopied, events)
+    }
+
+    /// Normalizes a collection root once, then refuses roots reached through a
+    /// link. The equality check includes ancestor links, not only a link at the
+    /// final root component.
+    private static func validatedSourceRoot(_ sourceRoot: URL) throws -> URL {
+        let supplied = sourceRoot.standardizedFileURL
+        let canonical = supplied.resolvingSymlinksInPath().standardizedFileURL
+        guard supplied.path == canonical.path else {
+            throw RootstockBlueError.io("collection source root must be canonical and not use symbolic links")
+        }
+        try requireDirectory(supplied, label: "collection source root")
+        return canonical
+    }
+
+    /// Opens each component relative to a root directory descriptor. `openat`
+    /// plus `O_NOFOLLOW` prevents a post-validation parent swap from changing
+    /// the source read by CasePackage.
+    private static func openValidatedSourceFile(relativePath: String, under root: URL) throws -> (descriptor: Int32, url: URL)? {
+        let components = try validatedArtifactComponents(relativePath)
+        guard let parent = try openArtifactParent(components: components, under: root) else { return nil }
+        defer { _ = close(parent.descriptor) }
+        return try openRegularArtifact(
+            name: String(components.last!), parent: parent, root: root
+        )
+    }
+
+    private static func validatedArtifactComponents(_ relativePath: String) throws -> [Substring] {
+        let components = relativePath.split(separator: "/", omittingEmptySubsequences: false)
+        guard !relativePath.isEmpty,
+              !relativePath.hasPrefix("/"),
+              components.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." })
+        else {
+            throw RootstockBlueError.io("collection artifact path must be a safe relative path")
+        }
+        return components
+    }
+
+    private static func openArtifactParent(
+        components: [Substring], under root: URL
+    ) throws -> (descriptor: Int32, url: URL)? {
+        var descriptor = try openCollectionRoot(root)
+        var candidate = root
+        for component in components.dropLast() {
+            let name = String(component)
+            let next = openat(descriptor, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+            guard next >= 0 else {
+                _ = close(descriptor)
+                if errno == ENOENT { return nil }
+                throw RootstockBlueError.io("collection source contains an unsafe path component: \(candidate.appendingPathComponent(name).path)")
+            }
+            _ = close(descriptor)
+            descriptor = next
+            candidate.appendPathComponent(name, isDirectory: true)
+        }
+        return (descriptor, candidate)
+    }
+
+    private static func openCollectionRoot(_ root: URL) throws -> Int32 {
+        let descriptor = open(root.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        guard descriptor >= 0 else {
+            throw RootstockBlueError.io("cannot open collection source root without following links")
+        }
+        return descriptor
+    }
+
+    private static func openRegularArtifact(
+        name: String, parent: (descriptor: Int32, url: URL), root: URL
+    ) throws -> (descriptor: Int32, url: URL)? {
+        let fileDescriptor = openat(parent.descriptor, name, O_RDONLY | O_NOFOLLOW)
+        guard fileDescriptor >= 0 else {
+            if errno == ENOENT { return nil }
+            throw RootstockBlueError.io("collection source contains an unsafe artifact path: \(parent.url.appendingPathComponent(name).path)")
+        }
+        do {
+            try requireRegularArtifact(fileDescriptor, path: parent.url.appendingPathComponent(name).path)
+            let url = parent.url.appendingPathComponent(name).standardizedFileURL
+            guard url.path.hasPrefix(root.path + "/") else {
+                throw RootstockBlueError.io("collection artifact escapes source root")
+            }
+            return (fileDescriptor, url)
+        } catch {
+            _ = close(fileDescriptor)
+            throw error
+        }
+    }
+
+    private static func requireRegularArtifact(_ descriptor: Int32, path: String) throws {
+        var info = stat()
+        guard fstat(descriptor, &info) == 0, (info.st_mode & S_IFMT) == S_IFREG else {
+            throw RootstockBlueError.io("collection source path is not a real regular file: \(path)")
+        }
+    }
+
+    private enum SourceNodeType {
+        case regularFile
+        case directory
+        case symbolicLink
+        case other
+    }
+
+    private static func requireDirectory(_ url: URL, label: String) throws {
+        guard try nodeTypeIfPresent(at: url) == .directory else {
+            throw RootstockBlueError.io("\(label) must be a real directory")
+        }
+    }
+
+    private static func nodeTypeIfPresent(at url: URL) throws -> SourceNodeType? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else {
+            if errno == ENOENT { return nil }
+            throw RootstockBlueError.io("cannot inspect collection source path: \(url.path)")
+        }
+        switch info.st_mode & S_IFMT {
+        case S_IFREG: return .regularFile
+        case S_IFDIR: return .directory
+        case S_IFLNK: return .symbolicLink
+        default: return .other
+        }
     }
 
     private static func artifactEvent(
@@ -113,13 +263,6 @@ public struct CollectRunner: Sendable {
             confidence: 1.0
             )
         )
-    }
-
-    private static func record(_ events: [EventEnvelope], in package: CasePackage, actor: String) throws {
-        let sink = CaseEventSink(package: package, actor: actor)
-        for event in events {
-            try sink.append(event)
-        }
     }
 
     /// Map logical artifact names to relative paths under a macOS-like tree.

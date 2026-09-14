@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rootstock.dev/contracts/family-open-export/v1/schema.json",
+  "title": "Rootstock Family Open Export v1",
+  "description": "The accepted v1 graph artifact boundary enforced by rootstock-graph-import-family-export.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "source",
+    "generated_at",
+    "scope_name",
+    "scan_profile",
+    "node_types",
+    "edge_vocabulary",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "source": { "enum": ["rootstock-red", "rootstock-blue"] },
+    "generated_at": { "$ref": "#/$defs/nonEmptyString" },
+    "scope_name": { "$ref": "#/$defs/nonEmptyString" },
+    "scan_profile": { "$ref": "#/$defs/nonEmptyString" },
+    "node_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nodeType" }
+    },
+    "edge_types": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edgeType" }
+    },
+    "edge_vocabulary": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/edgeType" }
+    },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    }
+  },
+  "additionalProperties": { "$ref": "#/$defs/jsonValue" },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "nodeType": {
+      "enum": ["Finding", "Host", "LaunchItem", "Protection"]
+    },
+    "edgeType": {
+      "enum": ["HAS_FINDING", "HAS_LAUNCH_ITEM", "HAS_PROTECTION"]
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "type": { "$ref": "#/$defs/nodeType" }
+      },
+      "additionalProperties": { "$ref": "#/$defs/jsonValue" }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to", "type"],
+      "properties": {
+        "from": { "$ref": "#/$defs/nonEmptyString" },
+        "to": { "$ref": "#/$defs/nonEmptyString" },
+        "type": { "$ref": "#/$defs/edgeType" }
+      },
+      "additionalProperties": { "$ref": "#/$defs/jsonValue" }
+    },
+    "jsonValue": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/jsonValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/jsonValue" } }
+      ]
+    }
+  }
+}

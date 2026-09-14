@@ -1,40 +1,40 @@
 # Rootstock documentation
 
-This directory contains the maintained public documentation for the Core,
-Rootstock Red, and Rootstock Blue source trees.
+Start with a component README for installation and commands. Use these guides
+when you need to understand settings, evidence, or how the tools work together.
 
-## Start here
+## Repository documentation
 
-- [Product family](FAMILY.md) describes component boundaries, artifacts, and
-  explicit interoperability commands.
-- [Architecture](../ARCHITECTURE.md) describes runtime boundaries, contracts,
-  and data flow.
-- [Threat model](THREAT_MODEL.md) describes data sensitivity, network access,
-  mutation boundaries, and operator assumptions.
-- [Quality gates](QUALITY.md) lists the checks used for the alpha candidate.
-- [Release procedure](RELEASING.md) records the approval-only publication
-  sequence. It does not authorize a release.
-- [FAQ](FAQ.md) covers common setup and interpretation questions.
-- [Frontend and reports](frontend.md) describes the maintained viewer and
-  report interfaces.
-- [Technical comparison](COMPARISON.md) defines the repository's scope relative
-  to adjacent tools without claiming feature parity.
+- [Architecture](ARCHITECTURE.md) describes implemented components,
+  dependencies, runtime flows, state ownership, and extension rules.
+- [Product family](FAMILY.md) lists supported artifact handoffs.
+- [Configuration](CONFIGURATION.md) explains environment variables, input files, and
+  local services.
+- [Threat model](THREAT_MODEL.md) records security assumptions, sensitive data,
+  and technical limitations.
+- [Quality gates](QUALITY.md) documents the shared verifier.
+- [Release procedure](RELEASING.md) covers preparing, checking, and publishing a Core alpha.
+- [FAQ](FAQ.md) covers common collection and graph questions.
+- [Frontend and reports](frontend.md) describes the static and live viewer.
+- [Collector benchmarks](benchmarks/README.md) explains the measurement script
+  and its private output files.
+- [Screenshot capture](screenshots.md) explains how to reproduce the public
+  synthetic viewer tour.
+- [Interface design](../DESIGN.md) defines maintained viewer design rules.
 
-## Detailed material
+## Component documentation
 
-- [Guides](guides/) contain operator and module instructions.
-- [Design documents](design-docs/) explain implemented architectural
-  decisions. Source and tests define current behavior.
-- [References](references/) contain the technique catalog, severity mapping,
-  and macOS security reference material.
-- [Research notes](research/) provide background for selected implemented
-  behavior. They are not compatibility guarantees.
-- [Benchmarks](benchmarks/) define public methods and acceptance thresholds.
-  Machine-specific results remain local.
-- [Interface design](../DESIGN.md) records viewer and report presentation rules.
+- [Collector](../collector/README.md)
+- [Graph](../graph/README.md)
+- [cve-scan](../modules/cve-scan/README.md)
+- [Rootstock Red](../rootstock-red/README.md)
+- [Rootstock Blue](../rootstock-blue/README.md)
+- [RootstockMacFacts](../packages/RootstockMacFacts/README.md)
+- [Interchange contracts](../contracts/README.md)
 
-## Documentation policy
-
-Only indexed, maintained documents are part of the public documentation set.
-Private data and reproducible local output belong in ignored paths. Statements
-about current behavior must remain supported by source or tests.
+See [examples](../examples/README.md), the
+[Neo4j Browser guide](guides/neo4j-browser-quickstart.md),
+[design decisions](design-docs/index.md), and the shared
+[technique catalog](references/technique-catalog.md),
+[severity mapping](references/severity-mapping.md), and
+[entitlement categories](references/entitlement-categories.md).

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Network share / SMB mount dual-use lateral (Wave-12).
+/// Network share / SMB mount dual-use lateral.
 ///
 /// Research basis: public 2025–26 macOS Network share mount tradecraft research.
 /// Safety and behavior: typed path inventory only; never mounts attacker shares or writes credentials to NetAuth.

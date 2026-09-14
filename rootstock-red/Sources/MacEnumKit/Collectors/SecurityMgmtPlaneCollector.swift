@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Security-product management-plane / privileged-XPC unload class (Wave-8).
+/// Security-product management-plane / privileged-XPC unload class.
 ///
 /// Research basis: XM Cyber–class security-tool management-plane research; sysext unload awareness.
 /// Safety and behavior: typed `SecurityMgmtPlaneState`; path inventory only - never unloads sensors.

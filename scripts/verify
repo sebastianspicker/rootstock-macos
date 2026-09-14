@@ -1,0 +1,360 @@
+#!/bin/sh
+# Run one explicit Rootstock verification lane from the repository root.
+
+set -eu
+
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+
+usage() {
+    cat <<'EOF'
+Usage: sh scripts/verify <quality|release|swift-core|swift-family|graph|cve|web|shell|neo4j|full>
+
+Every selected lane fails when a required tool, dependency environment, or
+runtime service is unavailable. The neo4j lane requires a reachable operator-
+controlled Neo4j instance plus NEO4J_PASSWORD, NEO4J_READ_USER, and
+NEO4J_READ_PASSWORD. The full lane includes neo4j.
+EOF
+}
+
+fail() {
+    printf '%s\n' "ERROR: $*" >&2
+    exit 1
+}
+
+need() {
+    command -v "$1" >/dev/null 2>&1 || fail "required tool '$1' is not available"
+}
+
+run() {
+    printf '\n==> %s\n' "$*"
+    "$@"
+}
+
+graph_uv() {
+    need uv
+    run uv run --project "$ROOT/graph" --locked "$@"
+}
+
+run_swiftlint() {
+    swiftlint_bin=${SWIFTLINT_BIN:-swiftlint}
+    case "$swiftlint_bin" in
+        */*) [ -x "$swiftlint_bin" ] || fail "SwiftLint executable not found: $swiftlint_bin" ;;
+        *) need "$swiftlint_bin" ;;
+    esac
+    swiftlint_version=$("$swiftlint_bin" version)
+    [ "$swiftlint_version" = "0.65.0" ] ||
+        fail "SwiftLint 0.65.0 is required (found $swiftlint_version)"
+    run "$swiftlint_bin" lint --config "$ROOT/.swiftlint.yml" --strict --quiet ||
+        fail "SwiftLint reported diagnostics or failed to run"
+}
+
+lane_quality() {
+    need npm
+    need python3
+    need uv
+    [ -x "$ROOT/node_modules/.bin/jscpd" ] ||
+        fail "run npm ci before the quality lane"
+    run python3 "$ROOT/scripts/check-source-size.py" \
+        --max-lines 600 --ratchet "$ROOT/.source-size-baseline.json"
+    graph_uv ruff check "$ROOT/graph/src" "$ROOT/graph/tests" \
+        "$ROOT/scripts" "$ROOT/examples" "$ROOT/docs" \
+        --exclude docs/archive --exclude docs/private
+    graph_uv ruff format --check "$ROOT/graph/src" "$ROOT/graph/tests" \
+        "$ROOT/scripts" "$ROOT/examples" "$ROOT/docs" \
+        --exclude docs/archive --exclude docs/private
+    (
+        cd "$ROOT/modules/cve-scan"
+        run uv run --locked ruff check .
+        run uv run --locked ruff format --check .
+    )
+    (
+        cd "$ROOT"
+        run npm run lint
+        run npm run format:check
+        run "$ROOT/node_modules/.bin/jscpd" --config "$ROOT/.jscpd.json" \
+            --baseline "$ROOT/.jscpd-baseline.json" --fail-on-new-clones
+    )
+    run_swiftlint
+}
+
+lane_release() {
+    need python3
+    need node
+    run python3 "$ROOT/scripts/check-source-size.py" --max-lines 600
+    if [ "${ROOTSTOCK_VERIFY_REQUIRE_CLEAN:-0}" = "1" ]; then
+        if [ "${ROOTSTOCK_VERIFY_CANDIDATE_INDEX:-0}" = "1" ]; then
+            run python3 "$ROOT/scripts/check-release.py" --require-clean --candidate-index
+        else
+            run python3 "$ROOT/scripts/check-release.py" --require-clean
+        fi
+    else
+        run python3 "$ROOT/scripts/check-release.py"
+    fi
+    run node "$ROOT/scripts/build-pages-demo.mjs"
+    run node "$ROOT/scripts/check-pages-demo.mjs"
+}
+
+lane_swift_core() {
+    need swift
+    (
+        cd "$ROOT/collector"
+        run swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+        run swift test --parallel -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+    )
+}
+
+lane_swift_family() {
+    need swift
+    need make
+    need python3
+    need uv
+    need mktemp
+    run python3 "$ROOT/scripts/check-blue-field-taxonomy.py"
+    (
+        family_tmp=$(mktemp -d /tmp/rootstock-family.XXXXXX)
+        trap 'rm -rf "$family_tmp"' EXIT HUP INT TERM
+        red_project="$family_tmp/red-project"
+        red_export="$family_tmp/red-family.json"
+        red_export_repeat="$family_tmp/red-family-repeat.json"
+        blue_case="$family_tmp/blue-ci.rsbcase"
+        blue_export="$family_tmp/blue-family.json"
+        blue_export_repeat="$family_tmp/blue-family-repeat.json"
+        blue_source="$family_tmp/blue-artifacts"
+        mkdir -p "$red_project"
+        cp "$ROOT/contracts/red-findings-to-blue-jsonl/v1/fixtures/valid.jsonl" \
+            "$red_project/findings.jsonl"
+
+        (
+            cd "$ROOT/rootstock-red"
+            run swift build --product rootstock-red -Xswiftc -warnings-as-errors
+            run .build/debug/rootstock-red version
+            run .build/debug/rootstock-red list collectors
+            run .build/debug/rootstock-red export-family \
+                --project "$red_project" --output "$red_export" \
+            --scope swift-family-ci --profile synthetic
+            run .build/debug/rootstock-red export-family \
+                --project "$red_project" --output "$red_export_repeat" \
+                --scope swift-family-ci --profile synthetic
+        )
+        [ -s "$red_export" ] || fail "rootstock-red family export is empty"
+        run python3 - "$red_export" "$red_export_repeat" <<'PY'
+import json
+import sys
+
+exports = [json.load(open(path, encoding="utf-8")) for path in sys.argv[1:]]
+for export in exports:
+    collisions = [node for node in export["nodes"] if node.get("finding_id") in {"a/b", "a?b"}]
+    if len(collisions) != 2 or len({node["id"] for node in collisions}) != 2:
+        raise SystemExit("rootstock-red family export lost collision-distinct findings")
+if {node["id"] for node in exports[0]["nodes"]} != {node["id"] for node in exports[1]["nodes"]}:
+    raise SystemExit("rootstock-red family IDs are not repeat-export stable")
+PY
+        graph_uv rootstock-graph-import-family-export \
+            --export "$red_export" --validate-only
+
+        mkdir -p "$blue_source/Library/Preferences"
+        : > "$blue_source/Library/Preferences/com.apple.security.plist"
+
+        (
+            cd "$ROOT/rootstock-blue"
+            run swift build --product rootstock-blue -Xswiftc -warnings-as-errors
+            run .build/debug/rootstock-blue version
+            run .build/debug/rootstock-blue case create "$blue_case" --name swift-family-ci
+            run .build/debug/rootstock-blue import scan-json "$ROOT/examples/demo-scan.json" --case "$blue_case"
+            run .build/debug/rootstock-blue import scan-json \
+                "$ROOT/contracts/collector-scan/fixtures/valid-family-collision-launch-items.json" --case "$blue_case"
+            run .build/debug/rootstock-blue import findings-jsonl \
+                "$ROOT/contracts/red-findings-to-blue-jsonl/v1/fixtures/valid.jsonl" --case "$blue_case"
+            run .build/debug/rootstock-blue ir posture --case "$blue_case" --source "$blue_source"
+            run .build/debug/rootstock-blue case verify "$blue_case"
+            run .build/debug/rootstock-blue export family "$blue_case" "$blue_export"
+            run .build/debug/rootstock-blue export family "$blue_case" "$blue_export_repeat"
+            if .build/debug/rootstock-blue record start; then
+                fail "unsupported rootstock-blue record start command must fail"
+            fi
+        )
+        [ -s "$blue_export" ] || fail "rootstock-blue family export is empty"
+        run python3 - "$blue_export" "$blue_export_repeat" <<'PY'
+import json
+import sys
+
+export, repeated = [json.load(open(path, encoding="utf-8")) for path in sys.argv[1:]]
+nodes = {node["type"]: node for node in export["nodes"]}
+required = {"Host", "Finding", "LaunchItem", "Protection"}
+missing = required - nodes.keys()
+if missing:
+    raise SystemExit(f"rootstock-blue family export missing node types: {sorted(missing)}")
+host = nodes["Host"]
+if host.get("hostname") != "acme-macbook-pro":
+    raise SystemExit("rootstock-blue family export did not preserve collector hostname")
+launch = nodes["LaunchItem"]
+if not all(launch.get(field) for field in ("label", "path", "program")):
+    raise SystemExit("rootstock-blue family export lost canonical launch-item fields")
+collisions = [node for node in export["nodes"] if node.get("label") in {"a/b", "a?b"}]
+if len(collisions) != 2 or len({node["id"] for node in collisions}) != 2:
+    raise SystemExit("rootstock-blue family export lost collision-distinct launch items")
+if {node["id"] for node in export["nodes"]} != {node["id"] for node in repeated["nodes"]}:
+    raise SystemExit("rootstock-blue family IDs are not repeat-export stable")
+PY
+        graph_uv rootstock-graph-import-family-export \
+            --export "$blue_export" --validate-only
+
+        (
+            cd "$ROOT/rootstock-red"
+            run swift test -Xswiftc -warnings-as-errors
+            run bash Scripts/check-no-lab-link.sh
+            if .build/debug/rootstock-red lab persist install; then
+                fail "rootstock-red lab mutation must fail closed without authorization"
+            fi
+        )
+        (
+            cd "$ROOT/rootstock-blue"
+            run swift test -Xswiftc -warnings-as-errors
+            run make content-validate
+            run make check-non-goals
+            run .build/debug/rootstock-blue detect run --ruleset samples --content-root Content
+        )
+    )
+    (
+        cd "$ROOT/packages/RootstockMacFacts"
+        run swift build -Xswiftc -warnings-as-errors
+        run swift test -Xswiftc -warnings-as-errors
+    )
+    run python3 "$ROOT/scripts/check-technique-catalog.py"
+}
+
+lane_graph() {
+    graph_uv ruff check "$ROOT/graph/src" "$ROOT/graph/tests" "$ROOT/scripts" "$ROOT/examples" "$ROOT/docs" --exclude docs/archive --exclude docs/private
+    graph_uv pytest "$ROOT/graph/tests"
+    graph_uv python "$ROOT/scripts/check-contracts.py"
+    graph_uv python "$ROOT/scripts/check-scan-contract-fields.py"
+    graph_uv python "$ROOT/scripts/validate-scan.py" "$ROOT/examples/demo-scan.json"
+    run bash "$ROOT/graph/scripts/wheel-smoke.sh"
+}
+
+lane_cve() {
+    need uv
+    (
+        cd "$ROOT/modules/cve-scan"
+        run uv run --locked ruff check .
+        run uv run --locked pytest
+    )
+}
+
+lane_web() {
+    need npm
+    need git
+    (
+        cd "$ROOT"
+        run npm run typecheck
+        run npm run lint
+        run node "$ROOT/scripts/test-viewer.mjs"
+        run node "$ROOT/scripts/check-viewer-assets.mjs"
+    )
+}
+
+lane_shell() {
+    need shellcheck
+    need git
+    need xargs
+    [ -n "$(git -C "$ROOT" ls-files -- '*.sh')" ] || fail "no shell files found for shellcheck"
+    (
+        cd "$ROOT"
+        printf '\n==> shellcheck tracked shell sources\n'
+        # shellcheck disable=SC2016 # The nested shell expands its own positional parameters.
+        git ls-files -z -- '*.sh' | xargs -0 sh -c '
+            for shell_source do
+                [ ! -f "$shell_source" ] || shellcheck "$shell_source"
+            done
+        ' sh
+        shellcheck scripts/verify
+    )
+}
+
+lane_neo4j() {
+    [ -n "${NEO4J_PASSWORD:-}" ] || fail "NEO4J_PASSWORD is required for the neo4j lane"
+    [ -n "${NEO4J_READ_USER:-}" ] || fail "NEO4J_READ_USER is required for the neo4j lane"
+    [ -n "${NEO4J_READ_PASSWORD:-}" ] || fail "NEO4J_READ_PASSWORD is required for the neo4j lane"
+    neo4j_uri=${NEO4J_URI:-bolt://localhost:7687}
+    need bash
+    need curl
+    need mktemp
+    run bash "$ROOT/graph/pipeline.sh" "$ROOT/examples/demo-scan.json" --skip-report
+    graph_uv python "$ROOT/scripts/check-neo4j-connection.py" \
+        --uri "$neo4j_uri" \
+        --user "${NEO4J_USER:-neo4j}"
+    (
+        api_port=${ROOTSTOCK_VERIFY_API_PORT:-18080}
+        api_token=${ROOTSTOCK_API_TOKEN:-}
+        if [ -z "$api_token" ]; then
+            api_token=$(uv run --project "$ROOT/graph" --locked python -c 'import secrets; print(secrets.token_urlsafe(32))')
+        fi
+        api_log=$(mktemp -t rootstock-graph-api.XXXXXX)
+        api_pid=''
+        # shellcheck disable=SC2329 # Invoked indirectly by the EXIT trap.
+        cleanup() {
+            if [ -n "$api_pid" ]; then
+                kill "$api_pid" 2>/dev/null || true
+                wait "$api_pid" 2>/dev/null || true
+            fi
+            rm -f "$api_log"
+        }
+        trap cleanup EXIT HUP INT TERM
+        (
+            cd "$ROOT"
+            ROOTSTOCK_API_TOKEN="$api_token" \
+            NEO4J_READ_USER="$NEO4J_READ_USER" \
+            NEO4J_READ_PASSWORD="$NEO4J_READ_PASSWORD" \
+                uv run --project "$ROOT/graph" --locked rootstock-graph-api \
+                --port "$api_port" --neo4j "$neo4j_uri" \
+                --neo4j-user "${NEO4J_USER:-neo4j}"
+        ) >"$api_log" 2>&1 &
+        api_pid=$!
+        attempts=0
+        until curl --fail --silent --show-error \
+            -H "Authorization: Bearer $api_token" \
+            "http://127.0.0.1:$api_port/api/graph" >/dev/null; do
+            attempts=$((attempts + 1))
+            [ "$attempts" -lt 15 ] || {
+                cat "$api_log" >&2 || true
+                fail "graph API did not become ready on 127.0.0.1:$api_port"
+            }
+            sleep 1
+        done
+    )
+}
+
+run_lane() {
+    case "$1" in
+        quality) lane_quality ;;
+        release) lane_release ;;
+        swift-core) lane_swift_core ;;
+        swift-family) lane_swift_family ;;
+        graph) lane_graph ;;
+        cve) lane_cve ;;
+        web) lane_web ;;
+        shell) lane_shell ;;
+        neo4j) lane_neo4j ;;
+        full)
+            lane_quality
+            lane_release
+            lane_swift_core
+            lane_swift_family
+            lane_graph
+            lane_cve
+            lane_web
+            lane_shell
+            lane_neo4j
+            ;;
+        *)
+            usage >&2
+            exit 2
+            ;;
+    esac
+}
+
+[ "$#" -eq 1 ] || {
+    usage >&2
+    exit 2
+}
+run_lane "$1"

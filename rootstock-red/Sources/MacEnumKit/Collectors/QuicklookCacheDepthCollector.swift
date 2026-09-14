@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// QuickLook thumbnail cache residual depth (Wave-14).
+/// QuickLook thumbnail cache residual depth.
 /// Research basis: 2025–26 macOS QuickLook cache depth tradecraft.
 /// Safety and behavior: path inventory only; never dumps QuickLook thumbnail bitmap contents as secret material.
 public struct QuicklookCacheDepthCollector: Collector {

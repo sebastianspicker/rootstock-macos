@@ -17,18 +17,22 @@ public struct HostPostureSnapshot: Sendable, Equatable {
     }
 }
 
-/// Injectable command runner for tests and product wrappers with timeouts.
+/// Product-owned execution boundary for live posture probes.
+///
+/// RootstockMacFacts only supplies paths and parsers. Products choose process
+/// execution, timeouts, permissions, and output capture before injecting a runner.
 public typealias HostPostureCommandRunner = @Sendable (String, [String]) -> String?
 
-/// Read-only probes. Callers map into product models; this kit does not serialize findings.
+/// Neutral posture paths and parsers. Callers map values into product models.
 public enum HostPostureProbes: Sendable {
     public static let spctlPath = "/usr/sbin/spctl"
     public static let csrutilPath = "/usr/bin/csrutil"
     public static let fdesetupPath = "/usr/bin/fdesetup"
 
-    /// Best-effort live snapshot. Returns nils when a probe fails (never throws).
+    /// Parse a best-effort live snapshot supplied by a product-owned runner.
+    /// Returns nils when a probe fails or produces unrecognized output.
     public static func snapshot(
-        run: HostPostureCommandRunner = defaultRunner
+        run: HostPostureCommandRunner
     ) -> HostPostureSnapshot {
         HostPostureSnapshot(
             gatekeeperEnabled: probeGatekeeper(run: run),
@@ -41,33 +45,20 @@ public enum HostPostureProbes: Sendable {
 
     /// Parse `spctl --status` output. Handles "assessments enabled/disabled".
     public static func parseGatekeeperOutput(_ output: String) -> Bool? {
-        let lower = output.lowercased()
-        if lower.contains("assessments enabled") {
-            return true
-        }
-        if lower.contains("assessments disabled") {
-            return false
-        }
-        // Prefer disabled when both tokens appear in noise.
-        if lower.contains("disabled") {
-            return false
-        }
-        if lower.contains("enabled") {
-            return true
-        }
-        return nil
+        parseEnabledState(
+            output.lowercased(),
+            enabledMarkers: ["assessments enabled", "enabled"],
+            disabledMarkers: ["assessments disabled", "disabled"]
+        )
     }
 
     /// Parse `csrutil status` output.
     public static func parseSIPOutput(_ output: String) -> Bool? {
-        let lower = output.lowercased()
-        if lower.contains("disabled") {
-            return false
-        }
-        if lower.contains("enabled") {
-            return true
-        }
-        return nil
+        parseEnabledState(
+            output.lowercased(),
+            enabledMarkers: ["enabled"],
+            disabledMarkers: ["disabled"]
+        )
     }
 
     /// Parse `fdesetup status` output (incl. deferred enablement).
@@ -77,11 +68,14 @@ public enum HostPostureProbes: Sendable {
             "filevault is on",
             "deferred enablement appears to be active"
         ]
-        if enabledMarkers.contains(where: lower.contains) {
+        let hasEnabledMarker = enabledMarkers.contains(where: lower.contains)
+        let disabledMarkers = ["filevault is off", "filevault is disabled"]
+        let hasDisabledMarker = disabledMarkers.contains(where: lower.contains)
+        if hasEnabledMarker && hasDisabledMarker { return nil }
+        if hasEnabledMarker {
             return true
         }
-        let disabledMarkers = ["filevault is off", "filevault is disabled"]
-        if disabledMarkers.contains(where: lower.contains) {
+        if hasDisabledMarker {
             return false
         }
         return parseFileVaultState(lower)
@@ -89,9 +83,26 @@ public enum HostPostureProbes: Sendable {
 
     private static func parseFileVaultState(_ output: String) -> Bool? {
         guard output.contains("filevault") else { return nil }
-        if output.contains(" on") { return true }
-        if output.contains(" off") { return false }
+        let isOn = output.contains(" on")
+        let isOff = output.contains(" off")
+        if isOn && isOff { return nil }
+        if isOn { return true }
+        if isOff { return false }
         return nil
+    }
+
+    private static func parseEnabledState(
+        _ output: String,
+        enabledMarkers: [String],
+        disabledMarkers: [String]
+    ) -> Bool? {
+        let isEnabled = enabledMarkers.contains(where: output.contains)
+        let isDisabled = disabledMarkers.contains(where: output.contains)
+        switch (isEnabled, isDisabled) {
+        case (true, false): return true
+        case (false, true): return false
+        default: return nil
+        }
     }
 
     /// Map optional bool to IR-style enabled string.
@@ -103,41 +114,21 @@ public enum HostPostureProbes: Sendable {
         }
     }
 
-    // MARK: - Live probes
+    // MARK: - Product-executed probes
 
-    public static func probeGatekeeper(run: HostPostureCommandRunner = defaultRunner) -> Bool? {
+    public static func probeGatekeeper(run: HostPostureCommandRunner) -> Bool? {
         guard let output = run(spctlPath, ["--status"]), !output.isEmpty else { return nil }
         return parseGatekeeperOutput(output)
     }
 
-    public static func probeSIP(run: HostPostureCommandRunner = defaultRunner) -> Bool? {
+    public static func probeSIP(run: HostPostureCommandRunner) -> Bool? {
         guard let output = run(csrutilPath, ["status"]), !output.isEmpty else { return nil }
         return parseSIPOutput(output)
     }
 
-    public static func probeFileVault(run: HostPostureCommandRunner = defaultRunner) -> Bool? {
+    public static func probeFileVault(run: HostPostureCommandRunner) -> Bool? {
         guard let output = run(fdesetupPath, ["status"]), !output.isEmpty else { return nil }
         return parseFileVaultOutput(output)
     }
 
-    public static let defaultRunner: HostPostureCommandRunner = { launchPath, args in
-        runProcess(launchPath, args)
-    }
-
-    private static func runProcess(_ launchPath: String, _ args: [String]) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: launchPath)
-        process.arguments = args
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return nil
-        }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)
-    }
 }

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// SSH-agent / key path lateral posture depth (Wave-8).
+/// SSH-agent / key path lateral posture depth.
 ///
 /// Research basis: SSH lateral checklists; agent socket and authorized_keys path awareness.
 /// Safety and behavior: typed `SSHAgentKeyPathState`; paths only - never reads key material.

@@ -1,7 +1,6 @@
 name: forensic-triage
 description: Post-incident offline forensics pack (host state + browser + PoL/MRU + access surface)
 requires_fda: true
-requires_es: false
 artifacts:
   - tcc
   - quarantine

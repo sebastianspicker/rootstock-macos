@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// App sandbox container residual depth markers (Wave-15 red↔blue pair).
+/// App sandbox container residual depth markers (red↔blue pair).
 /// Honesty: never breaks app sandbox or forges container entitlements.
 public struct SandboxContainerDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "SANDBOXCONTAINER", tier: .tier2, description: "Sandbox container depth markers")

@@ -8,15 +8,24 @@
     "node": ">=24.18"
   },
   "scripts": {
+    "lint": "biome lint eslint.config.mjs graph/viewer-css graph/viewer-src scripts && eslint .",
+    "format:check": "biome format eslint.config.mjs graph/viewer-css graph/viewer-src scripts",
     "typecheck": "tsc --noEmit",
     "bundle:css": "node scripts/bundle-viewer-css.mjs",
-    "bundle:js": "esbuild graph/viewer-src/main.ts --bundle --format=iife --platform=browser --target=es2022 --minify --outfile=graph/viewer.bundle.js",
+    "bundle:js": "esbuild graph/viewer-src/main.ts --bundle --format=iife --platform=browser --target=es2022 --minify --outfile=graph/src/rootstock_graph/resources/viewer/viewer.bundle.js",
     "bundle": "npm run bundle:css && npm run bundle:js",
-    "demo:build": "node scripts/build-pages-demo.mjs"
+    "demo:build": "node scripts/build-pages-demo.mjs",
+    "demo:verify": "node scripts/check-pages-demo.mjs",
+    "demo:screenshots": "node scripts/capture-demo-screenshots.mjs"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.12",
     "@types/node": "24.13.2",
+    "@typescript/native": "npm:typescript@7.0.2",
     "esbuild": "0.28.1",
-    "typescript": "7.0.2"
+    "eslint": "10.10.0",
+    "jscpd": "5.1.2",
+    "typescript": "npm:@typescript/typescript6@6.0.3",
+    "typescript-eslint": "8.69.0"
   }
 }

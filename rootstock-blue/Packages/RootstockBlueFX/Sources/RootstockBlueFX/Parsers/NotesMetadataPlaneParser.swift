@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Notes.app metadata collection path plane markers (Wave-14 red↔blue pair).
+/// Notes.app metadata collection path plane markers (red↔blue pair).
 /// Honesty: never reads Notes body contents or exports note secrets.
 public struct NotesMetadataPlaneParser: ArtifactParser {
     public let manifest = PluginManifest(id: "NOTESMETADATA", tier: .tier2, description: "Notes metadata plane markers")

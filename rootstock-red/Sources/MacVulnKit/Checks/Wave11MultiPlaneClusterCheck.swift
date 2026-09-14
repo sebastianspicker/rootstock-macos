@@ -1,9 +1,9 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-11 compound ranking (URL handlers × launchd overrides × browser extensions × Shortcuts).
+/// Multi-plane compound ranking (URL handlers × launchd overrides × browser extensions × Shortcuts).
 ///
-/// Research basis: engagement narrative across Wave-11 red↔blue pair themes.
+/// Research basis: engagement narrative across red↔blue pair themes.
 /// Safety and behavior: deterministic compounds over CollectedState; not automated exploit orchestration.
 public struct Wave11MultiPlaneClusterCheck: Check {
     public static let id = "rootstock.check.vuln.wave11_multi_plane_cluster"
@@ -62,7 +62,7 @@ public struct Wave11MultiPlaneClusterCheck: Check {
         let amps = clusterAmplifierLabels(state: state).sorted()
         return Finding(
             id: "\(id).multi_plane",
-            title: "Wave-11 multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))",
+            title: "Multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))",
             severity: compoundSeverity(planes: sorted, amplifiers: amps),
             category: .misconfig,
             resolution: .init(
@@ -71,10 +71,10 @@ public struct Wave11MultiPlaneClusterCheck: Check {
                 remediation: [
                     "Prioritize hosts co-locating launchd-override + browser-extension + remote amplifiers",
                     "Close remote access and restore disabled security products before lower-tier inventory",
-                    "Use Wave-11 lab plans under ROE for purple validation of expected telemetry",
+                    "Use corresponding lab plans under ROE for purple validation of expected telemetry",
                     "OPSEC: treat multi-plane compounds as engagement narrative, not an exploit script",
                 ],
-                falsePositiveNotes: "Developer workstations may legitimately co-locate many Wave-11 planes. Rank production hosts with remote/FDA/SIP amplifiers first."
+                falsePositiveNotes: "Developer workstations may legitimately co-locate many planes. Rank production hosts with remote/FDA/SIP amplifiers first."
             ),
             runtime: .init(confidence: .low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ", "WRITE"])
         )
@@ -93,7 +93,7 @@ public struct Wave11MultiPlaneClusterCheck: Check {
             Evidence(type: "amplifiers", detail: amplifierDetail),
             Evidence(type: "stage_labels", detail: "stages=\(stages.joined(separator: "|")) (labels only - not auto-exploit)"),
             Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"),
-            Evidence(type: "honesty", detail: "Wave-11 multi-plane ranking is path-to-impact narrative for operators. Rootstock Red does not register URL schemes, disable launchd security jobs, dump browser extension secrets, or run Shortcuts/App Intents."),
+            Evidence(type: "honesty", detail: "Multi-plane ranking is path-to-impact narrative for operators. Rootstock Red does not register URL schemes, disable launchd security jobs, dump browser extension secrets, or run Shortcuts/App Intents."),
         ]
     }
 

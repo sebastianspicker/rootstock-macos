@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
     static func assessPackageKitInstallerDesign(_ events: [EventEnvelope]) -> [Finding] {
         let rows = events.filter {
@@ -131,7 +130,7 @@ extension HardeningAssessment {
         ]
     }
 
-    // MARK: - Wave-11 multi-plane red↔blue pair assessments
+    // MARK: - Multi-plane red↔blue pair assessments
 
     static func assessURLSchemeHandler(_ events: [EventEnvelope]) -> [Finding] {
         let rows = events.filter {
@@ -249,7 +248,7 @@ extension HardeningAssessment {
             ),
         ]
     }
-    // MARK: - Wave-12 multi-plane red↔blue pair assessments
+    // MARK: - Multi-plane red↔blue pair assessments
     private static func hasMultiAppStealerTag(_ event: EventEnvelope) -> Bool { containsAny((event.fields["stealer.risk_tags"] ?? "").lowercased(), terms: ["multi_app_collection"]) }
     private static func isRiskyStealerPath(_ event: EventEnvelope, multiApp: Bool) -> Bool {
         let tags = (event.fields["stealer.risk_tags"] ?? "").lowercased()

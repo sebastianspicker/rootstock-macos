@@ -28,11 +28,10 @@ public struct PreflightReport: Sendable {
 
 /// Honest permission checklist - never silent TCC/FDA bypass.
 public enum Preflight {
-    /// - Parameter offlineFixtureMode: When true, FDA/ES are not required (offline tree / CI).
+    /// - Parameter offlineFixtureMode: When true, FDA is not required (offline tree / CI).
     public static func check(for pack: CollectionPack, offlineFixtureMode: Bool = false) -> PreflightReport {
         PreflightReport(items: [
             fullDiskAccessItem(pack: pack, offlineFixtureMode: offlineFixtureMode),
-            endpointSecurityItem(pack: pack, offlineFixtureMode: offlineFixtureMode),
             PreflightItem(
                 name: "Data volume unlocked",
                 ok: true,
@@ -73,28 +72,6 @@ public enum Preflight {
             ok: true,
             detail: "Not required for this pack",
             required: false
-        )
-    }
-
-    private static func endpointSecurityItem(
-        pack: CollectionPack,
-        offlineFixtureMode: Bool
-    ) -> PreflightItem {
-        if offlineFixtureMode || !pack.requiresES {
-            return PreflightItem(
-                name: "Endpoint Security System Extension",
-                ok: true,
-                detail: pack.requiresES
-                    ? "Offline/fixture mode - ES extension not required"
-                    : "Not required for this pack",
-                required: false
-            )
-        }
-        return PreflightItem(
-            name: "Endpoint Security System Extension",
-            ok: false,
-            detail: "Approve RootstockBlue ES system extension (requires Apple ES entitlement for production)",
-            required: true
         )
     }
 

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Unified log / logarchive observation depth markers (Wave-12 red↔blue pair).
+/// Unified log / logarchive observation depth markers (red↔blue pair).
 ///
 /// Honesty: never dumps private unified-log message bodies or force-collects other users' logarchives.
 public struct UnifiedLogObservationParser: ArtifactParser {

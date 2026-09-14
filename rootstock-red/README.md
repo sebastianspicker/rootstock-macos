@@ -1,28 +1,28 @@
 # Rootstock Red
 
-Rootstock Red is a Swift package for authorized macOS security assessment. The
-default `rootstock-red` executable collects host posture and writes structured
-findings. A separate `rootstock-red-lab` executable contains reversible
-technique-validation actions with explicit authorization checks and dry-run
-defaults.
+Rootstock Red is a Swift toolkit for authorized macOS security assessment. Its
+main executable, `rootstock-red`, collects host posture and reports structured
+findings. The separate `rootstock-red-lab` executable provides reversible
+technique-validation actions for controlled environments. Lab commands ask the
+operator to identify themselves and the engagement, but the software cannot
+verify written authorization.
 
-> Alpha status: the package reports version `0.1.0`. Finding schemas, check and
-> vector identifiers, CLI output, and lab behavior may change. It is not a C2
-> framework or a production implant.
+> Rootstock Red is alpha software at version `0.1.0`. Finding schemas,
+> identifiers, CLI output, and lab behavior may change between releases.
 
-## Current capabilities
+## What it does
 
 - Host, protection, security-product, persistence, TCC/FDA, identity, MDM,
   code-signing, entitlement, browser-path, and network-sharing assessment
 - Structured findings with evidence, ATT&CK identifiers, and OPSEC annotations
 - JSON, JSONL, SARIF, and Markdown output
 - Project directories with an artifact ledger
-- Registered read-only checks and path-to-impact vector assessments
+- Registered read-only checks and technique-oriented vector assessments
 - An optional family export that the core graph can validate and import
-- A separately linked lab executable for authorization-gated validation plans
+- A separately linked lab executable for dry-run validation plans and
+  explicitly enabled lab actions
 
-The default assessment executable does not link `RootstockLab`,
-`MacAgentKit`, `MacTransportKit`, or `RootstockMythicAdapter`.
+The default assessment executable does not link `RootstockLab`.
 
 ## Requirements
 
@@ -42,7 +42,7 @@ swift run rootstock-red version
 
 ## Assessment usage
 
-List the registered surfaces:
+List the available collectors, checks, and lab actions:
 
 ```bash
 swift run rootstock-red list collectors
@@ -59,8 +59,9 @@ swift run rootstock-red audit \
   --project /tmp/rootstock-red-project --format jsonl
 ```
 
-Network egress is disabled in assessment mode unless `--allow-network` is
-provided.
+The assessment executable currently has no network client. `--allow-network`
+records the operator's policy choice for a future or registered network-aware
+module. It is not a central network sandbox.
 
 The kill switch prevents execution when this file exists:
 
@@ -78,12 +79,13 @@ bridge consumed by the core graph importer:
 swift run rootstock-red export-family \
   --project /tmp/rootstock-red-project \
   --output /tmp/rootstock-red-family.json
-python3 ../graph/import_family_export.py \
+uv run --project ../graph --locked rootstock-graph-import-family-export \
   --export /tmp/rootstock-red-family.json --validate-only
 ```
 
-This bridge is explicit. Red does not emit the core collector's `scan.json` and
-does not feed Neo4j by default. See [Product family](../docs/FAMILY.md).
+The export is an optional interchange file. Red does not write the core
+collector's `scan.json` or connect directly to Neo4j. See the
+[product family map](../docs/FAMILY.md) for the boundaries between products.
 
 ## Lab executable
 
@@ -95,10 +97,12 @@ swift run rootstock-red-lab run lab.persist.shellrc plan \
   --i-am-authorized --scope ENGAGEMENT-ID --operator OPERATOR
 ```
 
-Lab commands require authorization metadata and default to dry-run behavior.
-Some actions can create or remove system state when an operator explicitly
-selects the non-dry-run path. Use them only on systems covered by written rules
-of engagement. The default `rootstock-red` binary rejects lab actions.
+Lab commands require an operator name and engagement scope, and they start in
+dry-run mode. These values make the invocation attributable; they do not
+authenticate the operator or establish permission. Some actions accept paths
+and can change local state after the operator passes `--no-dry-run`. Review the
+plan and resolved paths before doing so, and run lab actions only under written
+rules of engagement. The default `rootstock-red` executable cannot run them.
 
 See [Lab boundary](NOT_FOR_PRODUCTION_IMPLANT.md) and
 [Acceptable use](ACCEPTABLE_USE.md).
@@ -116,18 +120,18 @@ examples and tests use synthetic values.
 - TCC and security-product visibility varies with privileges and macOS release.
 - Several collectors use path or metadata presence because proprietary formats
   are not parsed.
-- OPSEC scores are assessment annotations, not measurements of detection
-  probability.
-- Transport libraries are unlinked skeletons, not supported runtime
-  products.
-- The family export is an optional interchange format, not a shared runtime or
-  schema with the core collector.
+- OPSEC scores describe how observable an assessment action is expected to be;
+  they are not detection probabilities.
+- The family export is an optional interchange format. Red and the core
+  collector do not share a runtime or native schema.
 
-## Architecture and extension points
+## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Finding schema](docs/FINDING_SCHEMA.md)
 - [Module API](docs/MODULE_API.md)
+- [Acceptable use](ACCEPTABLE_USE.md)
+- [Lab boundary](NOT_FOR_PRODUCTION_IMPLANT.md)
 - [Security policy](SECURITY.md)
 
 The default executable links `RootstockCore`, `MacOpsecKit`, `MacArtifactKit`,

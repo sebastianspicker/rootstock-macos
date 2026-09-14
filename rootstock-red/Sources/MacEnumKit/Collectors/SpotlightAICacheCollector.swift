@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Spotlight / mdworker / on-device AI-cache data-access class (Wave-8).
+/// Spotlight / mdworker / on-device AI-cache data-access class.
 ///
 /// Research basis: Sploitlight-class Spotlight research; on-device AI cache path awareness.
 /// Safety and behavior: typed `SpotlightAICacheState`; never dumps index, model, or user content.

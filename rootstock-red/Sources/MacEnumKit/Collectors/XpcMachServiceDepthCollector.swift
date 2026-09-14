@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// XPC Mach service residual depth (Wave-15).
+/// XPC Mach service residual depth.
 /// Safety and behavior: path inventory only; never registers XPC services or injects into Mach ports.
 public struct XpcMachServiceDepthCollector: Collector {
     public static let id = "collect.xpc_mach_service_depth"

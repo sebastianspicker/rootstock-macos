@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-10 compound depth: third-party extractor × quarantine / Gatekeeper posture.
+/// Compound depth: third-party extractor × quarantine / Gatekeeper posture.
 ///
 /// Research basis: Unit 42 / Jamf archive extractor Gatekeeper non-inheritance research.
 /// Safety and behavior: extractor × (GK-off | quarantine hits | archive drops); never strips quarantine.

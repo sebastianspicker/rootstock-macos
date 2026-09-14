@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import RootstockBlueCase
 import RootstockBlueCore
@@ -18,7 +19,7 @@ public enum FamilyOpenExporter: Sendable {
         scanProfile: String = "offline-dfir",
         generatedAt: Date = Date()
     ) -> [String: Any] {
-        let hostName = events.first(where: { $0.eventType == "ir.posture.host" })?.fields["host.hostname"] ?? caseName
+        let hostName = hostName(from: events, fallback: caseName)
         var graph = FamilyOpenGraph(hostName: hostName, caseName: caseName)
         for event in events {
             graph.append(event)
@@ -36,40 +37,47 @@ public enum FamilyOpenExporter: Sendable {
 
         init(hostName: String, caseName: String) {
             self.hostName = hostName
-            self.hostID = "Host:\(FamilyOpenExporter.sanitize(hostName))"
+            self.hostID = FamilyOpenExporter.nodeID(type: "Host", rawKey: hostName)
             self.caseName = caseName
             self.nodes = [["id": hostID, "type": "Host", "name": hostName, "hostname": hostName, "case_name": caseName]]
         }
 
         mutating func append(_ event: EventEnvelope) {
-            if event.eventType == "ir.posture.protection" {
+            if event.eventType == EventVocabulary.postureProtection {
                 appendProtection(event)
-            } else if event.eventType == "persistence.item" || event.sourcePlugin == "AUTOSTART" {
+            } else if EventVocabulary.isPersistence(event.eventType) || event.sourcePlugin == "AUTOSTART" {
                 appendLaunchItem(event)
-            } else if event.eventType == "finding.import" || event.eventType.hasPrefix("harden.") || event.fields["finding.id"] != nil {
+            } else if event.eventType == EventVocabulary.importedFinding || event.eventType.hasPrefix("harden.") || event.fields["finding.id"] != nil {
                 appendFinding(event)
             }
         }
 
         mutating func appendProtection(_ event: EventEnvelope) {
             let name = event.fields["protection.name"] ?? "Protection"
-            let id = "Protection:\(FamilyOpenExporter.sanitize(name.lowercased()))"
+            let id = FamilyOpenExporter.nodeID(type: "Protection", rawKey: name.lowercased())
             guard seen.insert(id).inserted else { return }
             nodes.append(["id": id, "type": "Protection", "name": name, "enabled": event.fields["protection.enabled"] ?? "unknown"])
             edges.append(["from": hostID, "to": id, "type": "HAS_PROTECTION"])
         }
 
         mutating func appendLaunchItem(_ event: EventEnvelope) {
-            let label = event.fields["persistence.label"] ?? event.fields[FieldTaxonomy.persistenceLabel] ?? event.rawRef ?? UUID().uuidString
-            let id = "LaunchItem:\(FamilyOpenExporter.sanitize(label))"
+            let label = nonEmpty(event.fields[FieldTaxonomy.persistenceLabel])
+                ?? nonEmpty(event.rawRef)
+                ?? event.id.uuidString
+            let path = event.fields[FieldTaxonomy.persistencePath] ?? ""
+            let program = event.fields[FieldTaxonomy.persistenceProgram] ?? event.fields[FieldTaxonomy.processPath] ?? ""
+            let id = FamilyOpenExporter.nodeID(
+                type: "LaunchItem",
+                rawKey: [label, path, program].joined(separator: "\u{1F}")
+            )
             guard seen.insert(id).inserted else { return }
-            nodes.append(["id": id, "type": "LaunchItem", "name": label, "label": label, "path": event.fields["persistence.path"] ?? event.fields[FieldTaxonomy.persistencePath] ?? "", "program": event.fields["persistence.program"] ?? event.fields[FieldTaxonomy.processPath] ?? ""])
+            nodes.append(["id": id, "type": "LaunchItem", "name": label, "label": label, "path": path, "program": program])
             edges.append(["from": hostID, "to": id, "type": "HAS_LAUNCH_ITEM"])
         }
 
         mutating func appendFinding(_ event: EventEnvelope) {
-            let findingID = event.fields["finding.id"] ?? event.eventType
-            let id = "Finding:\(FamilyOpenExporter.sanitize(findingID))"
+            let findingID = nonEmpty(event.fields["finding.id"]) ?? event.id.uuidString
+            let id = FamilyOpenExporter.nodeID(type: "Finding", rawKey: findingID)
             guard seen.insert(id).inserted else { return }
             nodes.append(["id": id, "type": "Finding", "name": event.fields["finding.title"] ?? findingID, "finding_id": findingID, "severity": event.fields["finding.severity"] ?? "info", "category": event.fields["finding.category"] ?? "other"])
             edges.append(["from": hostID, "to": id, "type": "HAS_FINDING"])
@@ -93,12 +101,57 @@ public enum FamilyOpenExporter: Sendable {
             withJSONObject: dict,
             options: [.prettyPrinted, .sortedKeys]
         )
-        try data.write(to: url, options: .atomic)
+        try CaseOutputWriter.write(data, to: url)
     }
 
-    private static func sanitize(_ value: String) -> String {
+    /// Case-aware export path: verify before reading and publish outside the
+    /// package with staged, no-clobber semantics.
+    @discardableResult
+    public static func writeJSON(
+        from package: CasePackage,
+        to url: URL,
+        scopeName: String = "rootstock-blue-case"
+    ) throws -> Int {
+        try package.verifyIntegrity()
+        let events = try package.loadAllEvents()
+        let dict = build(events: events, caseName: package.manifest.name, scopeName: scopeName)
+        let data = try JSONSerialization.data(
+            withJSONObject: dict,
+            options: [.prettyPrinted, .sortedKeys]
+        )
+        try CaseOutputWriter.write(data, from: package, to: url)
+        return events.count
+    }
+
+    /// Family open-export v1 identity rule: a readable normalized prefix plus
+    /// SHA-256 of the canonical raw key. The digest avoids collisions caused by
+    /// replacing distinct punctuation with the same readable character.
+    private static func nodeID(type: String, rawKey: String) -> String {
+        "\(type):\(readablePrefix(rawKey))--\(sha256(rawKey))"
+    }
+
+    private static func readablePrefix(_ value: String) -> String {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
         let scalars = value.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" }
-        return String(scalars)
+        let normalized = String(scalars)
+        return normalized.isEmpty ? "item" : String(normalized.prefix(80))
+    }
+
+    private static func sha256(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func nonEmpty(_ value: String?) -> String? {
+        guard let value, !value.isEmpty else { return nil }
+        return value
+    }
+
+    private static func hostName(from events: [EventEnvelope], fallback: String) -> String {
+        for event in events where event.eventType == EventVocabulary.postureHost || event.eventType == EventVocabulary.collectorScanMeta {
+            if let hostName = event.fields["host.hostname"] ?? event.fields["collector.hostname"], !hostName.isEmpty {
+                return hostName
+            }
+        }
+        return fallback
     }
 }

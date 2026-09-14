@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Emond legacy rules residual depth markers (Wave-15 red↔blue pair).
+/// Emond legacy rules residual depth markers (red↔blue pair).
 /// Honesty: never installs emond rules or enables the legacy event monitor daemon.
 public struct EmondLegacyDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "EMONDLEGACY", tier: .tier2, description: "Emond legacy depth markers")

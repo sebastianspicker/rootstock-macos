@@ -1,7 +1,7 @@
 import Foundation
 
-/// Documented Mac field names for Sigma-on-ESF and exports.
-/// Keep in sync with `Content/field-taxonomy/macos-esf.yaml`.
+/// Documented macOS event field names for offline and synthetic exports.
+/// Keep in sync with `Content/field-taxonomy/macos-events.yaml`.
 public enum FieldTaxonomy {
     public static let processPath = "process.executable.path"
     public static let processPid = "process.pid"
@@ -32,6 +32,7 @@ public enum FieldTaxonomy {
     public static let persistenceCommand = "persistence.command"
     public static let persistenceLabel = "persistence.label"
     public static let persistencePath = "persistence.path"
+    public static let persistenceProgram = "persistence.program"
 
     // System / browser extensions
     public static let extensionBundleID = "extension.bundle_id"
@@ -79,14 +80,14 @@ public enum FieldTaxonomy {
     public static let shellRisk = "shell.risk"
     public static let shellProfileScope = "shell.profile_scope"
 
-    // Wave-4: privileged helpers / folder actions / login hooks
+    // privileged helpers / folder actions / login hooks
     public static let privhelperLabel = "privhelper.label"
     public static let privhelperBundleID = "privhelper.bundle_id"
     public static let folderActionName = "folder_action.name"
     public static let folderActionWatched = "folder_action.watched_path"
     public static let loginHookType = "loginwindow.hook_type"
 
-    // Wave-4 access / account posture
+    // access / account posture
     public static let remoteService = "remote.service"
     public static let remoteEnabled = "remote.enabled"
     public static let accountGuestEnabled = "account.guest_enabled"
@@ -99,7 +100,7 @@ public enum FieldTaxonomy {
         tccService, tccIdentity, tccRight,
         btmItemType, btmItemPath, xprotectMalware,
         polStream, polValue, polSource,
-        persistenceKind, persistenceSchedule, persistenceCommand, persistenceLabel, persistencePath,
+        persistenceKind, persistenceSchedule, persistenceCommand, persistenceLabel, persistencePath, persistenceProgram,
         extensionBundleID, extensionState, extensionTeamID,
         extensionID, extensionName, extensionVersion, extensionPermissions,
         authTTY, authHost, authType,
@@ -115,4 +116,23 @@ public enum FieldTaxonomy {
         remoteService, remoteEnabled,
         accountGuestEnabled, accountAutoLogin,
     ]
+}
+
+/// Event type values shared by Blue producers and the family exporter.
+///
+/// These are event semantics, not source-plugin labels. Importers must retain
+/// their provenance in `EventEnvelope.identity` and `sourcePlugin` instead of
+/// inventing source-specific event types.
+public enum EventVocabulary {
+    public static let collectorScanMeta = "collector.scan_meta"
+    public static let tccGrant = "tcc.grant"
+    public static let persistenceItem = "persistence.item"
+    public static let persistenceLaunchItem = "persistence.launch_item"
+    public static let postureHost = "ir.posture.host"
+    public static let postureProtection = "ir.posture.protection"
+    public static let importedFinding = "finding.import"
+
+    public static func isPersistence(_ eventType: String) -> Bool {
+        eventType == persistenceItem || eventType == persistenceLaunchItem
+    }
 }

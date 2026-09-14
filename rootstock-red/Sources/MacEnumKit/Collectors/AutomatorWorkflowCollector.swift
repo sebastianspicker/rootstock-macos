@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Automator workflow delivery residual (Wave-14).
+/// Automator workflow delivery residual.
 /// Research basis: 2025–26 macOS Automator workflow delivery tradecraft.
 /// Safety and behavior: path inventory only; never executes Automator workflows or plants malicious .workflow bundles.
 public struct AutomatorWorkflowCollector: Collector {

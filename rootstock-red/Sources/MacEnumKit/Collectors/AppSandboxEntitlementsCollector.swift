@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// App sandbox / entitlement thick-client surface (Wave-7).
+/// App sandbox / entitlement thick-client surface.
 ///
 /// Research basis: MacPEAS / inject-check entitlement inventories; thick-client risk lists.
 /// Safety and behavior: typed `AppSandboxEntitlementState`; reuses inject/codesign signals; never

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// CUPS / printer dual-use residual surface (Wave-13).
+/// CUPS / printer dual-use residual surface.
 ///
 /// Research basis: public 2025–26 macOS CUPS printer dual-use tradecraft research.
 /// Safety and behavior: typed path inventory only; never submits print jobs or reconfigures CUPS remotely.

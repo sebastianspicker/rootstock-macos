@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// File Provider domain residual surface (Wave-16).
+/// File Provider domain residual surface.
 /// Safety and behavior: path inventory only; never registers malicious File Provider domains or exfiltrates provider caches.
 public struct FileproviderDomainCollector: Collector {
     public static let id = "collect.fileprovider_domain"

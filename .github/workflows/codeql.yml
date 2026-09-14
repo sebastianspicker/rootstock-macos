@@ -3,16 +3,8 @@ name: CodeQL
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "deprecated/**"
-      - "docs/archive/**"
-      - "docs/deprecated/**"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "deprecated/**"
-      - "docs/archive/**"
-      - "docs/deprecated/**"
   schedule:
     - cron: "37 4 * * 2"
 
@@ -36,6 +28,9 @@ jobs:
           - language: python
             os: ubuntu-latest
             build-mode: none
+          - language: javascript-typescript
+            os: ubuntu-latest
+            build-mode: none
           - language: swift
             os: macos-26
             build-mode: manual
@@ -43,6 +38,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
@@ -60,9 +57,12 @@ jobs:
           swift build --package-path collector \
             -Xswiftc -strict-concurrency=complete \
             -Xswiftc -warnings-as-errors
-          swift build --package-path packages/RootstockMacFacts
-          swift build --package-path rootstock-red
-          swift build --package-path rootstock-blue
+          swift build --package-path packages/RootstockMacFacts \
+            -Xswiftc -warnings-as-errors
+          swift build --package-path rootstock-red \
+            -Xswiftc -warnings-as-errors
+          swift build --package-path rootstock-blue \
+            -Xswiftc -warnings-as-errors
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3

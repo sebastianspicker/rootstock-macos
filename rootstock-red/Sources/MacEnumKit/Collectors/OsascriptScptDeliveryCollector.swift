@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Compiled AppleScript / OSA delivery residual (Wave-12).
+/// Compiled AppleScript / OSA delivery residual.
 ///
 /// Research basis: public 2025–26 macOS OSA/scpt delivery tradecraft research.
 /// Safety and behavior: typed path inventory only; never compiles malicious .scpt payloads or executes third-party AppleScripts.

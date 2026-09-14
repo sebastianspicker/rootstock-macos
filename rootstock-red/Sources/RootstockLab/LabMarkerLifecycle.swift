@@ -205,6 +205,26 @@ public enum DocumentationPlanExecutor {
     }
 }
 
+/// Internal common implementation for documentation-only, lab-root marker actions.
+///
+/// Concrete actions retain their public type, identifier, consent policy, and plan
+/// specification; this default only routes those unchanged values to the executor.
+protocol DocumentationPlanLabAction: LabAction {
+    static var documentationPlan: DocumentationPlanSpec { get }
+}
+
+extension DocumentationPlanLabAction {
+    public func run(request: LabActionRequest, context: EvaluationContext) async throws -> ActionResult {
+        try DocumentationPlanExecutor.run(
+            actionId: Self.id,
+            consent: Self.consent,
+            spec: Self.documentationPlan,
+            request: request,
+            context: context
+        )
+    }
+}
+
 
 /// Technique-specific strings for a single file-marker lab action.
 public struct FileMarkerCopy: Sendable {

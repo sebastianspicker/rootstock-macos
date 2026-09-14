@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Spotlight importer residual depth (Wave-16).
+/// Spotlight importer residual depth.
 /// Safety and behavior: path inventory only; never installs malicious Spotlight importers or dumps mdworker index contents.
 public struct SpotlightImporterDepthCollector: Collector {
     public static let id = "collect.spotlight_importer_depth"

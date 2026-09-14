@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-10 compound depth: multi-app stealer paths × remote access or FDA.
+/// Compound depth: multi-app stealer paths × remote access or FDA.
 ///
 /// Research basis: AMOS/Atomic/Odyssey/PXA 2025–2026 infostealer collection themes.
 /// Safety and behavior: multi-app path plane compounded with SSH/ARD or FDA; never dumps secrets.

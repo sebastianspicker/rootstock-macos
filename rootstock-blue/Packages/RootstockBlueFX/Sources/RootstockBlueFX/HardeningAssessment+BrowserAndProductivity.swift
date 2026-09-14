@@ -1,8 +1,7 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
-    // MARK: - Wave-7 assessments
+    // MARK: - assessments
 
     static func assessCookieEvilDomain(_ events: [EventEnvelope]) -> [Finding] {
         let cookies = events.filter {
@@ -212,7 +211,7 @@ extension HardeningAssessment {
         ]
     }
 
-    // MARK: - Wave-8 residual red↔blue pair assessments
+    // MARK: - Residual red↔blue pair assessments
 
     private static func isRiskyCookie(_ event: EventEnvelope) -> Bool {
         let fields = event.fields

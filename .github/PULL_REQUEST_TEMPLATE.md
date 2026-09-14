@@ -1,44 +1,24 @@
-## Summary
+## What changed?
 
-Briefly describe what changed and why.
+Describe the problem and the behavior after this change. Name the affected
+components and link the related issue, if there is one.
 
-## Component Scope
+## Verification
 
-- [ ] Rootstock Core collector or graph
-- [ ] cve-scan bridge
-- [ ] Rootstock Red
-- [ ] Rootstock Blue
-- [ ] RootstockMacFacts shared package
-- [ ] Documentation or repository automation
+List the commands you ran and their results. Note any relevant checks you
+could not run and why. Use the lanes in [Quality gates](../docs/QUALITY.md).
+For a UI change, include synthetic screenshots and the viewports tested.
 
-## Type of Change
+## Compatibility
 
-- [ ] Bug fix
-- [ ] New feature / data source
-- [ ] New query
-- [ ] Documentation
-- [ ] Refactoring
-- [ ] CI/CD
+Describe any change to commands, configuration, schemas, or imports between
+components. Include migration steps if needed. Delete this section if it does
+not apply.
 
-## Testing
+## Before submitting
 
-- [ ] Strict Swift build/tests pass, if collector code changed
-- [ ] `uv run --project graph --locked ruff check ...` passes, if Python/docs changed
-- [ ] Graph pytest passes; the required Neo4j lane ran for graph runtime behavior
-- [ ] cve-scan locked lint/tests pass, if `modules/cve-scan/` changed
-- [ ] TypeScript type-check, bundle, and viewer contracts pass
-- [ ] Focused regression tests cover the changed behavior and failure boundary
-- [ ] Synthetic fixture and JSON Schema stay aligned, if an output contract changed
-- [ ] Tested on macOS (version and architecture: ___)
-
-## Checklist
-
-- [ ] Code follows project conventions in `CONTRIBUTING.md`
-- [ ] No secrets, credentials, or real scan data included
-- [ ] No real graph exports, viewers, reports, screenshots, package inventories, or CVE scan outputs included
-- [ ] Any public screenshot uses the synthetic release fixture and has been privacy-reviewed
-- [ ] Every included file is intentional source, configuration, test data, or maintained documentation
-- [ ] Documentation index updated if active docs were added, moved, or removed
-- [ ] Documentation and changelog updated when public behavior or release notes changed
-- [ ] Skipped checks and residual uncertainty are stated in the PR description
-- [ ] No license scope was inferred or assigned for `packages/RootstockMacFacts/`
+- [ ] Tests and documentation cover the changed behavior.
+- [ ] Changed artifact contracts include producer, consumer, and fixture updates.
+- [ ] New or moved documentation is linked from an index or component README.
+- [ ] All examples, screenshots, and fixtures are synthetic; no credentials or real host or case data are included.
+- [ ] Component licenses and collector, Red Lab, and Blue safety rules are preserved.

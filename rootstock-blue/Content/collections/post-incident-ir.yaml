@@ -1,7 +1,6 @@
 name: post-incident-ir
 description: Expanded post-incident IR pack (persistence BTM/cron/loginitems + network + SSH + sessions + posture + host)
 requires_fda: true
-requires_es: false
 artifacts:
   - tcc
   - quarantine

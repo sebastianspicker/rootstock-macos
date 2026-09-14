@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
     static func assessAuthPlugins(_ events: [EventEnvelope]) -> [Finding] {
         let plugins = events.filter {
@@ -139,7 +138,7 @@ extension HardeningAssessment {
         ]
     }
 
-    // MARK: - Wave-6 assessments
+    // MARK: - assessments
     private static func isRiskyAuthorizationPlugin(_ event: EventEnvelope) -> Bool {
         let fields = event.fields
         let tags = (fields["persistence.risk_tags"] ?? "").lowercased()

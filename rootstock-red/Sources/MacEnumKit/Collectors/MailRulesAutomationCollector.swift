@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Mail rules / Apple Mail automation persistence (Wave-12).
+/// Mail rules / Apple Mail automation persistence.
 ///
 /// Research basis: public 2025–26 macOS Mail rules automation tradecraft research.
 /// Safety and behavior: typed path inventory only; never reads Mail contents or modifies user Mail rules.

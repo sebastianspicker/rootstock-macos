@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Check collector scan JSON contract field alignment.
+"""Check the collector scan wire contract against its runtime representations.
 
-Source of truth for top-level keys: collector/schema/scan-result.schema.json
+Source of truth for top-level keys:
+contracts/collector-scan/legacy-unversioned.schema.json
 
 Also compares:
-  - graph/models.py ScanResult field aliases (Pydantic)
+  - rootstock_graph.models.ScanResult field aliases (Pydantic)
   - collector/Sources/Models/ScanResult.swift CodingKeys (best-effort regex)
 
 Usage:
@@ -20,8 +21,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_PATH = ROOT / "collector" / "schema" / "scan-result.schema.json"
-MODELS_PATH = ROOT / "graph" / "models.py"
+GRAPH_SOURCE = ROOT / "graph" / "src"
+SCHEMA_PATH = ROOT / "contracts" / "collector-scan" / "legacy-unversioned.schema.json"
 SWIFT_PATH = ROOT / "collector" / "Sources" / "Models" / "ScanResult.swift"
 
 
@@ -33,11 +34,9 @@ def load_schema_keys() -> tuple[set[str], set[str]]:
 
 
 def load_pydantic_keys() -> set[str]:
-    spec = importlib.util.spec_from_file_location("graph_models", MODELS_PATH)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot load {MODELS_PATH}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    if str(GRAPH_SOURCE) not in sys.path:
+        sys.path.insert(0, str(GRAPH_SOURCE))
+    mod = importlib.import_module("rootstock_graph.models")
     mod.ScanResult.model_rebuild(_types_namespace=vars(mod))
     # model_fields keys are Python names; serialization aliases may differ
     keys: set[str] = set()

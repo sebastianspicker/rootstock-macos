@@ -1,35 +1,53 @@
-# Rootstock Collector Performance Benchmark
+# Collector benchmarks
 
-This page defines the public benchmark method and acceptance targets. It does
-not contain maintainer hostnames, local application inventories, or other
-machine-derived results. Run data is written to the ignored local file
-`docs/private/benchmark-results.md` by default.
+Use `scripts/benchmark.sh` to compare collector runs on the same Mac. It runs
+real host collection, so its output contains private data and belongs outside
+version control.
 
-## Targets
+## Run the benchmark
 
-| Metric | Target | Notes |
-|---|---|---|
-| Total time | < 30s | For ~150 apps with all modules enabled |
-| Peak memory | < 50 MB | Measured via `time -l` maximum resident set size |
-| JSON output | < 5 MB | Typical developer Mac |
+From the repository root:
 
-## Method
-
-```bash
+```sh
 (cd collector && swift build -c release)
 bash scripts/benchmark.sh
 ```
 
-The benchmark runs the release collector three times, validates the resulting
-JSON structure, reports duration and output size, and performs one verbose run
-for module timing. Full Disk Access and enabled modules materially affect the
-result, so comparisons must use the same permissions and module set.
+The script needs the release binary, Python 3, `bc`, macOS `/usr/bin/time`, and
+shell tools that support its timestamp calculation. It makes three timed runs
+with the collector's default modules, reads application and TCC grant counts
+from the JSON, and reports duration, peak resident memory, and output size.
+It then makes a fourth, verbose run for module timings.
 
-To write results somewhere else, set an explicit local path:
+Compare runs with the same collector version, permissions, module selection,
+and application inventory. Record Full Disk Access status; missing access can
+reduce both the work done and the evidence collected.
 
-```bash
-BENCHMARK_OUTPUT=/tmp/rootstock-benchmark.md bash scripts/benchmark.sh
+## Output files
+
+The script writes scans and timing logs under `/tmp/rootstock-bench-*` and
+appends a Markdown result table to `docs/private/benchmark-results.md`. To
+change the table destination:
+
+```sh
+BENCHMARK_OUTPUT=/private/path/benchmark-results.md bash scripts/benchmark.sh
 ```
 
-Do not commit benchmark output: it can reveal hostnames, application inventory,
-permission state, and machine-specific performance data.
+`BENCHMARK_OUTPUT` does not change the scan and timing-log paths. The collector
+refuses to overwrite an existing scan, so inspect and move previous benchmark
+files before repeating a run. Protect all output: it can reveal hostnames,
+applications, permissions, and local performance data.
+
+## Performance goals
+
+The original goals for a Mac with roughly 150 applications are:
+
+| Metric | Goal |
+| --- | --- |
+| Total time | Under 30 seconds |
+| Peak resident memory | Under 50 MiB |
+| JSON output | Under 5 MB |
+
+These are goals, not published measurements or automated pass thresholds.
+The script reports memory in MiB and output size in KiB. Judge a change using
+comparable before-and-after runs, including whether collection completed.

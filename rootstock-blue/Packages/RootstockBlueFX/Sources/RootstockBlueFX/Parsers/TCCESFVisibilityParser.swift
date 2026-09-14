@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// TCC / ESF **visibility depth** markers (Wave-8 residual red↔blue pair).
+/// TCC / ESF **visibility depth** markers (Residual red↔blue pair).
 ///
 /// Labels operator visibility as strong / partial / thin from offline markers.
 /// Never dumps TCC.db rows or live-subscribes Endpoint Security.

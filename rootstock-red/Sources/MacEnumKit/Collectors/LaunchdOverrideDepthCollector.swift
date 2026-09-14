@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Launchd disabled / override depth posture (Wave-11).
+/// Launchd disabled / override depth posture.
 ///
 /// Research basis: disabled.plist / overrides.plist defense-evasion research (Santa/Falcon disable class).
 /// Safety and behavior: security-product disable depth ranking; never writes overrides or unloads jobs.

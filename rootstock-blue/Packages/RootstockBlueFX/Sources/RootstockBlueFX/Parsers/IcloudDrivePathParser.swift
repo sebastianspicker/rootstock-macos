@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// iCloud Drive / Mobile Documents path plane markers (Wave-14 red↔blue pair).
+/// iCloud Drive / Mobile Documents path plane markers (red↔blue pair).
 /// Honesty: never enumerates iCloud file contents or exfiltrates Mobile Documents.
 public struct IcloudDrivePathParser: ArtifactParser {
     public let manifest = PluginManifest(id: "ICLOUDDRIVEPATH", tier: .tier2, description: "iCloud Drive path plane markers")

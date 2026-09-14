@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Health app residual path plane (Wave-16).
+/// Health app residual path plane.
 /// Safety and behavior: path inventory only; never exports HealthKit samples or medical records.
 public struct HealthPathPlaneCollector: Collector {
     public static let id = "collect.health_path_plane"

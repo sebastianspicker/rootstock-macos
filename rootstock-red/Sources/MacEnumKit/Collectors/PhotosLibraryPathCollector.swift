@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Photos.app library collection path plane (Wave-15).
+/// Photos.app library collection path plane.
 /// Safety and behavior: path inventory only; never reads photo contents or exports Photo Library media.
 public struct PhotosLibraryPathCollector: Collector {
     public static let id = "collect.photos_library_path"

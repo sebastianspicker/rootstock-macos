@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// TCC / ESF visibility-depth posture (Wave-9).
+/// TCC / ESF visibility-depth posture.
 ///
 /// Research basis: ESF/eslogger/Unified Logging operator visibility literature; TCC.db path research.
 /// Safety and behavior: typed depth label (strong/partial/thin); never dumps TCC.db rows or live-subscribes ESF.

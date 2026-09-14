@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Remote Apple Events / EPPC / Automation lateral posture (Wave-8).
+/// Remote Apple Events / EPPC / Automation lateral posture.
 ///
 /// Research basis: Remote Apple Events / ARD lateral checklists; EPPC historical surface.
 /// Safety and behavior: typed `RemoteAppleEventsState`; never enables RAE or sends AppleEvents.

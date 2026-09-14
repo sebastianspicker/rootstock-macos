@@ -221,7 +221,7 @@ LIMIT 20;
 
 
 // ── ★ EXPLORE 4 - All Inferred Attack Edges ──────────────────────────────
-// Show all edges that were inferred by infer.py (attack paths, not raw data).
+// Show all edges inferred by rootstock-graph-infer (attack paths, not raw data).
 
 MATCH (a)-[r]->(b)
 WHERE r.inferred = true

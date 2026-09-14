@@ -8,13 +8,15 @@ Usage:
 Exit code 0 on success, 1 on validation failure.
 """
 
-import importlib.util
 import json
 import sys
 from pathlib import Path
 from datetime import datetime
 
 ROOT = Path(__file__).parent.parent
+GRAPH_SOURCE = ROOT / "graph" / "src"
+if str(GRAPH_SOURCE) not in sys.path:
+    sys.path.insert(0, str(GRAPH_SOURCE))
 
 try:
     import jsonschema
@@ -25,24 +27,17 @@ except ImportError:
     )
     sys.exit(1)
 
-model_spec = importlib.util.spec_from_file_location(
-    "graph_models", ROOT / "graph" / "models.py"
-)
-if model_spec is None or model_spec.loader is None:
+try:
+    from rootstock_graph.models import ScanResult
+except ImportError:
     print(
-        "ERROR: graph models not importable. Run: uv sync --project graph --extra dev",
+        "ERROR: rootstock-graph models not importable. "
+        "Run: uv sync --project graph --extra dev",
         file=sys.stderr,
     )
     sys.exit(1)
 
-graph_models = importlib.util.module_from_spec(model_spec)
-model_spec.loader.exec_module(graph_models)
-# Load the graph contract directly from the repo so collector/schema and
-# Pydantic validation can be checked without installing graph as a package.
-graph_models.ScanResult.model_rebuild(_types_namespace=vars(graph_models))
-ScanResult = graph_models.ScanResult
-
-SCHEMA_PATH = ROOT / "collector" / "schema" / "scan-result.schema.json"
+SCHEMA_PATH = ROOT / "contracts" / "collector-scan" / "legacy-unversioned.schema.json"
 
 
 def load_schema():

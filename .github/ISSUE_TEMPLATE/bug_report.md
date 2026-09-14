@@ -1,47 +1,39 @@
 ---
-name: Bug Report
+name: Bug report
 about: Report a reproducible issue in a Rootstock component
 title: "[bug] "
 labels: bug
 ---
 
+For vulnerabilities in Rootstock, use the repository's private security
+reporting channel instead of a public issue.
+
 ## Environment
 
-- macOS version:
 - Rootstock version or commit:
-- Elevation level: user / root / Full Disk Access
-- Affected component: Core collector / Core graph or viewer / cve-scan /
-  Rootstock Red / Rootstock Blue / RootstockMacFacts / docs or CI
+- Affected component: collector / graph or viewer / cve-scan / Red / Blue / shared package / docs or CI
+- OS version and architecture:
+- Relevant tool versions:
+- For host collection: running user and Full Disk Access status, without usernames
 
-## Description
+## What happened?
 
-Describe the bug clearly.
+Describe the result and what you expected instead.
 
-## Steps to Reproduce
+## Steps to reproduce
+
+Include the command and a minimal synthetic input where possible.
 
 1.
 2.
 3.
 
-## Expected Behavior
-
-## Actual Behavior
-
 ## Diagnostics
 
-```text
-Paste redacted logs, command output, or error messages here.
-Do not paste real scan JSON, graph exports, reports, generated viewers,
-screenshots, tokens, hostnames, usernames, package inventories, or
-infrastructure details from a real environment.
-```
+Paste redacted errors or logs. Do not attach real scans, graph exports,
+reports, cases, generated viewers, screenshots of real evidence, credentials,
+hostnames, usernames, or package inventories.
 
-## Verification Attempted
+## Checks attempted
 
-- [ ] Collector command:
-- [ ] Graph command:
-- [ ] cve-scan command:
-- [ ] Rootstock Red or Blue command:
-- [ ] Relevant test or validation command:
-
-## Additional Context
+List any tests or troubleshooting steps and their results.

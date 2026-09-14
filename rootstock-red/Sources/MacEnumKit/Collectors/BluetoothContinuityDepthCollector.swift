@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Bluetooth / Continuity proximity residual depth (Wave-14).
+/// Bluetooth / Continuity proximity residual depth.
 /// Research basis: 2025–26 macOS Bluetooth Continuity depth tradecraft.
 /// Safety and behavior: path inventory only; never enables Bluetooth pairing or spoofs Continuity identities.
 public struct BluetoothContinuityDepthCollector: Collector {

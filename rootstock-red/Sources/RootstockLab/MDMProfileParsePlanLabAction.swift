@@ -2,12 +2,12 @@ import Foundation
 import RootstockCore
 
 /// Lab MDM profile parse depth review plan - documentation only.
-public struct MDMProfileParsePlanLabAction: LabAction {
+public struct MDMProfileParsePlanLabAction: DocumentationPlanLabAction {
     public static let id = "lab.surface.mdm_profile_parse_plan"
     public static let consent = ConsentPolicy.labDefault
     public static let riskClass = RiskClass.labOnly
 
-    private static let documentationPlan = DocumentationPlanSpec(
+    static let documentationPlan = DocumentationPlanSpec(
         focusDefault: "MDM profile parse depth",
         directory: "mdm-profile-parse-plan",
         filename: "mdm-profile-parse-plan.md",
@@ -21,15 +21,6 @@ public struct MDMProfileParsePlanLabAction: LabAction {
 
     public init() {}
 
-    public func run(request: LabActionRequest, context: EvaluationContext) async throws -> ActionResult {
-        try DocumentationPlanExecutor.run(
-            actionId: Self.id,
-            consent: Self.consent,
-            spec: Self.documentationPlan,
-            request: request,
-            context: context
-        )
-    }
 
     public static func resolveLabRoot(params: [String: String]) -> URL {
         LabPaths.resolveLabRoot(params: params)

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-10 compound depth: PackageKit services × receipts path-to-impact.
+/// Compound depth: PackageKit services × receipts path-to-impact.
 ///
 /// Research basis: PackageKit design-based persistence research (package_script_service / receipts).
 /// Safety and behavior: services+receipts co-presence with remote/root/sipOff amplifiers; never builds pkgs.

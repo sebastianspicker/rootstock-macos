@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Font validation / ATS dual-use surface markers (Wave-14 red↔blue pair).
+/// Font validation / ATS dual-use surface markers (red↔blue pair).
 /// Honesty: never installs malicious fonts or disables font validation.
 public struct FontValidationDualuseParser: ArtifactParser {
     public let manifest = PluginManifest(id: "FONTVALIDATION", tier: .tier2, description: "Font validation dual-use markers")

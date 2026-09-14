@@ -19,7 +19,6 @@ public struct AcquisitionWizard: Sendable {
         defer { removeUnpublishedStaging(stagedCase, fileManager: fileManager) }
         let package = try createStagedCase(at: stagedCase, outputCase: outputCase)
         try recordAcquisition(package: package, sourceTree: sourceTree, actor: actor)
-        try package.updateHashes()
         try validateDestination(outputCase, fileManager: fileManager)
         try fileManager.moveItem(at: stagedCase, to: outputCase)
         return try CasePackage.open(at: outputCase)

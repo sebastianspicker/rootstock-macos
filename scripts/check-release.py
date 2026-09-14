@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import posixpath
 import re
 import sys
@@ -108,7 +109,7 @@ def check_versions(check: ReleaseCheck, version: str) -> None:
         "Swift collector version matches VERSION",
     )
     check.require(
-        f'version="{version}"' in read_text("graph/server.py"),
+        f'version="{version}"' in read_text("graph/src/rootstock_graph/api.py"),
         "FastAPI version matches VERSION",
     )
     check.require(
@@ -151,19 +152,39 @@ def _required_public_files() -> tuple[str, ...]:
         "SECURITY.md",
         "LICENSE",
         "CITATION.cff",
+        "modules/cve-scan/LICENSE",
+        "modules/cve-scan/SECURITY.md",
+        "packages/RootstockMacFacts/LICENSE",
+        "rootstock-blue/LICENSE",
+        "rootstock-blue/NOTICE",
+        "rootstock-blue/SECURITY.md",
+        "rootstock-red/ACCEPTABLE_USE.md",
+        "rootstock-red/LICENSE",
+        "rootstock-red/SECURITY.md",
         "docs/README.md",
         "docs/RELEASING.md",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/release.yml",
+        ".github/workflows/pages.yml",
         ".node-version",
         "collector/Package.resolved",
         "collector/README.md",
         "graph/uv.lock",
         "modules/cve-scan/uv.lock",
         "package-lock.json",
+        "scripts/build-pages-demo.mjs",
+        "scripts/demo-tour.mjs",
+        "scripts/capture-demo-screenshots.mjs",
+        "docs/screenshots.md",
+        "docs/assets/screenshots/scope.png",
+        "docs/assets/screenshots/evidence.png",
+        "docs/assets/screenshots/report.png",
+        "docs/assets/screenshots/graph.png",
         "scripts/build-release.sh",
+        "scripts/check-pages-demo.mjs",
         "scripts/check-release.py",
-        "scripts/release-screenshot-fixture.mjs",
+        "scripts/verify",
+        "scripts/viewer-demo-data.mjs",
     )
 
 
@@ -176,12 +197,9 @@ def _required_pillar_files() -> tuple[str, ...]:
         "rootstock-red/Package.swift",
         "rootstock-red/Package.resolved",
         "rootstock-red/README.md",
-        "rootstock-red/LICENSE",
         "rootstock-red/NOT_FOR_PRODUCTION_IMPLANT.md",
         "rootstock-blue/Package.swift",
         "rootstock-blue/README.md",
-        "rootstock-blue/LICENSE",
-        "rootstock-blue/NOTICE",
         "rootstock-blue/Makefile",
         "rootstock-blue/docs/non-goals.md",
     )
@@ -189,10 +207,10 @@ def _required_pillar_files() -> tuple[str, ...]:
 
 def _required_viewer_files() -> tuple[str, ...]:
     return (
-        "graph/viewer.py",
-        "graph/viewer_template.html",
-        "graph/viewer.css",
-        "graph/viewer.bundle.js",
+        "graph/src/rootstock_graph/reporting/viewer.py",
+        "graph/src/rootstock_graph/resources/viewer/viewer_template.html",
+        "graph/src/rootstock_graph/resources/viewer/viewer.css",
+        "graph/src/rootstock_graph/resources/viewer/viewer.bundle.js",
         "graph/viewer-src/app.ts",
         "graph/viewer-src/canvas.ts",
         "graph/viewer-src/controls.ts",
@@ -250,16 +268,25 @@ def check_public_files(check: ReleaseCheck) -> None:
     tracked_paths = _tracked_paths()
     _check_tracked_public_files(check, tracked_paths)
     _check_release_integrity(check)
-    _report_paths(check, _index_markdown_image_failures(tracked_paths), "all index-level Markdown image targets are Git-tracked", "missing index image")
+    _report_paths(
+        check,
+        _index_markdown_image_failures(tracked_paths),
+        "all index-level Markdown image targets are Git-tracked",
+        "missing index image",
+    )
 
 
 def _check_tracked_public_files(check: ReleaseCheck, tracked_paths: set[str]) -> None:
     for path in _required_public_files():
         check.require((ROOT / path).is_file(), f"required public file exists: {path}")
-        check.require(path in tracked_paths, f"required public file is Git-tracked: {path}")
+        check.require(
+            path in tracked_paths, f"required public file is Git-tracked: {path}"
+        )
     for path in _required_pillar_files():
         check.require((ROOT / path).is_file(), f"public pillar marker exists: {path}")
-        check.require(path in tracked_paths, f"public pillar marker is Git-tracked: {path}")
+        check.require(
+            path in tracked_paths, f"public pillar marker is Git-tracked: {path}"
+        )
     shared_license = "packages/RootstockMacFacts/LICENSE"
     check.require(
         (ROOT / shared_license).is_file(),
@@ -270,8 +297,12 @@ def _check_tracked_public_files(check: ReleaseCheck, tracked_paths: set[str]) ->
         "RootstockMacFacts license file is Git-tracked",
     )
     for path in _required_viewer_files():
-        check.require((ROOT / path).is_file(), f"viewer source or bundle exists: {path}")
-        check.require(path in tracked_paths, f"viewer source or bundle is Git-tracked: {path}")
+        check.require(
+            (ROOT / path).is_file(), f"viewer source or bundle exists: {path}"
+        )
+        check.require(
+            path in tracked_paths, f"viewer source or bundle is Git-tracked: {path}"
+        )
 
 
 def _check_release_integrity(check: ReleaseCheck) -> None:
@@ -285,6 +316,7 @@ def _check_release_integrity(check: ReleaseCheck) -> None:
         "EXPECTED_ARCHIVE_LISTING" in release_script,
         "collector archive validates its exact file set",
     )
+
 
 def _forbidden_tracked_paths() -> list[str]:
     return [
@@ -332,13 +364,40 @@ def _local_packets() -> list[str]:
     ]
 
 
-def _report_paths(check: ReleaseCheck, paths: list[str], message: str, prefix: str) -> None:
+def _report_paths(
+    check: ReleaseCheck, paths: list[str], message: str, prefix: str
+) -> None:
     check.require(not paths, message)
     for path in paths:
         print(f"  {prefix}: {path}")
 
 
-def check_git_hygiene(check: ReleaseCheck, require_clean: bool) -> None:
+def _check_tracked_ignored_paths(check: ReleaseCheck) -> None:
+    tracked_ignored = git_output("ls-files", "-ci", "--exclude-standard").splitlines()
+    check.require(not tracked_ignored, "no tracked path is hidden by .gitignore")
+    for path in tracked_ignored:
+        print(f"  tracked and ignored: {path}")
+
+
+def _check_candidate_index(check: ReleaseCheck, status: str) -> None:
+    configured_index = os.environ.get("GIT_INDEX_FILE", "")
+    index_path = Path(configured_index).expanduser()
+    if configured_index and not index_path.is_absolute():
+        index_path = ROOT / index_path
+    using_temporary_index = bool(configured_index) and (
+        index_path.resolve() != (ROOT / ".git" / "index").resolve()
+    )
+    worktree_clean = all(
+        len(line) >= 2 and line[1] == " " and line[:2] != "??"
+        for line in status.splitlines()
+    )
+    check.require(using_temporary_index, "candidate proof uses a temporary Git index")
+    check.require(worktree_clean, "candidate index exactly matches the working tree")
+
+
+def check_git_hygiene(
+    check: ReleaseCheck, require_clean: bool, candidate_index: bool
+) -> None:
     """Reject private working files and optionally enforce a tag-clean tree."""
     _report_paths(
         check,
@@ -358,18 +417,15 @@ def check_git_hygiene(check: ReleaseCheck, require_clean: bool) -> None:
         "ignored private working directories are empty",
         "local packet",
     )
+    _check_tracked_ignored_paths(check)
+    if not require_clean:
+        return
 
-    tracked_ignored = git_output("ls-files", "-ci", "--exclude-standard").splitlines()
-    check.require(
-        not tracked_ignored,
-        "no tracked path is hidden by .gitignore",
-    )
-    for path in tracked_ignored:
-        print(f"  tracked and ignored: {path}")
-
-    if require_clean:
-        status = git_output("status", "--porcelain")
-        check.require(not status, "working tree is clean for tagging")
+    status = git_output("status", "--porcelain")
+    if candidate_index:
+        _check_candidate_index(check, status)
+        return
+    check.require(not status, "working tree is clean for tagging")
 
 
 def main() -> int:
@@ -379,7 +435,14 @@ def main() -> int:
         action="store_true",
         help="also fail when the working tree has staged, unstaged, or untracked changes",
     )
+    parser.add_argument(
+        "--candidate-index",
+        action="store_true",
+        help="accept staged candidate changes only when GIT_INDEX_FILE matches the tree",
+    )
     args = parser.parse_args()
+    if args.candidate_index and not args.require_clean:
+        parser.error("--candidate-index requires --require-clean")
 
     check = ReleaseCheck()
     version = read_text("VERSION").strip()
@@ -389,7 +452,7 @@ def main() -> int:
     )
     check_versions(check, version)
     check_public_files(check)
-    check_git_hygiene(check, args.require_clean)
+    check_git_hygiene(check, args.require_clean, args.candidate_index)
 
     if check.failures:
         print(f"\nRelease surface failed {len(check.failures)} check(s).")

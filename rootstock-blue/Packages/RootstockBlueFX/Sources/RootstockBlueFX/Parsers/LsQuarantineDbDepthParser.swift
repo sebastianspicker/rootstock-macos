@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// LaunchServices QuarantineEvents DB residual depth markers (Wave-14 red↔blue pair).
+/// LaunchServices QuarantineEvents DB residual depth markers (red↔blue pair).
 /// Honesty: never deletes QuarantineEvents rows or clears LS quarantine history.
 public struct LsQuarantineDbDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "LSQUARANTINEDB", tier: .tier2, description: "LS QuarantineEvents depth markers")

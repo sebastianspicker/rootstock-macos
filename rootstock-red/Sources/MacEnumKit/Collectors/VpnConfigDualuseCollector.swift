@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// VPN configuration dual-use residual surface (Wave-15).
+/// VPN configuration dual-use residual surface.
 /// Safety and behavior: path inventory only; never installs VPN profiles or rewrites network extension VPN configs.
 public struct VpnConfigDualuseCollector: Collector {
     public static let id = "collect.vpn_config_dualuse"

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// FileVault/escrow × Continuity × virtualization local data-protection cluster (Wave-7).
+/// FileVault/escrow × Continuity × virtualization local data-protection cluster.
 ///
 /// Research basis: local data confidentiality + proximity + nested execution research.
 /// Safety and behavior: multi-rule ranked Findings; no key dump or proximity malware.

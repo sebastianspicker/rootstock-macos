@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Webloc / Internet Location file delivery markers (Wave-12 red↔blue pair).
+/// Webloc / Internet Location file delivery markers (red↔blue pair).
 ///
 /// Honesty: never crafts phishing webloc/inetloc payloads or rewrites Internet Location files.
 public struct WeblocInetlocParser: ArtifactParser {

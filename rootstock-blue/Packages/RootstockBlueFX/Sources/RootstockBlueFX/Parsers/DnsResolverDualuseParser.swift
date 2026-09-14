@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// DNS resolver / mDNSResponder dual-use surface markers (Wave-14 red↔blue pair).
+/// DNS resolver / mDNSResponder dual-use surface markers (red↔blue pair).
 /// Honesty: never rewrites resolver config or poisons DNS caches.
 public struct DnsResolverDualuseParser: ArtifactParser {
     public let manifest = PluginManifest(id: "DNSRESOLVER", tier: .tier2, description: "DNS resolver dual-use markers")

@@ -1,7 +1,7 @@
-# Neo4j Browser Quickstart for Rootstock
+# Explore Rootstock data in Neo4j Browser
 
 This guide walks through starting Neo4j, importing a Rootstock scan, and running
-interactive attack-path queries in Neo4j Browser with the Rootstock style sheet.
+queries over the imported graph in Neo4j Browser with the Rootstock style sheet.
 
 ## Prerequisites
 
@@ -12,22 +12,21 @@ interactive attack-path queries in Neo4j Browser with the Rootstock style sheet.
   `uv sync --project graph --locked --all-extras`
 
 Run the commands in this guide from the repository root unless a command says
-otherwise. Graph Python and shell commands use the locked graph environment.
+otherwise. The graph commands below use the locked Python environment.
 
 ## Step 1: Start Neo4j
 
 ### Option A: Docker
 
 ```bash
-NEO4J_AUTH=neo4j/CHANGE_ME docker compose -f graph/docker-compose.yml up -d
-export NEO4J_PASSWORD=CHANGE_ME
+export NEO4J_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+NEO4J_AUTH="neo4j/$NEO4J_PASSWORD" \
+  docker compose -f graph/docker-compose.yml up -d --wait
 ```
 
-Wait for Neo4j to start:
-
-```bash
-docker compose -f graph/docker-compose.yml logs -f neo4j | grep "Started"
-```
+This generates a password for a new database. Keep it in a private local
+configuration. If the data volume already exists, use its existing password.
+`--wait` waits for the container health check.
 
 The compose file creates `rootstock-neo4j` and maps ports 7474 and 7687 on
 `127.0.0.1`.
@@ -39,10 +38,14 @@ The compose file creates `rootstock-neo4j` and maps ports 7474 and 7687 on
 3. Set a local password and export the same value as `NEO4J_PASSWORD`.
 4. Start the database.
 
-## Step 2: Import Scan Data
+## Step 2: Import a scan
 
-```bash
-uv run --project graph --locked python graph/import_scan.py \
+Validate the scan and create the graph constraints before importing:
+
+```sh
+uv run --project graph --locked python scripts/validate-scan.py /path/to/scan.json
+uv run --project graph --locked rootstock-graph-setup-schema
+uv run --project graph --locked rootstock-graph-import-scan \
   --input /path/to/scan.json --neo4j bolt://localhost:7687
 ```
 
@@ -52,7 +55,7 @@ import warnings before using those counts as coverage evidence.
 Then run relationship inference:
 
 ```bash
-uv run --project graph --locked python graph/infer.py \
+uv run --project graph --locked rootstock-graph-infer \
   --neo4j bolt://localhost:7687
 ```
 
@@ -65,10 +68,10 @@ Navigate to <http://localhost:7474> and log in with:
 
 ## Step 4: Load the Rootstock Style Sheet
 
-Start the local Browser asset server:
+In a second terminal, serve the guide and stylesheet locally:
 
 ```bash
-uv run --project graph --locked bash graph/browser/setup-browser.sh
+python3 -m http.server 8001 --bind 127.0.0.1 --directory graph/browser
 ```
 
 In the Neo4j Browser query editor, run:
@@ -98,7 +101,9 @@ The guide panel contains runnable Rootstock query examples.
 
 ## Step 6: Save Queries as Favorites
 
-`graph/browser/saved-queries.cypher` contains the Rootstock query set. To add a
+`graph/browser/saved-queries.cypher` contains queries for use in Browser.
+The complete packaged query catalog is documented in the
+[query reference](../../graph/src/rootstock_graph/resources/queries/README.md). To add a
 query to Neo4j Browser Favorites:
 
 1. Copy a query from `saved-queries.cypher`.
@@ -112,7 +117,7 @@ query to Neo4j Browser Favorites:
 After import and inference, generate a Markdown report:
 
 ```bash
-uv run --project graph --locked python graph/report.py \
+uv run --project graph --locked rootstock-graph-report \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.md
 ```
@@ -120,13 +125,14 @@ uv run --project graph --locked python graph/report.py \
 Add the original scan JSON when richer metadata is needed:
 
 ```bash
-uv run --project graph --locked python graph/report.py \
+uv run --project graph --locked rootstock-graph-report \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.md \
   --scan-json /path/to/scan.json
 ```
 
-Reports are local artifacts and are ignored by Git.
+The `rootstock-report.md` basename is ignored by Git. For a real report with a
+different name, write it to a private directory outside the checkout.
 
 ## Troubleshooting
 
@@ -138,7 +144,7 @@ MATCH (n) RETURN count(n)
 
 If the count is `0`, check:
 
-- `import_scan.py` ran without errors.
+- `rootstock-graph-import-scan` or `graph/pipeline.sh` ran without errors.
 - The `--neo4j` URL matches the running instance.
 - Port 7687 is reachable: `nc -zv localhost 7687`.
 
@@ -154,8 +160,8 @@ If the count is `0`, check:
 
 - Confirm the HTTP server is running:
   `curl http://localhost:8001/rootstock-guide.html | head -5`
-- If your Neo4j Browser blocks local HTTP assets, copy the guide HTML into
-  `$NEO4J_HOME/import/rootstock-guide.html` and load it with a `file://` URL.
+- If Browser blocks the local guide, paste queries from
+  `graph/browser/saved-queries.cypher` into the query editor.
 
 ### Docker cannot connect to Neo4j
 
@@ -178,9 +184,10 @@ Confirm inference ran successfully:
 MATCH ()-[r:CAN_INJECT_INTO]->() RETURN count(r) AS injection_edges
 ```
 
-If the count is `0`, re-run:
+A zero count may be valid for the loaded evidence. If inference has not run,
+run it now and inspect any warnings:
 
 ```bash
-uv run --project graph --locked python graph/infer.py \
+uv run --project graph --locked rootstock-graph-infer \
   --neo4j bolt://localhost:7687
 ```

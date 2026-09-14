@@ -14,12 +14,20 @@ public struct CaseEventSink: EventSink {
     }
 
     public func append(_ event: EventEnvelope) throws {
-        try package.appendEventJSONL(event, stream: stream)
-        try package.insertTimelineEvent(event)
+        try package.appendEvent(event, stream: stream)
+    }
+
+    public func append(_ events: [EventEnvelope], custody: EventCustodyNote?) throws {
+        try package.appendEventBatch(
+            events,
+            stream: stream,
+            custody: custody.map {
+                CustodyEvent(actor: actor, action: $0.action, detail: $0.detail)
+            }
+        )
     }
 
     public func noteCustody(action: String, detail: String) throws {
         try package.appendCustody(CustodyEvent(actor: actor, action: action, detail: detail))
-        try package.updateHashes()
     }
 }

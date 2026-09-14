@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// LaunchServices QuarantineEvents DB residual depth (Wave-14).
+/// LaunchServices QuarantineEvents DB residual depth.
 /// Research basis: 2025–26 macOS LS QuarantineEvents depth tradecraft.
 /// Safety and behavior: path inventory only; never deletes QuarantineEvents rows or clears LS quarantine history.
 public struct LsQuarantineDbDepthCollector: Collector {

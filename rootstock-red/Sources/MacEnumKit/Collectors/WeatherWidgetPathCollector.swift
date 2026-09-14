@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Weather / widget data residual plane (Wave-16).
+/// Weather / widget data residual plane.
 /// Safety and behavior: path inventory only; never dumps weather personalization data or widget timeline contents.
 public struct WeatherWidgetPathCollector: Collector {
     public static let id = "collect.weather_widget_path"

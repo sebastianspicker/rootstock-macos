@@ -52,6 +52,14 @@ struct RemoteCompoundSignals: Sendable {
     }
 }
 
+/// Preserve the shared threshold for assessment-only remote compound findings.
+///
+/// Callers retain their surface-specific evidence and paths; this only centralizes the
+/// mechanically identical amplifier-or-three-signals admission rule.
+func admitsRemoteCompound(_ signals: RemoteCompoundSignals, primaryCount: Int, secondaryCount: Int) -> Bool {
+    signals.hasAmplifier || primaryCount + secondaryCount >= 3
+}
+
 struct PlaneSignal: Sendable {
     let name: String
     let isPresent: Bool

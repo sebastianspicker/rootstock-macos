@@ -1,0 +1,22 @@
+// Name: Tier 0 Inbound Control Audit
+// Purpose: Enumerate modeled inbound paths to Tier 0 applications from selected sources
+// Category: Blue Team
+// Severity: Critical
+// Parameters: none
+// Prerequisites: rootstock-graph-import-scan + rootstock-graph-infer + rootstock-graph-tier-classification must have run
+// Review: identify source nodes with configured relationships to Tier 0 applications
+
+MATCH (target:Application {tier: 0})
+OPTIONAL MATCH p = (src)-[:CAN_INJECT_INTO|CHILD_INHERITS_TCC|CAN_SEND_APPLE_EVENT|HAS_TCC_GRANT|CAN_HIJACK|PERSISTS_VIA|CAN_READ_KEYCHAIN|SHARES_KEYCHAIN_GROUP|COMMUNICATES_WITH|HAS_TRANSITIVE_FDA|SUDO_NOPASSWD|CAN_CHANGE_PASSWORD|CAN_READ_KERBEROS|CAN_WRITE|CAN_MODIFY_TCC|CAN_INJECT_SHELL|ACCESSIBLE_BY|CAN_CONTROL_VIA_A11Y|CAN_BLIND_MONITORING|CAN_DEBUG*1..4]->(target)
+WHERE src <> target
+  AND (src.owned = true OR coalesce(size(src.injection_methods), 0) > 0)
+WITH target,
+     count(DISTINCT p) AS path_count,
+     collect(DISTINCT coalesce(src.name, src.bundle_id, '?'))[..10] AS sample_sources,
+     collect(DISTINCT labels(src)[0])[..5] AS source_types
+RETURN target.name                         AS tier0_asset,
+       target.bundle_id                    AS bundle_id,
+       path_count                          AS inbound_paths,
+       sample_sources                      AS top_sources,
+       source_types                        AS source_node_types
+ORDER BY path_count DESC, target.name

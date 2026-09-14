@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Calendar / Reminders automation lateral surface markers (Wave-13 red↔blue pair).
+/// Calendar / Reminders automation lateral surface markers (red↔blue pair).
 /// Honesty: never reads event contents or creates malicious calendar invites.
 public struct CalendarRemindersAutomationParser: ArtifactParser {
     public let manifest = PluginManifest(

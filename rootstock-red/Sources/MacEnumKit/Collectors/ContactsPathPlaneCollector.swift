@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Contacts database path residual plane (Wave-16).
+/// Contacts database path residual plane.
 /// Safety and behavior: path inventory only; never exports contact cards or dumps AddressBook database contents.
 public struct ContactsPathPlaneCollector: Collector {
     public static let id = "collect.contacts_path_plane"

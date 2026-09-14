@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// PAM authentication module residual surface (Wave-14).
+/// PAM authentication module residual surface.
 /// Research basis: 2025–26 macOS PAM auth module surface tradecraft.
 /// Safety and behavior: path inventory only; never installs PAM modules or modifies /etc/pam.d.
 public struct PamAuthModuleCollector: Collector {

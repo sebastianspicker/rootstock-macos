@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Mail rules / Apple Mail automation persistence markers (Wave-12 red↔blue pair).
+/// Mail rules / Apple Mail automation persistence markers (red↔blue pair).
 ///
 /// Honesty: never reads Mail contents or modifies user Mail rules.
 public struct MailRulesAutomationParser: ArtifactParser {

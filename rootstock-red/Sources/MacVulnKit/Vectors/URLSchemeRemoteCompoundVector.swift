@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-11 compound: URL scheme handlers × remote access path-to-impact.
+/// Compound: URL scheme handlers × remote access path-to-impact.
 public struct URLSchemeRemoteCompoundVector: Check {
     public static let id = "rootstock.vector.delivery.url_scheme_remote_compound"
     public static let cost: CollectorCost = .low

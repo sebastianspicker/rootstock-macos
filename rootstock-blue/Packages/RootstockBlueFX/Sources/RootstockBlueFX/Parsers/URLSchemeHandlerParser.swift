@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// URL scheme / document-handler surface markers (Wave-11 red↔blue pair).
+/// URL scheme / document-handler surface markers (red↔blue pair).
 ///
 /// Inventories LaunchServices / CFBundleURLTypes / opener path markers for IR.
 /// Honesty: never registers schemes or rewrites handlers.

@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 import RootstockMacFacts
 
 #if canImport(Darwin)
@@ -8,8 +7,7 @@ import Darwin
 #endif
 
 /// Defensive host IR posture enumeration - sibling DNA from MacEnumKit
-/// protections/host collectors, inverted to **defensive case I/O**: emits
-/// normalized `EventEnvelope`s with entity refs into `.rsbcase`.
+/// protections/host collectors, inverted to **defensive event emission**.
 ///
 /// Live SIP/Gatekeeper/FileVault parsing uses `HostPostureProbes` (RootstockMacFacts).
 /// Offline evidence-tree mode never requires live probes.
@@ -190,26 +188,20 @@ public enum HostIRPosture {
         }
     }
 
-    /// Write posture events into a case (JSONL + timeline + custody + hashes).
+    /// Emit posture events through an application-provided sink.
     @discardableResult
-    public static func writeToCase(
+    public static func write(
         _ events: [EventEnvelope],
-        package: CasePackage,
-        actor: String = NSUserName(),
+        into sink: any EventSink,
         mode: String
     ) throws -> Int {
-        for event in events {
-            try package.appendEventJSONL(event, stream: "es")
-            try package.insertTimelineEvent(event)
-        }
-        try package.appendCustody(
-            CustodyEvent(
-                actor: actor,
+        try sink.append(
+            events,
+            custody: EventCustodyNote(
                 action: "ir_posture",
                 detail: "IR posture (\(mode)) wrote \(events.count) events plugins=IRPOSTURE"
             )
         )
-        try package.updateHashes()
         return events.count
     }
 

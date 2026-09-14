@@ -1,7 +1,6 @@
 name: logs
 description: Unified log archive and ASL leftovers
 requires_fda: true
-requires_es: false
 artifacts:
   - unifiedlog_export
   - asl

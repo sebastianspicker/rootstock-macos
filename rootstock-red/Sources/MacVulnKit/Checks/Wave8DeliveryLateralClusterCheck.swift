@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-8 delivery × lateral compound ranking.
+/// Multi-plane delivery × lateral compound ranking.
 ///
 /// Research basis: engagement narrative across ClickFix delivery, RAE lateral, data-access, mgmt plane, SSH depth.
 /// Safety and behavior: deterministic compounds over CollectedState; not automated exploit orchestration.
@@ -100,7 +100,7 @@ public struct Wave8DeliveryLateralClusterCheck: Check {
     }
 
     private static func compoundTitle(for planes: [String]) -> String {
-        "Wave-8 delivery×lateral compound: \(planes.count) planes "
+        "Delivery×lateral compound: \(planes.count) planes "
             + "(\(planes.prefix(5).joined(separator: ", "))\(planes.count > 5 ? ", …" : ""))"
     }
 
@@ -118,7 +118,7 @@ public struct Wave8DeliveryLateralClusterCheck: Check {
             Evidence(type: "planes", detail: "planes=\(planes.joined(separator: "|")) count=\(planes.count)"),
             Evidence(type: "stage_labels", detail: "stages=\(stageHints.joined(separator: "|")) (labels only - not auto-exploit)"),
             Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"),
-            Evidence(type: "honesty", detail: "Wave-8 compound ranking is path-to-impact narrative for operators. Rootstock Red does not orchestrate ClickFix, RAE lateral, EDR unload, or SSH key extraction."),
+            Evidence(type: "honesty", detail: "Compound ranking is path-to-impact narrative for operators. Rootstock Red does not orchestrate ClickFix, RAE lateral, EDR unload, or SSH key extraction."),
         ]
         resolution.attackTechniques = ["T1204.002", "T1021", "T1005", "T1562.001"]
         resolution.remediation = [
@@ -127,7 +127,7 @@ public struct Wave8DeliveryLateralClusterCheck: Check {
             "Use lab plans under ROE for purple validation of expected telemetry",
             "OPSEC: treat multi-plane compounds as engagement narrative, not an exploit script",
         ]
-        resolution.falsePositiveNotes = "Developer workstations may legitimately co-locate many Wave-8 planes. Rank production hosts first."
+        resolution.falsePositiveNotes = "Developer workstations may legitimately co-locate many planes. Rank production hosts first."
         return resolution
     }
 

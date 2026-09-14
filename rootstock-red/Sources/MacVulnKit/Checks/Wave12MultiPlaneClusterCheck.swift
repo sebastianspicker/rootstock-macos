@@ -1,9 +1,9 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-12 compound ranking (6 net-new themes beyond Wave-11).
+/// Multi-plane compound ranking (6 net-new themes beyond prior coverage).
 ///
-/// Research basis: engagement narrative across Wave-12 red↔blue pair themes.
+/// Research basis: engagement narrative across red↔blue pair themes.
 /// Safety and behavior: deterministic compounds over CollectedState; not automated exploit orchestration.
 public struct Wave12MultiPlaneClusterCheck: Check {
     public static let id = "rootstock.check.vuln.wave12_multi_plane_cluster"
@@ -40,7 +40,7 @@ public struct Wave12MultiPlaneClusterCheck: Check {
             severity = .low
         }
 
-        return Finding(id: "\(id).multi_plane", title: "Wave-12 multi-plane compound: \(sorted.count) planes "
+        return Finding(id: "\(id).multi_plane", title: "Multi-plane compound: \(sorted.count) planes "
                 + "(\(sorted.joined(separator: ", ")))", severity: severity, category: .misconfig, resolution: .init(evidence: [
                 Evidence(
                     type: "planes",
@@ -66,16 +66,16 @@ public struct Wave12MultiPlaneClusterCheck: Check {
                 Evidence(
                     type: "honesty",
                     detail:
-                        "Wave-12 multi-plane ranking is path-to-impact narrative. "
+                        "Multi-plane ranking is path-to-impact narrative. "
                         + "Rootstock Red does not craft webloc lures, modify Mail rules, dump unified logs, "
                         + "edit Dock.plist, compile malicious scpt, or mount attacker shares."
                 ),
             ], attackTechniques: ["T1204", "T1114", "T1059.002", "T1021.002", "T1547", "T1083"], remediation: [
-                "Prioritize hosts co-locating multiple Wave-12 planes with remote/FDA amplifiers",
+                "Prioritize hosts co-locating multiple planes with remote/FDA amplifiers",
                 "Close remote access before deep dual-use inventory",
-                "Use Wave-12 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: multi-plane compounds are engagement narrative, not exploit scripts",
-            ], falsePositiveNotes: "Developer workstations may legitimately co-locate many Wave-12 planes. "
+            ], falsePositiveNotes: "Developer workstations may legitimately co-locate many planes. "
                 + "Rank production hosts with remote/FDA amplifiers first."), runtime: .init(confidence: .low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ"]))
     }
 }

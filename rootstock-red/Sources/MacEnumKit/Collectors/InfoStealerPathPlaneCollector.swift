@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Info-stealer multi-app collection path plane (Wave-9).
+/// Info-stealer multi-app collection path plane.
 ///
 /// Research basis: AMOS/Atomic/Odyssey/PXA 2025–2026 infostealer collection themes (Microsoft/Red Canary).
 /// Safety and behavior: typed multi-app path inventory beyond browser session alone; never dumps secrets.

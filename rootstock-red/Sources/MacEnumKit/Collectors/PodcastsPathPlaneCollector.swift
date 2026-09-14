@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Podcasts library path residual (Wave-16).
+/// Podcasts library path residual.
 /// Safety and behavior: path inventory only; never dumps podcast episode files or account tokens.
 public struct PodcastsPathPlaneCollector: Collector {
     public static let id = "collect.podcasts_path_plane"

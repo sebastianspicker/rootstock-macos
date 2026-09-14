@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rootstock.dev/contracts/red-findings-to-blue-jsonl/v1/red-finding.schema.json",
+  "title": "Rootstock Red Finding JSONL record v1",
+  "description": "One Swift Codable RootstockCore.Finding object emitted per JSONL line by Red.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "title", "severity", "confidence", "category", "evidence",
+    "attackTechniques", "remediation", "dryRunSafe", "tccDomains", "esfExpected"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+    "confidence": { "enum": ["low", "medium", "high"] },
+    "category": {
+      "enum": [
+        "host", "tcc", "mdm", "persist", "lool", "sandbox", "xpc", "cve",
+        "auth", "network", "codesign", "securityProduct", "misconfig", "other"
+      ]
+    },
+    "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "attackTechniques": { "type": "array", "items": { "type": "string" } },
+    "remediation": { "type": "array", "items": { "type": "string" } },
+    "falsePositiveNotes": { "type": "string" },
+    "dryRunSafe": { "type": "boolean" },
+    "opsecScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "tccDomains": { "type": "array", "items": { "type": "string" } },
+    "esfExpected": { "type": "array", "items": { "type": "string" } },
+    "osRange": { "type": "string" }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "detail"],
+      "properties": {
+        "type": { "type": "string" },
+        "path": { "type": "string" },
+        "detail": { "type": "string" },
+        "hash": { "type": "string" }
+      }
+    }
+  }
+}

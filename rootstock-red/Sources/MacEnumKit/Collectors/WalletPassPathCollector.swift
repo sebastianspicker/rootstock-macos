@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wallet / pass residual path plane (Wave-16).
+/// Wallet / pass residual path plane.
 /// Safety and behavior: path inventory only; never dumps pass contents, payment tokens, or card data.
 public struct WalletPassPathCollector: Collector {
     public static let id = "collect.wallet_pass_path"

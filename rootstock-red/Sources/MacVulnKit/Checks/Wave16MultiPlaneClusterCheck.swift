@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Multi-plane Wave-16 compound ranking (25 net-new themes / 50 red|blue half-pairs beyond Wave-15).
+/// Multi-plane compound ranking (25 net-new themes / 50 red|blue half-pairs beyond prior coverage).
 public struct Wave16MultiPlaneClusterCheck: Check {
     public static let id = "rootstock.check.vuln.wave16_multi_plane_cluster"
     public static let cost: CollectorCost = .low
@@ -65,16 +65,16 @@ public struct Wave16MultiPlaneClusterCheck: Check {
         let amps = clusterAmplifierLabels(state: state).sorted()
         let severity: Severity = (sorted.count >= 6 && amps.contains("remote") && amps.contains("fda")) ? .high
             : ((sorted.count >= 3 || (sorted.count >= 2 && amps.count >= 2)) ? .medium : .low)
-        return Finding(id: "\(id).multi_plane", title: "Wave-16 multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category: .misconfig, resolution: .init(evidence: [
+        return Finding(id: "\(id).multi_plane", title: "Multi-plane compound: \(sorted.count) planes (\(sorted.joined(separator: ", ")))", severity: severity, category:.misconfig, resolution:.init(evidence: [
                 Evidence(type: "planes", detail: "planes=\(sorted.joined(separator: "|")) count=\(sorted.count)"),
                 Evidence(type: "amplifiers", detail: amps.isEmpty ? "amplifiers=none" : "amplifiers=\(amps.joined(separator: "|")) count=\(amps.count)"),
                 Evidence(type: "stage_labels", detail: "stages=collection|privacy|mdm|media|automation (labels only - not auto-exploit)"),
                 Evidence(type: "host", detail: "host=\(state.host?.hostname ?? "unknown") user=\(state.host?.username ?? "unknown")"),
-                Evidence(type: "honesty", detail: "Wave-16 multi-plane ranking is path-to-impact narrative across 25 planes / 50 red|blue half-pairs. Rootstock Red does not dump app contents, location, Health/Wallet secrets, install MDM profiles, or rewrite Software Update catalogs."),
+                Evidence(type: "honesty", detail: "Multi-plane ranking is path-to-impact narrative across 25 planes / 50 red|blue half-pairs. Rootstock Red does not dump app contents, location, Health/Wallet secrets, install MDM profiles, or rewrite Software Update catalogs."),
             ], attackTechniques: ["T1005", "T1083", "T1213", "T1484", "T1072", "T1115"], remediation: [
-                "Prioritize hosts co-locating multiple Wave-16 planes with remote/FDA amplifiers",
+                "Prioritize hosts co-locating multiple planes with remote/FDA amplifiers",
                 "Close remote access before deep dual-use inventory",
-                "Use Wave-16 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: multi-plane compounds are engagement narrative, not exploit scripts",
             ], falsePositiveNotes: "Consumer Macs co-locate many first-party app path planes. Rank production remote hosts with FDA amplifiers first."), runtime: .init(confidence: .low, dryRunSafe: true, opsecScore: 28, esfExpected: ["OPEN", "EXEC", "READ"]))
     }

@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import RootstockBlueCore
 
@@ -15,6 +16,8 @@ public struct CasePackage: Sendable {
     public var logarchivesURL: URL { rootURL.appendingPathComponent("logarchives", isDirectory: true) }
     public var pluginsURL: URL { rootURL.appendingPathComponent("plugins", isDirectory: true) }
     public var sha256sumsURL: URL { rootURL.appendingPathComponent("sha256sums.txt") }
+    var writeLockURL: URL { rootURL.appendingPathComponent(".rsbcase-write-lock", isDirectory: true) }
+    var writeJournalURL: URL { writeLockURL.appendingPathComponent("journal.json") }
 
     public static func create(
         at url: URL,
@@ -54,39 +57,120 @@ public struct CasePackage: Sendable {
         try "".write(to: url.appendingPathComponent("sha256sums.txt"), atomically: true, encoding: .utf8)
 
         let pkg = CasePackage(rootURL: url, manifest: manifest)
+        try pkg.writeHashManifest()
         try pkg.appendCustody(
             CustodyEvent(actor: actor, action: "create", detail: "Case package created")
         )
-        try pkg.updateHashes()
         return pkg
     }
 
     public static func open(at url: URL) throws -> CasePackage {
         let manifestURL = url.appendingPathComponent("manifest.json")
-        guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+        do {
+            try CaseFilesystem.requireDirectory(at: url, label: "case root")
+            try CaseFilesystem.requireRegularFile(at: manifestURL, label: "manifest.json")
+        } catch RootstockBlueError.invalidCasePackage {
             throw RootstockBlueError.caseNotFound(url)
         }
         let data = try Data(contentsOf: manifestURL)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let manifest = try decoder.decode(CaseManifest.self, from: data)
-        guard FileManager.default.fileExists(atPath: url.appendingPathComponent("case.sqlite").path) else {
-            throw RootstockBlueError.invalidCasePackage("missing case.sqlite")
-        }
+        try validateSupportedFormat(manifest)
+        try CaseFilesystem.requireRegularFile(
+            at: url.appendingPathComponent("case.sqlite"),
+            label: "case.sqlite"
+        )
         return CasePackage(rootURL: url, manifest: manifest)
     }
 
     public func appendCustody(_ event: CustodyEvent) throws {
-        try CustodyLog.append(url: custodyURL, event: event)
-        let db = try CaseDatabase(url: databaseURL)
-        try db.insertCustody(event)
+        try beginWriteJournal(operation: "custody", target: relativePath(for: custodyURL), eventID: nil)
+        do {
+            try verifyIntegrity(allowWriteJournal: true)
+            try CustodyLog.append(url: custodyURL, event: event)
+            let db = try CaseDatabase(url: databaseURL)
+            try db.transaction {
+                try db.insertCustody(event)
+            }
+            try writeHashManifest(allowWriteJournal: true)
+            try clearWriteJournal()
+        } catch {
+            throw error
+        }
     }
 
-    public func appendEventJSONL(_ envelope: EventEnvelope, stream: String = "es") throws {
-        let dir = stream == "net" ? eventsNetURL : eventsESURL
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let day = ISO8601DateFormatter().string(from: envelope.eventTime).prefix(10)
-        let file = dir.appendingPathComponent("\(day).jsonl")
+    /// Records an event in its JSONL stream and SQLite projection.
+    /// The write journal is fail-closed interruption detection, not a power-loss
+    /// durability or atomic-recording guarantee.
+    public func appendEvent(_ envelope: EventEnvelope, stream: String = "es") throws {
+        try appendEventBatch([envelope], stream: stream, custody: nil)
+    }
+
+    /// Records a validated event batch and optional import custody record.
+    public func appendEventBatch(
+        _ events: [EventEnvelope],
+        stream: String,
+        custody: CustodyEvent?
+    ) throws {
+        try appendEventBatch(events, stream: stream, custody: custody, afterEventWrite: nil)
+    }
+
+    func appendEventBatch(
+        _ events: [EventEnvelope],
+        stream: String,
+        custody: CustodyEvent?,
+        afterEventWrite: ((Int) throws -> Void)?,
+        beforeWriteLock: (() throws -> Void)? = nil,
+        afterIntegrityCheck: (() throws -> Void)? = nil,
+        afterHashManifestWrite: (() throws -> Void)? = nil
+    ) throws {
+        guard !events.isEmpty || custody != nil else { return }
+        let eventIDs = events.map { $0.id.uuidString }
+        guard Set(eventIDs).count == eventIDs.count else {
+            throw RootstockBlueError.invalidCasePackage("duplicate event IDs in write batch")
+        }
+        try beforeWriteLock?()
+        try beginWriteJournal(
+            operation: "event_batch",
+            target: "events/\(stream)",
+            eventID: eventIDs.first
+        )
+        var mutationStarted = false
+        do {
+            try verifyIntegrity(allowWriteJournal: true)
+            try afterIntegrityCheck?()
+            // This is authoritative: a competing writer may have completed after
+            // this caller formed its batch but before it acquired the journal.
+            let readOnlyDatabase = try CaseDatabase(url: databaseURL, readOnly: true)
+            try readOnlyDatabase.requireTimelineEventIDsAbsent(eventIDs)
+            let database = try CaseDatabase(url: databaseURL)
+            mutationStarted = true
+            try database.transaction {
+                for (index, event) in events.enumerated() {
+                    try appendEventJSONL(event, to: try eventJSONLURL(for: event, stream: stream))
+                    try afterEventWrite?(index)
+                }
+                for event in events {
+                    try database.insertTimeline(event)
+                }
+                if let custody {
+                    try CustodyLog.append(url: custodyURL, event: custody)
+                    try database.insertCustody(custody)
+                }
+            }
+            try writeHashManifest(allowWriteJournal: true)
+            try afterHashManifestWrite?()
+            try clearWriteJournal()
+        } catch {
+            if !mutationStarted {
+                try? clearWriteJournal()
+            }
+            throw error
+        }
+    }
+
+    private func appendEventJSONL(_ envelope: EventEnvelope, to file: URL) throws {
         let data = try EventJSONL.encodeLine(envelope)
         if FileManager.default.fileExists(atPath: file.path) {
             let handle = try FileHandle(forWritingTo: file)
@@ -98,69 +182,154 @@ public struct CasePackage: Sendable {
         }
     }
 
-    public func openDatabase() throws -> CaseDatabase {
-        try CaseDatabase(url: databaseURL)
-    }
-
-    public func verifyLayout() throws {
-        let required = ["manifest.json", "case.sqlite", "custody.jsonl", "sha256sums.txt"]
-        for name in required {
-            let path = rootURL.appendingPathComponent(name).path
-            guard FileManager.default.fileExists(atPath: path) else {
-                throw RootstockBlueError.invalidCasePackage("missing \(name)")
-            }
-        }
-    }
-
-    public func updateHashes() throws {
-        var lines: [String] = []
-        let files = ["manifest.json", "case.sqlite", "custody.jsonl"]
-        for name in files {
-            let url = rootURL.appendingPathComponent(name)
-            if FileManager.default.fileExists(atPath: url.path) {
-                let hash = try Hashing.sha256File(at: url)
-                lines.append("\(hash)  \(name)")
-            }
-        }
-        try lines.joined(separator: "\n").write(to: sha256sumsURL, atomically: true, encoding: .utf8)
-    }
-
-    public func insertTimelineEvent(_ event: EventEnvelope) throws {
-        let db = try openDatabase()
-        try db.insertTimeline(event)
-    }
-
-    /// Load all JSONL events from es/ and net/ streams.
-    public func loadAllEvents() throws -> [EventEnvelope] {
-        var events: [EventEnvelope] = []
-        for dir in [eventsESURL, eventsNetURL] {
-            guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else {
-                continue
-            }
-            for file in files where file.pathExtension == "jsonl" {
-                events.append(contentsOf: try EventJSONL.decode(contentsOf: file, skipInvalid: true))
-            }
-        }
-        return events
-    }
-
-    public func eventJSONLFileCount() -> Int {
-        var count = 0
-        for dir in [eventsESURL, eventsNetURL] {
-            if let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
-                count += files.filter { $0.pathExtension == "jsonl" }.count
-            }
-        }
-        return count
-    }
-
     public func copyArtifact(from source: URL, relativeName: String) throws -> URL {
-        let dest = artifactsURL.appendingPathComponent(relativeName)
-        try FileManager.default.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if FileManager.default.fileExists(atPath: dest.path) {
-            try FileManager.default.removeItem(at: dest)
+        try copyArtifact(from: source, relativeName: relativeName, afterStagedCopy: nil)
+    }
+
+    func copyArtifact(
+        from source: URL,
+        relativeName: String,
+        afterStagedCopy: (() throws -> Void)?
+    ) throws -> URL {
+        let descriptor = try CaseFilesystem.openRegularFileNoFollow(at: source, label: "artifact source")
+        defer { _ = close(descriptor) }
+        return try copyArtifact(
+            fromFileDescriptor: descriptor,
+            sourceDescription: source.path,
+            relativeName: relativeName,
+            afterStagedCopy: afterStagedCopy
+        )
+    }
+
+    /// Copies from a descriptor already opened by a caller using non-following
+    /// traversal. The source pathname is deliberately never reopened here.
+    public func copyArtifact(fromFileDescriptor descriptor: Int32, relativeName: String) throws -> URL {
+        try copyArtifact(
+            fromFileDescriptor: descriptor,
+            sourceDescription: "descriptor:\(descriptor)",
+            relativeName: relativeName,
+            afterStagedCopy: nil
+        )
+    }
+
+    private func copyArtifact(
+        fromFileDescriptor descriptor: Int32,
+        sourceDescription: String,
+        relativeName: String,
+        afterStagedCopy: (() throws -> Void)?
+    ) throws -> URL {
+        let fm = FileManager.default
+        let destination = try artifactDestination(relativeName: relativeName)
+        guard !fm.fileExists(atPath: destination.path) else {
+            throw RootstockBlueError.invalidCasePackage("artifact already exists: \(relativeName)")
         }
-        try FileManager.default.copyItem(at: source, to: dest)
-        return dest
+        try CaseFilesystem.requireRegularFile(descriptor: descriptor, label: "artifact source")
+        try beginWriteJournal(operation: "artifact", target: "artifacts/\(relativeName)", eventID: nil)
+        let staging = rootURL.appendingPathComponent(".rsbcase-artifact-stage-\(UUID().uuidString)")
+        do {
+            try verifyIntegrity(allowWriteJournal: true)
+            try prepareArtifactParent(for: relativeName)
+            guard !fm.fileExists(atPath: destination.path) else {
+                throw RootstockBlueError.invalidCasePackage("artifact already exists: \(relativeName)")
+            }
+            try CaseFilesystem.requireRegularFile(descriptor: descriptor, label: "artifact source")
+            try streamArtifact(fromFileDescriptor: descriptor, to: staging)
+            try afterStagedCopy?()
+            try fm.moveItem(at: staging, to: destination)
+            let hash = try Hashing.sha256File(at: destination)
+            let custody = CustodyEvent(
+                actor: NSUserName(),
+                action: "artifact.copy",
+                detail: "source=\(sourceDescription) destination=artifacts/\(relativeName) sha256=\(hash)"
+            )
+            try CustodyLog.append(url: custodyURL, event: custody)
+            let database = try CaseDatabase(url: databaseURL)
+            try database.insertCustody(custody)
+            try writeHashManifest(allowWriteJournal: true)
+            try clearWriteJournal()
+            return destination
+        } catch {
+            throw error
+        }
+    }
+
+    private func streamArtifact(fromFileDescriptor sourceDescriptor: Int32, to staging: URL) throws {
+        let destinationDescriptor = Darwin.open(
+            staging.path,
+            O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW,
+            S_IRUSR | S_IWUSR
+        )
+        guard destinationDescriptor >= 0 else {
+            throw RootstockBlueError.invalidCasePackage("cannot create artifact staging file")
+        }
+        let source = FileHandle(fileDescriptor: sourceDescriptor, closeOnDealloc: false)
+        let destination = FileHandle(fileDescriptor: destinationDescriptor, closeOnDealloc: true)
+        do {
+            try source.seek(toOffset: 0)
+            while let chunk = try source.read(upToCount: 64 * 1024), !chunk.isEmpty {
+                try destination.write(contentsOf: chunk)
+            }
+            try destination.synchronize()
+            try destination.close()
+        } catch {
+            try? destination.close()
+            try? FileManager.default.removeItem(at: staging)
+            throw error
+        }
+    }
+
+    private func artifactDestination(relativeName: String) throws -> URL {
+        guard isSafeRelativePath(relativeName) else {
+            throw RootstockBlueError.invalidCasePackage("invalid artifact relative path")
+        }
+        let root = artifactsURL.standardizedFileURL
+        let destination = root.appendingPathComponent(relativeName).standardizedFileURL
+        guard destination.path.hasPrefix(root.path + "/") else {
+            throw RootstockBlueError.invalidCasePackage("artifact path escapes case package")
+        }
+        return destination
+    }
+
+    /// Creates only validated real-directory parents, after the sealed package has
+    /// passed verification under the exclusive write lock.
+    private func prepareArtifactParent(for relativeName: String) throws {
+        var parent = artifactsURL.standardizedFileURL
+        let rootValues = try parent.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard rootValues.isDirectory == true, rootValues.isSymbolicLink != true else {
+            throw RootstockBlueError.invalidCasePackage("artifact root is not a real directory")
+        }
+        for component in relativeName.split(separator: "/").dropLast() {
+            parent.appendPathComponent(String(component), isDirectory: true)
+            if FileManager.default.fileExists(atPath: parent.path) {
+                let values = try parent.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+                guard values.isDirectory == true, values.isSymbolicLink != true else {
+                    throw RootstockBlueError.invalidCasePackage("artifact parent is not a real directory")
+                }
+            } else {
+                try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: false)
+            }
+        }
+    }
+
+    private func eventJSONLURL(for envelope: EventEnvelope, stream: String) throws -> URL {
+        let dir = stream == "net" ? eventsNetURL : eventsESURL
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let day = ISO8601DateFormatter().string(from: envelope.eventTime).prefix(10)
+        return dir.appendingPathComponent("\(day).jsonl")
+    }
+
+}
+
+struct CaseWriteJournal: Codable {
+    let formatVersion: Int
+    let operation: String
+    let target: String
+    let eventID: String?
+
+    init(operation: String, target: String, eventID: String?) {
+        formatVersion = 1
+        self.operation = operation
+        self.target = target
+        self.eventID = eventID
     }
 }

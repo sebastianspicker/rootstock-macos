@@ -1,13 +1,13 @@
 # Fleet and osquery
 
-`RootstockBlueIntegrations.OsqueryExport` converts event envelopes to
-osquery-shaped rows for integrations that consume that schema. The CLI can
-also export a case timeline as JSONL:
+`RootstockBlueIntegrations.OsqueryExport` maps an event envelope to a flat
+string dictionary suitable for software that consumes osquery-shaped rows. To
+move a whole timeline into another system, export the case as JSONL:
 
 ```bash
 rootstock-blue export jsonl <path.rsbcase> <out.jsonl>
 ```
 
-Rootstock Blue does not provide a Fleet server, query scheduler, or live
-osquery virtual tables. Operators are responsible for transporting exported
-records and mapping them to their Fleet or SIEM deployment.
+Blue stops at the row conversion or JSONL file. Connect and map that output to
+your Fleet or SIEM deployment separately; the project does not include a Fleet
+server, query scheduler, or live osquery virtual table.

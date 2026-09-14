@@ -23,10 +23,12 @@ function isNode(value: unknown): value is GraphNodeInput {
 }
 
 function isEdge(value: unknown): value is GraphEdge {
-  return isRecord(value)
-    && typeof value.source === "string"
-    && typeof value.target === "string"
-    && typeof value.kind === "string";
+  return (
+    isRecord(value) &&
+    typeof value.source === "string" &&
+    typeof value.target === "string" &&
+    typeof value.kind === "string"
+  );
 }
 
 type ValidGraph = {
@@ -34,7 +36,7 @@ type ValidGraph = {
   edges: GraphEdge[];
 };
 
-type ValidGraphResponse = Record<string, unknown> & {graph: ValidGraph};
+type ValidGraphResponse = Record<string, unknown> & { graph: ValidGraph };
 
 function isValidGraphNodes(value: unknown): value is GraphNodeInput[] {
   if (!Array.isArray(value)) return false;
@@ -65,7 +67,7 @@ export function parseGraphPayload(value: unknown): GraphPayload {
   if (!isValidGraphResponse(value)) throw new TypeError("Malformed graph response");
   return {
     metadata: isRecord(value.metadata) ? value.metadata : {},
-    graph: {nodes: value.graph.nodes, edges: value.graph.edges},
+    graph: { nodes: value.graph.nodes, edges: value.graph.edges },
   };
 }
 
@@ -92,7 +94,7 @@ export function parseQueryResult(value: unknown): QueryResult {
   const rows = queryRows(value.rows);
   const count = queryCount(value.count, rows.length);
   const columns = queryColumns(value.columns, rows);
-  return {rows, columns, count, truncated: value.truncated === true};
+  return { rows, columns, count, truncated: value.truncated === true };
 }
 
 export function queryResultMeta(result: QueryResult): string {
@@ -101,24 +103,33 @@ export function queryResultMeta(result: QueryResult): string {
     : pluralRows(result.rows.length);
 }
 
-export function pluralRows(count: number): string { return `${count} ${count === 1 ? "row" : "rows"}`; }
+export function pluralRows(count: number): string {
+  return `${count} ${count === 1 ? "row" : "rows"}`;
+}
 
 /** Resolves a live API path while rejecting bases and targets outside the viewer origin. */
-export function resolveSameOriginApiTarget(apiBaseUrl: string, path: string, origin: string): string {
+export function resolveSameOriginApiTarget(
+  apiBaseUrl: string,
+  path: string,
+  origin: string,
+): string {
   const base = new URL(apiBaseUrl || "/", origin);
   const target = new URL(path, base);
-  if (base.origin !== origin || target.origin !== origin) throw new Error("Live API target must use the viewer origin");
+  if (base.origin !== origin || target.origin !== origin)
+    throw new Error("Live API target must use the viewer origin");
   return target.toString();
 }
 
 export function queryRows(value: unknown): Record<string, unknown>[] {
-  if (!Array.isArray(value) || !value.every(isRecord)) throw new TypeError("Malformed query response");
+  if (!Array.isArray(value) || !value.every(isRecord))
+    throw new TypeError("Malformed query response");
   return value;
 }
 
 export function queryCount(value: unknown, fallback: number): number {
   const count = typeof value === "number" ? value : fallback;
-  if (!Number.isInteger(count) || count < 0 || count !== fallback) throw new TypeError("Malformed query response");
+  if (!Number.isInteger(count) || count < 0 || count !== fallback)
+    throw new TypeError("Malformed query response");
   return count;
 }
 
@@ -167,7 +178,7 @@ function isValidOwnedListResponse(value: unknown): value is ValidOwnedListRespon
 /** Validates ownership entries and requires the server count to match their list length. */
 export function parseOwnedList(value: unknown): OwnedListResponse {
   if (!isValidOwnedListResponse(value)) throw new TypeError("Malformed owned response");
-  return {owned: value.owned, count: value.count};
+  return { owned: value.owned, count: value.count };
 }
 
 /** Extracts the requested ownership mutation count from a structurally valid response. */

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Screen Sharing / ARD residual depth (Wave-15).
+/// Screen Sharing / ARD residual depth.
 /// Safety and behavior: path inventory only; never enables Screen Sharing or ARD, never connects to remote desktops.
 public struct ScreenSharingArdDepthCollector: Collector {
     public static let id = "collect.screen_sharing_ard_depth"

@@ -1,45 +1,33 @@
 ---
-name: Feature Request
-about: Suggest a bounded change to a Rootstock component
+name: Feature request
+about: Suggest an improvement to a Rootstock component
 title: "[feature] "
 labels: enhancement
 ---
 
 ## Problem
 
-What problem does this solve?
+Describe what you are trying to do and where the current behavior gets in
+the way. Include a fictional example if it helps.
 
-## Component Scope
+## Affected component
 
-- Affected component: Core collector / Core graph or viewer / cve-scan /
-  Rootstock Red / Rootstock Blue / RootstockMacFacts
-- Does this change an existing artifact contract or optional family bridge?
-- Does it require an explicit boundary between components rather than a shared
-  runtime dependency?
+Core collector / graph or viewer / cve-scan / Red / Blue / RootstockMacFacts
 
-## Proposed Solution
+## Proposed change
 
-Describe the feature or change.
+Describe the behavior you would like. If it changes an existing command or
+file format, explain how current users would be affected.
 
-## Use Case
+## Access and data
 
-- Who benefits? Operator / assessor / incident responder / researcher
-- Example scenario:
+Would this require network access, new privileges, or changes to host state?
+What sensitive data could it read or produce?
 
-## Safety Scope
+## Alternatives
 
-- Does this keep the collector passive and local-only?
-- Does it require network access, active probing, or new privileges?
-- Could it expose sensitive scan artifacts?
-- Does it preserve the alpha boundary that components may change independently?
+Describe any workaround or other approach you have considered.
 
-Do not propose a license assignment for `packages/RootstockMacFacts/`; its
-license scope is unresolved.
+## How to verify it
 
-## Verification
-
-What tests, fixture updates, or smoke checks should prove this works?
-
-## Alternatives Considered
-
-## Additional Context
+What result or example would show that the change works?

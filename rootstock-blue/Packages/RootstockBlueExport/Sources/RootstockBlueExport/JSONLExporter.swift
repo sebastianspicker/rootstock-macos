@@ -4,20 +4,15 @@ import RootstockBlueCase
 
 public enum JSONLExporter {
     public static func exportEvents(_ events: [EventEnvelope], to url: URL) throws {
-        try EventJSONL.encode(events).write(to: url)
+        try CaseOutputWriter.write(EventJSONL.encode(events), to: url)
     }
 
-    public static func exportCaseEvents(_ package: CasePackage, to url: URL) throws {
-        // Intentionally ES stream only (historical API); net remains on package.loadAllEvents().
-        var events: [EventEnvelope] = []
-        if let files = try? FileManager.default.contentsOfDirectory(
-            at: package.eventsESURL,
-            includingPropertiesForKeys: nil
-        ) {
-            for file in files where file.pathExtension == "jsonl" {
-                events.append(contentsOf: try EventJSONL.decode(contentsOf: file, skipInvalid: true))
-            }
-        }
-        try exportEvents(events, to: url)
+    /// Exports the verified case timeline with containment and no-clobber checks.
+    @discardableResult
+    public static func exportCase(_ package: CasePackage, to url: URL) throws -> Int {
+        try package.verifyIntegrity()
+        let events = try package.loadAllEvents()
+        try CaseOutputWriter.write(EventJSONL.encode(events), from: package, to: url)
+        return events.count
     }
 }

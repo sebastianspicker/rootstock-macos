@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Bluetooth / Continuity proximity residual depth markers (Wave-14 red↔blue pair).
+/// Bluetooth / Continuity proximity residual depth markers (red↔blue pair).
 /// Honesty: never enables Bluetooth pairing or spoofs Continuity identities.
 public struct BluetoothContinuityDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "BTCONTINUITY", tier: .tier2, description: "Bluetooth Continuity depth markers")

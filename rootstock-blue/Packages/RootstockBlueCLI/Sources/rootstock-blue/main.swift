@@ -2,7 +2,7 @@
 import Foundation
 import RootstockBlueCore
 import RootstockBlueCase
-import RootstockBlueESKit
+import RootstockBlueSyntheticEvents
 import RootstockBlueFX
 import RootstockBlueDetect
 import RootstockBlueCollect
@@ -95,7 +95,7 @@ struct RootstockBlueCLI {
     private static func verifyCase(_ args: [String]) throws {
         guard args.count >= 2 else { throw RootstockBlueError.io("usage: case verify <path>") }
         let package = try CasePackage.open(at: URL(fileURLWithPath: args[1]))
-        try package.verifyLayout()
+        try package.verifyIntegrity()
         let events = try package.loadAllEvents()
         print("ok \(package.rootURL.path) events=\(events.count) jsonl_files=\(package.eventJSONLFileCount())")
     }
@@ -117,26 +117,23 @@ struct RootstockBlueCLI {
             guard let jsonlIdx = args.firstIndex(of: "--jsonl"), args.count > jsonlIdx + 1 else {
                 throw RootstockBlueError.io("usage: record inject --case <path.rsbcase> --jsonl <file>")
             }
-            var profileName = ESProfileName.ir
+            var profileName = SyntheticProfileName.triage
             if let idx = args.firstIndex(of: "--profile"), args.count > idx + 1 {
-                profileName = ESProfileName(rawValue: args[idx + 1]) ?? .ir
+                profileName = SyntheticProfileName(rawValue: args[idx + 1]) ?? .triage
             }
-            let profile = ESSubscriptionProfile.builtin(profileName)
-            precondition(!profile.authMode)
+            let profile = SyntheticEventProfile.builtin(profileName)
             let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[caseIdx + 1]))
             let jsonl = URL(fileURLWithPath: args[jsonlIdx + 1])
             let envelopes = try SessionRecorder.loadEnvelopes(fromJSONL: jsonl)
-            let client = MockESClient()
+            let client = SyntheticEventClient()
             let recorder = SessionRecorder(profile: profile)
             let sink = CaseEventSink(package: pkg)
             let result = try recorder.recordEnvelopes(envelopes, client: client, into: sink)
-            print("record_inject written=\(result.written) profile=\(profileName.rawValue) authMode=\(profile.authMode)")
+            print("record_inject written=\(result.written) profile=\(profileName.rawValue)")
             print("counters received=\(result.counters.received) mapped=\(result.counters.mapped) dropped=\(result.counters.totalDropped)")
         case "status":
-            print("record status: use inject for CI/alpha; live ES requires entitlement+FDA (mock factory default)")
+            print("record status: synthetic fixture injection only; no live signed Endpoint Security implementation is included")
             print("auth_block_default=\(NonGoals.authBlockDefaultOn)")
-        case "start", "stop":
-            print("deprecated in alpha: use `record inject --case ... --jsonl ...` for durable session→case path")
         default:
             throw RootstockBlueError.io("unknown record subcommand")
         }
@@ -147,20 +144,17 @@ struct RootstockBlueCLI {
             throw RootstockBlueError.io("usage: query <path.rsbcase> <SQL>")
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[0]))
+        try pkg.verifyIntegrity()
         let sql = args.dropFirst().joined(separator: " ")
-        let db = try pkg.openDatabase()
-        if sql.trimmingCharacters(in: .whitespacesAndNewlines).uppercased().hasPrefix("SELECT") {
-            let rows = try db.queryRows(sql)
-            print("rows=\(rows.count)")
-            for row in rows.prefix(50) {
-                let line = row.keys.sorted().map { "\($0)=\(row[$0] ?? "")" }.joined(separator: " ")
-                print(line)
-            }
-        } else if let value = try db.queryScalar(sql) {
-            print(value)
-        } else {
-            try db.exec(sql)
-            print("ok")
+        guard sql.trimmingCharacters(in: .whitespacesAndNewlines).uppercased().hasPrefix("SELECT") else {
+            throw RootstockBlueError.io("case queries are read-only SELECT statements")
+        }
+        let db = try CaseDatabase(url: pkg.databaseURL, readOnly: true)
+        let rows = try db.queryRows(sql)
+        print("rows=\(rows.count)")
+        for row in rows.prefix(50) {
+            let line = row.keys.sorted().map { "\($0)=\(row[$0] ?? "")" }.joined(separator: " ")
+            print(line)
         }
     }
 
@@ -206,6 +200,7 @@ struct RootstockBlueCLI {
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[1]))
         let out = URL(fileURLWithPath: args[2])
+        try pkg.verifyIntegrity()
         // Optionally attach detections from samples against case timeline
         var findings: [Finding] = []
         let rulesDir = repoContentRoot().appendingPathComponent("detections/samples")
@@ -260,7 +255,7 @@ struct RootstockBlueCLI {
             return
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[idx + 1]))
-        let n = try engine.parse(source: source, into: pkg)
+        let n = try engine.parse(source: source, into: CaseEventSink(package: pkg))
         print("parsed_events=\(n) plugins=\(engine.runtime.parserIDs().joined(separator: ","))")
         print("wrote \(n) events into case \(pkg.rootURL.path)")
     }
@@ -296,22 +291,16 @@ struct RootstockBlueCLI {
             }
             let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[1]))
             let out = URL(fileURLWithPath: args[2])
-            let events = try CaseTimeline.merged(from: pkg)
-            try JSONLExporter.exportEvents(events, to: out)
-            print("exported \(out.path) events=\(events.count)")
+            let eventCount = try JSONLExporter.exportCase(pkg, to: out)
+            print("exported \(out.path) events=\(eventCount)")
         case "family":
             guard args.count >= 3 else {
                 throw RootstockBlueError.io("usage: export family <path.rsbcase> <out.json>")
             }
             let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[1]))
             let out = URL(fileURLWithPath: args[2])
-            let events = try CaseTimeline.merged(from: pkg)
-            try FamilyOpenExporter.writeJSON(
-                events: events,
-                to: out,
-                caseName: pkg.manifest.name
-            )
-            print("exported_family \(out.path) events_in=\(events.count)")
+            let eventCount = try FamilyOpenExporter.writeJSON(from: pkg, to: out)
+            print("exported_family \(out.path) events_in=\(eventCount)")
         default:
             throw RootstockBlueError.io("unknown export kind: \(kind)")
         }
@@ -344,11 +333,6 @@ struct RootstockBlueCLI {
             throw RootstockBlueError.io(
                 "usage: import scan-json <scan.json> --case <path.rsbcase>\n"
                     + "       import findings-jsonl <findings.jsonl> --case <path.rsbcase>"
-            )
-        }
-        if kind == "zip" {
-            throw RootstockBlueError.notImplemented(
-                "ZIP archive import is disabled in this alpha. Parse an already-extracted artifact tree with parse."
             )
         }
         guard let caseIdx = args.firstIndex(of: "--case"), args.count > caseIdx + 1 else {
@@ -422,14 +406,13 @@ struct RootstockBlueCLI {
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[caseIdx + 1]))
         let events = try SantaBridge.eventsFromSantaLog(at: logURL)
         let sink = CaseEventSink(package: pkg, actor: NSUserName())
-        for event in events {
-            try sink.append(event)
-        }
-        try sink.noteCustody(
-            action: "santa_ingest",
-            detail: "Santa decision log \(logURL.lastPathComponent) → \(events.count) events"
+        try sink.append(
+            events,
+            custody: EventCustodyNote(
+                action: "santa_ingest",
+                detail: "Santa decision log \(logURL.lastPathComponent) → \(events.count) events"
+            )
         )
-        try pkg.updateHashes()
         print("santa_ingest events_written=\(events.count) log=\(logURL.path)")
         for e in events.prefix(20) {
             let decision = e.fields["santa.decision"] ?? "?"

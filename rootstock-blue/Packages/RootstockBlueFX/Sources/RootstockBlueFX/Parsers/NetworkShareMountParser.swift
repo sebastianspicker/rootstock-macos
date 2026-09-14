@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Network share / SMB mount dual-use lateral markers (Wave-12 red↔blue pair).
+/// Network share / SMB mount dual-use lateral markers (red↔blue pair).
 ///
 /// Honesty: never mounts attacker shares or writes credentials to NetAuth.
 public struct NetworkShareMountParser: ArtifactParser {

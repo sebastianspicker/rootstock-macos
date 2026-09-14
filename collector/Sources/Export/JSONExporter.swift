@@ -25,13 +25,28 @@ public enum JSONExporterError: LocalizedError {
     }
 }
 
+/// Test-only failure points for exercising the no-partial-overwrite guarantee.
+///
+/// This is internal so it does not alter the collector's public CLI contract.
+enum JSONExporterTestFailure: Sendable {
+    case beforePublish
+    case createDestinationBeforePublish
+    case afterPublishBeforeDirectorySync
+}
+
 /// Serializes a ScanResult to JSON and writes it to disk.
 public struct JSONExporter {
     private let encoder: JSONEncoder
+    private let testFailure: JSONExporterTestFailure?
 
     public init() {
+        self.init(testFailure: nil)
+    }
+
+    init(testFailure: JSONExporterTestFailure?) {
         encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        self.testFailure = testFailure
     }
 
     /// Encode a ScanResult to JSON data.
@@ -46,18 +61,98 @@ public struct JSONExporter {
     }
 
     private func writeSecurely(_ data: Data, to path: String, force: Bool) throws {
-        try validateOutputPath(path, force: force)
+        let directory = outputDirectory(for: path)
+        let directoryFD = try openDirectory(directory, outputPath: path)
+        defer { close(directoryFD) }
 
-        let fd = try openOutputFile(path, force: force)
-        defer { close(fd) }
+        let filename = try outputFilename(for: path)
+        try validateOutputPath(
+            path,
+            filename: filename,
+            directoryFD: directoryFD,
+            force: force
+        )
 
-        try enforceOwnerOnlyPermissions(fd, path: path)
-        try writeAll(data, to: fd, path: path)
+        let temporaryName = makeTemporaryFilename(for: filename)
+        var shouldRemoveTemporaryFile = true
+        defer {
+            if shouldRemoveTemporaryFile {
+                _ = unlinkat(directoryFD, temporaryName, 0)
+            }
+        }
+
+        let temporaryFD = try openTemporaryFile(
+            temporaryName,
+            directoryFD: directoryFD,
+            outputPath: path
+        )
+        do {
+            try enforceOwnerOnlyPermissions(temporaryFD, path: path)
+            try writeAll(data, to: temporaryFD, path: path)
+            try finishTemporaryFile(temporaryFD, path: path)
+        } catch {
+            _ = close(temporaryFD)
+            throw error
+        }
+        guard close(temporaryFD) == 0 else {
+            throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
+        }
+
+        if testFailure == .beforePublish {
+            throw JSONExporterError.writeFailed(path, "test-injected failure before atomic publish")
+        }
+        if testFailure == .createDestinationBeforePublish {
+            try createRacingDestination(
+                filename,
+                directoryFD: directoryFD,
+                outputPath: path
+            )
+        }
+
+        try publishTemporaryFile(
+            temporaryName,
+            as: filename,
+            directoryFD: directoryFD,
+            outputPath: path,
+            force: force
+        )
+        shouldRemoveTemporaryFile = false
+
+        if testFailure == .afterPublishBeforeDirectorySync {
+            throw JSONExporterError.writeFailed(
+                path,
+                "output was published but directory durability is unknown (test-injected)"
+            )
+        }
+
+        try synchronizeDirectory(directoryFD, outputPath: path)
     }
 
-    private func validateOutputPath(_ path: String, force: Bool) throws {
+    private func outputDirectory(for path: String) -> String {
+        let directory = (path as NSString).deletingLastPathComponent
+        return directory.isEmpty ? "." : directory
+    }
+
+    private func outputFilename(for path: String) throws -> String {
+        let filename = (path as NSString).lastPathComponent
+        guard !filename.isEmpty else {
+            throw JSONExporterError.cannotOpen(path, "output path has no filename")
+        }
+        return filename
+    }
+
+    private func makeTemporaryFilename(for filename: String) -> String {
+        ".\(filename).\(UUID().uuidString).tmp"
+    }
+
+    private func validateOutputPath(
+        _ path: String,
+        filename: String,
+        directoryFD: Int32,
+        force: Bool
+    ) throws {
         var statInfo = stat()
-        if lstat(path, &statInfo) == 0 {
+        if fstatat(directoryFD, filename, &statInfo, AT_SYMLINK_NOFOLLOW) == 0 {
             let fileType = statInfo.st_mode & S_IFMT
             if fileType == S_IFLNK {
                 throw JSONExporterError.outputIsSymlink(path)
@@ -73,14 +168,30 @@ public struct JSONExporter {
         }
     }
 
-    private func openOutputFile(_ path: String, force: Bool) throws -> Int32 {
-        let flags = O_WRONLY | O_CREAT | O_NOFOLLOW | (force ? O_TRUNC : O_EXCL)
-        let fd = open(path, flags, mode_t(S_IRUSR | S_IWUSR))
+    private func openDirectory(_ directory: String, outputPath: String) throws -> Int32 {
+        let fd = open(directory, O_RDONLY | O_DIRECTORY)
+        guard fd >= 0 else {
+            throw JSONExporterError.cannotOpen(outputPath, String(cString: strerror(errno)))
+        }
+        return fd
+    }
+
+    private func openTemporaryFile(
+        _ temporaryName: String,
+        directoryFD: Int32,
+        outputPath: String
+    ) throws -> Int32 {
+        let fd = openat(
+            directoryFD,
+            temporaryName,
+            O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW,
+            mode_t(S_IRUSR | S_IWUSR)
+        )
         guard fd >= 0 else {
             if errno == ELOOP {
-                throw JSONExporterError.outputIsSymlink(path)
+                throw JSONExporterError.outputIsSymlink(outputPath)
             }
-            throw JSONExporterError.cannotOpen(path, String(cString: strerror(errno)))
+            throw JSONExporterError.cannotOpen(outputPath, String(cString: strerror(errno)))
         }
         return fd
     }
@@ -106,6 +217,74 @@ public struct JSONExporter {
                 remaining -= written
                 pointer = pointer.advanced(by: written)
             }
+        }
+    }
+
+    private func finishTemporaryFile(_ fd: Int32, path: String) throws {
+        try synchronizeFile(fd, path: path)
+    }
+
+    private func publishTemporaryFile(
+        _ temporaryName: String,
+        as filename: String,
+        directoryFD: Int32,
+        outputPath: String,
+        force: Bool
+    ) throws {
+        if force {
+            guard renameat(directoryFD, temporaryName, directoryFD, filename) == 0 else {
+                throw JSONExporterError.writeFailed(outputPath, String(cString: strerror(errno)))
+            }
+            return
+        }
+
+        guard linkat(directoryFD, temporaryName, directoryFD, filename, 0) == 0 else {
+            if errno == EEXIST {
+                throw JSONExporterError.outputExists(outputPath)
+            }
+            throw JSONExporterError.writeFailed(outputPath, String(cString: strerror(errno)))
+        }
+        guard unlinkat(directoryFD, temporaryName, 0) == 0 else {
+            throw JSONExporterError.writeFailed(
+                outputPath,
+                "output was published but temporary cleanup failed: \(String(cString: strerror(errno)))"
+            )
+        }
+    }
+
+    private func createRacingDestination(
+        _ filename: String,
+        directoryFD: Int32,
+        outputPath: String
+    ) throws {
+        let fd = openat(
+            directoryFD,
+            filename,
+            O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW,
+            mode_t(S_IRUSR | S_IWUSR)
+        )
+        guard fd >= 0 else {
+            throw JSONExporterError.writeFailed(outputPath, String(cString: strerror(errno)))
+        }
+        defer { _ = close(fd) }
+        try writeAll(Data("racer".utf8), to: fd, path: outputPath)
+        try synchronizeFile(fd, path: outputPath)
+    }
+
+    private func synchronizeFile(_ fd: Int32, path: String) throws {
+        while fsync(fd) != 0 {
+            if errno == EINTR { continue }
+            throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
+        }
+    }
+
+    private func synchronizeDirectory(_ fd: Int32, outputPath: String) throws {
+        while fsync(fd) != 0 {
+            if errno == EINTR { continue }
+            throw JSONExporterError.writeFailed(
+                outputPath,
+                "output was published but directory durability is unknown: \(String(cString: strerror(errno)))"
+            )
         }
     }
 }

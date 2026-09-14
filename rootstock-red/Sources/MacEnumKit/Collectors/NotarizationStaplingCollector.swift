@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Notarization / stapling trust-depth surface (Wave-7).
+/// Notarization / stapling trust-depth surface.
 ///
 /// Research basis: Gatekeeper/notarization research; spctl/stapler operator checklists.
 /// Safety and behavior: typed `NotarizationStaplingState`; never forges tickets or bypasses GK.

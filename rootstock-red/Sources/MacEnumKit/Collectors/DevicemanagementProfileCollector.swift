@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Device management profile residual depth (Wave-16).
+/// Device management profile residual depth.
 /// Safety and behavior: path inventory only; never installs configuration profiles or enrolls hosts in MDM.
 public struct DevicemanagementProfileCollector: Collector {
     public static let id = "collect.devicemanagement_profile"

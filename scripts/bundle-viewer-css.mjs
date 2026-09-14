@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Concatenate graph/viewer-css/* modules (per manifest.json) into graph/viewer.css.
+ * Concatenate graph/viewer-css/* modules (per manifest.json) into the package viewer CSS resource.
  * Usage: node scripts/bundle-viewer-css.mjs
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -9,7 +9,9 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const cssDir = join(root, "graph", "viewer-css");
-const outPath = join(root, "graph", "viewer.css");
+const outPath =
+  process.argv[2] ??
+  join(root, "graph", "src", "rootstock_graph", "resources", "viewer", "viewer.css");
 const manifestPath = join(cssDir, "manifest.json");
 
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -40,5 +42,5 @@ for (const file of files) {
   parts.push(`/* ===== ${file} ===== */`, body, "");
 }
 
-writeFileSync(outPath, parts.join("\n") + "\n", "utf8");
+writeFileSync(outPath, `${parts.join("\n").trimEnd()}\n`, "utf8");
 console.log(`bundle-viewer-css: wrote ${outPath} (${files.length} modules)`);

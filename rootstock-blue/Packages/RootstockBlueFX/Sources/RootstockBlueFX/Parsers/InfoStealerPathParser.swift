@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Info-stealer multi-app **path plane** markers (Wave-8 residual red↔blue pair).
+/// Info-stealer multi-app **path plane** markers (Residual red↔blue pair).
 ///
 /// Inventories browser / messaging / vault / wallet / sync path families for IR.
 /// **NEVER exports secrets** - no password, cookie, keychain, or wallet material.

@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Cron / at job dual-use residual depth markers (Wave-14 red↔blue pair).
+/// Cron / at job dual-use residual depth markers (red↔blue pair).
 /// Honesty: never installs cron or at jobs outside the lab root.
 public struct CronAtJobDepthParser: ArtifactParser {
     public let manifest = PluginManifest(id: "CRONATJOB", tier: .tier2, description: "Cron/at job depth markers")

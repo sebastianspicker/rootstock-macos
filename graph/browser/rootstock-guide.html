@@ -2,7 +2,7 @@
   Rootstock Neo4j Browser Guide
   Load with: :play http://localhost:8001/rootstock-guide.html
   To serve locally:
-    cd graph/browser && python3 -m http.server 8001
+    cd graph/browser && python3 -m http.server 8001 --bind 127.0.0.1
     Then in Neo4j Browser: :play http://localhost:8001/rootstock-guide.html
 -->
 <style>
@@ -57,8 +57,8 @@
     <!-- ── Slide 1: Welcome ───────────────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Welcome to Rootstock</h3>
-        <p class="lead">Inspect macOS security evidence and modeled relationships.</p>
+        <h3>Explore the Rootstock graph</h3>
+        <p class="lead">Review collected macOS security evidence and the relationships derived from it.</p>
         <p>
           Rootstock represents collected <strong>TCC grants</strong>, entitlements,
           <strong>Keychain ACLs</strong>, code signing metadata, and XPC services as a
@@ -66,28 +66,28 @@
           library. Results depend on collector permissions and the selected modules.
         </p>
         <hr>
-        <h4>Graph Contents</h4>
+        <h4>What the graph contains</h4>
         <ul>
-          <li>Application - applications present in the imported scan</li>
-          <li>TCC_Permission - services referenced by imported TCC grants</li>
-          <li>Entitlement - code signing entitlements per app</li>
-          <li>XPC_Service - LaunchDaemons and LaunchAgents</li>
-          <li>Keychain_Item - Keychain ACL metadata (no secrets)</li>
-          <li>MDM_Profile - installed configuration profiles</li>
-          <li>User - local user accounts</li>
-          <li>Computer - scanned host with posture properties</li>
-          <li>CriticalFile - security-critical file ACL metadata</li>
-          <li>BluetoothDevice - paired Bluetooth peripherals</li>
-          <li>CertificateAuthority - signing certificate chain CAs</li>
-          <li>AuthorizationRight - macOS authorization DB rights</li>
-          <li>SystemExtension - network/endpoint security/driver extensions</li>
-          <li>SudoersRule - sudoers file entries</li>
-          <li>LoginSession - active login sessions</li>
+          <li><code>Application</code>: applications present in the imported scan</li>
+          <li><code>TCC_Permission</code>: services referenced by imported TCC grants</li>
+          <li><code>Entitlement</code>: code-signing entitlements for each app</li>
+          <li><code>XPC_Service</code>: LaunchDaemons and LaunchAgents</li>
+          <li><code>Keychain_Item</code>: Keychain ACL metadata, without secrets</li>
+          <li><code>MDM_Profile</code>: installed configuration profiles</li>
+          <li><code>User</code>: local user accounts</li>
+          <li><code>Computer</code>: the scanned host and its posture properties</li>
+          <li><code>CriticalFile</code>: ACL metadata for security-critical files</li>
+          <li><code>BluetoothDevice</code>: paired Bluetooth peripherals</li>
+          <li><code>CertificateAuthority</code>: certificate authorities in signing chains</li>
+          <li><code>AuthorizationRight</code>: macOS authorization database rights</li>
+          <li><code>SystemExtension</code>: network, endpoint security, and driver extensions</li>
+          <li><code>SudoersRule</code>: entries from sudoers files</li>
+          <li><code>LoginSession</code>: active login sessions</li>
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Quick Health Check</h4>
-        <p>Run this to verify your graph is populated:</p>
+        <h4>Check the import</h4>
+        <p>List the node labels and counts to confirm that the graph contains imported data:</p>
         <pre class="pre-scrollable code runnable">
 MATCH (n)
 RETURN labels(n)[0] AS node_type, count(n) AS count
@@ -95,7 +95,7 @@ ORDER BY count DESC
         </pre>
         <p class="hint">A populated graph returns the node labels present in the imported scan.</p>
         <hr>
-        <h4>Key Relationships</h4>
+        <h4>Common relationships</h4>
         <table class="table table-condensed">
           <thead><tr><th>Relationship</th><th>Meaning</th><th>Type</th></tr></thead>
           <tbody>
@@ -125,12 +125,12 @@ ORDER BY count DESC
     <!-- ── Slide 2: Getting Started ──────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Getting Started</h3>
-        <p class="lead">Explore the TCC attack surface.</p>
+        <h3>Review TCC grants</h3>
+        <p class="lead">Start with the privacy permissions recorded in the scan.</p>
         <p>
           TCC (Transparency, Consent, and Control) is the macOS permission system that
-          controls access to sensitive resources: Full Disk Access, Camera, Microphone,
-          Contacts, and more.
+          controls access to resources such as Full Disk Access, Camera, Microphone,
+          and Contacts.
         </p>
         <p>
           Each imported grant describes authorization state observed in the scan. A
@@ -138,7 +138,7 @@ ORDER BY count DESC
           for manual validation, not proof that access can be inherited.
         </p>
         <hr>
-        <h4>Try These First</h4>
+        <h4>Start here</h4>
         <ul>
           <li>Run the query on the right to list up to 50 active TCC grants</li>
           <li>Review apps with multiple grants against their documented purpose</li>
@@ -175,7 +175,7 @@ LIMIT 20
     <!-- ── Slide 3: Find Injectable Apps ─────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Find Injectable Apps</h3>
+        <h3>Review modeled injection conditions</h3>
         <p class="lead">Review apps with Full Disk Access and modeled injection conditions.</p>
         <p>
           Rootstock derives injection relationships from collected runtime, signing, and
@@ -188,21 +188,20 @@ LIMIT 20
           to protected files.
         </p>
         <hr>
-        <h4>Injection Methods</h4>
+        <h4>Reported methods</h4>
         <ul>
-          <li><code>dyld_insert</code> - missing Hardened Runtime</li>
-          <li><code>missing_library_validation</code> - accepts unsigned dylibs</li>
-          <li><code>dyld_insert_via_entitlement</code> - has allow-dyld entitlement</li>
-          <li><code>electron_env_var</code> - ELECTRON_RUN_AS_NODE abuse</li>
+          <li><code>dyld_insert</code>: Hardened Runtime was not observed</li>
+          <li><code>missing_library_validation</code>: effective library validation was not observed</li>
+          <li><code>dyld_insert_via_entitlement</code>: an allow-DYLD entitlement was observed</li>
+          <li><code>electron_env_var</code>: the model matched an Electron environment-variable condition</li>
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 1 - Injectable FDA Apps</h4>
+        <h4>Query 1: Injectable FDA apps</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (app:Application)
-      -[:HAS_TCC_GRANT {allowed: true}]->
+MATCH (app:Application)-[:HAS_TCC_GRANT {allowed: true}]-&gt;
       (:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
-MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(app)
+MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]-&gt;(app)
 WITH app, collect(DISTINCT inj.method) AS injection_methods
 RETURN app.name            AS app_name,
        app.bundle_id       AS bundle_id,
@@ -213,7 +212,7 @@ RETURN app.name            AS app_name,
 ORDER BY method_count DESC, app.name ASC
         </pre>
         <hr>
-        <h4>Visualise the Attack Surface</h4>
+        <h4>Visualize the modeled path</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (attacker:Application {bundle_id: 'attacker.payload'})
       -[inj:CAN_INJECT_INTO]->(app:Application)
@@ -229,7 +228,7 @@ LIMIT 25
     <!-- ── Slide 4: Attack Paths ──────────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Attack Paths</h3>
+        <h3>Inspect modeled paths</h3>
         <p class="lead">Inspect multi-hop relationships in the imported graph.</p>
         <p>
           The <code>shortestPath</code> algorithm finds the minimum number of hops
@@ -243,20 +242,20 @@ LIMIT 25
         <p>Longer results can include Apple Event or injection relationships.</p>
         <hr>
         <p class="hint">
-          Tip: Click a path node in the graph to see its full
-          properties. Right-click → "Expand" to explore neighbours.
+          Click a path node to inspect all of its properties. Right-click it and
+          choose "Expand" to explore neighboring nodes.
         </p>
         <p class="hint">
           The <code>attacker.payload</code> node represents any attacker-controlled
-          code on the system. It is created by <code>infer.py</code>.
+          code on the system. It is created by <code>rootstock-graph-infer</code>.
         </p>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 2 - Shortest Path to Full Disk Access</h4>
+        <h4>Query 2: Shortest path to Full Disk Access</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (attacker:Application {bundle_id: 'attacker.payload'}),
       (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
-MATCH p = shortestPath((attacker)-[*..5]->(fda))
+MATCH p = shortestPath((attacker)-[*..5]-&gt;(fda))
 RETURN p,
        length(p)                                                AS path_length,
        [n IN nodes(p) | coalesce(n.name, n.display_name, '?')] AS node_names,
@@ -265,7 +264,7 @@ ORDER BY path_length ASC
 LIMIT 10
         </pre>
         <hr>
-        <h4>Injection Chain (Multi-hop)</h4>
+        <h4>Multi-hop injection chain</h4>
         <pre class="pre-scrollable code runnable">
 MATCH path = (attacker:Application {bundle_id: 'attacker.payload'})
              -[:CAN_INJECT_INTO*1..3]->
@@ -284,7 +283,7 @@ ORDER BY hops ASC LIMIT 15
     <!-- ── Slide 5: Electron Risks ───────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Electron Risks</h3>
+        <h3>Review Electron applications</h3>
         <p class="lead">Review modeled Electron child-process permission inheritance.</p>
         <p>
           Rootstock records Electron-related properties and can derive child-process
@@ -305,19 +304,20 @@ ORDER BY hops ASC LIMIT 15
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 3 - Electron TCC Inheritance</h4>
+        <h4>Query 3: Electron TCC inheritance candidates</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (app:Application {is_electron: true})
-      -[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
+MATCH (app:Application {is_electron: true})-[:HAS_TCC_GRANT {allowed: true}]-&gt;(perm:TCC_Permission)
 WITH app, collect(DISTINCT perm.display_name) AS inherited_permissions
 RETURN app.name              AS app_name,
        app.bundle_id         AS bundle_id,
+       app.path              AS path,
        inherited_permissions,
+       app.injection_methods AS injection_methods,
        size(inherited_permissions) AS permission_count
 ORDER BY permission_count DESC, app.name ASC
         </pre>
         <hr>
-        <h4>Electron Apps + Injection Susceptibility</h4>
+        <h4>Electron apps and modeled injection conditions</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application {is_electron: true})
 OPTIONAL MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
@@ -336,7 +336,7 @@ ORDER BY is_injectable DESC, size(permissions) DESC
     <!-- ── Slide 6: Blue Team Audit ──────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Blue Team Audit</h3>
+        <h3>Build a defensive baseline</h3>
         <p class="lead">Establish a TCC baseline and detect anomalies.</p>
         <p>
           The graph can be used to review TCC grants, MDM-managed permissions, and
@@ -344,7 +344,7 @@ ORDER BY is_injectable DESC, size(permissions) DESC
           investigation leads and do not by themselves establish compromise.
         </p>
         <hr>
-        <h4>Key Questions for Blue Teams</h4>
+        <h4>Questions to investigate</h4>
         <ul>
           <li>Which non-system apps have Full Disk Access?</li>
           <li>Are there apps with private Apple entitlements?</li>
@@ -357,19 +357,36 @@ ORDER BY is_injectable DESC, size(permissions) DESC
           install to detect new TCC grants introduced by the installer.</p>
       </div>
       <div class="col-sm-8">
-        <h4>Analysis Query 7 - TCC Grant Overview (Blue Team)</h4>
+        <h4>Query 7: TCC grant overview</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (app:Application)-[r:HAS_TCC_GRANT]->(perm:TCC_Permission)
+MATCH (app:Application)-[r:HAS_TCC_GRANT]-&gt;(perm:TCC_Permission)
 WITH perm.display_name AS permission,
      perm.service      AS service,
      sum(CASE WHEN r.allowed = true  THEN 1 ELSE 0 END) AS allowed_count,
      sum(CASE WHEN r.allowed = false THEN 1 ELSE 0 END) AS denied_count,
      count(*) AS total_grants
 RETURN permission, service, allowed_count, denied_count, total_grants
-ORDER BY total_grants DESC
+ORDER BY total_grants DESC;
+
+
+MATCH (app:Application)-[r:HAS_TCC_GRANT {allowed: true}]-&gt;(perm:TCC_Permission)
+WITH app, collect(DISTINCT perm.display_name) AS permissions
+RETURN app.name            AS app_name,
+       app.bundle_id       AS bundle_id,
+       app.is_system       AS is_system,
+       permissions,
+       size(permissions)   AS permission_count
+ORDER BY permission_count DESC
+LIMIT 20;
+
+
+MATCH (app:Application)-[r:HAS_TCC_GRANT {allowed: true}]-&gt;(perm:TCC_Permission)
+WITH r.auth_reason AS granted_by, count(*) AS n
+RETURN granted_by, n
+ORDER BY n DESC;
         </pre>
         <hr>
-        <h4>Apple Event TCC Cascade</h4>
+        <h4>Apple Event TCC cascade</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (source:Application)-[:CAN_SEND_APPLE_EVENT]->(target:Application)
       -[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
@@ -386,12 +403,13 @@ ORDER BY source.name, perm.display_name
     <!-- ── Slide 7: Next Steps ───────────────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Next Steps</h3>
+        <h3>Continue with the query library</h3>
         <p class="lead">Extend your analysis with the full query library.</p>
-        <h4>Query Library (103 queries)</h4>
+        <h4>Query library: 103 queries</h4>
         <p>
-          Query files are in <code>graph/queries/</code>. Run them via
-          <code>query_runner.py</code> or paste into Neo4j Browser.
+          Query files are packaged with <code>rootstock-graph</code>. Run them
+          via <code>rootstock-graph-query</code> or paste them into Neo4j
+          Browser.
         </p>
         <h5>Core (01-10)</h5>
         <ul>
@@ -423,29 +441,29 @@ ORDER BY source.name, perm.display_name
         </ul>
       </div>
       <div class="col-sm-8">
-        <h4>Generate a Security Report</h4>
+        <h4>Generate a report</h4>
         <pre class="pre-scrollable code">
 # Markdown report:
-uv run --project graph --locked python graph/report.py \
+uv run --project graph --locked rootstock-graph-report \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.md
 
 # HTML report with richer metadata:
-uv run --project graph --locked python graph/report.py \
+uv run --project graph --locked rootstock-graph-report \
   --neo4j bolt://localhost:7687 \
   --output rootstock-report.html \
   --format html \
   --scan-json scan.json
         </pre>
         <hr>
-        <h4>Load Graph Style Sheet</h4>
-        <p>Apply Rootstock colours to Neo4j Browser:</p>
+        <h4>Load the graph style sheet</h4>
+        <p>Apply the Rootstock colors in Neo4j Browser:</p>
         <pre class="pre-scrollable code">
 # In Neo4j Browser, paste this command:
 :style http://localhost:8001/rootstock-style.grass
         </pre>
         <hr>
-        <h4>Private Entitlement Audit</h4>
+        <h4>Review private entitlements</h4>
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application {is_system: false})
       -[:HAS_ENTITLEMENT]->(ent:Entitlement {is_private: true})
@@ -463,20 +481,20 @@ LIMIT 20
     <!-- ── Slide 8: Tier Classification & Ownership ──────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Tier Classification & Ownership</h3>
-        <p class="lead">Prioritise findings by asset criticality.</p>
+        <h3>Tier classification and ownership</h3>
+        <p class="lead">Prioritize applications with the graph's classification rules.</p>
         <p>
           Rootstock assigns application tiers from graph properties and inference rules:
         </p>
         <ul>
-          <li><strong>Tier 0</strong> - applications assigned the highest modeled impact.</li>
-          <li><strong>Tier 1</strong> - applications assigned intermediate modeled impact.</li>
-          <li><strong>Tier 2</strong> - other applications classified by the current rules.</li>
+          <li><strong>Tier 0</strong>: apps with Full Disk Access or <code>com.apple.private.tcc.allow</code>, apps targeted through passwordless sudo, and apps with a KEV-listed CVE plus a TCC grant.</li>
+          <li><strong>Tier 1</strong>: apps with another TCC grant, Keychain trust, or root-daemon persistence, and apps with a CVSS score of at least 8.0 plus a TCC grant.</li>
+          <li><strong>Tier 2</strong>: remaining apps with persistence, injection conditions, private entitlements, or a CVE association.</li>
         </ul>
         <hr>
-        <h4>Ownership Workflow</h4>
+        <h4>Mark an analysis starting point</h4>
         <p>
-          Use <code>mark_owned.py</code> to mark nodes under authorized control for an
+          Use <code>rootstock-graph-mark-owned</code> to mark nodes under authorized control for an
           analysis exercise. Reachability queries then return modeled paths from those
           nodes to classified assets.
         </p>
@@ -486,20 +504,22 @@ LIMIT 20
         <pre class="pre-scrollable code runnable">
 MATCH (app:Application)
 WHERE app.tier IS NOT NULL
-OPTIONAL MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)
-OPTIONAL MATCH (app)-[:HAS_ENTITLEMENT]->(ent:Entitlement {is_private: true})
+OPTIONAL MATCH (app)-[:HAS_TCC_GRANT {allowed: true}]-&gt;(perm:TCC_Permission)
+OPTIONAL MATCH (app)-[:HAS_ENTITLEMENT]-&gt;(ent:Entitlement {is_private: true})
+
 WITH app,
-     collect(DISTINCT perm.display_name) AS tcc_grants,
-     collect(DISTINCT ent.name)          AS private_entitlements,
-     size(app.injection_methods)         AS injection_method_count
-RETURN app.tier              AS tier,
-       app.name              AS app_name,
-       app.bundle_id         AS bundle_id,
-       app.is_system         AS is_system,
+     collect(DISTINCT perm.display_name)   AS tcc_grants,
+     collect(DISTINCT ent.name)            AS private_entitlements,
+     size(app.injection_methods)           AS injection_method_count
+
+RETURN app.tier                            AS tier,
+       app.name                            AS app_name,
+       app.bundle_id                       AS bundle_id,
+       app.is_system                       AS is_system,
        tcc_grants,
        private_entitlements,
        injection_method_count,
-       app.is_electron       AS is_electron
+       app.is_electron                     AS is_electron
 ORDER BY app.tier ASC, app.name
         </pre>
         <hr>
@@ -508,12 +528,12 @@ ORDER BY app.tier ASC, app.name
 MATCH (src)
 WHERE src.owned = true
 MATCH (fda:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
-MATCH p = shortestPath((src)-[:CAN_INJECT_INTO|CHILD_INHERITS_TCC|CAN_SEND_APPLE_EVENT|HAS_TCC_GRANT|CAN_HIJACK|PERSISTS_VIA|CAN_READ_KEYCHAIN|COMMUNICATES_WITH|HAS_TRANSITIVE_FDA|SUDO_NOPASSWD|CAN_WRITE|CAN_MODIFY_TCC|CAN_INJECT_SHELL|ACCESSIBLE_BY|CAN_CONTROL_VIA_A11Y|CAN_BLIND_MONITORING|CAN_DEBUG*..6]->(fda))
+MATCH p = shortestPath((src)-[:CAN_INJECT_INTO|CHILD_INHERITS_TCC|CAN_SEND_APPLE_EVENT|HAS_TCC_GRANT|CAN_HIJACK|PERSISTS_VIA|CAN_READ_KEYCHAIN|SHARES_KEYCHAIN_GROUP|COMMUNICATES_WITH|HAS_TRANSITIVE_FDA|SUDO_NOPASSWD|CAN_CHANGE_PASSWORD|CAN_READ_KERBEROS|CAN_WRITE|CAN_MODIFY_TCC|CAN_INJECT_SHELL|ACCESSIBLE_BY|CAN_CONTROL_VIA_A11Y|CAN_BLIND_MONITORING|CAN_DEBUG*..6]-&gt;(fda))
 RETURN p,
-       length(p) AS path_length,
+       length(p)                                                AS path_length,
        [n IN nodes(p) | coalesce(n.name, n.display_name, n.bundle_id, '?')] AS node_names,
-       [r IN relationships(p) | type(r)] AS rel_types,
-       src.owned_at AS owned_since
+       [r IN relationships(p) | type(r)]                        AS rel_types,
+       src.owned_at                                              AS owned_since
 ORDER BY path_length ASC
 LIMIT 10
         </pre>
@@ -523,15 +543,15 @@ LIMIT 10
     <!-- ── Slide 9: Physical Security & iCloud ───────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Physical Security & iCloud</h3>
-        <p class="lead">Assess physical and cloud attack surface.</p>
+        <h3>Physical posture and iCloud</h3>
+        <p class="lead">Correlate host posture with application and iCloud evidence.</p>
         <p>
           The Computer node stores physical security posture:
           Lockdown Mode, screen lock, FileVault, Thunderbolt security,
           Bluetooth discoverability, and Secure Boot level.
         </p>
         <hr>
-        <h4>iCloud Sync Risks</h4>
+        <h4>Interpret iCloud results</h4>
         <p>
           The query lists apps with iCloud entitlements, modeled injection methods, and
           host iCloud state. It does not establish access to remote device data or prove
@@ -546,33 +566,49 @@ WITH c,
      CASE WHEN c.lockdown_mode_enabled = false OR c.lockdown_mode_enabled IS NULL THEN 1 ELSE 0 END AS no_lockdown,
      CASE WHEN c.bluetooth_discoverable = true THEN 1 ELSE 0 END AS bt_discoverable,
      CASE WHEN c.screen_lock_enabled = false OR c.screen_lock_enabled IS NULL THEN 1 ELSE 0 END AS no_screen_lock,
+     CASE WHEN c.screen_lock_delay &gt; 5 THEN 1 ELSE 0 END AS slow_screen_lock,
+     CASE WHEN c.display_sleep_timeout &gt; 15 THEN 1 ELSE 0 END AS long_display_sleep,
      CASE WHEN c.filevault_enabled = false OR c.filevault_enabled IS NULL THEN 1 ELSE 0 END AS no_filevault,
      CASE WHEN c.secure_boot_level IS NOT NULL AND c.secure_boot_level &lt;&gt; 'full' THEN 1 ELSE 0 END AS weak_secure_boot,
      CASE WHEN c.external_boot_allowed = true THEN 1 ELSE 0 END AS ext_boot
 WITH c,
-     no_lockdown + bt_discoverable + no_screen_lock + no_filevault + weak_secure_boot + ext_boot AS weakness_score
-WHERE weakness_score > 0
-RETURN c.hostname              AS hostname,
+     no_lockdown + bt_discoverable + no_screen_lock + slow_screen_lock +
+     long_display_sleep + no_filevault + weak_secure_boot + ext_boot AS weakness_score,
+     [x IN [
+       CASE WHEN c.lockdown_mode_enabled = false OR c.lockdown_mode_enabled IS NULL THEN 'no_lockdown_mode' END,
+       CASE WHEN c.bluetooth_discoverable = true THEN 'bluetooth_discoverable' END,
+       CASE WHEN c.screen_lock_enabled = false OR c.screen_lock_enabled IS NULL THEN 'no_screen_lock' END,
+       CASE WHEN c.screen_lock_delay &gt; 5 THEN 'slow_screen_lock_delay' END,
+       CASE WHEN c.display_sleep_timeout &gt; 15 THEN 'long_display_sleep' END,
+       CASE WHEN c.filevault_enabled = false OR c.filevault_enabled IS NULL THEN 'no_filevault' END,
+       CASE WHEN c.secure_boot_level IS NOT NULL AND c.secure_boot_level &lt;&gt; 'full' THEN 'weak_secure_boot' END,
+       CASE WHEN c.external_boot_allowed = true THEN 'external_boot_allowed' END
+     ] WHERE x IS NOT NULL] AS weaknesses
+WHERE weakness_score &gt; 0
+RETURN c.hostname       AS hostname,
        weakness_score,
-       c.lockdown_mode_enabled AS lockdown_mode,
-       c.bluetooth_discoverable AS bt_discoverable,
-       c.screen_lock_enabled   AS screen_lock,
-       c.filevault_enabled     AS filevault,
-       c.secure_boot_level     AS secure_boot,
-       c.external_boot_allowed AS external_boot
+       weaknesses,
+       c.lockdown_mode_enabled   AS lockdown_mode,
+       c.bluetooth_discoverable  AS bt_discoverable,
+       c.screen_lock_enabled     AS screen_lock,
+       c.screen_lock_delay       AS screen_lock_delay_sec,
+       c.display_sleep_timeout   AS display_sleep_min,
+       c.filevault_enabled       AS filevault,
+       c.secure_boot_level       AS secure_boot,
+       c.external_boot_allowed   AS external_boot
 ORDER BY weakness_score DESC
         </pre>
         <hr>
         <h4>Query 68 - Injectable iCloud Sync</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (a:Application)-[:HAS_ENTITLEMENT]->(e:Entitlement {category: 'icloud'})
-WHERE size(a.injection_methods) > 0
-MATCH (a)-[:INSTALLED_ON]->(c:Computer {icloud_signed_in: true})
-RETURN a.name             AS app,
-       a.bundle_id        AS bundle_id,
+MATCH (a:Application)-[:HAS_ENTITLEMENT]-&gt;(e:Entitlement {category: 'icloud'})
+WHERE size(a.injection_methods) &gt; 0
+MATCH (a)-[:INSTALLED_ON]-&gt;(c:Computer {icloud_signed_in: true})
+RETURN a.name            AS app,
+       a.bundle_id       AS bundle_id,
        a.injection_methods AS injection_methods,
-       collect(e.name)    AS icloud_entitlements,
-       c.hostname         AS hostname,
+       collect(e.name)   AS icloud_entitlements,
+       c.hostname        AS hostname,
        c.icloud_drive_enabled    AS drive_enabled,
        c.icloud_keychain_enabled AS keychain_sync
 ORDER BY size(a.injection_methods) DESC, a.name
@@ -583,18 +619,18 @@ ORDER BY size(a.injection_methods) DESC, a.name
     <!-- ── Slide 10: Advanced Attack Paths ────────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Advanced Attack Paths</h3>
+        <h3>Additional relationship models</h3>
         <p class="lead">File ACLs, shell hooks, and cross-host correlation.</p>
         <p>
           The graph also models relationships derived from file ACLs, shell hooks, and
           cross-host identity data:
         </p>
         <ul>
-          <li><strong>File ACL review</strong> - users with modeled write access to
+          <li><strong>File ACL review</strong>: users with modeled write access to
             security-relevant files or directories.</li>
-          <li><strong>Shell hook review</strong> - writable shell startup files reported
+          <li><strong>Shell hook review</strong>: writable shell startup files reported
             by the collector.</li>
-          <li><strong>Cross-host correlation</strong> - identity relationships shared by
+          <li><strong>Cross-host correlation</strong>: identity relationships shared by
             multiple imported hosts.</li>
         </ul>
         <hr>
@@ -606,23 +642,31 @@ ORDER BY size(a.injection_methods) DESC, a.name
       <div class="col-sm-8">
         <h4>Query 48 - File ACL Write Paths</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (u:User)-[:CAN_WRITE]->(f:CriticalFile)
-RETURN u.name       AS user,
-       f.path       AS file_path,
-       f.category   AS file_type,
-       f.owner      AS owner,
-       f.mode       AS permissions
-ORDER BY f.category, u.name
+MATCH (u:User)-[w:CAN_WRITE]-&gt;(cf:CriticalFile)
+OPTIONAL MATCH (cf)-[:PROTECTS]-&gt;(target)
+RETURN u.name                              AS username,
+       cf.path                             AS critical_file,
+       cf.category                         AS category,
+       cf.owner                            AS file_owner,
+       cf.mode                             AS permissions,
+       cf.is_sip_protected                 AS sip_protected,
+       collect(DISTINCT coalesce(
+           target.display_name, target.service, target.label, '?'
+       ))                                  AS protects
+ORDER BY cf.category, u.name
         </pre>
         <hr>
         <h4>Query 50 - Shell Hook Injection</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (u:User)-[:CAN_INJECT_SHELL]->(f:CriticalFile {category: 'shell_hook'})
-RETURN u.name   AS user,
-       f.path   AS hook_path,
-       f.owner  AS owner,
-       f.mode   AS permissions
-ORDER BY u.name, f.path
+MATCH (u:User)-[r:CAN_INJECT_SHELL]-&gt;(cf:CriticalFile {category: 'shell_hook'})
+OPTIONAL MATCH (u)-[:HAS_SESSION]-&gt;(s:LoginSession)
+RETURN u.name                              AS username,
+       cf.path                             AS shell_hook_path,
+       cf.mode                             AS permissions,
+       cf.owner                            AS file_owner,
+       collect(DISTINCT s.session_type)    AS active_session_types,
+       size(collect(DISTINCT s))           AS active_session_count
+ORDER BY active_session_count DESC, u.name
         </pre>
       </div>
     </slide>
@@ -630,50 +674,50 @@ ORDER BY u.name, f.path
     <!-- ── Slide 11: Certificate & Cloud Risk ─────────────────────────────── -->
     <slide class="row-fluid">
       <div class="col-sm-4">
-        <h3>Certificate & Cloud Risk</h3>
-        <p class="lead">Signing integrity and cloud exposure analysis.</p>
+        <h3>Review signing certificates</h3>
+        <p class="lead">Use certificate metadata as one part of an application trust review.</p>
         <p>
           Certificate metadata is one input to application trust review. Interpret it
           together with notarization, runtime, entitlement, and provenance evidence.
         </p>
         <hr>
-        <h4>Certificate Risk Factors</h4>
+        <h4>Interpretation notes</h4>
         <ul>
-          <li><strong>Expired certificates</strong> - record the signing and timestamp
+          <li><strong>Expired certificates</strong>: record the signing and timestamp
             context before drawing a conclusion.</li>
-          <li><strong>Ad-hoc signatures</strong> - no Developer ID identity is attached.</li>
-          <li><strong>Non-Apple CA chains</strong> - record the issuer and validate the
+          <li><strong>Ad-hoc signatures</strong>: no Developer ID identity is attached.</li>
+          <li><strong>Non-Apple CA chains</strong>: record the issuer and validate the
             expected trust policy; issuer origin alone is not a finding.</li>
         </ul>
       </div>
       <div class="col-sm-8">
         <h4>Query 60 - Expired Cert with TCC</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission)
+MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]-&gt;(t:TCC_Permission)
 WHERE a.is_certificate_expired = true
   AND a.is_sip_protected = false
 WITH a, collect(DISTINCT t.service) AS tcc_grants
-RETURN a.name                   AS app_name,
-       a.bundle_id              AS bundle_id,
-       a.certificate_expires    AS certificate_expires,
-       a.signing_certificate_cn AS signing_certificate,
+RETURN a.name                       AS app_name,
+       a.bundle_id                  AS bundle_id,
+       a.certificate_expires        AS certificate_expires,
+       a.signing_certificate_cn     AS signing_certificate,
        tcc_grants
 ORDER BY size(tcc_grants) DESC
         </pre>
         <hr>
         <h4>Query 62 - Non-Apple CA Chain</h4>
         <pre class="pre-scrollable code runnable">
-MATCH (a:Application)-[:SIGNED_BY_CA]->(leaf:CertificateAuthority)
-OPTIONAL MATCH path = (leaf)-[:ISSUED_BY*0..]->(root:CertificateAuthority {is_root: true})
+MATCH (a:Application)-[:SIGNED_BY_CA]-&gt;(leaf:CertificateAuthority)
+OPTIONAL MATCH path = (leaf)-[:ISSUED_BY*0..10]-&gt;(root:CertificateAuthority {is_root: true})
 WITH a, leaf, root
 WHERE root IS NOT NULL
   AND root.common_name IS NOT NULL
   AND NOT root.common_name STARTS WITH 'Apple'
-RETURN a.name                   AS app_name,
-       a.bundle_id              AS bundle_id,
-       a.signing_certificate_cn AS signing_certificate,
-       root.common_name         AS root_ca,
-       root.organization        AS root_org
+RETURN a.name                       AS app_name,
+       a.bundle_id                  AS bundle_id,
+       a.signing_certificate_cn     AS signing_certificate,
+       root.common_name             AS root_ca,
+       root.organization            AS root_org
 ORDER BY a.name
         </pre>
       </div>

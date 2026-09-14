@@ -1,46 +1,49 @@
-# DD-011: Family Artifact Bridges
+# DD-011: File exchange between products
 
-Status: Accepted (design); implementations optional and versioned
+Status: Accepted; optional imports and exports are implemented
 Date: 2026-07-16
 
 ## Context
 
-[DD-010](product-family.md) keeps collector/graph, rootstock-red, and
-rootstock-blue as separate products. Operators still need controlled handoffs
-(for example: import a collector snapshot into a blue case, or attach red
-findings to an IR package) without coupling SPM packages or collapsing schemas.
+[DD-010](product-family.md) keeps collector/graph, Rootstock Red, and Rootstock
+Blue as separate products. Operators still need explicit file transfers, such
+as importing a collector snapshot into a Blue case or attaching Red findings
+to an incident-response package, without coupling Swift packages or combining
+schemas.
 
-[DD-009](cve-scan-artifact-bridge.md) already proves the pattern: produce a
+[DD-009](cve-scan-artifact-bridge.md) establishes the pattern: produce a
 versioned JSON artifact; validate allowlists; import with provenance.
 
 ## Decision
 
-1. Bridges are optional tools/subcommands - not required for default pipelines.
-2. Each bridge declares `schema_version` and fails closed on mismatch.
-3. Provenance is mandatory: `source` ∈
-   `collector` | `rootstock-red` | `rootstock-blue` | `cve-scan`.
+1. Bridges are optional commands and are not required for default pipelines.
+2. Versioned exports declare `schema_version`; consumers reject unsupported
+   versions. The collector scan remains a legacy, unversioned format, and the
+   Red findings handoff follows its documented JSONL record contract.
+3. Every imported record identifies its source as `collector`,
+   `rootstock-red`, `rootstock-blue`, or `cve-scan`.
 4. Prefer JSON artifacts over importing another product’s Swift/Python types.
-5. Synthetic fixtures only in git; real host outputs stay ignored.
+5. Only synthetic fixtures belong in Git; real host output stays private.
 
 ### Bridges
 
 | Bridge | Producer | Consumer | Status |
 |--------|----------|----------|--------|
-| scan.json → case | collector | rootstock-blue `import scan-json` | Shipped |
-| findings JSONL → case | rootstock-red | rootstock-blue `import findings-jsonl` | Shipped |
-| family open-export → Neo4j | red `export-family` / blue `export family` | `graph/import_family_export.py` (schema v1) | Shipped (optional, allowlisted Host/Finding/Protection/LaunchItem) |
+| scan.json → case | collector | rootstock-blue `import scan-json` | Implemented |
+| findings JSONL → case | rootstock-red | rootstock-blue `import findings-jsonl` | Implemented |
+| family open-export → Neo4j | red `export-family` / blue `export family` | `rootstock-graph-import-family-export` (schema v1) | Implemented; Host, Finding, Protection, and LaunchItem nodes |
 
-Synthetic fixtures: `examples/family-export-red.json`, `examples/family-export-blue.json`.
+See the synthetic [Red export](../../examples/family-export-red.json) and
+[Blue export](../../examples/family-export-blue.json) for complete examples.
 
-### Non-goals
+### What remains separate
 
-- Making blue a Neo4j viewer
-- Making red emit full graph `ScanResult` by default
-- Shared mutable runtime between products
+Blue continues to manage cases, and Red continues to write findings. Exporting
+a file does not turn either product into a graph client or share mutable state.
 
 ## Usage
 
-### Blue CLI (examples)
+### Import into a Blue case
 
 ```bash
 rootstock-blue import scan-json ./scan.json --case ./incident.rsbcase
@@ -49,22 +52,20 @@ rootstock-blue import findings-jsonl ./findings.jsonl --case ./incident.rsbcase
 
 ### Graph consumer
 
-`graph/import_family_export.py` validates allowlisted Host / Finding /
-Protection / LaunchItem nodes and MERGEs them with `source` provenance and
-`family_export=true`. OpenGraph/viewer mapping
-(`graph/opengraph_export.py`: `resolve_node_type_info`,
-`family_export_to_opengraph`) maps those findings to `rs_RedFinding` /
-`rs_BlueFinding` and host→finding edges to `rs_RedHasFinding` /
-`rs_BlueHasFinding` so they stay distinct from cve-scan `rs_CveFinding`.
+`rootstock-graph-import-family-export` accepts only the documented Host,
+Finding, Protection, and LaunchItem node types. It preserves the source and
+marks imported records with `family_export=true`. OpenGraph exports keep Red,
+Blue, and cve-scan finding types distinct.
 
 ## Consequences
 
-- Bridge code lives next to the consumer (blue import modules; graph import
-  scripts) with golden synthetic fixtures.
+- Bridge code lives next to the consumer (Blue import modules and the graph
+  package) with synthetic fixtures. The canonical schemas and fixtures
+  are under `contracts/`.
 - Technique catalog IDs may appear as optional fields on findings/events for
-  purple handoff; they are not required for import validity.
-- Default CI for core Rootstock remains collector/graph/cve-scan; bridge tests
-  run in product packages that implement them.
+  cross-product mapping; they are not required for import validity.
+- The `graph` and `swift-family` verification lanes check schemas,
+  producer exports, consumer validation, stable identifiers, and provenance.
 
 ## See also
 

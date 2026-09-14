@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Time Machine local snapshot residual depth (Wave-15).
+/// Time Machine local snapshot residual depth.
 /// Safety and behavior: path inventory only; never mounts snapshots for data theft or deletes backup catalogs.
 public struct TmLocalSnapshotDepthCollector: Collector {
     public static let id = "collect.tm_local_snapshot_depth"

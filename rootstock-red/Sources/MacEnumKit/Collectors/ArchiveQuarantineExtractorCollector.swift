@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Archive / quarantine third-party extractor surface (Wave-9).
+/// Archive / quarantine third-party extractor surface.
 ///
 /// Research basis: Unit 42 / Jamf third-party archive extractor quarantine non-inheritance research.
 /// Safety and behavior: typed `ArchiveQuarantineExtractorState`; never strips quarantine or crafts bypass archives.

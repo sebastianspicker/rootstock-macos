@@ -1,5 +1,5 @@
 import Foundation
-// MARK: - Wave-16 2026 coverage multi-plane surfaces (25 themes / 50 half-pairs)
+// MARK: - 2026 coverage multi-plane surfaces (25 themes / 50 half-pairs)
 
 
 /// AirPlay receiver dual-use residual (never enables AirPlay Receiver or spoofs AirPlay targets).

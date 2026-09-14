@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Webloc / Internet Location file delivery (Wave-12).
+/// Webloc / Internet Location file delivery.
 ///
 /// Research basis: public 2025–26 macOS Webloc/inetloc delivery tradecraft research.
 /// Safety and behavior: typed path inventory only; never crafts phishing webloc/inetloc payloads or rewrites Internet Location files.

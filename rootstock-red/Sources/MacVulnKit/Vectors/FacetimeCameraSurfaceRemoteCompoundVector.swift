@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-16 compound: FaceTime camera dual-use × remote/FDA path-to-impact.
+/// Compound: FaceTime camera dual-use × remote/FDA path-to-impact.
 public struct FacetimeCameraSurfaceRemoteCompoundVector: Check {
     public static let id = "rootstock.vector.data.facetime_camera_surface_remote_compound"
     public static let cost: CollectorCost = .low
@@ -12,7 +12,7 @@ public struct FacetimeCameraSurfaceRemoteCompoundVector: Check {
         let b = s?.avConferencePaths.count ?? 0
         guard a >= 1, b >= 1 || a >= 2 else { return [] }
         let compound = RemoteCompoundSignals(state: state)
-        guard compound.hasAmplifier || a + b >= 3 else { return [] }
+        guard admitsRemoteCompound(compound, primaryCount: a, secondaryCount: b) else { return [] }
         var evidence: [Evidence] = [
             Evidence(type: "facetime_camera_surface_compound", detail: "a=\(a) b=\(b) remote=\(compound.remote) fda=\(compound.fullDiskAccess) sensorThin=\(compound.sensorThin)"),
         ]
@@ -25,7 +25,7 @@ public struct FacetimeCameraSurfaceRemoteCompoundVector: Check {
         let severity = compound.severity
         return [Finding(id: Self.id, title: compound.remote ? "FaceTime camera dual-use × remote compound" : "FaceTime camera dual-use × impact compound", severity: severity, category: .misconfig, resolution: .init(evidence: evidence, attackTechniques: ["T1125", "T1123", "T1113"], remediation: [
                 "Prioritize hosts co-locating FaceTime camera dual-use with remote/FDA amplifiers",
-                "Use Wave-16 lab plans under ROE for purple validation",
+                "Use corresponding lab plans under ROE for purple validation",
                 "OPSEC: path-to-impact ranking only - not an auto-exploit chain",
             ], falsePositiveNotes: "Developer hosts may co-locate dual-use paths; rank production remote hosts first."), runtime: .init(confidence: .medium, dryRunSafe: true, opsecScore: 27, esfExpected: ["OPEN", "EXEC", "READ"]))]
     }

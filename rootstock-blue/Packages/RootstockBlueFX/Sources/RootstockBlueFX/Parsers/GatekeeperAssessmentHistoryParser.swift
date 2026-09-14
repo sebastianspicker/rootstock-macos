@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Gatekeeper assessment / syspolicyd history depth markers (Wave-13 red↔blue pair).
+/// Gatekeeper assessment / syspolicyd history depth markers (red↔blue pair).
 /// Honesty: never clears Gatekeeper assessments or disables syspolicyd.
 public struct GatekeeperAssessmentHistoryParser: ArtifactParser {
     public let manifest = PluginManifest(

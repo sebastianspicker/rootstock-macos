@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Software Update catalog residual surface (Wave-16).
+/// Software Update catalog residual surface.
 /// Safety and behavior: path inventory only; never points SUS catalogs at attacker mirrors or tampers with update plists.
 public struct SoftwareupdateCatalogCollector: Collector {
     public static let id = "collect.softwareupdate_catalog"

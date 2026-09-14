@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// MDM profile shallow parse depth (Wave-9).
+/// MDM profile shallow parse depth.
 ///
 /// Research basis: Configuration Profile PayloadType taxonomy; enterprise mobileconfig research.
 /// Safety and behavior: shallow PayloadType / PayloadDisplayName inventory only; never dumps secrets or installs profiles.

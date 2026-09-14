@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Python runtime dual-use residual surface markers (Wave-15 red↔blue pair).
+/// Python runtime dual-use residual surface markers (red↔blue pair).
 /// Honesty: never executes third-party Python payloads or drops malicious site-packages.
 public struct PythonRuntimeDualuseParser: ArtifactParser {
     public let manifest = PluginManifest(id: "PYTHONRUNTIME", tier: .tier2, description: "Python runtime dual-use markers")

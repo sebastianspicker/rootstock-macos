@@ -18,91 +18,62 @@ dependencies = [
     "uvicorn>=0.27,<1.0",
     "requests>=2.33,<3.0",
     "Markdown>=3,<4",
+    "jsonschema>=4.0,<5.0",
+    "rfc3339-validator>=0.1.4,<1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "httpx>=0.27,<1.0",
-    "jsonschema>=4.0,<5.0",
     "pytest",
-    "ruff",
+    "ruff==0.15.21",
 ]
 
-[tool.setuptools]
-py-modules = [
-  "_report_campaign_diagrams",
-  "bloodhound_import",
-  "category_predicates",
-  "clear_owned",
-  "constants",
-  "cve_enrichment",
-  "cve_reference",
-  "cve_reference_catalog",
-  "cve_reference_cves_core",
-  "cve_reference_cves_extended",
-  "cve_reference_models",
-  "diff_formatters",
-  "diff_models",
-  "diff_scans",
-  "family_finding_classification",
-  "import_cve_scan",
-  "import_family_export",
-  "import_nodes_certificates",
-  "import_nodes_core",
-  "import_nodes_enrichment",
-  "import_nodes_sandbox",
-  "import_nodes_security",
-  "import_nodes_security_enterprise",
-  "import_nodes_services",
-  "import_scan",
-  "import_vulnerabilities",
-  "infer",
-  "infer_accessibility",
-  "infer_automation",
-  "infer_common",
-  "infer_electron",
-  "infer_esf",
-  "infer_file_acl",
-  "infer_finder_fda",
-  "infer_group_capabilities",
-  "infer_injection",
-  "infer_kerberos",
-  "infer_keychain_groups",
-  "infer_mdm_overgrant",
-  "infer_password",
-  "infer_quarantine",
-  "infer_recommendations",
-  "infer_risk_score",
-  "infer_sandbox",
-  "infer_shell_hooks",
-  "mark_owned",
-  "merge_scans",
-  "models",
-  "neo4j_connection",
-  "opengraph_export",
-  "opengraph_family",
-  "opengraph_mapping",
-  "query_runner",
-  "report",
-  "report_assembly",
-  "report_diagrams",
-  "report_diagram_common",
-  "report_formatters",
-  "report_graphviz",
-  "report_html",
-  "report_query_results",
-  "report_recommendations",
-  "report_sections",
-  "scan_loader",
-  "server",
-  "server_validation",
-  "setup_schema",
-  "tier_classification",
-  "utils",
-  "version_matcher",
-  "viewer",
-  "viewer_layout",
+[project.scripts]
+rootstock-graph-api = "rootstock_graph.api:main"
+rootstock-graph-bloodhound-import = "rootstock_graph.ingestion.bloodhound_import:main"
+rootstock-graph-clear-owned = "rootstock_graph.inference.clear_owned:main"
+rootstock-graph-cve-enrichment = "rootstock_graph.vulnerability.cve_enrichment:main"
+rootstock-graph-diff-scans = "rootstock_graph.reporting.diff_scans:main"
+rootstock-graph-import-cve-scan = "rootstock_graph.ingestion.import_cve_scan:main"
+rootstock-graph-import-family-export = "rootstock_graph.ingestion.import_family_export:main"
+rootstock-graph-import-scan = "rootstock_graph.ingestion.import_scan:main"
+rootstock-graph-import-vulnerabilities = "rootstock_graph.ingestion.import_vulnerabilities:main"
+rootstock-graph-infer = "rootstock_graph.inference.infer:main"
+rootstock-graph-mark-owned = "rootstock_graph.inference.mark_owned:main"
+rootstock-graph-merge-scans = "rootstock_graph.ingestion.merge_scans:main"
+rootstock-graph-opengraph-export = "rootstock_graph.reporting.opengraph_export:main"
+rootstock-graph-query = "rootstock_graph.reporting.query_runner:main"
+rootstock-graph-report = "rootstock_graph.reporting.report:main"
+rootstock-graph-report-graphviz = "rootstock_graph.reporting.report_graphviz:main"
+rootstock-graph-setup-schema = "rootstock_graph.ingestion.setup_schema:main"
+rootstock-graph-tier-classification = "rootstock_graph.inference.tier_classification:main"
+rootstock-graph-viewer = "rootstock_graph.reporting.viewer:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rootstock_graph = [
+    "resources/queries/*.cypher",
+    "resources/queries/README.md",
+    "resources/contracts/family-open-export/v1/schema.json",
+    "resources/contracts/cve-scan-export/v7/schema.json",
+    "resources/contracts/README.md",
+    "resources/viewer/*.css",
+    "resources/viewer/*.html",
+    "resources/viewer/*.js",
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "C901"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8

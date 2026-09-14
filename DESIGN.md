@@ -1,87 +1,82 @@
-# Rootstock Design System
+# Viewer design
 
-## Overview
+The viewer helps analysts move from a security question to its supporting
+facts, modeled relationships, and a report. The main flow is Scope →
+Evidence → Report. Graph tools opens a second workspace for triage, node
+inspection, paths, and queries.
 
-Rootstock uses the Graphite Laboratory visual language: a forensic
-instrument for authorized analysts on a 13–16-inch MacBook. Design serves the
-investigation task: modeled attack paths, evidence, and provenance. The system
-follows the OS theme by default and allows a persistent
-light or dark override.
+This document describes the interface conventions. See
+[Frontend and report interface](docs/frontend.md) for behavior and
+[Screenshot capture](docs/screenshots.md) for reproducible examples.
 
-## Theme
+## Evidence comes first
 
-- Color strategy: restrained mineral neutrals; semantic color only for action,
-  selection, path focus, severity, and success.
-- Modes: system, light, and dark. Persist only `rootstock.theme`.
-- Motion: 120–180ms state changes; instant under `prefers-reduced-motion`.
-- Elevation: tonal layers and hairline rules; avoid large soft shadows.
+Start with the source, collection time, and any collection gaps. Keep recorded
+facts, inferred relationships, and missing evidence distinct. A modeled path
+shows preconditions; it does not establish compromise.
 
-## Color Tokens (Graphite Lab)
+The evidence screen places the selected application's path and facts beside
+recommendations and installation details. Report preparation names the output
+and its scope before download. Static mode exports a snapshot summary; live
+mode can generate the full graph assessment.
 
-| Role | Dark | Light | CSS variable |
-|---|---|---|---|
-| Void / canvas | `#090b0f` / `#0c0e13` | cool off-white | `--ink` / `--ink-deep` |
-| Surface | `#10131a` | `#ffffff` | `--pane` |
-| Raised | `#151922` | raised cool gray | `--pane-raised` |
-| Border | `rgba(255,255,255,0.06)` | cool rule | `--rule` |
-| Text | `#eceef2` | near-ink | `--text` |
-| Muted / faint | `#8b93a7` / `#5c6478` | muted cool | `--muted` / `--subtle` |
-| Signal (action) | `#6aafff` | deep blue | `--action` |
-| Path | `#6ecfbc` | teal | `--path` |
-| Brand / critical | rootstock red / `#f07178` | deep red | brand / `--critical` |
-| High / success | `#d9a04a` / `#5cbc80` | amber / green | `--high` / `--verified` |
+## Layout
 
-Severity never relies on color alone. Path focus uses mint edges and dimmed
-non-path nodes.
+The folio uses a task column and a narrower context column. On small screens,
+the context follows the task. Each step focuses its heading and returns to the
+top of the document.
 
-## Typography
+Graph tools uses a searchable node list, a central workspace, and an evidence
+inspector. Triage, Graph, Paths, and Queries share the same selected data.
+The node list provides an alternative to choosing nodes on the canvas.
 
-- UI: `"IBM Plex Sans"`, system UI stack.
-- Mono: `"IBM Plex Mono"`, SF Mono, Menlo, Consolas.
-- Body ~13px; technical values in mono; display titles reserved for the dossier
-  heading (~20–22px). Letter-spacing on the wordmark only.
+## Color and typography
 
-## Spacing and Shape
+Dark surfaces, fine borders, and green action controls define the default
+folio. The graph also offers system, light, and dark themes. Severity has a
+text label as well as a color; inference uses labels and dashed relationships.
 
-- Spacing: 4, 8, 12, 16, 24, 32px.
-- Radius: 8px panels/controls; pills for nav and tags.
-- Quiet density: more space in chrome, denser only in data lists.
+Use the existing CSS variables for text, surfaces, borders, actions, and
+severity. The base palette lives in `graph/viewer-css/base.css`; folio styles
+and dark-theme overrides live in `graph/viewer-css/folio.css`. Read those
+files for the current values.
 
-## Layout (viewer)
+Use the UI font stack for prose and controls. Use the monospace stack for
+identifiers, timestamps, paths, and query text. Fonts must remain usable without
+an external font download.
 
-```
-Header 52px: brand, host, navigation, session, export
-Workspace: 248px index | fluid stage | 320px evidence
-  Stage: risk and path metadata | canvas
-Footer 40px: provenance line
-```
+## Controls and copy
 
-- Secondary chrome uses `.chrome-secondary` (de-emphasized or hidden).
-- Path investigation is the hero state; graph tools stay available but quiet.
-- Narrow &lt;768px: list-first stack; canvas remains reachable.
+Name actions by their result: Inspect snapshot, Prepare report, Find modeled
+path. Distinguish loading, empty results, filtered results, failed requests,
+and partial collection. State which operations require a live connection.
 
-## Components
+Keep focus, selection, disabled, and error states visible. Technical details
+belong beside the evidence they explain. Avoid language that suggests a
+finding is a confirmed exploit or that a recommendation has been applied.
 
-Buttons, fields, tabs, filters, dossier rows, and path banners share default,
-hover, focus, active, disabled, and error states. Focus rings use `--action`.
-The dossier is title-first: kicker, title, short subtitle, severity, evidence
-tabs, plain model note, single primary action.
+## Accessibility
 
-## Content
+WCAG 2.2 AA is the design target. Use semantic headings, labels, buttons, and
+tables. Make graph selection and path construction available through DOM
+controls. Preserve keyboard focus after updates and respect reduced-motion
+preferences. Do not treat automated checks as proof of conformance.
 
-Analyst language: “Run query,” “Modeled path,” “Modeled preconditions do not
-prove exploitation.” Distinguish empty, filtered-empty, error, and partial
-evidence. Do not claim confirmed exploit.
+Review changes at desktop and narrow widths, including long paths, missing
+metadata, empty results, and errors. The screenshot workflow checks the main
+folio at 390 pixels; it does not cover every graph interaction or assistive
+technology.
 
-## Authoring CSS
+## Editing the interface
 
-Source modules live in `graph/viewer-css/`. Assemble with:
+Edit TypeScript in `graph/viewer-src/` and CSS in `graph/viewer-css/`, then run:
 
-```bash
-npm run bundle:css
-# or
-npm run bundle   # CSS + JS
+```sh
+npm run bundle
+sh scripts/verify web
 ```
 
-Do not hand-edit assembled `graph/viewer.css` for feature work. Edit the source
-modules.
+The bundle command updates the packaged assets under
+`graph/src/rootstock_graph/resources/viewer/`. Do not edit generated CSS or
+JavaScript directly. After a visible change, inspect the rendered flow and
+refresh the synthetic screenshots when needed.

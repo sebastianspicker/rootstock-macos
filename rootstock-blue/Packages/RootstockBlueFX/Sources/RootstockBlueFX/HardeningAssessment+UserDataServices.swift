@@ -1,6 +1,5 @@
 import Foundation
 import RootstockBlueCore
-import RootstockBlueCase
 extension HardeningAssessment {
 
     static func assessMapsLocationPath(_ events: [EventEnvelope]) -> [Finding] {

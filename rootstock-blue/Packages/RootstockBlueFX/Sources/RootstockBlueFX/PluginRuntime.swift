@@ -62,12 +62,12 @@ public struct PluginRuntime: Sendable {
 
     private static var forensicsParsers: [any ArtifactParser] {
         [
-            // Wave-3 2026 coverage ROI (beyond §7.1–§7.2)
+            // 2026 coverage ROI (beyond §7.1–§7.2)
             ShellProfilesParser(),
             EmondParser(),
             SudoersParser(),
             LaunchdOverridesParser(),
-            // Wave-4 2026 coverage ROI (beyond §7.1–§7.9)
+            // 2026 coverage ROI (beyond §7.1–§7.9)
             PrivHelpersParser(),
             FolderActionsParser(),
             LoginHooksParser(),
@@ -76,14 +76,14 @@ public struct PluginRuntime: Sendable {
 
     private static var coverageParsers: [any ArtifactParser] {
         [
-            // Wave-5 2026 coverage ROI (beyond §7.1–§7.10)
+            // 2026 coverage ROI (beyond §7.1–§7.10)
             AuthPluginsParser(),
             NetUsageParser(),
             USBHistoryParser(),
             KeychainMetaParser(),
             CodesignParser(),
             ARDParser(),
-            // Wave-6 2026 coverage ROI (beyond §7.1–§7.11)
+            // 2026 coverage ROI (beyond §7.1–§7.11)
             SpotlightParser(),
             TrashParser(),
             DocRevisionsParser(),
@@ -93,7 +93,7 @@ public struct PluginRuntime: Sendable {
             QuickLookParser(),
             ScreenTimeParser(),
             ICloudParser(),
-            // Wave-7 2026 coverage ROI (beyond §7.1–§7.12)
+            // 2026 coverage ROI (beyond §7.1–§7.12)
             CookiesParser(),
             BookmarksParser(),
             OfficeMRUParser(),
@@ -107,7 +107,7 @@ public struct PluginRuntime: Sendable {
 
     private static var wave8Parsers: [any ArtifactParser] {
         [
-            // Wave-8 residual red↔blue pair parsers
+            // Residual red↔blue pair parsers
             PackageKitDesignParser(),
             ArchiveExtractorParser(),
             InfoStealerPathParser(),
@@ -117,7 +117,7 @@ public struct PluginRuntime: Sendable {
 
     private static var wave11Parsers: [any ArtifactParser] {
         [
-            // Wave-11 multi-plane red↔blue pair parsers
+            // Multi-plane red↔blue pair parsers
             URLSchemeHandlerParser(),
             LaunchdOverrideDepthParser(),
             BrowserExtensionDualUseParser(),
@@ -127,7 +127,7 @@ public struct PluginRuntime: Sendable {
 
     private static var wave12Parsers: [any ArtifactParser] {
         [
-            // Wave-12 multi-plane red↔blue pair parsers
+            // Multi-plane red↔blue pair parsers
             WeblocInetlocParser(),
             MailRulesAutomationParser(),
             UnifiedLogObservationParser(),
@@ -139,7 +139,7 @@ public struct PluginRuntime: Sendable {
 
     private static var wave13Parsers: [any ArtifactParser] {
         [
-            // Wave-13 multi-plane red↔blue pair parsers
+            // Multi-plane red↔blue pair parsers
             CalendarRemindersAutomationParser(),
             GatekeeperAssessmentHistoryParser(),
             HomebrewPackageDualUseParser(),
@@ -150,7 +150,7 @@ public struct PluginRuntime: Sendable {
 
     private static var wave14Parsers: [any ArtifactParser] {
         [
-            // Wave-14 multi-plane red↔blue pair parsers
+            // Multi-plane red↔blue pair parsers
             AutomatorWorkflowParser(),
             IcloudDrivePathParser(),
             BluetoothContinuityDepthParser(),
@@ -166,7 +166,7 @@ public struct PluginRuntime: Sendable {
 
     private static var wave15Parsers: [any ArtifactParser] {
         [
-            // Wave-15 multi-plane red↔blue pair parsers
+            // Multi-plane red↔blue pair parsers
             PhotosLibraryPathParser(),
             VpnConfigDualuseParser(),
             SandboxContainerDepthParser(),

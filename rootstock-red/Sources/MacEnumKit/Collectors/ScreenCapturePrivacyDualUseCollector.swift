@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// ScreenCapture / screenshot privacy dual-use depth (Wave-13).
+/// ScreenCapture / screenshot privacy dual-use depth.
 ///
 /// Research basis: public 2025–26 macOS ScreenCapture privacy dual-use tradecraft research.
 /// Safety and behavior: typed path inventory only; never captures screens or dumps Screen Recording TCC rows.

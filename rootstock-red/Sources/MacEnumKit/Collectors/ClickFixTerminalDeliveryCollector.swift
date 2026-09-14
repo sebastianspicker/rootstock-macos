@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// ClickFix / paste-and-run Terminal delivery posture (Wave-8).
+/// ClickFix / paste-and-run Terminal delivery posture.
 ///
 /// Research basis: Microsoft/Jamf ClickFix campaign research; TerminalFix paste-run class.
 /// Safety and behavior: typed `ClickFixTerminalDeliveryState`; never builds lures or payloads.

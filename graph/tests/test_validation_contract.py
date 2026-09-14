@@ -8,11 +8,11 @@ from pathlib import Path
 
 import jsonschema
 
-from models import ScanResult
+from rootstock_graph.models import ScanResult
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_PATH = ROOT / "collector" / "schema" / "scan-result.schema.json"
+SCHEMA_PATH = ROOT / "contracts" / "collector-scan" / "legacy-unversioned.schema.json"
 DEMO_SCAN_PATH = ROOT / "examples" / "demo-scan.json"
 VALIDATOR_PATH = ROOT / "scripts" / "validate-scan.py"
 
@@ -47,9 +47,7 @@ def test_duplicate_bundle_ids_are_allowed_when_paths_differ() -> None:
     checks.assertEqual(validate_scan.validate_semantics(data), [])
     result = ScanResult.model_validate(data)
     matching = [
-        app
-        for app in result.applications
-        if app.bundle_id == data["applications"][0]["bundle_id"]
+        app for app in result.applications if app.bundle_id == data["applications"][0]["bundle_id"]
     ]
     checks.assertGreaterEqual(
         {app.path for app in matching},

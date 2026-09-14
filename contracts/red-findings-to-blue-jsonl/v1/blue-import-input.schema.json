@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rootstock.dev/contracts/red-findings-to-blue-jsonl/v1/blue-import-input.schema.json",
+  "title": "Rootstock Blue findings JSONL import input",
+  "description": "Actual retained consumer boundary. Blue defaults missing id, title, severity, category, and confidence and ignores extra keys.",
+  "type": "object",
+  "additionalProperties": { "$ref": "#/$defs/jsonValue" },
+  "$defs": {
+    "jsonValue": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/jsonValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/jsonValue" } }
+      ]
+    }
+  }
+}

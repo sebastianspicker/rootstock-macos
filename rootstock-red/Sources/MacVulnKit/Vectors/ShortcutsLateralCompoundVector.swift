@@ -1,7 +1,7 @@
 import Foundation
 import RootstockCore
 
-/// Wave-11 compound: Shortcuts/App Intents × remote / RAE lateral.
+/// Compound: Shortcuts/App Intents × remote / RAE lateral.
 public struct ShortcutsLateralCompoundVector: Check {
     public static let id = "rootstock.vector.automation.shortcuts_lateral_compound"
     public static let cost: CollectorCost = .low

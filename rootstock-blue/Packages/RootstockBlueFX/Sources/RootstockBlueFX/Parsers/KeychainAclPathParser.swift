@@ -1,7 +1,7 @@
 import Foundation
 import RootstockBlueCore
 
-/// Keychain ACL path residual surface markers (Wave-15 red↔blue pair).
+/// Keychain ACL path residual surface markers (red↔blue pair).
 /// Honesty: never dumps keychain items, passwords, or private keys.
 public struct KeychainAclPathParser: ArtifactParser {
     public let manifest = PluginManifest(id: "KEYCHAINACLPATH", tier: .tier2, description: "Keychain ACL path plane markers")
