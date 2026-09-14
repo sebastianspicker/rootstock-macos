@@ -291,15 +291,13 @@ lane_neo4j() {
         fi
         api_log=$(mktemp -t rootstock-graph-api.XXXXXX)
         api_pid=''
-        # shellcheck disable=SC2329 # Invoked indirectly by the EXIT trap.
-        cleanup() {
+        trap '
             if [ -n "$api_pid" ]; then
                 kill "$api_pid" 2>/dev/null || true
                 wait "$api_pid" 2>/dev/null || true
             fi
             rm -f "$api_log"
-        }
-        trap cleanup EXIT HUP INT TERM
+        ' EXIT HUP INT TERM
         (
             cd "$ROOT"
             ROOTSTOCK_API_TOKEN="$api_token" \
