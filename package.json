@@ -15,7 +15,7 @@
     "demo:build": "node scripts/build-pages-demo.mjs"
   },
   "devDependencies": {
-    "@types/node": "24.13.2",
+    "@types/node": "26.6.1",
     "esbuild": "0.28.1",
     "typescript": "7.0.2"
   }
