@@ -1,4 +1,4 @@
-"""import_nodes_core.py - Core node imports (applications, TCC, entitlements, certificates)."""
+"""import_nodes_core.py - Core node imports (computer, applications, and their links)."""
 
 from __future__ import annotations
 
@@ -7,11 +7,6 @@ from datetime import datetime, timezone
 
 from neo4j import Session
 
-from .import_nodes_certificates import (
-    import_certificate_authorities as import_certificate_authorities,
-)
-from .import_nodes_sandbox import import_sandbox_profiles as import_sandbox_profiles
-from .import_nodes_permissions import import_entitlements, import_tcc_grants
 from ..models import (
     ApplicationData,
     ComputerData,
@@ -20,14 +15,10 @@ from ..models import (
 __all__ = [
     "ComputerImportContext",
     "import_applications",
-    "import_certificate_authorities",
     "import_computer",
-    "import_entitlements",
     "import_installed_on",
     "import_local_to",
-    "import_sandbox_profiles",
     "import_signed_by_team",
-    "import_tcc_grants",
 ]
 
 

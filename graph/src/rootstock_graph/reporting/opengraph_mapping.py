@@ -316,13 +316,13 @@ def map_node_for_opengraph(hostname: str, label: str, props: dict) -> dict | Non
     type_info = resolve_node_type_info(label, props)
     if not type_info:
         return None
-    key = _node_key(label, props)
+    key = node_key(label, props)
     return {
         "id": make_node_id(hostname, label, key),
         "kind": type_info["kind"],
-        "label": _node_display_name(label, props),
+        "label": node_display_name(label, props),
         "properties": {
-            **_serialize_props(props),
+            **serialize_props(props),
             "_icon": type_info["icon"],
             "_color": type_info["color"],
         },
@@ -345,11 +345,11 @@ def map_edge_for_opengraph(
     if not type_info:
         return None
     return {
-        "source": make_node_id(hostname, src_label, _node_key(src_label, src_props)),
-        "target": make_node_id(hostname, tgt_label, _node_key(tgt_label, tgt_props)),
+        "source": make_node_id(hostname, src_label, node_key(src_label, src_props)),
+        "target": make_node_id(hostname, tgt_label, node_key(tgt_label, tgt_props)),
         "kind": type_info["kind"],
         "properties": {
-            **_serialize_props(rel_props),
+            **serialize_props(rel_props),
             "_traversable": type_info["traversable"],
         },
     }
@@ -358,20 +358,20 @@ def map_edge_for_opengraph(
 # ── Node ID generation ──────────────────────────────────────────────────────
 
 
-def _sanitize(text: str) -> str:
+def sanitize(text: str) -> str:
     """Convert text to a safe ID component."""
     return "".join(c if c.isalnum() or c in "-_." else "-" for c in text)
 
 
 def make_node_id(hostname: str, label: str, key: str) -> str:
     """Generate a unique OpenGraph node ID."""
-    return f"rs-{_sanitize(hostname)}-{_sanitize(label.lower())}-{_sanitize(key)}"
+    return f"rs-{sanitize(hostname)}-{sanitize(label.lower())}-{sanitize(key)}"
 
 
 # ── Node key extraction ─────────────────────────────────────────────────────
 
 
-def _node_key(label: str, props: dict) -> str:
+def node_key(label: str, props: dict) -> str:
     """Extract the unique key for a node based on its label."""
     # Keychain_Item uses a composite key not expressible as a single property name.
     if label == "Keychain_Item":
@@ -401,7 +401,7 @@ _NODE_DISPLAY_FIELDS: dict[str, tuple[tuple[str, ...], str]] = {
 }
 
 
-def _node_display_name(label: str, props: dict) -> str:
+def node_display_name(label: str, props: dict) -> str:
     """Human-readable display name for a node."""
     fields, fallback = _NODE_DISPLAY_FIELDS.get(
         label,
@@ -410,7 +410,7 @@ def _node_display_name(label: str, props: dict) -> str:
     return str(next((props[field] for field in fields if props.get(field)), fallback))
 
 
-def _serialize_props(props: dict) -> dict:
+def serialize_props(props: dict) -> dict:
     """Convert Neo4j node properties to JSON-serializable dict."""
     result = {}
     for k, v in props.items():
@@ -423,7 +423,7 @@ def _serialize_props(props: dict) -> dict:
     return result
 
 
-def _primary_label(labels: list[str]) -> str:
+def primary_label(labels: list[str]) -> str:
     """Pick the primary label from a node's labels, preferring known labels."""
     known = set(NODE_TYPE_MAP.keys())
     for label in labels:

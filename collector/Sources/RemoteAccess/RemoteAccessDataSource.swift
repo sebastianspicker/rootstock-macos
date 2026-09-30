@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Collects SSH and Screen Sharing remote access service status.
 ///

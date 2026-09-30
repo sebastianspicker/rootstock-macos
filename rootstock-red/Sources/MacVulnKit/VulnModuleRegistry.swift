@@ -3,8 +3,6 @@
 import Foundation
 import RootstockCore
 import MacEnumKit
-import MacOpsecKit
-import MacArtifactKit
 
 /// Default assess checks for RootstockRed.
 public enum VulnModuleRegistry {

@@ -10,6 +10,7 @@ from neo4j.exceptions import ServiceUnavailable
 from rootstock_graph.api_support import routes
 from rootstock_graph.constants import NODE_KEY_PROPERTY
 from rootstock_graph.reporting import opengraph_export as export
+from rootstock_graph.reporting import opengraph_mapping as mapping
 
 
 class Session:
@@ -39,7 +40,7 @@ def test_unrestricted_export_stays_unrestricted():
     assert "maximum_records" not in params
 
 
-@pytest.mark.parametrize("label", list(export.NODE_TYPE_MAP))
+@pytest.mark.parametrize("label", list(mapping.NODE_TYPE_MAP))
 @pytest.mark.parametrize("value", [None, "", "value"])
 def test_endpoint_projection_preserves_identity(label, value):
     props = {key: value for key in NODE_KEY_PROPERTY.values()}
@@ -50,7 +51,7 @@ def test_endpoint_projection_preserves_identity(label, value):
             [key, item] for key, item in candidate.items() if key in export.IDENTITY_PROPERTIES
         ]
         decoded = export._endpoint_properties(projected)
-        assert export._node_key(label, decoded) == export._node_key(label, candidate)
+        assert mapping.node_key(label, decoded) == mapping.node_key(label, candidate)
         assert ("name" in decoded) == ("name" in candidate)
 
 
@@ -71,7 +72,7 @@ def test_edges_project_identity_only_and_keep_relationship_properties():
     assert params["identity_properties"] == export.IDENTITY_PROPERTIES
     assert edge["properties"]["evidence"] == record["rel"]["evidence"]
     assert edge["properties"]["optional"] is None
-    assert edge["target"] == export.make_node_id("synthetic", "Keychain_Item", "item-None")
+    assert edge["target"] == mapping.make_node_id("synthetic", "Keychain_Item", "item-None")
 
 
 def test_node_overflow_does_not_query_edges():

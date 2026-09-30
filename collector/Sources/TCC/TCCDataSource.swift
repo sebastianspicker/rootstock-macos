@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import RootstockMacFacts
 
 /// Reads TCC (Transparency, Consent, and Control) grants from macOS TCC databases.
 ///
@@ -29,8 +30,8 @@ public struct TCCDataSource: DataSource {
     /// Default initializer - uses the standard macOS TCC database paths.
     public init() {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        userDBPath = home + "/Library/Application Support/com.apple.TCC/TCC.db"
-        systemDBPath = "/Library/Application Support/com.apple.TCC/TCC.db"
+        userDBPath = home + "/" + MacSecurityPaths.userTCCDatabaseRelative
+        systemDBPath = MacSecurityPaths.systemTCCDatabase
         macOSVersion = MacOSVersion.detect()
     }
 
@@ -148,7 +149,7 @@ public struct TCCDataSource: DataSource {
 
 /// Probes whether the current process can open and query a TCC database.
 public enum TCCAccessProbe {
-    public static let systemDatabasePath = "/Library/Application Support/com.apple.TCC/TCC.db"
+    public static let systemDatabasePath = MacSecurityPaths.systemTCCDatabase
 
     public static func canQueryDatabase(at path: String) -> Bool {
         do {

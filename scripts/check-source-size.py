@@ -68,9 +68,7 @@ GENERATED_SUFFIXES = (
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Check maintained code files for excessive size."
-    )
+    parser = argparse.ArgumentParser(description="Check maintained code files for excessive size.")
     parser.add_argument(
         "--max-lines",
         type=int,
@@ -81,8 +79,7 @@ def parse_args() -> argparse.Namespace:
         "--ratchet",
         type=Path,
         help=(
-            "JSON file containing exact ceilings for grandfathered files above "
-            "the new-file limit"
+            "JSON file containing exact ceilings for grandfathered files above the new-file limit"
         ),
     )
     args = parser.parse_args()
@@ -115,13 +112,9 @@ def _ratchet_mapping(payload: object, path: Path) -> dict[str, object]:
     return payload
 
 
-def _validate_global_ceiling(
-    ratchet: dict[str, object], path: Path, global_max_lines: int
-) -> None:
+def _validate_global_ceiling(ratchet: dict[str, object], path: Path, global_max_lines: int) -> None:
     if ratchet.get("global_max_lines") != global_max_lines:
-        raise RuntimeError(
-            f"{path}: global_max_lines must match --max-lines ({global_max_lines})"
-        )
+        raise RuntimeError(f"{path}: global_max_lines must match --max-lines ({global_max_lines})")
 
 
 def _new_file_ceiling(ratchet: dict[str, object], path: Path) -> int:
@@ -262,9 +255,7 @@ def _report_violations(
     return 1
 
 
-def _report_success(
-    checked: int, global_max_lines: int, new_file_max_lines: int | None
-) -> int:
+def _report_success(checked: int, global_max_lines: int, new_file_max_lines: int | None) -> int:
     new_file_clause = (
         f", with new files capped at {new_file_max_lines} lines."
         if new_file_max_lines is not None

@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "/Users/kim/jsonl-one",
+        "pammod.risk_tags" : "jsonl_tag,pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/pam_auth_module.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "jsonl-name",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/pam_auth_module.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "primary-name",
+        "pammod.notes" : "synthetic note",
+        "pammod.path" : "/Users/alice/Library/Markers/primary",
+        "pammod.risk_tags" : "custom_a,custom_b,custom_a,pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "kind-only",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "/Users/erin/bin/tool",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "label-only",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "42",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "/Users/Shared/shared-marker",
+        "pammod.risk_tags" : ",pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "/Users/ivy/fractional",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "/Users/jack/bad-time",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "single-kind",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "surface-label",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pammod|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "pam.module",
+      "fields" : {
+        "event.type" : "pam.module",
+        "pammod.name" : "",
+        "pammod.notes" : "PAM auth module surface markers - never installs PAM modules or modifies /etc/pam.d",
+        "pammod.path" : "/Users/nia/array-entry",
+        "pammod.risk_tags" : "pam_surface",
+        "pammod.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/pam_auth_module.json",
+      "source" : "parser",
+      "sourcePlugin" : "PAMAUTHMODULE"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "PAM auth module surface markers",
+    "id" : "PAMAUTHMODULE",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

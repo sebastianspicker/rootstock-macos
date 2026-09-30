@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "/Users/kim/jsonl-one",
+        "cronat.risk_tags" : "jsonl_tag,cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/cron_at_job_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "jsonl-name",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/cron_at_job_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "primary-name",
+        "cronat.notes" : "synthetic note",
+        "cronat.path" : "/Users/alice/Library/Markers/primary",
+        "cronat.risk_tags" : "custom_a,custom_b,custom_a,cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "kind-only",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "/Users/erin/bin/tool",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "label-only",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "42",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "/Users/Shared/shared-marker",
+        "cronat.risk_tags" : ",cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "/Users/ivy/fractional",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "/Users/jack/bad-time",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "single-kind",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "surface-label",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:cronat|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "cron.at_job",
+      "fields" : {
+        "cronat.name" : "",
+        "cronat.notes" : "Cron/at job depth markers - never installs cron or at jobs outside the lab root",
+        "cronat.path" : "/Users/nia/array-entry",
+        "cronat.risk_tags" : "cron_at_surface",
+        "cronat.secrets_exported" : "false",
+        "event.type" : "cron.at_job",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/cron_at_job_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "CRONATJOB"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Cron/at job depth markers",
+    "id" : "CRONATJOB",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

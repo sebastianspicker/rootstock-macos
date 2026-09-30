@@ -29,11 +29,11 @@ records separately from Neo4j, and each export has its own format.
 
 | Path | Responsibility | Data and dependencies |
 | --- | --- | --- |
-| `collector/` | Local Swift host collection | Writes one legacy, unversioned `scan.json`; no network collection path. |
-| `graph/` | Python import, inference, queries, reports, API, and viewer | Owns Neo4j graph state and packaged `rootstock-graph-*` commands. |
+| `collector/` | Local Swift host collection | One target per data source plus `Models`, `Export`, `HostCommand`, `LaunchdPlists`, `FileACLInspection`, and the CLI; writes one legacy, unversioned `scan.json`; no network collection path. |
+| `graph/` | Python import, inference, queries, reports, and API in `src/rootstock_graph/`; viewer sources in the self-contained Node project `graph/viewer/` | Owns Neo4j graph state and packaged `rootstock-graph-*` commands. |
 | `modules/cve-scan/` | Scoped CVE evidence collection and reporting | Owns run directories and a versioned graph export; no Neo4j dependency. |
-| `rootstock-red/` | Read-only assessment plus a separately linked lab | Owns findings and project artifacts; lab mutation uses operator self-attestation and dry-run controls. |
-| `rootstock-blue/` | Offline DFIR case analysis and synthetic event exercises | Owns `.rsbcase` custody, JSONL, SQLite projection, and checksum semantics. |
+| `rootstock-red/` | Read-only assessment (`RootstockCore`, `MacEnumKit`, `MacVulnKit`, `MacReportKit`) plus a separately linked lab (`RootstockLab`) | Owns findings and project artifacts; lab mutation uses operator self-attestation and dry-run controls. |
+| `rootstock-blue/` | Offline DFIR case analysis and synthetic event exercises; targets in `Sources/RootstockBlue*` | Owns `.rsbcase` custody, JSONL, SQLite projection, and checksum semantics. |
 | `packages/RootstockMacFacts/` | Neutral macOS paths, vocabulary, and parsers | Swift library only; no product serializer, graph/case state, or network client. |
 | `contracts/` | Canonical cross-product schemas and fixtures | Each contract states its producer, consumers, version rule, and checker. |
 
@@ -66,15 +66,19 @@ sequenceDiagram
 
 The collector runs independent local data sources, retains recoverable
 failures in the result, and serializes one `ScanResult`. Before import,
-`scripts/validate-scan.py` checks the canonical JSON schema, the packaged
-Pydantic model, and semantic constraints. `graph/pipeline.sh` then sequences
+`rootstock-graph-validate-scan scan.json` (installed with the graph package)
+checks the packaged collector-scan schema mirror, the Pydantic model, and
+semantic constraints. `graph/pipeline.sh` then sequences
 schema setup, optional CVE refresh, collector import, optional cve-scan import,
 inference, vulnerability import, tier classification, and reporting.
 
-Python graph code lives in `graph/src/rootstock_graph/`. Its main
-packages are `ingestion/`, `inference/`, `reporting/`, and `vulnerability/`.
-Root-level graph files are orchestration or frontend inputs, not Python command
-adapters. CLI commands are declared in
+Python graph code lives in `graph/src/rootstock_graph/`. Foundation modules
+(`category_predicates`, `constants`, `cypher`, `models`, `neo4j`, `paths`,
+`server_validation`) sit below `vulnerability`, `ingestion`, `reporting`,
+`api_support` (routes, schemas, dependencies), and `api`; `inference` sits on
+the foundation and feeds `api_support`. `graph/tests/test_architecture.py`
+enforces the layering. Root-level graph files are orchestration or frontend
+inputs, not Python command adapters. CLI commands are declared in
 `graph/pyproject.toml`.
 
 ## Contracts and compatibility
@@ -87,9 +91,13 @@ adapters. CLI commands are declared in
 | Red findings JSONL | `contracts/red-findings-to-blue-jsonl/v1/` | Red | Blue | Preserve required finding fields; Blue may ignore additional fields. |
 
 `scripts/check-contracts.py` validates canonical schemas, synthetic valid and
-invalid fixtures, record invariants, and the packaged family-schema mirror.
-`scripts/check-scan-contract-fields.py` aligns the collector schema, Swift
-coding keys, and graph model aliases. A contract change is incomplete until
+invalid fixtures, record invariants, and the packaged contract mirrors. For
+the collector scan it also validates a golden fixture that the collector's Swift
+tests keep byte-identical to real `JSONExporter` output, and requires that
+fixture to exercise every schema property the encoder can emit.
+`scripts/check-scan-contract-fields.py` aligns the collector schema's top-level
+keys with graph model aliases and checks that the graph model accepts the
+fixture. A contract change is incomplete until
 its producer, every supported consumer, fixtures, checker, and compatibility
 text agree.
 
@@ -103,7 +111,7 @@ text agree.
   derived graph state.
 - Static viewers embed a bounded OpenGraph payload. Live viewers start without
   graph data and use the authenticated local API. Viewer source is authored in
-  `graph/viewer-src/` and `graph/viewer-css/`; packaged assets are generated
+  `graph/viewer/src/` and `graph/viewer/css/`; packaged assets are generated
   under `graph/src/rootstock_graph/resources/viewer/`.
 - Blue case packages own their manifest, custody and event JSONL, SQLite
   projection, checksum inventory, and interruption journal. Graph imports do
@@ -121,9 +129,17 @@ the [threat model](THREAT_MODEL.md).
 ## Build and release
 
 There is no root language workspace. SwiftPM, Python, and Node environments are
-resolved within their owning package. `scripts/verify` runs the
-component checks. Only the collector has a
-repository release-archive script; Graph, cve-scan, Red, Blue, and
+resolved within their owning package: each Swift package has its own manifest,
+each Python project its `uv.lock`, and the viewer its own `package.json`,
+lockfile, and `.node-version` in `graph/viewer/` (`npm ci --ignore-scripts`,
+then `npm run bundle`, `demo:build`, `demo:verify`, or `demo:screenshots`). The
+root `package.json` is tools-only: it holds the repository-wide jscpd
+duplication gate. Product-owned scripts live in the product
+(`collector/scripts/`, `graph/scripts/`, `rootstock-blue/Tools/scripts/`); the
+root `scripts/` directory holds only `verify` and the cross-product checkers.
+`scripts/verify` runs the component checks; see [Quality gates](QUALITY.md).
+Only the collector has a repository release-archive script
+(`collector/scripts/build-release.sh`); Graph, cve-scan, Red, Blue, and
 RootstockMacFacts remain source packages in the current Core alpha procedure.
 
 The repository does not provide a supported remote graph service, fleet agent,
@@ -132,17 +148,36 @@ notarization workflow.
 
 ## Extension rules
 
-- Add collector evidence through a focused data source and update the legacy
-  contract only additively.
-- Add graph commands inside `rootstock_graph` and declare their console entry
-  point in `graph/pyproject.toml`.
+- Add collector evidence as a new data-source target that depends only on
+  `Models` and, where needed, `HostCommand` (process execution),
+  `LaunchdPlists`, `FileACLInspection`, or `RootstockMacFacts`; data-source
+  targets do not depend on each other. Take shared macOS paths from
+  `RootstockMacFacts.MacSecurityPaths`. Change the legacy contract only
+  additively.
+- Add graph code inside `rootstock_graph` in the layer that matches its
+  dependencies (see above); no cross-module private imports or re-export
+  facades. Declare console entry points in `graph/pyproject.toml`. Change the
+  viewer in `graph/viewer/` and rebuild the committed bundle.
 - Add cve-scan collectors only behind declared scope and coverage reporting.
-- Add Red assessment modules through the documented module protocols. Lab
-  actions remain in the separate lab product and must document writes and
-  rollback.
-- Add Blue parsers, collection packs, and detections with synthetic fixtures;
-  keep case mutations behind custody-aware APIs.
+- Add Red assessment modules through the documented module protocols: collectors
+  and evidence helpers in `MacEnumKit`, checks and vectors in `MacVulnKit`,
+  report formats in `MacReportKit`. Red's dependency order is `RootstockCore`,
+  `MacEnumKit`, `MacVulnKit`, `RootstockRedCLI`. Lab actions remain in
+  `RootstockLab`/`RootstockLabCLI`, which `rootstock-red` never links
+  (`Scripts/check-no-lab-link.sh`), and must document writes and rollback.
+- Add Blue parsers, collection packs, and detections with synthetic fixtures.
+  A surface-marker parser is a spec for the single `SurfaceMarkerEngine`, with a
+  characterization golden in `Tests/RootstockBlueTests/Fixtures/surface-markers`;
+  keep case mutations behind custody-aware APIs. Contract import and export
+  live in `RootstockBlueInterchange`.
 - Put only product-neutral Swift facts in `RootstockMacFacts`.
+- Change a contract only with its producer, consumers, valid and invalid
+  fixtures, `scripts/check-contracts.py`, and the version rule. For the
+  collector scan this includes the encoder fixture
+  `contracts/collector-scan/fixtures/valid-collector-encoder-complete.json`,
+  regenerated with `ROOTSTOCK_REGENERATE_FIXTURES=1 swift test --filter
+  CompleteScanFixtureTests` from `collector/`, and the packaged mirrors under
+  `graph/src/rootstock_graph/resources/contracts/`.
 
 The [architecture decisions](design-docs/index.md) explain these choices.
 Component READMEs link to their detailed architecture and extension guides.

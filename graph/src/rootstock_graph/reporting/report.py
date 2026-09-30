@@ -28,8 +28,9 @@ from neo4j.exceptions import DriverError, Neo4jError
 
 from ..neo4j import add_neo4j_args, connect_from_args
 from .query_runner import discover_queries
-from ..utils import first_cypher_statement, run_query
-from .report_assembly import assemble_report, markdown_to_html
+from ..cypher import first_cypher_statement, run_query
+from .report_assembly import assemble_report
+from .report_html import markdown_to_html
 
 
 class ScanMetadataError(RuntimeError):
@@ -38,7 +39,7 @@ class ScanMetadataError(RuntimeError):
 
 # ── Default Parameters for Parameterized Queries ────────────────────────────
 
-_DEFAULT_PARAMS = {
+DEFAULT_PARAMS = {
     "target_service": "kTCCServiceSystemPolicyAllFiles",
     "min_permissions": 3,
     "team_id": "",
@@ -79,7 +80,7 @@ def _run_report_query(session, query: dict) -> tuple[str, list[dict] | str]:
     filename = query["filename"]
     try:
         statement = first_cypher_statement(query["cypher"])
-        params = _DEFAULT_PARAMS if _has_parameters(query) else {}
+        params = DEFAULT_PARAMS if _has_parameters(query) else {}
         rows = run_query(session, statement, params)
         print(f"  ✓ {filename}: {len(rows)} rows", file=sys.stderr)
         return filename, rows

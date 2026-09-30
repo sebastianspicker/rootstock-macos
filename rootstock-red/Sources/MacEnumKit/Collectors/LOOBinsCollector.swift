@@ -1,6 +1,5 @@
 import Foundation
 import RootstockCore
-import MacLolKit
 
 /// LOOBins subset inventory + LOLPlanner ranking for common assess goals.
 public struct LOOBinsCollector: Collector {

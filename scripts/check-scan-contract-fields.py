@@ -1,85 +1,65 @@
 #!/usr/bin/env python3
-"""Check the collector scan wire contract against its runtime representations.
+"""Check the collector scan schema's fields against its producer and consumer.
 
-Source of truth for top-level keys:
+Source of truth:
 contracts/collector-scan/legacy-unversioned.schema.json
 
-Also compares:
-  - rootstock_graph.models.ScanResult field aliases (Pydantic)
-  - collector/Sources/Models/ScanResult.swift CodingKeys (best-effort regex)
+Producer: contracts/collector-scan/fixtures/valid-collector-encoder-complete.json
+is the collector's real JSONExporter output (kept equal by the Swift test
+CompleteScanFixtureTests; schema validity is checked by
+scripts/check-contracts.py). It must exercise every property declared anywhere
+in the schema, apart from the documented properties the encoder never writes.
+The closed schema already rejects properties the encoder emits but the schema
+does not declare.
 
-Usage:
-    python3 scripts/check-scan-contract-fields.py
+Consumer: top-level keys must match rootstock_graph.models.ScanResult field
+aliases (Pydantic), and the graph model must accept the complete encoder
+fixture, so nested drift on the consumer side is caught too.
+
+Run with the graph environment so rootstock_graph is installed:
+
+    uv run --project graph --locked python scripts/check-scan-contract-fields.py
 """
 
 from __future__ import annotations
 
-import importlib.util
 import json
-import re
 import sys
 from pathlib import Path
 
+from rootstock_graph import models
+
 ROOT = Path(__file__).resolve().parent.parent
-GRAPH_SOURCE = ROOT / "graph" / "src"
-SCHEMA_PATH = ROOT / "contracts" / "collector-scan" / "legacy-unversioned.schema.json"
-SWIFT_PATH = ROOT / "collector" / "Sources" / "Models" / "ScanResult.swift"
+SCAN_CONTRACT = ROOT / "contracts" / "collector-scan"
+SCHEMA_PATH = SCAN_CONTRACT / "legacy-unversioned.schema.json"
+ENCODER_FIXTURE_PATH = SCAN_CONTRACT / "fixtures" / "valid-collector-encoder-complete.json"
+# Schema properties that consumers accept but the Swift encoder never writes.
+PROPERTIES_NOT_EMITTED = {"KeychainItem.sensitivity"}
 
 
-def load_schema_keys() -> tuple[set[str], set[str]]:
-    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+def load_json(path: Path) -> object:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_schema_keys(schema: dict) -> tuple[set[str], set[str]]:
     props = set(schema.get("properties", {}).keys())
     required = set(schema.get("required", []))
     return props, required
 
 
 def load_pydantic_keys() -> set[str]:
-    if str(GRAPH_SOURCE) not in sys.path:
-        sys.path.insert(0, str(GRAPH_SOURCE))
-    mod = importlib.import_module("rootstock_graph.models")
-    mod.ScanResult.model_rebuild(_types_namespace=vars(mod))
+    models.ScanResult.model_rebuild(_types_namespace=vars(models))
     # model_fields keys are Python names; serialization aliases may differ
     keys: set[str] = set()
-    for name, field in mod.ScanResult.model_fields.items():
+    for name, field in models.ScanResult.model_fields.items():
         alias = field.alias or field.serialization_alias or name
         keys.add(str(alias))
     return keys
 
 
-def _camel_to_snake(name: str) -> str:
-    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
-
-def load_swift_coding_keys() -> set[str] | None:
-    if not SWIFT_PATH.is_file():
-        return None
-    text = SWIFT_PATH.read_text(encoding="utf-8")
-    # Prefer the top-level ScanResult.CodingKeys block (last large enum is fine;
-    # collect all CodingKeys string mappings and bare cases).
-    keys: set[str] = set()
-    for m in re.finditer(
-        r"case\s+(\w+)(?:\s*=\s*\"([a-z0-9_]+)\")?",
-        text,
-    ):
-        case_name, explicit = m.group(1), m.group(2)
-        if explicit:
-            keys.add(explicit)
-        else:
-            # String CodingKey uses the case name as the JSON key when unaliased
-            # (e.g. case timestamp → "timestamp"; case applications → "applications").
-            keys.add(case_name)
-            keys.add(_camel_to_snake(case_name))
-    return keys or None
-
-
 def _pydantic_alignment_errors(schema_keys: set[str], required: set[str]) -> list[str]:
     errors: list[str] = []
-    try:
-        pydantic_keys = load_pydantic_keys()
-    except Exception as exc:  # noqa: BLE001
-        print(f"ERROR: cannot load graph models: {exc}", file=sys.stderr)
-        return [f"cannot load graph models: {exc}"]
+    pydantic_keys = load_pydantic_keys()
 
     only_schema = sorted(schema_keys - pydantic_keys)
     only_pydantic = sorted(pydantic_keys - schema_keys)
@@ -95,36 +75,81 @@ def _pydantic_alignment_errors(schema_keys: set[str], required: set[str]) -> lis
     return errors
 
 
-def _swift_alignment_errors(schema_keys: set[str]) -> list[str]:
-    swift_keys = load_swift_coding_keys()
-    if swift_keys is None:
-        return []
-    missing_swift = sorted(schema_keys - swift_keys)
-    if missing_swift:
-        return [
-            "schema top-level keys not found in ScanResult.swift CodingKeys strings: "
-            f"{missing_swift}"
-        ]
-    return []
+def declared_properties(schema: dict) -> set[str]:
+    """Every object property in the schema as ``Owner.property``."""
+    declared = {f"root.{key}" for key in schema.get("properties", {})}
+    for def_name, definition in schema.get("$defs", {}).items():
+        declared.update(f"{def_name}.{key}" for key in definition.get("properties", {}))
+    return declared
 
 
-def _success_message(schema_keys: set[str], required: set[str]) -> str:
-    swift_keys = load_swift_coding_keys()
-    return (
-        f"OK: schema ({len(schema_keys)} props) aligns with graph ScanResult; "
-        f"required={sorted(required)}"
-        + ("; Swift CodingKeys cover top-level" if swift_keys is not None else "")
+def _collect_emitted(
+    schema: dict, node: dict, owner: str, value: object, emitted: set[str]
+) -> None:
+    ref = node.get("$ref")
+    if isinstance(ref, str) and ref.startswith("#/$defs/"):
+        owner = ref.removeprefix("#/$defs/")
+        node = schema["$defs"][owner]
+    for branch in node.get("oneOf", []):
+        if value is not None and branch.get("type") != "null":
+            _collect_emitted(schema, branch, owner, value, emitted)
+    _collect_children(schema, node, owner, value, emitted)
+
+
+def _collect_children(
+    schema: dict, node: dict, owner: str, value: object, emitted: set[str]
+) -> None:
+    properties = node.get("properties", {})
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in properties:
+                emitted.add(f"{owner}.{key}")
+                _collect_emitted(schema, properties[key], owner, child, emitted)
+    elif isinstance(value, list) and isinstance(node.get("items"), dict):
+        for item in value:
+            _collect_emitted(schema, node["items"], owner, item, emitted)
+
+
+def _encoder_coverage_errors(schema: dict, fixture: object) -> tuple[list[str], str]:
+    declared = declared_properties(schema)
+    emitted: set[str] = set()
+    _collect_emitted(schema, schema, "root", fixture, emitted)
+
+    errors: list[str] = []
+    missing = sorted(declared - emitted - PROPERTIES_NOT_EMITTED)
+    if missing:
+        errors.append(f"schema properties the encoder fixture never emits: {missing}")
+    stale = sorted(PROPERTIES_NOT_EMITTED & emitted)
+    if stale:
+        errors.append(f"listed as not emitted but present in encoder fixture: {stale}")
+    unknown = sorted(PROPERTIES_NOT_EMITTED - declared)
+    if unknown:
+        errors.append(f"listed as not emitted but not declared in schema: {unknown}")
+    summary = (
+        f"encoder fixture covers {len(emitted)}/{len(declared)} schema properties "
+        f"(not emitted: {sorted(PROPERTIES_NOT_EMITTED)})"
     )
+    return errors, summary
 
 
 def main() -> int:
-    if not SCHEMA_PATH.is_file():
-        print(f"ERROR: schema missing {SCHEMA_PATH}", file=sys.stderr)
-        return 1
+    for path in (SCHEMA_PATH, ENCODER_FIXTURE_PATH):
+        if not path.is_file():
+            print(f"ERROR: missing {path}", file=sys.stderr)
+            return 1
 
-    schema_keys, required = load_schema_keys()
+    schema = load_json(SCHEMA_PATH)
+    if not isinstance(schema, dict):
+        print(f"ERROR: {SCHEMA_PATH} root is not an object", file=sys.stderr)
+        return 1
+    schema_keys, required = load_schema_keys(schema)
     errors = _pydantic_alignment_errors(schema_keys, required)
-    errors.extend(_swift_alignment_errors(schema_keys))
+    coverage_errors, coverage = _encoder_coverage_errors(schema, load_json(ENCODER_FIXTURE_PATH))
+    errors.extend(coverage_errors)
+    try:
+        models.ScanResult.model_validate(load_json(ENCODER_FIXTURE_PATH))
+    except ValueError as exc:
+        errors.append(f"graph ScanResult rejects the encoder fixture: {exc}")
 
     if errors:
         print("Scan contract field check FAILED:")
@@ -132,7 +157,10 @@ def main() -> int:
             print(f"  - {e}")
         return 1
 
-    print(_success_message(schema_keys, required))
+    print(
+        f"OK: schema ({len(schema_keys)} props) aligns with and accepts graph ScanResult; "
+        f"required={sorted(required)}; {coverage}"
+    )
     return 0
 
 

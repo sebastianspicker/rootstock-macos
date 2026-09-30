@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "/Users/kim/jsonl-one",
+        "sirisug.risk_tags" : "jsonl_tag,siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/siri_suggestions_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "jsonl-name",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/siri_suggestions_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "primary-name",
+        "sirisug.notes" : "synthetic note",
+        "sirisug.path" : "/Users/alice/Library/Markers/primary",
+        "sirisug.risk_tags" : "custom_a,custom_b,custom_a,siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "kind-only",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "/Users/erin/bin/tool",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "label-only",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "42",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "/Users/Shared/shared-marker",
+        "sirisug.risk_tags" : ",siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "/Users/ivy/fractional",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "/Users/jack/bad-time",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "single-kind",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "surface-label",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sirisug|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "siri.suggestions",
+      "fields" : {
+        "event.type" : "siri.suggestions",
+        "sirisug.name" : "",
+        "sirisug.notes" : "Siri Suggestions residual markers - never dumps Siri transcripts or Suggestions databases contents",
+        "sirisug.path" : "/Users/nia/array-entry",
+        "sirisug.risk_tags" : "siri_surface",
+        "sirisug.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/siri_suggestions_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "SIRISUG"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Siri Suggestions residual markers",
+    "id" : "SIRISUG",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import importlib
 import json
-from pathlib import Path
+import sys
 
 import pytest
+import uvicorn
 
 from rootstock_graph import api
+from rootstock_graph.api_support import dependencies
 from rootstock_graph.ingestion import import_family_export, import_scan
 from rootstock_graph.paths import package_resource_dir
 from rootstock_graph.reporting import query_runner
@@ -47,9 +49,9 @@ def test_package_resources_supply_queries_and_viewer_runtime() -> None:
 
 def test_api_keeps_loopback_token_and_read_only_cypher_contracts() -> None:
     assert (
-        api.MAX_ADHOC_CYPHER_LENGTH,
-        api.MAX_ADHOC_CYPHER_ROWS,
-        api.ADHOC_CYPHER_TIMEOUT_SECONDS,
+        dependencies.MAX_ADHOC_CYPHER_LENGTH,
+        dependencies.MAX_ADHOC_CYPHER_ROWS,
+        dependencies.ADHOC_CYPHER_TIMEOUT_SECONDS,
     ) == (10_000, 1_000, 5.0)
     validate_bind_host("localhost")
     validate_bind_host("127.0.0.1")
@@ -66,13 +68,22 @@ def test_api_keeps_loopback_token_and_read_only_cypher_contracts() -> None:
     )
 
 
-def test_api_cli_keeps_loopback_default_and_port_flag() -> None:
-    args = api._build_parser().parse_args(["--port", "8123"])
-    assert (args.host, args.port, args.neo4j) == (
+def test_api_cli_keeps_loopback_default_and_port_flag(monkeypatch) -> None:
+    served: dict[str, object] = {}
+    monkeypatch.setenv("NEO4J_PASSWORD", "writer-password")
+    monkeypatch.setenv("NEO4J_READ_USER", "reader")
+    monkeypatch.setenv("NEO4J_READ_PASSWORD", "reader-password")
+    monkeypatch.setenv("ROOTSTOCK_API_TOKEN", "t" * 32)
+    monkeypatch.setattr(sys, "argv", ["rootstock-graph-api", "--port", "8123"])
+    monkeypatch.setattr(uvicorn, "run", lambda app, **options: served.update(options, app=app))
+
+    assert api.main() == 0
+    assert (served["host"], served["port"], api.app.state.neo4j_uri) == (
         "127.0.0.1",
         8123,
         "bolt://localhost:7687",
     )
+    assert served["app"] is api.app
 
 
 def test_importer_cli_keeps_input_and_neo4j_flags() -> None:
@@ -166,11 +177,3 @@ def test_packaged_family_schema_keeps_the_canonical_identity() -> None:
         .read_text(encoding="utf-8")
     )
     assert schema["$id"] == import_family_export.FAMILY_EXPORT_SCHEMA_ID
-
-
-def test_packaged_cve_schema_is_byte_identical_to_the_canonical_contract() -> None:
-    root = package_resource_dir("contracts").joinpath("cve-scan-export", "v7", "schema.json")
-    canonical = (
-        Path(__file__).resolve().parents[2] / "contracts" / "cve-scan-export" / "v7" / "schema.json"
-    )
-    assert root.read_bytes() == canonical.read_bytes()

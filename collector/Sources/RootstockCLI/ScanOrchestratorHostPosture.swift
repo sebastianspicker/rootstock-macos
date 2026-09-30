@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 import RootstockMacFacts
 
 extension ScanOrchestrator {

@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "/Users/kim/jsonl-one",
+        "sucat.risk_tags" : "jsonl_tag,softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/softwareupdate_catalog.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "jsonl-name",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/softwareupdate_catalog.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "primary-name",
+        "sucat.notes" : "synthetic note",
+        "sucat.path" : "/Users/alice/Library/Markers/primary",
+        "sucat.risk_tags" : "custom_a,custom_b,custom_a,softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "kind-only",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "/Users/erin/bin/tool",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "label-only",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "42",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "/Users/Shared/shared-marker",
+        "sucat.risk_tags" : ",softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "/Users/ivy/fractional",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "/Users/jack/bad-time",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "single-kind",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "surface-label",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sucat|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "softwareupdate.catalog",
+      "fields" : {
+        "event.type" : "softwareupdate.catalog",
+        "sucat.name" : "",
+        "sucat.notes" : "Software Update catalog markers - never points SUS catalogs at attacker mirrors or tampers with update plists",
+        "sucat.path" : "/Users/nia/array-entry",
+        "sucat.risk_tags" : "softwareupdate_surface",
+        "sucat.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/softwareupdate_catalog.json",
+      "source" : "parser",
+      "sourcePlugin" : "SUCAT"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Software Update catalog markers",
+    "id" : "SUCAT",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

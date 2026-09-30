@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterator
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,6 +10,7 @@ from neo4j import READ_ACCESS
 from neo4j.exceptions import ServiceUnavailable
 
 from rootstock_graph import api
+from rootstock_graph.api_support import dependencies
 
 
 TOKEN = "t" * 32
@@ -135,19 +136,19 @@ def test_api_rejects_write_procedure_and_multistatement_cypher(api_client, cyphe
 
 def test_api_bounds_cypher_size_rows_timeout_and_read_access(api_client) -> None:
     client, writer_driver, read_driver, session = api_client
-    session.rows = [{"row": index} for index in range(api.MAX_ADHOC_CYPHER_ROWS + 2)]
+    session.rows = [{"row": index} for index in range(dependencies.MAX_ADHOC_CYPHER_ROWS + 2)]
     response = client.post("/api/cypher", headers=AUTH, json={"cypher": "MATCH (n) RETURN n"})
     assert response.status_code == 200
-    assert response.json()["count"] == api.MAX_ADHOC_CYPHER_ROWS
+    assert response.json()["count"] == dependencies.MAX_ADHOC_CYPHER_ROWS
     assert response.json()["truncated"] is True
     assert writer_driver.access_modes == []
     assert read_driver.access_modes == [READ_ACCESS]
-    assert session.queries[0].timeout == api.ADHOC_CYPHER_TIMEOUT_SECONDS
+    assert session.queries[0].timeout == dependencies.ADHOC_CYPHER_TIMEOUT_SECONDS
 
     too_long = client.post(
         "/api/cypher",
         headers=AUTH,
-        json={"cypher": "M" * (api.MAX_ADHOC_CYPHER_LENGTH + 1)},
+        json={"cypher": "M" * (dependencies.MAX_ADHOC_CYPHER_LENGTH + 1)},
     )
     assert too_long.status_code == 413
 
@@ -219,8 +220,8 @@ def test_api_startup_fails_closed_without_read_credentials(
     monkeypatch.setenv("NEO4J_READ_PASSWORD", "reader-password")
     monkeypatch.delenv(missing)
 
-    args = SimpleNamespace(host="127.0.0.1", neo4j="bolt://localhost:7687", neo4j_user="writer")
-    assert api._configure_app_state(args) is False
+    monkeypatch.setattr(sys, "argv", ["rootstock-graph-api", "--neo4j-user", "writer"])
+    assert api.main() == 1
     assert missing in capsys.readouterr().err
 
 
@@ -230,19 +231,17 @@ def test_api_startup_rejects_writer_as_read_principal(monkeypatch, capsys) -> No
     monkeypatch.setenv("NEO4J_READ_USER", "writer")
     monkeypatch.setenv("NEO4J_READ_PASSWORD", "reader-password")
 
-    args = SimpleNamespace(
-        host="127.0.0.1",
-        neo4j="bolt://localhost:7687",
-        neo4j_user="writer",
-    )
-    assert api._configure_app_state(args) is False
+    monkeypatch.setattr(sys, "argv", ["rootstock-graph-api", "--neo4j-user", "writer"])
+    assert api.main() == 1
     assert "must differ" in capsys.readouterr().err
 
 
-def test_api_startup_rejects_non_loopback_bind_before_reading_credentials(capsys) -> None:
-    args = SimpleNamespace(host="0.0.0.0", neo4j="bolt://localhost:7687", neo4j_user="writer")
+def test_api_startup_rejects_non_loopback_bind_before_reading_credentials(
+    monkeypatch, capsys
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["rootstock-graph-api", "--host", "0.0.0.0"])
 
-    assert api._configure_app_state(args) is False
+    assert api.main() == 1
     assert "loopback" in capsys.readouterr().err
 
 

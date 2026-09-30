@@ -10,7 +10,9 @@ usage() {
 Usage: sh scripts/verify <quality|release|swift-core|swift-family|graph|cve|web|shell|neo4j|full>
 
 Every selected lane fails when a required tool, dependency environment, or
-runtime service is unavailable. The neo4j lane requires a reachable operator-
+runtime service is unavailable. The web lane and the quality lane's viewer
+checks need `npm ci` in graph/viewer; the quality lane's duplication gate needs
+`npm ci` in the repository root. The neo4j lane requires a reachable operator-
 controlled Neo4j instance plus NEO4J_PASSWORD, NEO4J_READ_USER, and
 NEO4J_READ_PASSWORD. The full lane includes neo4j.
 EOF
@@ -28,6 +30,10 @@ need() {
 run() {
     printf '\n==> %s\n' "$*"
     "$@"
+}
+
+run_swift_test() {
+    run sh "$ROOT/scripts/swift-test" "$@"
 }
 
 graph_uv() {
@@ -53,14 +59,18 @@ lane_quality() {
     need python3
     need uv
     [ -x "$ROOT/node_modules/.bin/jscpd" ] ||
-        fail "run npm ci before the quality lane"
+        fail "run npm ci in the repository root before the quality lane"
+    [ -x "$ROOT/graph/viewer/node_modules/.bin/biome" ] ||
+        fail "run npm ci in graph/viewer before the quality lane"
     run python3 "$ROOT/scripts/check-source-size.py" \
         --max-lines 600 --ratchet "$ROOT/.source-size-baseline.json"
     graph_uv ruff check "$ROOT/graph/src" "$ROOT/graph/tests" \
-        "$ROOT/scripts" "$ROOT/examples" "$ROOT/docs" \
+        "$ROOT/scripts" "$ROOT/graph/scripts" "$ROOT/rootstock-blue/Tools/scripts" \
+        "$ROOT/examples" "$ROOT/docs" \
         --exclude docs/archive --exclude docs/private
     graph_uv ruff format --check "$ROOT/graph/src" "$ROOT/graph/tests" \
-        "$ROOT/scripts" "$ROOT/examples" "$ROOT/docs" \
+        "$ROOT/scripts" "$ROOT/graph/scripts" "$ROOT/rootstock-blue/Tools/scripts" \
+        "$ROOT/examples" "$ROOT/docs" \
         --exclude docs/archive --exclude docs/private
     (
         cd "$ROOT/modules/cve-scan"
@@ -68,9 +78,12 @@ lane_quality() {
         run uv run --locked ruff format --check .
     )
     (
-        cd "$ROOT"
+        cd "$ROOT/graph/viewer"
         run npm run lint
         run npm run format:check
+    )
+    (
+        cd "$ROOT"
         run "$ROOT/node_modules/.bin/jscpd" --config "$ROOT/.jscpd.json" \
             --baseline "$ROOT/.jscpd-baseline.json" --fail-on-new-clones
     )
@@ -90,8 +103,8 @@ lane_release() {
     else
         run python3 "$ROOT/scripts/check-release.py"
     fi
-    run node "$ROOT/scripts/build-pages-demo.mjs"
-    run node "$ROOT/scripts/check-pages-demo.mjs"
+    run node "$ROOT/graph/viewer/scripts/build-pages-demo.mjs"
+    run node "$ROOT/graph/viewer/scripts/check-pages-demo.mjs"
 }
 
 lane_swift_core() {
@@ -99,7 +112,7 @@ lane_swift_core() {
     (
         cd "$ROOT/collector"
         run swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
-        run swift test --parallel -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+        run_swift_test --parallel -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
     )
 }
 
@@ -109,7 +122,7 @@ lane_swift_family() {
     need python3
     need uv
     need mktemp
-    run python3 "$ROOT/scripts/check-blue-field-taxonomy.py"
+    run python3 "$ROOT/rootstock-blue/Tools/scripts/check-field-taxonomy.py"
     (
         family_tmp=$(mktemp -d /tmp/rootstock-family.XXXXXX)
         trap 'rm -rf "$family_tmp"' EXIT HUP INT TERM
@@ -201,7 +214,7 @@ PY
 
         (
             cd "$ROOT/rootstock-red"
-            run swift test -Xswiftc -warnings-as-errors
+            run_swift_test -Xswiftc -warnings-as-errors
             run bash Scripts/check-no-lab-link.sh
             if .build/debug/rootstock-red lab persist install; then
                 fail "rootstock-red lab mutation must fail closed without authorization"
@@ -209,7 +222,7 @@ PY
         )
         (
             cd "$ROOT/rootstock-blue"
-            run swift test -Xswiftc -warnings-as-errors
+            run_swift_test -Xswiftc -warnings-as-errors
             run make content-validate
             run make check-non-goals
             run .build/debug/rootstock-blue detect run --ruleset samples --content-root Content
@@ -218,17 +231,19 @@ PY
     (
         cd "$ROOT/packages/RootstockMacFacts"
         run swift build -Xswiftc -warnings-as-errors
-        run swift test -Xswiftc -warnings-as-errors
+        run_swift_test -Xswiftc -warnings-as-errors
     )
     run python3 "$ROOT/scripts/check-technique-catalog.py"
 }
 
 lane_graph() {
-    graph_uv ruff check "$ROOT/graph/src" "$ROOT/graph/tests" "$ROOT/scripts" "$ROOT/examples" "$ROOT/docs" --exclude docs/archive --exclude docs/private
+    graph_uv ruff check "$ROOT/graph/src" "$ROOT/graph/tests" "$ROOT/scripts" "$ROOT/graph/scripts" \
+        "$ROOT/rootstock-blue/Tools/scripts" "$ROOT/examples" "$ROOT/docs" \
+        --exclude docs/archive --exclude docs/private
     graph_uv pytest "$ROOT/graph/tests"
     graph_uv python "$ROOT/scripts/check-contracts.py"
     graph_uv python "$ROOT/scripts/check-scan-contract-fields.py"
-    graph_uv python "$ROOT/scripts/validate-scan.py" "$ROOT/examples/demo-scan.json"
+    graph_uv rootstock-graph-validate-scan "$ROOT/examples/demo-scan.json"
     run bash "$ROOT/graph/scripts/wheel-smoke.sh"
 }
 
@@ -244,12 +259,14 @@ lane_cve() {
 lane_web() {
     need npm
     need git
+    [ -x "$ROOT/graph/viewer/node_modules/.bin/tsc" ] ||
+        fail "run npm ci in graph/viewer before the web lane"
     (
-        cd "$ROOT"
+        cd "$ROOT/graph/viewer"
         run npm run typecheck
         run npm run lint
-        run node "$ROOT/scripts/test-viewer.mjs"
-        run node "$ROOT/scripts/check-viewer-assets.mjs"
+        run node "$ROOT/graph/viewer/scripts/test-viewer.mjs"
+        run node "$ROOT/graph/viewer/scripts/check-viewer-assets.mjs"
     )
 }
 
@@ -267,7 +284,7 @@ lane_shell() {
                 [ ! -f "$shell_source" ] || shellcheck "$shell_source"
             done
         ' sh
-        shellcheck scripts/verify
+        shellcheck scripts/verify scripts/swift-test
     )
 }
 
@@ -280,7 +297,7 @@ lane_neo4j() {
     need curl
     need mktemp
     run bash "$ROOT/graph/pipeline.sh" "$ROOT/examples/demo-scan.json" --skip-report
-    graph_uv python "$ROOT/scripts/check-neo4j-connection.py" \
+    graph_uv python "$ROOT/graph/scripts/check-neo4j-connection.py" \
         --uri "$neo4j_uri" \
         --user "${NEO4J_USER:-neo4j}"
     (

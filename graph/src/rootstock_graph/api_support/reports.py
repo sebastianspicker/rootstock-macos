@@ -11,10 +11,11 @@ from neo4j.exceptions import DriverError, Neo4jError
 from pydantic import BaseModel, ConfigDict
 
 from ..reporting.query_runner import discover_queries
-from ..reporting.report import _DEFAULT_PARAMS, get_scan_metadata_from_session
-from ..reporting.report_assembly import assemble_report, markdown_to_html
+from ..reporting.report import DEFAULT_PARAMS, get_scan_metadata_from_session
+from ..reporting.report_assembly import assemble_report
+from ..reporting.report_html import markdown_to_html
 from ..server_validation import validate_api_cypher
-from ..utils import first_cypher_statement, run_query
+from ..cypher import first_cypher_statement, run_query
 
 MAX_QUERY_ROWS = 1_000
 MAX_TOTAL_ROWS = 20_000
@@ -53,7 +54,7 @@ def _query_results(session: _TimedSession) -> dict[str, list[dict]]:
         statement = first_cypher_statement(query["cypher"])
         if validate_api_cypher(statement):
             raise HTTPException(500, "A configured report query is not read-only")
-        rows = run_query(session, statement, _DEFAULT_PARAMS, maximum_rows=MAX_QUERY_ROWS + 1)
+        rows = run_query(session, statement, DEFAULT_PARAMS, maximum_rows=MAX_QUERY_ROWS + 1)
         total_rows += len(rows)
         if len(rows) > MAX_QUERY_ROWS or total_rows > MAX_TOTAL_ROWS:
             raise HTTPException(

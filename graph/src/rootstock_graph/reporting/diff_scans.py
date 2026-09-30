@@ -36,7 +36,7 @@ from ..models import ScanResult
 from ..ingestion.scan_loader import load_scan
 
 
-from .diff_models import (  # noqa: F401
+from .diff_models import (
     AppDiff,
     TCCDiff,
     InjectionDiff,
@@ -45,15 +45,14 @@ from .diff_models import (  # noqa: F401
     PhysicalPostureDiff,
     RemoteAccessDiff,
     ICloudPostureDiff,
-    VulnerabilityDiff,
     PostureDiff,
 )
 
-from .diff_formatters import (  # noqa: F401
+from .diff_formatters import (
     summarize,
     format_text,
 )
-from .diff_vulnerabilities import diff_vulnerabilities  # noqa: F401
+from .diff_vulnerabilities import diff_vulnerabilities
 
 
 # ── Diff logic ──────────────────────────────────────────────────────────────

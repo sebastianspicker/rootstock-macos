@@ -8,7 +8,7 @@ included:
   - packages/RootstockMacFacts/Tests
   - rootstock-red/Sources
   - rootstock-red/Tests
-  - rootstock-blue/Packages
+  - rootstock-blue/Sources
   - rootstock-blue/Tests
 
 excluded:
@@ -20,7 +20,6 @@ only_rules:
   - deployment_target
   - duplicate_conditions
   - duplicate_enum_cases
-  - empty_xctest_method
   - function_body_length
   - identical_operands
   - overridden_super_call
@@ -30,7 +29,6 @@ only_rules:
   - unused_control_flow_label
   - unused_enumerated
   - unused_optional_binding
-  - xctfail_message
 
 cyclomatic_complexity: 8
 function_body_length: 60

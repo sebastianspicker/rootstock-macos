@@ -1,5 +1,12 @@
 # Changelog
 
+## Repository naming migration
+
+The repository moves from `sebastianspicker/rootstock` to
+`sebastianspicker/rootstock-macos`. Product commands, data formats, and runtime
+identifiers remain unchanged. The demo moves to
+https://sebastianspicker.github.io/rootstock-macos/.
+
 This changelog records user-visible changes to Rootstock. The versioned
 entries begin with the first Core alpha.
 
@@ -8,6 +15,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## Unreleased
 
 ### Changed
+
+- Scan validation is the installed `rootstock-graph-validate-scan` command;
+  `scripts/validate-scan.py` is removed. Arguments, output, and exit codes are
+  unchanged.
+- The graph viewer's Node project moved to `graph/viewer/` (run `npm ci`,
+  `npm run bundle`, and the demo commands there); the root `package.json` now
+  holds only repository quality tooling. The collector release and benchmark
+  scripts moved to `collector/scripts/`.
+- The Rootstock Blue library product `RootstockBlueExport` is renamed
+  `RootstockBlueInterchange`; Blue sources moved to `rootstock-blue/Sources/`.
+- Swift tests use Swift Testing, so the CommandLineTools are enough to run them.
 
 - Added an interactive synthetic viewer demo and a four-screen tour for the
   README and GitHub Pages, with a reproducible browser capture command.
@@ -20,6 +38,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Aligned Rootstock Blue bundle metadata with its `0.4.0-dfir` runtime label.
 - Added a collector-specific package README and exact package file-set check.
 - Documented graph prerequisites and how to interpret modeled results.
+
+### Fixed
+
+- Rootstock Blue no longer rejects valid cases when an event or custody
+  timestamp falls in the last millisecond of a second.
+- The Rootstock Blue unified-logs sidecar can always be stopped by its
+  process-group termination, even when the caller blocks SIGTERM.
+- Rootstock Blue exports refuse to write into the input case even when the
+  case lives under `/tmp` or `/var`, where macOS path resolution previously
+  let a report land inside the case.
+- `rootstock-graph-validate-scan` reports a non-object JSON document as an
+  invalid scan instead of crashing.
 
 ## [0.1.0-alpha.1] (release candidate)
 

@@ -1,7 +1,8 @@
 import Foundation
 import Models
+import HostCommand
 import RootstockMacFacts
-import XPCServices
+import LaunchdPlists
 
 /// Enumerates all persistence mechanisms on the system.
 ///
@@ -128,8 +129,7 @@ public struct PersistenceDataSource: DataSource {
     // MARK: - Login Items (BTM)
 
     private func collectLoginItems() -> ([LaunchItem], [String]) {
-        let btmPath = NSHomeDirectory()
-            + "/Library/Application Support/com.apple.backgroundtaskmanagementagent/backgrounditems.btm"
+        let btmPath = NSHomeDirectory() + "/" + MacSecurityPaths.backgroundItemsBTMRelative
 
         let fm = FileManager.default
         guard fm.fileExists(atPath: btmPath) else {

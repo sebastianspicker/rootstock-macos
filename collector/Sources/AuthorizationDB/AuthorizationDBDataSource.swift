@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Reads macOS Authorization Database rights via `security authorizationdb read`.
 ///

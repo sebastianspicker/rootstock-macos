@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from rootstock_graph.ingestion import import_cve_scan
-from rootstock_graph.paths import package_resource_dir
+from rootstock_graph.ingestion import cve_scan_contract, import_cve_scan
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,13 +17,8 @@ def _fixture(name: str = "valid-minimal.json") -> dict[str, object]:
     return json.loads((CONTRACT_DIR / "fixtures" / name).read_text(encoding="utf-8"))
 
 
-def test_packaged_cve_schema_is_byte_identical_to_canonical_contract() -> None:
-    packaged = package_resource_dir("contracts").joinpath("cve-scan-export", "v7", "schema.json")
-    assert packaged.read_bytes() == (CONTRACT_DIR / "schema.json").read_bytes()
-
-
 def test_schema_first_validation_accepts_canonical_fixture() -> None:
-    export = import_cve_scan.validate_export(_fixture())
+    export = cve_scan_contract.validate_export(_fixture())
     assert export.schema_version == 7
     assert export.node_types == frozenset({"Host"})
 
@@ -48,8 +42,8 @@ def test_schema_first_validation_accepts_canonical_fixture() -> None:
 def test_cve_export_rejects_invalid_semantic_metadata(mutate, message: str) -> None:
     raw = _fixture()
     mutate(raw)
-    with pytest.raises(import_cve_scan.CveScanImportError, match=message):
-        import_cve_scan.validate_export(raw)
+    with pytest.raises(cve_scan_contract.CveScanImportError, match=message):
+        cve_scan_contract.validate_export(raw)
 
 
 def test_cve_export_rejects_dangling_edge_endpoints() -> None:
@@ -62,8 +56,8 @@ def test_cve_export_rejects_dangling_edge_endpoints() -> None:
         edge_types=["HAS_FINDING"],
     )
     raw["edges"].append({"from": "Host:fixture", "to": "Finding:missing", "type": "HAS_FINDING"})
-    with pytest.raises(import_cve_scan.CveScanImportError, match="not a known node id"):
-        import_cve_scan.validate_export(raw)
+    with pytest.raises(cve_scan_contract.CveScanImportError, match="not a known node id"):
+        cve_scan_contract.validate_export(raw)
 
 
 def test_validate_only_does_not_open_neo4j(monkeypatch, capsys) -> None:

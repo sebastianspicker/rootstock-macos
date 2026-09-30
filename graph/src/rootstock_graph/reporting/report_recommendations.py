@@ -110,7 +110,7 @@ def _append_recommendations(
     sections.append("")
 
 
-def _append_recommendations_section(
+def append_recommendations_section(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
     rows: object,

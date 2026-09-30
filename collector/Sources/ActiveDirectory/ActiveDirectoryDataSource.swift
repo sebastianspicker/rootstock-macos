@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Detects Active Directory binding status and AD-to-local group mappings.
 ///

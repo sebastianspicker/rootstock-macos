@@ -19,8 +19,11 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from . import import_nodes_certificates
 from . import import_nodes_core
 from . import import_nodes_enrichment
+from . import import_nodes_permissions
+from . import import_nodes_sandbox
 from . import import_nodes_security
 from . import import_nodes_security_enterprise
 from . import import_nodes_services
@@ -53,10 +56,14 @@ def _scan_computer_context(scan: ScanResult) -> import_nodes_core.ComputerImport
 
 def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
     n_apps = import_nodes_core.import_applications(session, scan.applications, scan.scan_id)
-    grants_linked, _ = import_nodes_core.import_tcc_grants(session, scan.tcc_grants, scan.scan_id)
-    import_nodes_core.import_entitlements(session, scan.applications, scan.scan_id)
+    grants_linked, _ = import_nodes_permissions.import_tcc_grants(
+        session, scan.tcc_grants, scan.scan_id
+    )
+    import_nodes_permissions.import_entitlements(session, scan.applications, scan.scan_id)
     import_nodes_core.import_signed_by_team(session)
-    import_nodes_core.import_certificate_authorities(session, scan.applications, scan.scan_id)
+    import_nodes_certificates.import_certificate_authorities(
+        session, scan.applications, scan.scan_id
+    )
     import_nodes_services.import_xpc_services(session, scan.xpc_services)
     import_nodes_services.import_keychain_items(session, scan.keychain_acls, scan.scan_id)
     import_nodes_services.import_mdm_profiles(session, scan.mdm_profiles)
@@ -78,7 +85,7 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
     import_nodes_security_enterprise.import_kerberos_artifacts(
         session, scan.kerberos_artifacts, scan.hostname, scan.scan_id
     )
-    import_nodes_core.import_sandbox_profiles(session, scan.sandbox_profiles, scan.scan_id)
+    import_nodes_sandbox.import_sandbox_profiles(session, scan.sandbox_profiles, scan.scan_id)
     import_nodes_enrichment.import_bluetooth_devices(
         session, scan.bluetooth_devices, scan.hostname, scan.scan_id
     )

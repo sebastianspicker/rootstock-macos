@@ -1,7 +1,6 @@
 .DS_Store
 .build/
 .swiftpm/
-Packages/.build/
 *.xcodeproj/
 xcuserdata/
 DerivedData/
@@ -13,5 +12,4 @@ DerivedData/
 .env.*
 Tools/sidecars/macos-unifiedlogs/bin/
 *.rsbcase/
-!Fixtures/cases/**
 .rootstock-blue/

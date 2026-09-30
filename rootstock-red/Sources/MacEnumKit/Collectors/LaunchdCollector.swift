@@ -1,6 +1,5 @@
 import Foundation
 import RootstockCore
-import MacPersistKit
 
 /// LaunchAgent inventory (user domain) via PersistAudit.
 public struct LaunchdCollector: Collector {

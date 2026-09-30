@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "/Users/kim/jsonl-one",
+        "notesmeta.risk_tags" : "jsonl_tag,notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/notes_metadata_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "jsonl-name",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/notes_metadata_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "primary-name",
+        "notesmeta.notes" : "synthetic note",
+        "notesmeta.path" : "/Users/alice/Library/Markers/primary",
+        "notesmeta.risk_tags" : "custom_a,custom_b,custom_a,notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "kind-only",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "/Users/erin/bin/tool",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "label-only",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "42",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "/Users/Shared/shared-marker",
+        "notesmeta.risk_tags" : ",notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "/Users/ivy/fractional",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "/Users/jack/bad-time",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "single-kind",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "surface-label",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:notesmeta|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "notes.metadata",
+      "fields" : {
+        "event.type" : "notes.metadata",
+        "notesmeta.name" : "",
+        "notesmeta.notes" : "Notes metadata plane markers - never reads Notes body contents or exports note secrets",
+        "notesmeta.path" : "/Users/nia/array-entry",
+        "notesmeta.risk_tags" : "notes_surface",
+        "notesmeta.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/notes_metadata_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "NOTESMETADATA"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Notes metadata plane markers",
+    "id" : "NOTESMETADATA",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

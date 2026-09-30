@@ -12,6 +12,6 @@ def test_fetch_and_cache_preserves_partial_nvd_errors(monkeypatch) -> None:
         return {"CVE-1": {"vector": None}}
 
     monkeypatch.setattr(cve_enrichment, "fetch_nvd", fetch_nvd)
-    monkeypatch.setattr(cve_enrichment, "_has_any_enrichment_cache", lambda: False)
+    monkeypatch.setattr(cve_enrichment, "has_any_enrichment_cache", lambda: False)
 
     assert cve_enrichment.fetch_and_cache() == ["NVD partial: 1/1 CVEs failed enrichment"]

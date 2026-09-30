@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import RootstockMacFacts
 
 /// Parses /etc/sudoers and /etc/sudoers.d/* for NOPASSWD rules.
 public struct SudoersDataSource: DataSource {
@@ -10,7 +11,7 @@ public struct SudoersDataSource: DataSource {
     private let includeDirectoryPath: String
 
     public init() {
-        self.init(sudoersPath: "/etc/sudoers", includeDirectoryPath: "/etc/sudoers.d")
+        self.init(sudoersPath: MacSecurityPaths.sudoers, includeDirectoryPath: MacSecurityPaths.sudoersD)
     }
 
     internal init(sudoersPath: String, includeDirectoryPath: String) {

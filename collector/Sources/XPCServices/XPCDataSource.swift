@@ -1,5 +1,8 @@
 import Foundation
 import Models
+import HostCommand
+import LaunchdPlists
+import RootstockMacFacts
 
 /// Discovers XPC services by parsing launchd plist files from all standard directories.
 ///
@@ -19,10 +22,10 @@ public struct XPCDataSource: DataSource {
     private let runCommand: ShellCommand
 
     private static let directories: [(path: String, type: XPCService.ServiceType)] = [
-        ("/System/Library/LaunchDaemons", .daemon),
-        ("/Library/LaunchDaemons", .daemon),
-        ("/Library/LaunchAgents", .agent),
-        (NSHomeDirectory() + "/Library/LaunchAgents", .agent),
+        (MacSecurityPaths.appleLaunchDaemons, .daemon),
+        (MacSecurityPaths.systemLaunchDaemons, .daemon),
+        (MacSecurityPaths.systemLaunchAgents, .agent),
+        (NSHomeDirectory() + "/" + MacSecurityPaths.userLaunchAgentsRelative, .agent),
     ]
 
     public init() {

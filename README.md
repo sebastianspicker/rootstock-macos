@@ -1,9 +1,11 @@
 # Rootstock
 
-[![Build](https://github.com/sebastianspicker/rootstock/actions/workflows/test.yml/badge.svg)](https://github.com/sebastianspicker/rootstock/actions)
-[![Codacy](https://app.codacy.com/project/badge/Grade/8b8c55c173964e039f5b1e7629cca6b2)](https://app.codacy.com/gh/sebastianspicker/rootstock/dashboard)
+Investigate macOS security exposure and its supporting evidence.
+
+[![Build](https://github.com/sebastianspicker/rootstock-macos/actions/workflows/test.yml/badge.svg)](https://github.com/sebastianspicker/rootstock-macos/actions)
+[![Codacy](https://app.codacy.com/project/badge/Grade/8b8c55c173964e039f5b1e7629cca6b2)](https://app.codacy.com/gh/sebastianspicker/rootstock-macos/dashboard)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13235/badge)](https://www.bestpractices.dev/projects/13235)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sebastianspicker/rootstock/badge)](https://scorecard.dev/viewer/?uri=github.com/sebastianspicker/rootstock)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sebastianspicker/rootstock-macos/badge)](https://scorecard.dev/viewer/?uri=github.com/sebastianspicker/rootstock-macos)
 
 Rootstock helps you investigate macOS security exposure: which apps hold
 sensitive permissions, which protections are missing, and how those facts
@@ -18,15 +20,15 @@ Alpha: `0.1.0-alpha.1`. Commands and schemas may change. Release archives
 are not signed or notarized. Modeled paths describe possible exposure, not
 confirmed exploitation.
 
-[Try the interactive demo](https://sebastianspicker.github.io/rootstock/) ·
+[Try the interactive demo](https://sebastianspicker.github.io/rootstock-macos/) ·
 [Read the docs](docs/README.md) · [Choose a component](#components)
 
 ## Screenshot tour
 
 These are real browser captures of the viewer using a fictional dataset.
-The [Pages demo](https://sebastianspicker.github.io/rootstock/) needs no install,
+The [Pages demo](https://sebastianspicker.github.io/rootstock-macos/) needs no install,
 scans no host, and connects to no database. Its
-[screenshot tour](https://sebastianspicker.github.io/rootstock/tour.html) walks
+[screenshot tour](https://sebastianspicker.github.io/rootstock-macos/tour.html) walks
 through the same flow.
 
 ### 1. Choose a question
@@ -85,7 +87,7 @@ See [Architecture](docs/ARCHITECTURE.md) for dependency and runtime flows and
 | cve-scan | Python 3.11+, `uv` |
 | Red | macOS 13+, Swift 6.2+ |
 | Blue | macOS 14+, Swift 6.2+ |
-| Viewer | Node.js from `.node-version`, npm 11.17.0 |
+| Viewer | Node.js from `graph/viewer/.node-version`, npm 11.17.0 |
 
 Use Python 3.11 to match the repository development and CI environment. Install only the
 environment needed for the component you are working on.
@@ -104,7 +106,7 @@ Create the locked graph environment and validate the artifact:
 
 ```sh
 uv sync --project graph --locked --all-extras
-uv run --project graph --locked python scripts/validate-scan.py scan.json
+uv run --project graph --locked rootstock-graph-validate-scan scan.json
 ```
 
 Generate a password for a new local Neo4j database, start the bundled

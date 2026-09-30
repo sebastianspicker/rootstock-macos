@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "/Users/kim/jsonl-one",
+        "icldrv.risk_tags" : "jsonl_tag,icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/icloud_drive_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "jsonl-name",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/icloud_drive_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "primary-name",
+        "icldrv.notes" : "synthetic note",
+        "icldrv.path" : "/Users/alice/Library/Markers/primary",
+        "icldrv.risk_tags" : "custom_a,custom_b,custom_a,icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "kind-only",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "/Users/erin/bin/tool",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "label-only",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "42",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "/Users/Shared/shared-marker",
+        "icldrv.risk_tags" : ",icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "/Users/ivy/fractional",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "/Users/jack/bad-time",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "single-kind",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "surface-label",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:icldrv|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "icloud.drive_path",
+      "fields" : {
+        "event.type" : "icloud.drive_path",
+        "icldrv.name" : "",
+        "icldrv.notes" : "iCloud Drive path plane markers - never enumerates iCloud file contents or exfiltrates Mobile Documents",
+        "icldrv.path" : "/Users/nia/array-entry",
+        "icldrv.risk_tags" : "icloud_path_surface",
+        "icldrv.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/icloud_drive_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "ICLOUDDRIVEPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "iCloud Drive path plane markers",
+    "id" : "ICLOUDDRIVEPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

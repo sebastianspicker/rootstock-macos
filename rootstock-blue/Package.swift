@@ -14,7 +14,7 @@ let package = Package(
         .library(name: "RootstockBlueFX", targets: ["RootstockBlueFX"]),
         .library(name: "RootstockBlueDetect", targets: ["RootstockBlueDetect"]),
         .library(name: "RootstockBlueCollect", targets: ["RootstockBlueCollect"]),
-        .library(name: "RootstockBlueExport", targets: ["RootstockBlueExport"]),
+        .library(name: "RootstockBlueInterchange", targets: ["RootstockBlueInterchange"]),
         .library(name: "RootstockBlueAcquire", targets: ["RootstockBlueAcquire"]),
         .library(name: "RootstockBlueIntegrations", targets: ["RootstockBlueIntegrations"]),
         .executable(name: "rootstock-blue", targets: ["rootstock-blue"]),
@@ -26,7 +26,6 @@ let package = Package(
         // MARK: - Core (no deps)
         .target(
             name: "RootstockBlueCore",
-            path: "Packages/RootstockBlueCore/Sources/RootstockBlueCore",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -34,7 +33,6 @@ let package = Package(
         .target(
             name: "RootstockBlueCase",
             dependencies: ["RootstockBlueCore"],
-            path: "Packages/RootstockBlueCase/Sources/RootstockBlueCase",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -42,7 +40,6 @@ let package = Package(
         .target(
             name: "RootstockBlueSyntheticEvents",
             dependencies: ["RootstockBlueCore"],
-            path: "Packages/RootstockBlueSyntheticEvents/Sources/RootstockBlueSyntheticEvents",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -53,7 +50,6 @@ let package = Package(
                 "RootstockBlueCore",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ],
-            path: "Packages/RootstockBlueFX/Sources/RootstockBlueFX",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -61,7 +57,6 @@ let package = Package(
         .target(
             name: "RootstockBlueDetect",
             dependencies: ["RootstockBlueCore"],
-            path: "Packages/RootstockBlueDetect/Sources/RootstockBlueDetect",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -69,25 +64,23 @@ let package = Package(
         .target(
             name: "RootstockBlueCollect",
             dependencies: ["RootstockBlueCore", "RootstockBlueCase"],
-            path: "Packages/RootstockBlueCollect/Sources/RootstockBlueCollect",
             swiftSettings: strictConcurrencySettings
         ),
 
-        // MARK: - Export
+        // MARK: - Interchange (contract import/export + case outputs)
         .target(
-            name: "RootstockBlueExport",
+            name: "RootstockBlueInterchange",
             dependencies: [
                 "RootstockBlueCore",
                 "RootstockBlueCase",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ],
-            path: "Packages/RootstockBlueExport/Sources/RootstockBlueExport",
             swiftSettings: strictConcurrencySettings
         ),
         .testTarget(
-            name: "RootstockBlueExportTests",
+            name: "RootstockBlueTests",
             dependencies: [
-                "RootstockBlueExport",
+                "RootstockBlueInterchange",
                 "RootstockBlueCase",
                 "RootstockBlueFX",
                 "RootstockBlueCore",
@@ -97,7 +90,7 @@ let package = Package(
                 "RootstockBlueIntegrations",
                 "RootstockBlueSyntheticEvents",
             ],
-            path: "Tests/RootstockBlueExportTests",
+            exclude: ["Fixtures"],
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -105,7 +98,6 @@ let package = Package(
         .target(
             name: "RootstockBlueAcquire",
             dependencies: ["RootstockBlueCore", "RootstockBlueCase"],
-            path: "Packages/RootstockBlueAcquire/Sources/RootstockBlueAcquire",
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -113,8 +105,6 @@ let package = Package(
         .target(
             name: "RootstockBlueIntegrations",
             dependencies: ["RootstockBlueCore"],
-            path: "Packages/RootstockBlueIntegrations/Sources/RootstockBlueIntegrations",
-            exclude: ["README.md"],
             swiftSettings: strictConcurrencySettings
         ),
 
@@ -128,11 +118,9 @@ let package = Package(
                 "RootstockBlueFX",
                 "RootstockBlueDetect",
                 "RootstockBlueCollect",
-                "RootstockBlueExport",
-                "RootstockBlueAcquire",
+                "RootstockBlueInterchange",
                 "RootstockBlueIntegrations",
             ],
-            path: "Packages/RootstockBlueCLI/Sources/rootstock-blue",
             swiftSettings: strictConcurrencySettings
         ),
     ],

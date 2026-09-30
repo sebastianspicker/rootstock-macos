@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "/Users/kim/jsonl-one",
+        "mapsloc.risk_tags" : "jsonl_tag,maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/maps_location_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "jsonl-name",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/maps_location_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "primary-name",
+        "mapsloc.notes" : "synthetic note",
+        "mapsloc.path" : "/Users/alice/Library/Markers/primary",
+        "mapsloc.risk_tags" : "custom_a,custom_b,custom_a,maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "kind-only",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "/Users/erin/bin/tool",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "label-only",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "42",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "/Users/Shared/shared-marker",
+        "mapsloc.risk_tags" : ",maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "/Users/ivy/fractional",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "/Users/jack/bad-time",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "single-kind",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "surface-label",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:mapsloc|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "maps.location",
+      "fields" : {
+        "event.type" : "maps.location",
+        "mapsloc.name" : "",
+        "mapsloc.notes" : "Maps location residual markers - never dumps location history or spoofs CoreLocation positions",
+        "mapsloc.path" : "/Users/nia/array-entry",
+        "mapsloc.risk_tags" : "maps_location_surface",
+        "mapsloc.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/maps_location_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "MAPSLOC"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Maps location residual markers",
+    "id" : "MAPSLOC",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

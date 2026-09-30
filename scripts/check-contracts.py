@@ -16,11 +16,14 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 from rootstock_graph.ingestion import import_family_export
-from rootstock_graph.paths import package_resource_dir
 
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACTS = ROOT / "contracts"
+PACKAGED_CONTRACTS = ROOT / "graph" / "src" / "rootstock_graph" / "resources" / "contracts"
+# The mirror README documents the copies; it and dotfiles (for example .DS_Store)
+# have no canonical counterpart.
+PACKAGED_MIRROR_DOCUMENTATION = {"README.md"}
 FAMILY_PRODUCER_NODE_TYPES = ["Finding", "Host", "LaunchItem", "Protection"]
 FAMILY_PRODUCER_EDGE_VOCABULARY = [
     "HAS_FINDING",
@@ -42,9 +45,7 @@ def load_json(path: Path) -> object:
 
 def load_jsonl(path: Path) -> list[object]:
     records: list[object] = []
-    for line_number, line in enumerate(
-        path.read_text(encoding="utf-8").splitlines(), 1
-    ):
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
         try:
@@ -73,35 +74,36 @@ def assert_schema_identity(label: str, schema_path: Path, expected_id: str) -> N
     print(f"OK schema identity: {label}")
 
 
-def assert_packaged_family_schema_mirror(canonical_schema: Path) -> None:
-    """Require the installed schema mirror to match canonical contract bytes exactly."""
-    packaged_schema = package_resource_dir("contracts").joinpath(
-        "family-open-export", "v1", "schema.json"
-    )
-    canonical_bytes = canonical_schema.read_bytes()
-    packaged_bytes = packaged_schema.read_bytes()
-    if packaged_bytes != canonical_bytes:
+def assert_packaged_contract_mirrors() -> None:
+    """Require every packaged contract copy to match its canonical bytes exactly."""
+    mismatches: list[str] = []
+    mirrored = 0
+    for packaged in sorted(PACKAGED_CONTRACTS.rglob("*")):
+        relative = packaged.relative_to(PACKAGED_CONTRACTS)
+        if (
+            not packaged.is_file()
+            or packaged.name.startswith(".")
+            or relative.as_posix() in PACKAGED_MIRROR_DOCUMENTATION
+        ):
+            continue
+        mirrored += 1
+        canonical = CONTRACTS / relative
+        if not canonical.is_file():
+            mismatches.append(f"{relative} (no canonical contracts/{relative.as_posix()})")
+        elif canonical.read_bytes() != packaged.read_bytes():
+            mismatches.append(f"{relative} (differs from contracts/{relative.as_posix()})")
+    if mismatches:
         raise AssertionError(
-            "packaged family schema differs from canonical "
-            f"{canonical_schema}; regenerate the read-only install mirror"
+            "packaged contract mirrors differ from canonical contracts; regenerate the "
+            "read-only install mirrors: " + ", ".join(mismatches)
         )
-    print("OK packaged family schema mirror")
+    if mirrored == 0:
+        raise AssertionError(f"no packaged contract mirrors found under {PACKAGED_CONTRACTS}")
+    print(f"OK packaged contract mirrors ({mirrored} files)")
 
 
-def graph_invariants(document: object, *, require_counts: bool) -> list[str]:
-    if not isinstance(document, dict):
-        return ["root is not an object"]
-    nodes = document.get("nodes")
-    edges = document.get("edges")
-    declared_nodes = document.get("node_types")
-    declared_edges = document.get("edge_types")
-    vocabulary = document.get("edge_vocabulary")
-    if not all(
-        isinstance(value, list)
-        for value in (nodes, edges, declared_nodes, declared_edges, vocabulary)
-    ):
-        return ["graph arrays are missing or invalid"]
-
+def _node_invariants(nodes: list, declared_nodes: list) -> tuple[list[str], set[str], list[str]]:
+    """Return (node IDs, emitted node types, errors) for the node array."""
     errors: list[str] = []
     ids: list[str] = []
     node_types: set[str] = set()
@@ -118,8 +120,14 @@ def graph_invariants(document: object, *, require_counts: bool) -> list[str]:
                 errors.append(f"nodes[{index}] type {node_type!r} is not declared")
     if len(ids) != len(set(ids)):
         errors.append("node IDs must be unique")
+    return ids, node_types, errors
 
-    known_ids = set(ids)
+
+def _edge_invariants(
+    edges: list, known_ids: set[str], vocabulary: list
+) -> tuple[set[str], list[str]]:
+    """Return (emitted edge types, errors) for the edge array."""
+    errors: list[str] = []
     actual_edge_types: set[str] = set()
     for index, edge in enumerate(edges):
         if not isinstance(edge, dict):
@@ -128,23 +136,48 @@ def graph_invariants(document: object, *, require_counts: bool) -> list[str]:
         if isinstance(edge_type, str):
             actual_edge_types.add(edge_type)
             if edge_type not in vocabulary:
-                errors.append(
-                    f"edges[{index}] type {edge_type!r} is not in edge_vocabulary"
-                )
+                errors.append(f"edges[{index}] type {edge_type!r} is not in edge_vocabulary")
         if isinstance(source, str) and source not in known_ids:
             errors.append(f"edges[{index}] source {source!r} is not a node ID")
         if isinstance(target, str) and target not in known_ids:
             errors.append(f"edges[{index}] target {target!r} is not a node ID")
+    return actual_edge_types, errors
 
+
+def _count_invariants(
+    document: dict, nodes: list, edges: list, declared_nodes: list, node_types: set[str]
+) -> list[str]:
+    errors: list[str] = []
+    if document.get("node_count") != len(nodes):
+        errors.append("node_count must equal nodes length")
+    if document.get("edge_count") != len(edges):
+        errors.append("edge_count must equal edges length")
+    if declared_nodes != sorted(node_types):
+        errors.append("node_types must equal the sorted set of emitted node types")
+    return errors
+
+
+def graph_invariants(document: object, *, require_counts: bool) -> list[str]:
+    if not isinstance(document, dict):
+        return ["root is not an object"]
+    nodes = document.get("nodes")
+    edges = document.get("edges")
+    declared_nodes = document.get("node_types")
+    declared_edges = document.get("edge_types")
+    vocabulary = document.get("edge_vocabulary")
+    if not all(
+        isinstance(value, list)
+        for value in (nodes, edges, declared_nodes, declared_edges, vocabulary)
+    ):
+        return ["graph arrays are missing or invalid"]
+
+    ids, node_types, errors = _node_invariants(nodes, declared_nodes)
+    actual_edge_types, edge_errors = _edge_invariants(edges, set(ids), vocabulary)
+    errors.extend(edge_errors)
     if declared_edges != sorted(actual_edge_types):
         errors.append("edge_types must equal the sorted set of emitted edge types")
     if require_counts:
-        if document.get("node_count") != len(nodes):
-            errors.append("node_count must equal nodes length")
-        if document.get("edge_count") != len(edges):
-            errors.append("edge_count must equal edges length")
-        if declared_nodes != sorted(node_types):
-            errors.append("node_types must equal the sorted set of emitted node types")
+        errors.extend(_count_invariants(document, nodes, edges, declared_nodes, node_types))
     return errors
 
 
@@ -154,6 +187,40 @@ def family_runtime_errors(document: object) -> list[str]:
     except import_family_export.FamilyExportError as exc:
         return [str(exc)]
     return []
+
+
+def _producer_host_errors(nodes: list, source: object) -> list[str]:
+    if not nodes or not isinstance(nodes[0], dict) or nodes[0].get("type") != "Host":
+        return ["producer output must begin with its Host node"]
+    errors: list[str] = []
+    required_host_keys = {"id", "type", "name", "hostname"}
+    if source == "rootstock-red":
+        required_host_keys.add("os_version")
+    elif source == "rootstock-blue":
+        required_host_keys.add("case_name")
+    else:
+        errors.append(f"unknown producer source {source!r}")
+    if not required_host_keys.issubset(nodes[0]):
+        errors.append("producer Host node is missing its emitted fields")
+    return errors
+
+
+def _producer_node_field_errors(nodes: list, source: object) -> list[str]:
+    errors: list[str] = []
+    for index, node in enumerate(nodes):
+        if not isinstance(node, dict):
+            continue
+        node_type = node.get("type")
+        required_keys = {
+            "Finding": {"id", "type", "name", "finding_id", "severity", "category"},
+            "LaunchItem": {"id", "type", "name", "label", "path", "program"},
+            "Protection": {"id", "type", "name", "enabled"},
+        }.get(node_type, set())
+        if source == "rootstock-red" and node_type == "Finding":
+            required_keys = required_keys | {"confidence"}
+        if not required_keys.issubset(node):
+            errors.append(f"producer node {index} is missing emitted {node_type} fields")
+    return errors
 
 
 def family_producer_output_errors(document: object) -> list[str]:
@@ -170,42 +237,15 @@ def family_producer_output_errors(document: object) -> list[str]:
         errors.append("producer edge_vocabulary must be the current fixed vocabulary")
     if not isinstance(nodes, list) or not isinstance(edges, list):
         return errors + ["producer fixture nodes and edges must be arrays"]
-    if not nodes or not isinstance(nodes[0], dict) or nodes[0].get("type") != "Host":
-        errors.append("producer output must begin with its Host node")
-    else:
-        required_host_keys = {"id", "type", "name", "hostname"}
-        if source == "rootstock-red":
-            required_host_keys.add("os_version")
-        elif source == "rootstock-blue":
-            required_host_keys.add("case_name")
-        else:
-            errors.append(f"unknown producer source {source!r}")
-        if not required_host_keys.issubset(nodes[0]):
-            errors.append("producer Host node is missing its emitted fields")
-    for index, node in enumerate(nodes):
-        if not isinstance(node, dict):
-            continue
-        node_type = node.get("type")
-        required_keys = {
-            "Finding": {"id", "type", "name", "finding_id", "severity", "category"},
-            "LaunchItem": {"id", "type", "name", "label", "path", "program"},
-            "Protection": {"id", "type", "name", "enabled"},
-        }.get(node_type, set())
-        if source == "rootstock-red" and node_type == "Finding":
-            required_keys = required_keys | {"confidence"}
-        if not required_keys.issubset(node):
-            errors.append(
-                f"producer node {index} is missing emitted {node_type} fields"
-            )
+    errors.extend(_producer_host_errors(nodes, source))
+    errors.extend(_producer_node_field_errors(nodes, source))
     actual_edge_types = sorted(
         edge["type"]
         for edge in edges
         if isinstance(edge, dict) and isinstance(edge.get("type"), str)
     )
     if document.get("edge_types") != sorted(set(actual_edge_types)):
-        errors.append(
-            "producer edge_types must be the sorted set of emitted edge types"
-        )
+        errors.append("producer edge_types must be the sorted set of emitted edge types")
     return errors
 
 
@@ -275,31 +315,31 @@ def main() -> int:
     collector_schema = CONTRACTS / "collector-scan" / "legacy-unversioned.schema.json"
     family_schema = CONTRACTS / "family-open-export" / "v1" / "schema.json"
     cve_schema = CONTRACTS / "cve-scan-export" / "v7" / "schema.json"
-    red_schema = (
-        CONTRACTS / "red-findings-to-blue-jsonl" / "v1" / "red-finding.schema.json"
-    )
+    red_schema = CONTRACTS / "red-findings-to-blue-jsonl" / "v1" / "red-finding.schema.json"
     blue_input_schema = (
-        CONTRACTS
-        / "red-findings-to-blue-jsonl"
-        / "v1"
-        / "blue-import-input.schema.json"
+        CONTRACTS / "red-findings-to-blue-jsonl" / "v1" / "blue-import-input.schema.json"
     )
 
     try:
         assert_schema_identity("collector", collector_schema, SCHEMA_IDS["collector"])
         assert_schema_identity("family", family_schema, SCHEMA_IDS["family"])
-        assert_packaged_family_schema_mirror(family_schema)
+        assert_packaged_contract_mirrors()
         assert_schema_identity("cve-scan", cve_schema, SCHEMA_IDS["cve"])
         assert_schema_identity("red finding", red_schema, SCHEMA_IDS["red_finding"])
-        assert_schema_identity(
-            "Blue JSONL input", blue_input_schema, SCHEMA_IDS["blue_input"]
-        )
+        assert_schema_identity("Blue JSONL input", blue_input_schema, SCHEMA_IDS["blue_input"])
 
         assert_valid(
             "collector minimal fixture",
             collector_schema,
             load_json(CONTRACTS / "collector-scan" / "fixtures" / "valid-minimal.json"),
         )
+        # Byte-for-byte output of the collector's JSONExporter; the Swift test
+        # CompleteScanFixtureTests keeps it identical to the real encoder, and
+        # check-scan-contract-fields.py requires it to cover the whole schema.
+        encoder_fixture = load_json(
+            CONTRACTS / "collector-scan" / "fixtures" / "valid-collector-encoder-complete.json"
+        )
+        assert_valid("collector encoder complete fixture", collector_schema, encoder_fixture)
         assert_valid(
             "collector public example",
             collector_schema,
@@ -318,23 +358,14 @@ def main() -> int:
         assert_invalid(
             "collector missing required fixture",
             collector_schema,
-            load_json(
-                CONTRACTS
-                / "collector-scan"
-                / "fixtures"
-                / "invalid-missing-required.json"
-            ),
+            load_json(CONTRACTS / "collector-scan" / "fixtures" / "invalid-missing-required.json"),
         )
 
         assert_family_runtime_valid(
             "family v1 minimal Red fixture",
             family_schema,
             load_json(
-                CONTRACTS
-                / "family-open-export"
-                / "v1"
-                / "fixtures"
-                / "valid-minimal-red.json"
+                CONTRACTS / "family-open-export" / "v1" / "fixtures" / "valid-minimal-red.json"
             ),
             producer_parity=True,
         )
@@ -349,22 +380,14 @@ def main() -> int:
             "family v1 importer-compatible extension fixture",
             family_schema,
             load_json(
-                CONTRACTS
-                / "family-open-export"
-                / "v1"
-                / "fixtures"
-                / "valid-importer-minimal.json"
+                CONTRACTS / "family-open-export" / "v1" / "fixtures" / "valid-importer-minimal.json"
             ),
         )
         assert_family_runtime_invalid(
             "family v1 dangling edge fixture",
             family_schema,
             load_json(
-                CONTRACTS
-                / "family-open-export"
-                / "v1"
-                / "fixtures"
-                / "invalid-dangling-edge.json"
+                CONTRACTS / "family-open-export" / "v1" / "fixtures" / "invalid-dangling-edge.json"
             ),
         )
         assert_family_runtime_invalid(
@@ -394,9 +417,7 @@ def main() -> int:
         assert_valid(
             "cve-scan v7 minimal fixture",
             cve_schema,
-            load_json(
-                CONTRACTS / "cve-scan-export" / "v7" / "fixtures" / "valid-minimal.json"
-            ),
+            load_json(CONTRACTS / "cve-scan-export" / "v7" / "fixtures" / "valid-minimal.json"),
             cve_graph_invariants,
         )
         assert_valid(
@@ -408,9 +429,7 @@ def main() -> int:
         assert_invalid(
             "cve-scan v7 count mismatch fixture",
             cve_schema,
-            load_json(
-                CONTRACTS / "cve-scan-export" / "v7" / "fixtures" / "invalid-count.json"
-            ),
+            load_json(CONTRACTS / "cve-scan-export" / "v7" / "fixtures" / "invalid-count.json"),
             cve_graph_invariants,
         )
 
@@ -419,9 +438,7 @@ def main() -> int:
         )
         for index, record in enumerate(valid_red_records):
             assert_valid(f"red finding JSONL record {index}", red_schema, record)
-            assert_valid(
-                f"blue accepted JSONL record {index}", blue_input_schema, record
-            )
+            assert_valid(f"blue accepted JSONL record {index}", blue_input_schema, record)
         for index, record in enumerate(
             load_jsonl(
                 CONTRACTS
@@ -441,9 +458,7 @@ def main() -> int:
                 / "invalid-blue-input.jsonl"
             )
         ):
-            assert_invalid(
-                f"blue non-object input record {index}", blue_input_schema, record
-            )
+            assert_invalid(f"blue non-object input record {index}", blue_input_schema, record)
     except (AssertionError, OSError, json.JSONDecodeError) as exc:
         print(f"CONTRACT CHECK FAILED: {exc}", file=sys.stderr)
         return 1

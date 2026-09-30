@@ -59,9 +59,7 @@ def read_text(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-async def _run_git_async(
-    args: tuple[str, ...], input_text: str | None
-) -> tuple[int, str, str]:
+async def _run_git_async(args: tuple[str, ...], input_text: str | None) -> tuple[int, str, str]:
     process = await asyncio.create_subprocess_exec(
         "/usr/bin/git",
         "-C",
@@ -100,7 +98,8 @@ def check_versions(check: ReleaseCheck, version: str) -> None:
     python_version = pep440_alpha(version)
     graph = tomllib.loads(read_text("graph/pyproject.toml"))
     cve_scan = tomllib.loads(read_text("modules/cve-scan/pyproject.toml"))
-    viewer = json.loads(read_text("package.json"))
+    viewer = json.loads(read_text("graph/viewer/package.json"))
+    repo_tools = json.loads(read_text("package.json"))
     demo_scan = json.loads(read_text("examples/demo-scan.json"))
 
     check.require(
@@ -128,6 +127,10 @@ def check_versions(check: ReleaseCheck, version: str) -> None:
     check.require(
         viewer["version"] == version,
         "viewer package version matches VERSION",
+    )
+    check.require(
+        repo_tools["version"] == version,
+        "repository tools package version matches VERSION",
     )
     check.require(
         demo_scan["collector_version"] == version,
@@ -166,25 +169,27 @@ def _required_public_files() -> tuple[str, ...]:
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/release.yml",
         ".github/workflows/pages.yml",
-        ".node-version",
+        "graph/viewer/.node-version",
         "collector/Package.resolved",
         "collector/README.md",
         "graph/uv.lock",
         "modules/cve-scan/uv.lock",
         "package-lock.json",
-        "scripts/build-pages-demo.mjs",
-        "scripts/demo-tour.mjs",
-        "scripts/capture-demo-screenshots.mjs",
+        "package.json",
+        "graph/viewer/package-lock.json",
+        "graph/viewer/scripts/build-pages-demo.mjs",
+        "graph/viewer/scripts/demo-tour.mjs",
+        "graph/viewer/scripts/capture-demo-screenshots.mjs",
         "docs/screenshots.md",
         "docs/assets/screenshots/scope.png",
         "docs/assets/screenshots/evidence.png",
         "docs/assets/screenshots/report.png",
         "docs/assets/screenshots/graph.png",
-        "scripts/build-release.sh",
-        "scripts/check-pages-demo.mjs",
+        "collector/scripts/build-release.sh",
+        "graph/viewer/scripts/check-pages-demo.mjs",
         "scripts/check-release.py",
         "scripts/verify",
-        "scripts/viewer-demo-data.mjs",
+        "graph/viewer/scripts/viewer-demo-data.mjs",
     )
 
 
@@ -211,19 +216,19 @@ def _required_viewer_files() -> tuple[str, ...]:
         "graph/src/rootstock_graph/resources/viewer/viewer_template.html",
         "graph/src/rootstock_graph/resources/viewer/viewer.css",
         "graph/src/rootstock_graph/resources/viewer/viewer.bundle.js",
-        "graph/viewer-src/app.ts",
-        "graph/viewer-src/canvas.ts",
-        "graph/viewer-src/controls.ts",
-        "graph/viewer-src/dom.ts",
-        "graph/viewer-src/live.ts",
-        "graph/viewer-src/main.ts",
-        "graph/viewer-src/model.ts",
-        "graph/viewer-src/protocol.ts",
-        "graph/viewer-src/runtime.ts",
-        "graph/viewer-src/spatial.ts",
-        "graph/viewer-src/storage.ts",
-        "graph/viewer-src/types.ts",
-        "graph/viewer-src/view.ts",
+        "graph/viewer/src/app.ts",
+        "graph/viewer/src/canvas.ts",
+        "graph/viewer/src/controls.ts",
+        "graph/viewer/src/dom.ts",
+        "graph/viewer/src/live.ts",
+        "graph/viewer/src/main.ts",
+        "graph/viewer/src/model.ts",
+        "graph/viewer/src/protocol.ts",
+        "graph/viewer/src/runtime.ts",
+        "graph/viewer/src/spatial.ts",
+        "graph/viewer/src/storage.ts",
+        "graph/viewer/src/types.ts",
+        "graph/viewer/src/view.ts",
     )
 
 
@@ -248,9 +253,7 @@ def _index_markdown_image_failures(tracked_paths: set[str]) -> list[str]:
             target = _local_markdown_image_target(match.group(1) or match.group(2))
             if target is None:
                 continue
-            resolved = posixpath.normpath(
-                posixpath.join(posixpath.dirname(markdown_path), target)
-            )
+            resolved = posixpath.normpath(posixpath.join(posixpath.dirname(markdown_path), target))
             if resolved not in tracked_paths:
                 failures.append(f"{markdown_path} -> {target}")
     return failures
@@ -279,14 +282,10 @@ def check_public_files(check: ReleaseCheck) -> None:
 def _check_tracked_public_files(check: ReleaseCheck, tracked_paths: set[str]) -> None:
     for path in _required_public_files():
         check.require((ROOT / path).is_file(), f"required public file exists: {path}")
-        check.require(
-            path in tracked_paths, f"required public file is Git-tracked: {path}"
-        )
+        check.require(path in tracked_paths, f"required public file is Git-tracked: {path}")
     for path in _required_pillar_files():
         check.require((ROOT / path).is_file(), f"public pillar marker exists: {path}")
-        check.require(
-            path in tracked_paths, f"public pillar marker is Git-tracked: {path}"
-        )
+        check.require(path in tracked_paths, f"public pillar marker is Git-tracked: {path}")
     shared_license = "packages/RootstockMacFacts/LICENSE"
     check.require(
         (ROOT / shared_license).is_file(),
@@ -297,16 +296,12 @@ def _check_tracked_public_files(check: ReleaseCheck, tracked_paths: set[str]) ->
         "RootstockMacFacts license file is Git-tracked",
     )
     for path in _required_viewer_files():
-        check.require(
-            (ROOT / path).is_file(), f"viewer source or bundle exists: {path}"
-        )
-        check.require(
-            path in tracked_paths, f"viewer source or bundle is Git-tracked: {path}"
-        )
+        check.require((ROOT / path).is_file(), f"viewer source or bundle exists: {path}")
+        check.require(path in tracked_paths, f"viewer source or bundle is Git-tracked: {path}")
 
 
 def _check_release_integrity(check: ReleaseCheck) -> None:
-    release_script = read_text("scripts/build-release.sh")
+    release_script = read_text("collector/scripts/build-release.sh")
     check.require(
         '"${REPO_ROOT}/collector/README.md"' in release_script
         and '"${REPO_ROOT}/README.md" "${PACKAGE_DIR}/README.md"' not in release_script,
@@ -364,9 +359,7 @@ def _local_packets() -> list[str]:
     ]
 
 
-def _report_paths(
-    check: ReleaseCheck, paths: list[str], message: str, prefix: str
-) -> None:
+def _report_paths(check: ReleaseCheck, paths: list[str], message: str, prefix: str) -> None:
     check.require(not paths, message)
     for path in paths:
         print(f"  {prefix}: {path}")
@@ -388,16 +381,13 @@ def _check_candidate_index(check: ReleaseCheck, status: str) -> None:
         index_path.resolve() != (ROOT / ".git" / "index").resolve()
     )
     worktree_clean = all(
-        len(line) >= 2 and line[1] == " " and line[:2] != "??"
-        for line in status.splitlines()
+        len(line) >= 2 and line[1] == " " and line[:2] != "??" for line in status.splitlines()
     )
     check.require(using_temporary_index, "candidate proof uses a temporary Git index")
     check.require(worktree_clean, "candidate index exactly matches the working tree")
 
 
-def check_git_hygiene(
-    check: ReleaseCheck, require_clean: bool, candidate_index: bool
-) -> None:
+def check_git_hygiene(check: ReleaseCheck, require_clean: bool, candidate_index: bool) -> None:
     """Reject private working files and optionally enforce a tag-clean tree."""
     _report_paths(
         check,

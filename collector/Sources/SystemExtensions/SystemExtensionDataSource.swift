@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Enumerates system extensions via `systemextensionsctl list`.
 public struct SystemExtensionDataSource: DataSource {

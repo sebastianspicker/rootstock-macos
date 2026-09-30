@@ -12,7 +12,7 @@ bootstrap:
 	@bash Tools/scripts/bootstrap.sh
 
 test:
-	swift test -Xswiftc -warnings-as-errors
+	sh ../scripts/swift-test -Xswiftc -warnings-as-errors
 
 cli:
 	swift build --product rootstock-blue -Xswiftc -warnings-as-errors
@@ -32,7 +32,7 @@ content-validate: check-field-taxonomy
 	echo "content-validate OK"
 
 check-field-taxonomy:
-	@python3 ../scripts/check-blue-field-taxonomy.py
+	@python3 Tools/scripts/check-field-taxonomy.py
 
 check-non-goals:
 	@bash Tools/scripts/check_non_goals.sh

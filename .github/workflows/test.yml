@@ -35,13 +35,19 @@ jobs:
       - name: Set up Node and npm
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version-file: .node-version
+          node-version-file: graph/viewer/.node-version
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            graph/viewer/package-lock.json
       - name: Set up locked npm
         run: npm install --global npm@11.17.0 --ignore-scripts
       - name: Verify npm version
         run: test "$(npm --version)" = "11.17.0"
-      - name: Install locked web quality tools
+      - name: Install locked repository quality tools
+        run: npm ci --no-audit --no-fund --ignore-scripts
+      - name: Install locked viewer quality tools
+        working-directory: graph/viewer
         run: npm ci --no-audit --no-fund --ignore-scripts
       - name: Set up uv and Python
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -82,13 +88,15 @@ jobs:
       - name: Set up Node and npm
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version-file: .node-version
+          node-version-file: graph/viewer/.node-version
           cache: npm
+          cache-dependency-path: graph/viewer/package-lock.json
       - name: Set up locked npm
         run: npm install --global npm@11.17.0 --ignore-scripts
       - name: Verify npm version
         run: test "$(npm --version)" = "11.17.0"
       - name: Install locked viewer dependencies
+        working-directory: graph/viewer
         run: npm ci --no-audit --no-fund --ignore-scripts
       - name: Verify viewer workspaces
         run: sh scripts/verify web

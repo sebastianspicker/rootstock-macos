@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "/Users/kim/jsonl-one",
+        "podpath.risk_tags" : "jsonl_tag,podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/podcasts_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "jsonl-name",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/podcasts_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "primary-name",
+        "podpath.notes" : "synthetic note",
+        "podpath.path" : "/Users/alice/Library/Markers/primary",
+        "podpath.risk_tags" : "custom_a,custom_b,custom_a,podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "kind-only",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "/Users/erin/bin/tool",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "label-only",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "42",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "/Users/Shared/shared-marker",
+        "podpath.risk_tags" : ",podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "/Users/ivy/fractional",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "/Users/jack/bad-time",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "single-kind",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "surface-label",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:podpath|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "podcasts.path",
+      "fields" : {
+        "event.type" : "podcasts.path",
+        "podpath.name" : "",
+        "podpath.notes" : "Podcasts path plane markers - never dumps podcast episode files or account tokens",
+        "podpath.path" : "/Users/nia/array-entry",
+        "podpath.risk_tags" : "podcasts_surface",
+        "podpath.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/podcasts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "PODPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Podcasts path plane markers",
+    "id" : "PODPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

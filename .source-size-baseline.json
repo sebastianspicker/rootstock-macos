@@ -6,13 +6,13 @@
     "collector/Sources/RootstockCLI/ScanOrchestrator.swift": 514,
     "graph/src/rootstock_graph/ingestion/import_vulnerabilities.py": 535,
     "graph/src/rootstock_graph/reporting/report_assembly.py": 519,
-    "graph/viewer-src/app.ts": 512,
+    "graph/viewer/src/app.ts": 512,
     "modules/cve-scan/src/cve_scan/feed_normalize.py": 513,
     "modules/cve-scan/src/cve_scan/host_inventory.py": 506,
     "modules/cve-scan/src/cve_scan/mac_inventory.py": 507,
     "modules/cve-scan/src/cve_scan/models.py": 549,
     "modules/cve-scan/src/cve_scan/scan.py": 506,
     "modules/cve-scan/src/cve_scan/supply_chain_python.py": 517,
-    "rootstock-blue/Packages/RootstockBlueAcquire/Sources/RootstockBlueAcquire/LogicalAcquire.swift": 530
+    "rootstock-blue/Sources/RootstockBlueAcquire/LogicalAcquire.swift": 530
   }
 }

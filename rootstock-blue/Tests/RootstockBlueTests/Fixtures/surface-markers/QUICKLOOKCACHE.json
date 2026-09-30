@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "/Users/kim/jsonl-one",
+        "qlcache.risk_tags" : "jsonl_tag,quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/quicklook_cache_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "jsonl-name",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/quicklook_cache_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "primary-name",
+        "qlcache.notes" : "synthetic note",
+        "qlcache.path" : "/Users/alice/Library/Markers/primary",
+        "qlcache.risk_tags" : "custom_a,custom_b,custom_a,quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "kind-only",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "/Users/erin/bin/tool",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "label-only",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "42",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "/Users/Shared/shared-marker",
+        "qlcache.risk_tags" : ",quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "/Users/ivy/fractional",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "/Users/jack/bad-time",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "single-kind",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "surface-label",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:qlcache|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "quicklook.cache",
+      "fields" : {
+        "event.type" : "quicklook.cache",
+        "qlcache.name" : "",
+        "qlcache.notes" : "QuickLook cache depth markers - never dumps QuickLook thumbnail bitmap contents as secret material",
+        "qlcache.path" : "/Users/nia/array-entry",
+        "qlcache.risk_tags" : "quicklook_surface",
+        "qlcache.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/quicklook_cache_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "QUICKLOOKCACHE"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "QuickLook cache depth markers",
+    "id" : "QUICKLOOKCACHE",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

@@ -2,7 +2,7 @@
 
 The family open export is an optional, allowlisted graph artifact emitted by
 `rootstock-red/Sources/MacReportKit/FamilyOpenExporter.swift` and
-`rootstock-blue/Packages/RootstockBlueExport/Sources/RootstockBlueExport/FamilyOpenExporter.swift`.
+`rootstock-blue/Sources/RootstockBlueInterchange/FamilyOpenExporter.swift`.
 Import it with `rootstock-graph-import-family-export`.
 
 This artifact is separate from the collector's `scan.json`. Version 1 permits

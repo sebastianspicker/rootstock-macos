@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "/Users/kim/jsonl-one",
+        "remcloud.risk_tags" : "jsonl_tag,reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/reminders_cloud_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "jsonl-name",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/reminders_cloud_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "primary-name",
+        "remcloud.notes" : "synthetic note",
+        "remcloud.path" : "/Users/alice/Library/Markers/primary",
+        "remcloud.risk_tags" : "custom_a,custom_b,custom_a,reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "kind-only",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "/Users/erin/bin/tool",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "label-only",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "42",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "/Users/Shared/shared-marker",
+        "remcloud.risk_tags" : ",reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "/Users/ivy/fractional",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "/Users/jack/bad-time",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "single-kind",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "surface-label",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:remcloud|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "reminders.cloud",
+      "fields" : {
+        "event.type" : "reminders.cloud",
+        "remcloud.name" : "",
+        "remcloud.notes" : "Reminders cloud path markers - never reads reminder titles/bodies or exports Reminders databases",
+        "remcloud.path" : "/Users/nia/array-entry",
+        "remcloud.risk_tags" : "reminders_cloud_surface",
+        "remcloud.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/reminders_cloud_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "REMCLOUD"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Reminders cloud path markers",
+    "id" : "REMCLOUD",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

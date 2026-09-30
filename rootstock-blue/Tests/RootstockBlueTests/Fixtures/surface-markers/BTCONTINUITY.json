@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "/Users/kim/jsonl-one",
+        "btcont.risk_tags" : "jsonl_tag,bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/bluetooth_continuity_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "jsonl-name",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/bluetooth_continuity_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "primary-name",
+        "btcont.notes" : "synthetic note",
+        "btcont.path" : "/Users/alice/Library/Markers/primary",
+        "btcont.risk_tags" : "custom_a,custom_b,custom_a,bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "kind-only",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "/Users/erin/bin/tool",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "label-only",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "42",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "/Users/Shared/shared-marker",
+        "btcont.risk_tags" : ",bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "/Users/ivy/fractional",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "/Users/jack/bad-time",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "single-kind",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "surface-label",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:btcont|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "bluetooth.continuity",
+      "fields" : {
+        "btcont.name" : "",
+        "btcont.notes" : "Bluetooth Continuity depth markers - never enables Bluetooth pairing or spoofs Continuity identities",
+        "btcont.path" : "/Users/nia/array-entry",
+        "btcont.risk_tags" : "bt_continuity_surface",
+        "btcont.secrets_exported" : "false",
+        "event.type" : "bluetooth.continuity",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/bluetooth_continuity_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "BTCONTINUITY"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Bluetooth Continuity depth markers",
+    "id" : "BTCONTINUITY",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

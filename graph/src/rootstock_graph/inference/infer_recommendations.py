@@ -18,7 +18,7 @@ from typing import Any, cast
 from neo4j import Session
 from neo4j.exceptions import Neo4jError
 
-from .category_predicates import RISK_CATEGORY_PREDICATES
+from ..category_predicates import RISK_CATEGORY_PREDICATES
 
 logger = logging.getLogger(__name__)
 

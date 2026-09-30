@@ -1,18 +1,18 @@
 import Foundation
-import XCTest
+import Testing
 @testable import RootstockMacFacts
 
-final class RootstockMacFactsTests: XCTestCase {
-    func testHostPostureParsersAndLabels() {
-        XCTAssertEqual(HostPostureProbes.parseGatekeeperOutput("assessments enabled"), true)
-        XCTAssertEqual(HostPostureProbes.parseGatekeeperOutput("assessments disabled"), false)
-        XCTAssertEqual(HostPostureProbes.parseSIPOutput("System Integrity Protection status: disabled."), false)
-        XCTAssertEqual(HostPostureProbes.parseFileVaultOutput("Deferred enablement appears to be active."), true)
-        XCTAssertNil(HostPostureProbes.parseFileVaultOutput("not a FileVault status"))
-        XCTAssertEqual(HostPostureProbes.enabledLabel(nil), "unknown")
+@Suite struct RootstockMacFactsTests {
+    @Test func hostPostureParsersAndLabels() {
+        #expect(HostPostureProbes.parseGatekeeperOutput("assessments enabled") == true)
+        #expect(HostPostureProbes.parseGatekeeperOutput("assessments disabled") == false)
+        #expect(HostPostureProbes.parseSIPOutput("System Integrity Protection status: disabled.") == false)
+        #expect(HostPostureProbes.parseFileVaultOutput("Deferred enablement appears to be active.") == true)
+        #expect(HostPostureProbes.parseFileVaultOutput("not a FileVault status") == nil)
+        #expect(HostPostureProbes.enabledLabel(nil) == "unknown")
     }
 
-    func testInjectedRunnerDefinesLiveExecutionBoundary() {
+    @Test func injectedRunnerDefinesLiveExecutionBoundary() {
         let runner = StubPostureRunner(outputs: [
             HostPostureProbes.spctlPath: "assessments enabled",
             HostPostureProbes.csrutilPath: "System Integrity Protection status: enabled.",
@@ -21,26 +21,23 @@ final class RootstockMacFactsTests: XCTestCase {
 
         let snapshot = HostPostureProbes.snapshot(run: runner.run)
 
-        XCTAssertEqual(snapshot, HostPostureSnapshot(
+        #expect(snapshot == HostPostureSnapshot(
             gatekeeperEnabled: true,
             sipEnabled: true,
             filevaultEnabled: false
         ))
-        XCTAssertEqual(runner.invocations, [
+        #expect(runner.invocations == [
             .init(path: HostPostureProbes.spctlPath, arguments: ["--status"]),
             .init(path: HostPostureProbes.csrutilPath, arguments: ["status"]),
             .init(path: HostPostureProbes.fdesetupPath, arguments: ["status"]),
         ])
     }
 
-    func testPathCatalogAndLaunchdFactsAreDeterministic() {
-        XCTAssertEqual(
-            MacSecurityPaths.userTCCDatabase(homePath: "/Users/tester"),
-            "/Users/tester/Library/Application Support/com.apple.TCC/TCC.db"
-        )
-        XCTAssertEqual(TCCServiceCatalog.displayName(for: TCCServiceCatalog.fullDiskAccessService), "Full Disk Access")
-        XCTAssertTrue(TCCServiceCatalog.isKnown("kTCCServiceCamera"))
-        XCTAssertEqual(TCCServiceCatalog.minimumMajorVersion(for: "kTCCServiceLocation"), 12)
+    @Test func pathCatalogAndLaunchdFactsAreDeterministic() {
+        #expect(MacSecurityPaths.userTCCDatabase(homePath: "/Users/tester") == "/Users/tester/Library/Application Support/com.apple.TCC/TCC.db")
+        #expect(TCCServiceCatalog.displayName(for: TCCServiceCatalog.fullDiskAccessService) == "Full Disk Access")
+        #expect(TCCServiceCatalog.isKnown("kTCCServiceCamera"))
+        #expect(TCCServiceCatalog.minimumMajorVersion(for: "kTCCServiceLocation") == 12)
 
         let summary = LaunchdPlistFacts.summarize(path: "fixture.plist", dict: [
             "Label": "com.example.fixture",
@@ -48,14 +45,14 @@ final class RootstockMacFactsTests: XCTestCase {
             "RunAtLoad": true,
             "KeepAlive": ["SuccessfulExit": false],
         ])
-        XCTAssertEqual(summary.label, "com.example.fixture")
-        XCTAssertEqual(summary.program, "/usr/bin/example")
-        XCTAssertEqual(summary.effectiveArguments, ["/usr/bin/example", "--safe"])
-        XCTAssertTrue(summary.runAtLoad)
-        XCTAssertTrue(summary.keepAlive)
+        #expect(summary.label == "com.example.fixture")
+        #expect(summary.program == "/usr/bin/example")
+        #expect(summary.effectiveArguments == ["/usr/bin/example", "--safe"])
+        #expect(summary.runAtLoad)
+        #expect(summary.keepAlive)
     }
 
-    func testLaunchdDirectoryEnumerationAndPlistSummariesUseTemporaryFixtures() throws {
+    @Test func launchdDirectoryEnumerationAndPlistSummariesUseTemporaryFixtures() throws {
         let directory = try makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         try writePlist(
@@ -77,34 +74,31 @@ final class RootstockMacFactsTests: XCTestCase {
         try Data("not a plist".utf8).write(to: directory.appendingPathComponent("broken.plist"))
         try Data().write(to: directory.appendingPathComponent("ignored.txt"))
 
-        XCTAssertEqual(
-            LaunchdPlistFacts.listPlistPaths(in: directory.path).map { URL(fileURLWithPath: $0).lastPathComponent },
-            ["alpha.plist", "broken.plist", "zeta.plist"]
-        )
+        #expect(LaunchdPlistFacts.listPlistPaths(in: directory.path).map { URL(fileURLWithPath: $0).lastPathComponent } == ["alpha.plist", "broken.plist", "zeta.plist"])
         let summaries = LaunchdPlistFacts.summarizeDirectory(at: directory.path)
-        XCTAssertEqual(summaries.map(\.label), ["com.example.alpha", nil, "com.example.zeta"])
-        XCTAssertEqual(summaries[0].effectiveArguments, ["/usr/bin/alpha", "--safe"])
-        XCTAssertTrue(summaries[0].runAtLoad)
-        XCTAssertFalse(summaries[1].keepAlive)
-        XCTAssertTrue(summaries[2].keepAlive)
+        #expect(summaries.map(\.label) == ["com.example.alpha", nil, "com.example.zeta"])
+        #expect(summaries[0].effectiveArguments == ["/usr/bin/alpha", "--safe"])
+        #expect(summaries[0].runAtLoad)
+        #expect(!(summaries[1].keepAlive))
+        #expect(summaries[2].keepAlive)
     }
 
-    func testLaunchdKeepAliveRecognizesDocumentedShapes() {
-        XCTAssertTrue(LaunchdPlistFacts.resolveKeepAlive(true))
-        XCTAssertFalse(LaunchdPlistFacts.resolveKeepAlive(false))
-        XCTAssertTrue(LaunchdPlistFacts.resolveKeepAlive(["SuccessfulExit": false]))
-        XCTAssertFalse(LaunchdPlistFacts.resolveKeepAlive([String: Any]()))
-        XCTAssertFalse(LaunchdPlistFacts.resolveKeepAlive("true"))
+    @Test func launchdKeepAliveRecognizesDocumentedShapes() {
+        #expect(LaunchdPlistFacts.resolveKeepAlive(true))
+        #expect(!(LaunchdPlistFacts.resolveKeepAlive(false)))
+        #expect(LaunchdPlistFacts.resolveKeepAlive(["SuccessfulExit": false]))
+        #expect(!(LaunchdPlistFacts.resolveKeepAlive([String: Any]())))
+        #expect(!(LaunchdPlistFacts.resolveKeepAlive("true")))
     }
 
-    func testPostureParsersLeaveUnknownAndAmbiguousValuesUnknown() {
-        XCTAssertNil(HostPostureProbes.parseGatekeeperOutput("status unavailable"))
-        XCTAssertNil(HostPostureProbes.parseGatekeeperOutput("assessments enabled; assessments disabled"))
-        XCTAssertNil(HostPostureProbes.parseSIPOutput("System Integrity Protection status: enabled then disabled"))
-        XCTAssertNil(HostPostureProbes.parseFileVaultOutput("FileVault is On. FileVault is Off."))
+    @Test func postureParsersLeaveUnknownAndAmbiguousValuesUnknown() {
+        #expect(HostPostureProbes.parseGatekeeperOutput("status unavailable") == nil)
+        #expect(HostPostureProbes.parseGatekeeperOutput("assessments enabled; assessments disabled") == nil)
+        #expect(HostPostureProbes.parseSIPOutput("System Integrity Protection status: enabled then disabled") == nil)
+        #expect(HostPostureProbes.parseFileVaultOutput("FileVault is On. FileVault is Off.") == nil)
 
         let unknown = HostPostureProbes.snapshot { _, _ in nil }
-        XCTAssertEqual(unknown, HostPostureSnapshot())
+        #expect(unknown == HostPostureSnapshot())
     }
 
     private func makeTemporaryDirectory() throws -> URL {

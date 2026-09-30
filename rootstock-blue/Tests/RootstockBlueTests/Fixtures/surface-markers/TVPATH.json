@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "/Users/kim/jsonl-one",
+        "tvpath.risk_tags" : "jsonl_tag,tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/tv_app_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "jsonl-name",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/tv_app_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "primary-name",
+        "tvpath.notes" : "synthetic note",
+        "tvpath.path" : "/Users/alice/Library/Markers/primary",
+        "tvpath.risk_tags" : "custom_a,custom_b,custom_a,tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "kind-only",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "/Users/erin/bin/tool",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "label-only",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "42",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "/Users/Shared/shared-marker",
+        "tvpath.risk_tags" : ",tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "/Users/ivy/fractional",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "/Users/jack/bad-time",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "single-kind",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "surface-label",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tvpath|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tv.path",
+      "fields" : {
+        "event.type" : "tv.path",
+        "tvpath.name" : "",
+        "tvpath.notes" : "TV.app path plane markers - never dumps TV.app media caches or account material",
+        "tvpath.path" : "/Users/nia/array-entry",
+        "tvpath.risk_tags" : "tv_surface",
+        "tvpath.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/tv_app_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "TVPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "TV.app path plane markers",
+    "id" : "TVPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

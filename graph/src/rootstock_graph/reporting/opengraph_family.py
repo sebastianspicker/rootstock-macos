@@ -91,7 +91,7 @@ def _family_payload(export, hostname: str, nodes: list[dict], edges: list[dict])
 
 def export_cross_domain(session, hostname: str) -> dict:
     """Export Rootstock users and their matching Azure identity edges."""
-    from .opengraph_mapping import _sanitize, _serialize_props, make_node_id
+    from .opengraph_mapping import make_node_id, sanitize, serialize_props
 
     nodes: list[dict] = []
     edges: list[dict] = []
@@ -104,13 +104,13 @@ def export_cross_domain(session, hostname: str) -> dict:
                 "id": rootstock_id,
                 "kind": "rs_User",
                 "label": username,
-                "properties": _serialize_props(properties),
+                "properties": serialize_props(properties),
             }
         )
         edges.append(
             {
                 "source": rootstock_id,
-                "target": f"az-user-{_sanitize(username)}",
+                "target": f"az-user-{sanitize(username)}",
                 "kind": "rs_SameIdentity",
                 "properties": {"match_key": username, "_traversable": False},
             }

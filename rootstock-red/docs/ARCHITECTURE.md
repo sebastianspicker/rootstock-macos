@@ -38,6 +38,12 @@ the limitation in `CollectedState` and continues with the evidence it has.
 
 ## Build boundaries
 
+Target graph (`Sources/`): `RootstockCore` <- `MacEnumKit` (collectors plus
+the `Opsec/`, `Artifacts/`, `LOLBins/`, `Identity/`, `MDM/`, and `Persistence/`
+families) <- `MacVulnKit` (checks and vectors) <- `RootstockRedCLI`;
+`MacReportKit` depends on `RootstockCore` and is linked by the CLI. Tests are
+`RootstockCoreTests`, `MacEnumKitTests`, and `RootstockLabTests`.
+
 `rootstock-red` does not link `RootstockLab`. Only the separately built
 `rootstock-red-lab` executable links the lab library, so the assessment binary
 cannot dispatch a lab action.

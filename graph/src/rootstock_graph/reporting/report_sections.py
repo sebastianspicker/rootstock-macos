@@ -77,7 +77,7 @@ def _append_titled_query_section(
     sections.append("")
 
 
-def _append_extended_query_sections(
+def append_extended_query_sections(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
     queries: list[dict],
@@ -368,7 +368,7 @@ def _endpoint_fallback_category_conditions(
     ]
 
 
-def _collect_active_categories(
+def collect_active_categories(
     query_results: dict[str, list[dict] | str],
     injectable_rows: list[dict],
     electron_rows: list[dict],
@@ -397,7 +397,7 @@ def _collect_active_categories(
     )
 
 
-def _append_vulnerability_mapping(
+def append_vulnerability_mapping(
     sections: list[str],
     active_categories: set[str],
 ) -> None:
@@ -413,7 +413,7 @@ def _append_vulnerability_mapping(
     sections.append("")
 
 
-def _append_threat_landscape(
+def append_threat_landscape(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
 ) -> None:

@@ -19,9 +19,10 @@ date to the versioned entry and `CITATION.cff` when preparing publication.
 
 ## Check the candidate
 
-Use the repository toolchains: Xcode 26.6 with Swift 6.3 for the collector,
-Python 3.11 with the checked-in `uv.lock` files, and Node from `.node-version`
-with npm 11.17.0 and `package-lock.json`.
+Use the repository toolchains: Swift 6.3 (Xcode 26.6) for the collector,
+Python 3.11 with the checked-in `uv.lock` files, and the Node version in
+`graph/viewer/.node-version` with npm 11.17.0 and the `package-lock.json` files
+in `graph/viewer/` and the repository root.
 
 From the repository root, run:
 
@@ -57,6 +58,8 @@ not a release commit.
 Build the Pages artifact and verify its synthetic data and screenshot files:
 
 ```sh
+cd graph/viewer
+npm ci --ignore-scripts
 npm run demo:build
 npm run demo:verify
 ```
@@ -71,7 +74,7 @@ not belong in public assets. The static demo does not test the live API.
 On a supported macOS builder, run:
 
 ```sh
-bash scripts/build-release.sh
+bash collector/scripts/build-release.sh
 ```
 
 The script checks the requested version, the binary's version output, arm64

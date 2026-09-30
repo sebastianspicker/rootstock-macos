@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "/Users/kim/jsonl-one",
+        "fndsync.risk_tags" : "jsonl_tag,finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/finder_sync_extension.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "jsonl-name",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/finder_sync_extension.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "primary-name",
+        "fndsync.notes" : "synthetic note",
+        "fndsync.path" : "/Users/alice/Library/Markers/primary",
+        "fndsync.risk_tags" : "custom_a,custom_b,custom_a,finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "kind-only",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "/Users/erin/bin/tool",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "label-only",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "42",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "/Users/Shared/shared-marker",
+        "fndsync.risk_tags" : ",finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "/Users/ivy/fractional",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "/Users/jack/bad-time",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "single-kind",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "surface-label",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fndsync|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "finder.sync_ext",
+      "fields" : {
+        "event.type" : "finder.sync_ext",
+        "fndsync.name" : "",
+        "fndsync.notes" : "Finder Sync dual-use markers - never installs Finder Sync extensions or rewrites Finder preferences for abuse",
+        "fndsync.path" : "/Users/nia/array-entry",
+        "fndsync.risk_tags" : "finder_sync_surface",
+        "fndsync.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/finder_sync_extension.json",
+      "source" : "parser",
+      "sourcePlugin" : "FNDSYNC"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Finder Sync dual-use markers",
+    "id" : "FNDSYNC",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

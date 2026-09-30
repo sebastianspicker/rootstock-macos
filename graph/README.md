@@ -34,8 +34,16 @@ The implementation lives in `src/rootstock_graph/`:
   and viewers.
 - `vulnerability/` contains the curated reference catalog, enrichment, and
   version matching.
-- `models.py`, `neo4j.py`, and `api.py` are shared data, connection, and HTTP
-  boundaries.
+- `api_support/` holds the API routes (an `APIRouter`), schemas, dependencies,
+  and report helpers; `api.py` is the ASGI app that includes them.
+- `category_predicates.py`, `constants.py`, `cypher.py`, `models.py`,
+  `neo4j.py`, `paths.py`, and `server_validation.py` are foundation modules
+  that every layer may use.
+
+Layers depend downward only: foundation, `vulnerability`, `ingestion`,
+`reporting`, `api_support`, `api`; `inference` sits on foundation and feeds
+`api_support`. `tests/test_architecture.py` enforces this, forbids cross-module
+private imports, and rejects dynamic imports.
 
 Use the `rootstock-graph-*` console commands declared in `pyproject.toml`.
 There are no supported root-level Python command wrappers.
@@ -92,10 +100,10 @@ intentionally update derived graph state. Grant the read principal only
 `MATCH` and `SHOW` privileges, with no `WRITE` or `DBMS` privileges. Do not
 proxy or tunnel this alpha service for real data.
 
-Viewer TypeScript and CSS are authored in `graph/viewer-src/` and
-`graph/viewer-css/`. `npm run bundle` rebuilds the packaged assets in
-`src/rootstock_graph/resources/viewer/`; do not edit those generated assets by
-hand. Static viewers embed graph data, while the live viewer retrieves it from
+Viewer TypeScript and CSS are authored in `graph/viewer/src/` and
+`graph/viewer/css/`. Run `npm run bundle` in `graph/viewer` to rebuild the
+packaged assets in `src/rootstock_graph/resources/viewer/`; do not edit those
+generated assets by hand. Static viewers embed graph data, while the live viewer retrieves it from
 the authenticated API.
 
 The viewer opens with Scope, Evidence, and Report steps. Its Graph step includes
@@ -126,9 +134,10 @@ limit.
 
 ## Packaging and verification
 
-`src/rootstock_graph/resources/contracts/family-open-export/v1/schema.json` is
-the read-only installation copy of the canonical repository contract. The
-contract checker requires the two files to be byte-for-byte identical.
+The files under `src/rootstock_graph/resources/contracts/` (for example
+`family-open-export/v1/schema.json`) are read-only installation copies of
+canonical repository contracts. `scripts/check-contracts.py`
+requires every mirror to be byte-for-byte identical to its canonical file.
 
 Run from the repository root:
 
@@ -138,10 +147,11 @@ sh scripts/verify web
 ```
 
 The graph lane runs Ruff, the graph test suite, contract and scan-model checks,
-synthetic scan validation, and an isolated wheel smoke test. The web lane
-type-checks and tests the viewer, then compares a temporary build with the
-packaged assets in the working tree. Run `npm run bundle` to refresh those
-assets. Test a live Neo4j connection and API separately:
+synthetic scan validation with `rootstock-graph-validate-scan`, and an isolated
+wheel smoke test. The web lane needs `npm ci --ignore-scripts` in
+`graph/viewer`; it type-checks, lints, and tests the viewer, then compares a temporary build with the
+packaged assets in the working tree. Run `npm run bundle` in `graph/viewer` to
+refresh those assets. Test a live Neo4j connection and API separately:
 
 ```sh
 NEO4J_PASSWORD=CHANGE_ME_WRITE \

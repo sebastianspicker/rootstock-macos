@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "/Users/kim/jsonl-one",
+        "ardss.risk_tags" : "jsonl_tag,ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/screen_sharing_ard_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "jsonl-name",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/screen_sharing_ard_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "primary-name",
+        "ardss.notes" : "synthetic note",
+        "ardss.path" : "/Users/alice/Library/Markers/primary",
+        "ardss.risk_tags" : "custom_a,custom_b,custom_a,ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "kind-only",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "/Users/erin/bin/tool",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "label-only",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "42",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "/Users/Shared/shared-marker",
+        "ardss.risk_tags" : ",ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "/Users/ivy/fractional",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "/Users/jack/bad-time",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "single-kind",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "surface-label",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ardss|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ard.screen_sharing",
+      "fields" : {
+        "ardss.name" : "",
+        "ardss.notes" : "Screen Sharing ARD depth markers - never enables Screen Sharing or ARD, never connects to remote desktops",
+        "ardss.path" : "/Users/nia/array-entry",
+        "ardss.risk_tags" : "ard_surface",
+        "ardss.secrets_exported" : "false",
+        "event.type" : "ard.screen_sharing",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/screen_sharing_ard_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENSHARINGARD"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Screen Sharing ARD depth markers",
+    "id" : "SCREENSHARINGARD",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

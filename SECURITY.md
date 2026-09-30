@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Do not open public GitHub issues for security vulnerabilities. Use
-[GitHub private vulnerability reporting](https://github.com/sebastianspicker/rootstock/security/advisories/new)
+[GitHub private vulnerability reporting](https://github.com/sebastianspicker/rootstock-macos/security/advisories/new)
 to submit reports confidentially.
 
 Include:

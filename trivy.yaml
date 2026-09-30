@@ -1,6 +1,7 @@
 scan:
   skip-dirs:
     - "**/.venv"
-    - collector/.build
+    - "**/.build"
+    - "**/node_modules"
   skip-files:
     - .env.example

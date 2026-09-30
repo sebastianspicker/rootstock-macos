@@ -15,7 +15,7 @@ Pydantic models in `graph/src/rootstock_graph/models.py` and the canonical JSON
 Schema in `contracts/collector-scan/legacy-unversioned.schema.json`:
 
 ```bash
-uv run --project graph --locked python scripts/validate-scan.py examples/demo-scan.json
+uv run --project graph --locked rootstock-graph-validate-scan examples/demo-scan.json
 ```
 
 Use this scan to test the graph pipeline without running the collector.

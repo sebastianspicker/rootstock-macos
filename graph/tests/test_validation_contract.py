@@ -2,27 +2,22 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-import importlib.util
 import json
 from pathlib import Path
 
 import jsonschema
+import pytest
 
+from rootstock_graph.ingestion import validate_scan
 from rootstock_graph.models import ScanResult
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = ROOT / "contracts" / "collector-scan" / "legacy-unversioned.schema.json"
 DEMO_SCAN_PATH = ROOT / "examples" / "demo-scan.json"
-VALIDATOR_PATH = ROOT / "scripts" / "validate-scan.py"
 
 
 checks = TestCase()
-
-spec = importlib.util.spec_from_file_location("validate_scan", VALIDATOR_PATH)
-validate_scan = importlib.util.module_from_spec(spec)
-checks.assertTrue(spec and spec.loader)
-spec.loader.exec_module(validate_scan)
 
 
 def _load_json(path: Path) -> dict:
@@ -56,3 +51,18 @@ def test_duplicate_bundle_ids_are_allowed_when_paths_differ() -> None:
             duplicate["path"],
         },
     )
+
+
+@pytest.mark.parametrize("text", ["[]", "1", '"scan"', "null"])
+def test_non_object_root_is_reported_as_invalid(
+    text: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    scan = tmp_path / "scan.json"
+    scan.write_text(text)
+    monkeypatch.setattr("sys.argv", ["rootstock-graph-validate-scan", str(scan)])
+
+    checks.assertEqual(validate_scan.main(), 1)
+    output = capsys.readouterr()
+    checks.assertIn("Invalid", output.out)
+    checks.assertIn("Schema: [(root)]", output.out)
+    checks.assertNotIn("Traceback", output.out + output.err)

@@ -13,9 +13,13 @@ defaults to ignored private storage, and release binaries use the ignored
 
 ## Setup
 
-- macOS 14+ and Xcode 26.6 / Swift 6.3 for the collector
+- macOS 14+ and Swift 6.3 for the collector; Red, Blue, and the shared
+  package use Swift 6.2+. Swift tests use Swift Testing, so Xcode is not
+  required (`scripts/swift-test`, used by `sh scripts/verify`, adds the plugin
+  path for the Command Line Tools toolchain)
 - Python 3.11+, `uv`, and Neo4j 5.x for full graph development
-- Node.js from `.node-version` and npm 11.17.0 for the viewer
+- Node.js from `graph/viewer/.node-version` and npm 11.17.0 for the viewer
+  and the repository duplication gate
 - Docker only when exercising the Neo4j lane
 
 Install only the environments relevant to your work. For example:
@@ -23,7 +27,8 @@ Install only the environments relevant to your work. For example:
 ```sh
 uv sync --project graph --locked --all-extras
 uv sync --project modules/cve-scan --locked --all-extras
-npm ci --ignore-scripts
+npm ci --ignore-scripts --prefix graph/viewer  # viewer, web lane
+npm ci --ignore-scripts                        # repository root, jscpd gate
 ```
 
 ## Verification
@@ -51,7 +56,9 @@ breaking change. Add a versioned contract instead.
 The graph package is implemented in `graph/src/rootstock_graph/` and exposed
 through `rootstock-graph-*` console commands declared in `graph/pyproject.toml`.
 Do not recreate root-level Python command adapters. Keep the graph API
-loopback-only, bearer-token protected, and read-only for ad-hoc Cypher.
+loopback-only, bearer-token protected, and read-only for ad-hoc Cypher. Graph
+modules follow the layering enforced by `graph/tests/test_architecture.py`; see
+[Architecture](docs/ARCHITECTURE.md#extension-rules).
 
 ## Product-specific rules
 
@@ -63,6 +70,9 @@ loopback-only, bearer-token protected, and read-only for ad-hoc Cypher.
   default. Do not describe self-attestation as external authorization.
 - Blue event ingestion is synthetic/offline only. Do not present fixture tests
   as live Endpoint Security, signing, entitlement, or deployment validation.
+- Product-owned scripts live in the product (`collector/scripts/`,
+  `graph/scripts/`, `rootstock-blue/Tools/scripts/`); the root `scripts/`
+  directory holds only the verifier and cross-product checkers.
 - `RootstockMacFacts` contains neutral facts and parsers, not product models,
   serializers, graph state, or network clients.
 

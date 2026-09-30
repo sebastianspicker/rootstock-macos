@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "/Users/kim/jsonl-one",
+        "hkpath.risk_tags" : "jsonl_tag,homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/homekit_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "jsonl-name",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/homekit_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "primary-name",
+        "hkpath.notes" : "synthetic note",
+        "hkpath.path" : "/Users/alice/Library/Markers/primary",
+        "hkpath.risk_tags" : "custom_a,custom_b,custom_a,homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "kind-only",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "/Users/erin/bin/tool",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "label-only",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "42",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "/Users/Shared/shared-marker",
+        "hkpath.risk_tags" : ",homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "/Users/ivy/fractional",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "/Users/jack/bad-time",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "single-kind",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "surface-label",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hkpath|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "homekit.path",
+      "fields" : {
+        "event.type" : "homekit.path",
+        "hkpath.name" : "",
+        "hkpath.notes" : "HomeKit path plane markers - never enumerates HomeKit accessory secrets or pairs devices",
+        "hkpath.path" : "/Users/nia/array-entry",
+        "hkpath.risk_tags" : "homekit_surface",
+        "hkpath.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/homekit_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HKPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "HomeKit path plane markers",
+    "id" : "HKPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

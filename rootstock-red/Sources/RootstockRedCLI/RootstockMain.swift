@@ -5,8 +5,6 @@ import Foundation
 import RootstockCore
 import MacEnumKit
 import MacVulnKit
-import MacOpsecKit
-import MacArtifactKit
 import MacReportKit
 
 @main

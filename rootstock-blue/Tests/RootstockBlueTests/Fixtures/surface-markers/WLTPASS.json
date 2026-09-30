@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "kim",
+        "wltpass.name" : "",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "/Users/kim/jsonl-one",
+        "wltpass.risk_tags" : "jsonl_tag,wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/wallet_pass_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "lee",
+        "wltpass.name" : "jsonl-name",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/wallet_pass_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "alice",
+        "wltpass.name" : "primary-name",
+        "wltpass.notes" : "synthetic note",
+        "wltpass.path" : "/Users/alice/Library/Markers/primary",
+        "wltpass.risk_tags" : "custom_a,custom_b,custom_a,wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "erin",
+        "wltpass.name" : "kind-only",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "/Users/erin/bin/tool",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "fallback",
+        "wltpass.name" : "label-only",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "gina",
+        "wltpass.name" : "42",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "fallback",
+        "wltpass.name" : "",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "/Users/Shared/shared-marker",
+        "wltpass.risk_tags" : ",wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "ivy",
+        "wltpass.name" : "",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "/Users/ivy/fractional",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "jack",
+        "wltpass.name" : "",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "/Users/jack/bad-time",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "carol",
+        "wltpass.name" : "single-kind",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "dana",
+        "wltpass.name" : "surface-label",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wltpass|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "wallet.pass",
+      "fields" : {
+        "event.type" : "wallet.pass",
+        "user.name" : "nia",
+        "wltpass.name" : "",
+        "wltpass.notes" : "Wallet pass path markers - never dumps pass contents, payment tokens, or card data",
+        "wltpass.path" : "/Users/nia/array-entry",
+        "wltpass.risk_tags" : "wallet_surface",
+        "wltpass.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/wallet_pass_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WLTPASS"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Wallet pass path markers",
+    "id" : "WLTPASS",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

@@ -20,18 +20,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from .import_nodes_certificates import import_certificate_authorities
 from .import_nodes_core import (
     computer_import_context,
     import_applications,
-    import_certificate_authorities,
     import_computer,
-    import_entitlements,
     import_installed_on,
     import_local_to,
-    import_sandbox_profiles,
     import_signed_by_team,
-    import_tcc_grants,
 )
+from .import_nodes_permissions import import_entitlements, import_tcc_grants
+from .import_nodes_sandbox import import_sandbox_profiles
 from .import_nodes_enrichment import (
     import_bluetooth_devices,
     import_file_acls,

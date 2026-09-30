@@ -6,8 +6,8 @@ authors:
   - family-names: Spicker
     given-names: Sebastian J.
 version: 0.1.0-alpha.1
-repository-code: "https://github.com/sebastianspicker/rootstock"
-url: "https://github.com/sebastianspicker/rootstock"
+repository-code: "https://github.com/sebastianspicker/rootstock-macos"
+url: "https://github.com/sebastianspicker/rootstock-macos"
 abstract: >-
   This citation record covers the Rootstock Core alpha candidate: a passive,
   local-first workflow that maps macOS security boundaries into an inspectable

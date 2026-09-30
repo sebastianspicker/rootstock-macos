@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "/Users/kim/jsonl-one",
+        "fontval.risk_tags" : "jsonl_tag,font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/font_validation_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "jsonl-name",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/font_validation_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "primary-name",
+        "fontval.notes" : "synthetic note",
+        "fontval.path" : "/Users/alice/Library/Markers/primary",
+        "fontval.risk_tags" : "custom_a,custom_b,custom_a,font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "kind-only",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "/Users/erin/bin/tool",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "label-only",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "42",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "/Users/Shared/shared-marker",
+        "fontval.risk_tags" : ",font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "/Users/ivy/fractional",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "/Users/jack/bad-time",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "single-kind",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "surface-label",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fontval|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "font.validation",
+      "fields" : {
+        "event.type" : "font.validation",
+        "fontval.name" : "",
+        "fontval.notes" : "Font validation dual-use markers - never installs malicious fonts or disables font validation",
+        "fontval.path" : "/Users/nia/array-entry",
+        "fontval.risk_tags" : "font_surface",
+        "fontval.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/font_validation_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "FONTVALIDATION"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Font validation dual-use markers",
+    "id" : "FONTVALIDATION",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

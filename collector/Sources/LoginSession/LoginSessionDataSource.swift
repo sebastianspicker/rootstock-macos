@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Enumerates active login sessions by parsing the output of `who`.
 public struct LoginSessionDataSource: DataSource {

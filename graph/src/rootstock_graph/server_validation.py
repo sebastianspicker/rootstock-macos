@@ -7,7 +7,7 @@ import ipaddress
 import re
 from urllib.parse import SplitResult, urlsplit
 
-from .utils import (
+from .cypher import (
     cypher_code_only,
     has_multiple_cypher_statements,
     validate_read_only_cypher,

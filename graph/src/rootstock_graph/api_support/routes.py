@@ -1,4 +1,4 @@
-"""HTTP route handlers for the Rootstock Graph API facade."""
+"""HTTP route handlers for the Rootstock Graph API, collected on one APIRouter."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import math
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from neo4j import Query
 from neo4j.exceptions import DriverError, Neo4jError
@@ -23,21 +23,31 @@ from ..inference.tier_classification import classify
 from ..reporting.opengraph_export import build_opengraph
 from ..reporting.query_runner import discover_queries, find_query
 from ..reporting.viewer import render_viewer_html
-from ..utils import first_cypher_statement, run_query
+from ..cypher import first_cypher_statement, run_query
 from ..server_validation import validate_adhoc_cypher as _validate_adhoc_cypher
 from ..server_validation import validate_api_cypher as _validate_api_cypher
-from .. import api
+from .dependencies import (
+    ADHOC_CYPHER_TIMEOUT_SECONDS,
+    MAX_ADHOC_CYPHER_LENGTH,
+    MAX_ADHOC_CYPHER_ROWS,
+    READ_SESSION_DEPENDENCY,
+    SESSION_DEPENDENCY,
+    logger,
+)
 from .reports import ReportRequest, generate_report
+from .schemas import ClearOwnedRequest, CypherRequest, MarkOwnedRequest, QueryRunRequest
+
+router = APIRouter()
 
 
-@api.app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 def serve_viewer(request: Request):
     """Serve the live interactive viewer without embedding graph data."""
     data = _empty_graph_payload()
     return HTMLResponse(content=render_viewer_html(data, title="Live Attack Graph", mode="live"))
 
 
-@api.app.get("/api/queries")
+@router.get("/api/queries")
 def list_queries():
     """List all available Cypher queries with metadata."""
     queries = discover_queries()
@@ -55,17 +65,17 @@ def list_queries():
     ]
 
 
-@api.app.post("/api/report")
-def report_endpoint(body: ReportRequest, session=api.READ_SESSION_DEPENDENCY):
+@router.post("/api/report")
+def report_endpoint(body: ReportRequest, session=READ_SESSION_DEPENDENCY):
     """Return an in-memory assessment for the browser to download locally."""
     return generate_report(session, body)
 
 
-@api.app.post("/api/queries/{query_id}/run")
+@router.post("/api/queries/{query_id}/run")
 def run_query_endpoint(
     query_id: str,
-    body: api.QueryRunRequest | None = None,
-    session=api.READ_SESSION_DEPENDENCY,
+    body: QueryRunRequest | None = None,
+    session=READ_SESSION_DEPENDENCY,
 ):
     """Execute a query by ID and return results as JSON."""
     query = find_query(discover_queries(), query_id)
@@ -74,24 +84,24 @@ def run_query_endpoint(
 
     cypher = first_cypher_statement(query["cypher"])
     if _validate_api_cypher(cypher):
-        api.logger.error("Configured query %s is not read-only", query_id)
+        logger.error("Configured query %s is not read-only", query_id)
         raise HTTPException(status_code=500, detail="Configured query is not read-only")
     params = body.params if body else {}
     try:
         rows = run_query(
             session,
-            Query(cypher, timeout=api.ADHOC_CYPHER_TIMEOUT_SECONDS),
+            Query(cypher, timeout=ADHOC_CYPHER_TIMEOUT_SECONDS),
             params or {},
-            maximum_rows=api.MAX_ADHOC_CYPHER_ROWS + 1,
+            maximum_rows=MAX_ADHOC_CYPHER_ROWS + 1,
         )
     except HTTPException:
         raise
     except (DriverError, Neo4jError) as error:
-        api.logger.warning("Query %s failed: %s", query_id, error)
+        logger.warning("Query %s failed: %s", query_id, error)
         raise HTTPException(status_code=400, detail="Query execution failed") from error
 
-    truncated = len(rows) > api.MAX_ADHOC_CYPHER_ROWS
-    rows = rows[: api.MAX_ADHOC_CYPHER_ROWS]
+    truncated = len(rows) > MAX_ADHOC_CYPHER_ROWS
+    rows = rows[:MAX_ADHOC_CYPHER_ROWS]
     return {
         "query": {
             "id": query["id"],
@@ -105,15 +115,15 @@ def run_query_endpoint(
     }
 
 
-@api.app.get("/api/graph")
-def get_graph(session=api.READ_SESSION_DEPENDENCY):
+@router.get("/api/graph")
+def get_graph(session=READ_SESSION_DEPENDENCY):
     """Return the full OpenGraph JSON for viewer refresh."""
     _hostname, data = _build_live_graph(session)
     return data
 
 
-@api.app.post("/api/mark-owned")
-def mark_owned_endpoint(body: api.MarkOwnedRequest, session=api.SESSION_DEPENDENCY):
+@router.post("/api/mark-owned")
+def mark_owned_endpoint(body: MarkOwnedRequest, session=SESSION_DEPENDENCY):
     """Mark nodes as owned (compromised)."""
     timestamp = datetime.now(timezone.utc).isoformat()
     with session.begin_transaction() as transaction:
@@ -128,8 +138,8 @@ def mark_owned_endpoint(body: api.MarkOwnedRequest, session=api.SESSION_DEPENDEN
     return {"marked": count, "timestamp": timestamp}
 
 
-@api.app.post("/api/clear-owned")
-def clear_owned_endpoint(body: api.ClearOwnedRequest, session=api.SESSION_DEPENDENCY):
+@router.post("/api/clear-owned")
+def clear_owned_endpoint(body: ClearOwnedRequest, session=SESSION_DEPENDENCY):
     """Clear owned markers from nodes."""
     if body.all:
         count = clear_all(session)
@@ -142,8 +152,8 @@ def clear_owned_endpoint(body: api.ClearOwnedRequest, session=api.SESSION_DEPEND
     return {"cleared": count}
 
 
-@api.app.get("/api/owned")
-def get_owned(session=api.READ_SESSION_DEPENDENCY):
+@router.get("/api/owned")
+def get_owned(session=READ_SESSION_DEPENDENCY):
     """List all currently owned nodes."""
     results = []
     for item in list_owned(session):
@@ -161,8 +171,8 @@ def get_owned(session=api.READ_SESSION_DEPENDENCY):
     return {"owned": results, "count": len(results)}
 
 
-@api.app.post("/api/tier-classify")
-def tier_classify_endpoint(session=api.SESSION_DEPENDENCY):
+@router.post("/api/tier-classify")
+def tier_classify_endpoint(session=SESSION_DEPENDENCY):
     """Run tier classification on all Application nodes."""
     tier0, tier1, tier2 = classify(session)
     return {"tier0": tier0, "tier1": tier1, "tier2": tier2, "total": tier0 + tier1 + tier2}
@@ -172,24 +182,24 @@ def _limited_records(result) -> tuple[list[Any], bool]:
     records = []
     truncated = False
     for index, record in enumerate(result):
-        if index >= api.MAX_ADHOC_CYPHER_ROWS:
+        if index >= MAX_ADHOC_CYPHER_ROWS:
             truncated = True
             break
         records.append(record)
     return records, truncated
 
 
-@api.app.post("/api/cypher")
-def run_cypher_endpoint(body: api.CypherRequest, session=api.READ_SESSION_DEPENDENCY):
+@router.post("/api/cypher")
+def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
     """Execute a bounded, read-only ad-hoc Cypher query."""
-    if len(body.cypher) > api.MAX_ADHOC_CYPHER_LENGTH:
+    if len(body.cypher) > MAX_ADHOC_CYPHER_LENGTH:
         raise HTTPException(status_code=413, detail="Cypher query exceeds 10000 characters")
     error = _validate_adhoc_cypher(body.cypher)
     if error:
         raise HTTPException(status_code=403, detail=error)
     try:
         result = session.run(
-            Query(body.cypher, timeout=api.ADHOC_CYPHER_TIMEOUT_SECONDS), body.params or {}
+            Query(body.cypher, timeout=ADHOC_CYPHER_TIMEOUT_SECONDS), body.params or {}
         )
         records, truncated = _limited_records(result)
         columns = list(records[0].keys()) if records else []
@@ -197,7 +207,7 @@ def run_cypher_endpoint(body: api.CypherRequest, session=api.READ_SESSION_DEPEND
     except HTTPException:
         raise
     except (DriverError, Neo4jError) as error:
-        api.logger.warning("Ad-hoc Cypher failed: %s", error)
+        logger.warning("Ad-hoc Cypher failed: %s", error)
         raise HTTPException(status_code=400, detail="Query execution failed") from error
     return {"columns": columns, "rows": rows, "count": len(rows), "truncated": truncated}
 

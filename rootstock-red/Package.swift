@@ -35,60 +35,26 @@ let package = Package(
             path: "Tests/RootstockCoreTests"
         ),
 
-        // MARK: - Assess kits (default executable graph)
-        .target(
-            name: "MacOpsecKit",
-            dependencies: ["RootstockCore"],
-            path: "Sources/MacOpsecKit"
-        ),
-        .target(
-            name: "MacArtifactKit",
-            dependencies: ["RootstockCore"],
-            path: "Sources/MacArtifactKit"
-        ),
-        .target(
-            name: "MacLolKit",
-            dependencies: ["RootstockCore"],
-            path: "Sources/MacLolKit",
-            resources: [
-                .process("Resources"),
-            ]
-        ),
-        .target(
-            name: "MacIdentityKit",
-            dependencies: ["RootstockCore"],
-            path: "Sources/MacIdentityKit"
-        ),
-        .target(
-            name: "MacMdmKit",
-            dependencies: ["RootstockCore"],
-            path: "Sources/MacMdmKit"
-        ),
-        .target(
-            name: "MacPersistKit",
-            dependencies: [
-                "RootstockCore",
-                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
-            ],
-            path: "Sources/MacPersistKit"
-        ),
+        // MARK: - Enumeration (default executable graph)
         .target(
             name: "MacEnumKit",
             dependencies: [
                 "RootstockCore",
-                "MacOpsecKit",
-                "MacArtifactKit",
-                "MacLolKit",
-                "MacIdentityKit",
-                "MacMdmKit",
-                "MacPersistKit",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ],
-            path: "Sources/MacEnumKit"
+            path: "Sources/MacEnumKit",
+            resources: [
+                .process("LOLBins/Resources"),
+            ]
+        ),
+        .testTarget(
+            name: "MacEnumKitTests",
+            dependencies: ["MacEnumKit"],
+            path: "Tests/MacEnumKitTests"
         ),
         .target(
             name: "MacVulnKit",
-            dependencies: ["RootstockCore", "MacEnumKit", "MacOpsecKit", "MacArtifactKit"],
+            dependencies: ["RootstockCore", "MacEnumKit"],
             path: "Sources/MacVulnKit"
         ),
         .target(
@@ -122,14 +88,8 @@ let package = Package(
             name: "RootstockRedCLI",
             dependencies: [
                 "RootstockCore",
-                "MacOpsecKit",
-                "MacArtifactKit",
                 "MacEnumKit",
                 "MacVulnKit",
-                "MacLolKit",
-                "MacIdentityKit",
-                "MacMdmKit",
-                "MacPersistKit",
                 "MacReportKit",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],

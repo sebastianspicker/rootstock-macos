@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "/Users/kim/jsonl-one",
+        "calrem.risk_tags" : "jsonl_tag,automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/calendar_reminders_automation.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "jsonl-name",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/calendar_reminders_automation.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "primary-name",
+        "calrem.notes" : "synthetic note",
+        "calrem.path" : "/Users/alice/Library/Markers/primary",
+        "calrem.risk_tags" : "custom_a,custom_b,custom_a,automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "kind-only",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "/Users/erin/bin/tool",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "label-only",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "42",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "/Users/Shared/shared-marker",
+        "calrem.risk_tags" : ",automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "/Users/ivy/fractional",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "/Users/jack/bad-time",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "single-kind",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "surface-label",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:calrem|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.reminders",
+      "fields" : {
+        "calrem.name" : "",
+        "calrem.notes" : "Calendar/Reminders automation markers - never reads event contents or creates malicious calendar invites",
+        "calrem.path" : "/Users/nia/array-entry",
+        "calrem.risk_tags" : "automation_surface",
+        "calrem.secrets_exported" : "false",
+        "event.type" : "calendar.reminders",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/calendar_reminders_automation.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALENDARREMINDERS"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Calendar/Reminders automation surface markers",
+    "id" : "CALENDARREMINDERS",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

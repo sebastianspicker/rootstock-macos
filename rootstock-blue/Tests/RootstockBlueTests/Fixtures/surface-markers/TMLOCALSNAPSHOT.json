@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "/Users/kim/jsonl-one",
+        "tmsnap.risk_tags" : "jsonl_tag,tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/tm_local_snapshot_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "jsonl-name",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/tm_local_snapshot_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "primary-name",
+        "tmsnap.notes" : "synthetic note",
+        "tmsnap.path" : "/Users/alice/Library/Markers/primary",
+        "tmsnap.risk_tags" : "custom_a,custom_b,custom_a,tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "kind-only",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "/Users/erin/bin/tool",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "label-only",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "42",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "/Users/Shared/shared-marker",
+        "tmsnap.risk_tags" : ",tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "/Users/ivy/fractional",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "/Users/jack/bad-time",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "single-kind",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "surface-label",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:tmsnap|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "tm.local_snapshot",
+      "fields" : {
+        "event.type" : "tm.local_snapshot",
+        "tmsnap.name" : "",
+        "tmsnap.notes" : "TM local snapshot depth markers - never mounts snapshots for data theft or deletes backup catalogs",
+        "tmsnap.path" : "/Users/nia/array-entry",
+        "tmsnap.risk_tags" : "tm_snapshot_surface",
+        "tmsnap.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/tm_local_snapshot_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "TMLOCALSNAPSHOT"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "TM local snapshot depth markers",
+    "id" : "TMLOCALSNAPSHOT",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

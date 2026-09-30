@@ -1,0 +1,424 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/kim/jsonl-one",
+        "osa.risk_tags" : "jsonl_tag,scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/osascript_scpt_delivery.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "jsonl-name",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/osascript_scpt_delivery.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/Users/lee/jsonl-tile"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.depth" : "2",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/lee/jsonl-tile",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.runs_script" : "true",
+        "osa.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/osascript_scpt_delivery.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.depth" : "3",
+        "osa.name" : "primary-name",
+        "osa.notes" : "synthetic note",
+        "osa.path" : "/Users/alice/Library/Markers/primary",
+        "osa.risk_tags" : "custom_a,custom_b,custom_a,scpt_surface",
+        "osa.runs_script" : "true",
+        "osa.secrets_exported" : "false",
+        "osa.share_url" : "smb://share.example.invalid/x",
+        "osa.tool_present" : "true",
+        "osa.url_host" : "host.example.invalid",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|rule-only"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "rule-only",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/bob/tile",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "bob"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "kind-only",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/erin/bin/tool",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.runs_script" : "true",
+        "osa.secrets_exported" : "false",
+        "osa.tool_present" : "true",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "label-only",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/frank/handler",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "frank"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.depth" : "deep",
+        "osa.name" : "42",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "osa.url_host" : "7",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/Shared/shared-marker",
+        "osa.risk_tags" : ",scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|rule-name-only"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "rule-name-only",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "hank"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/private/var/tile-no-user"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/private/var/tile-no-user",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/ivy/fractional",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/jack/bad-time",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "single-kind",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "surface-label",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/private/var/tile-only"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/private/var/tile-only",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "osa.share_url" : "smb://share.example.invalid/one",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/TileOnly/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/Users/nia/array-entry",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/osascript_scpt_delivery.json",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:osa|/opt/handler"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "osascript.scpt",
+      "fields" : {
+        "event.type" : "osascript.scpt",
+        "osa.name" : "",
+        "osa.notes" : "OSA/scpt delivery markers - never compiles malicious .scpt payloads or executes third-party AppleScripts",
+        "osa.path" : "/opt/handler",
+        "osa.risk_tags" : "scpt_surface",
+        "osa.secrets_exported" : "false",
+        "user.name" : "mo"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/osascript_scpt_delivery.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "OSASCRIPTSCPT"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "OSA/scpt delivery surface markers",
+    "id" : "OSASCRIPTSCPT",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

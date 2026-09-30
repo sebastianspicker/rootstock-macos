@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Takes a snapshot of running processes via `ps` and resolves bundle IDs.
 public struct ProcessSnapshotDataSource: DataSource {

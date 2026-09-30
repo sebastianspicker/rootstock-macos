@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "kim",
+        "wthrwdg.name" : "",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "/Users/kim/jsonl-one",
+        "wthrwdg.risk_tags" : "jsonl_tag,weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/weather_widget_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "lee",
+        "wthrwdg.name" : "jsonl-name",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/weather_widget_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "alice",
+        "wthrwdg.name" : "primary-name",
+        "wthrwdg.notes" : "synthetic note",
+        "wthrwdg.path" : "/Users/alice/Library/Markers/primary",
+        "wthrwdg.risk_tags" : "custom_a,custom_b,custom_a,weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "erin",
+        "wthrwdg.name" : "kind-only",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "/Users/erin/bin/tool",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "fallback",
+        "wthrwdg.name" : "label-only",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "gina",
+        "wthrwdg.name" : "42",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "fallback",
+        "wthrwdg.name" : "",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "/Users/Shared/shared-marker",
+        "wthrwdg.risk_tags" : ",weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "ivy",
+        "wthrwdg.name" : "",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "/Users/ivy/fractional",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "jack",
+        "wthrwdg.name" : "",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "/Users/jack/bad-time",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "carol",
+        "wthrwdg.name" : "single-kind",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "dana",
+        "wthrwdg.name" : "surface-label",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:wthrwdg|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "weather.widget",
+      "fields" : {
+        "event.type" : "weather.widget",
+        "user.name" : "nia",
+        "wthrwdg.name" : "",
+        "wthrwdg.notes" : "Weather widget residual markers - never dumps weather personalization data or widget timeline contents",
+        "wthrwdg.path" : "/Users/nia/array-entry",
+        "wthrwdg.risk_tags" : "weather_surface",
+        "wthrwdg.secrets_exported" : "false"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/weather_widget_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "WTHRWDG"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Weather widget residual markers",
+    "id" : "WTHRWDG",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "rootstock-viewer",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.17.0",
+  "engines": {
+    "node": ">=24.18"
+  },
+  "scripts": {
+    "lint": "biome lint eslint.config.mjs css src scripts && eslint .",
+    "format:check": "biome format eslint.config.mjs css src scripts",
+    "typecheck": "tsc --noEmit",
+    "bundle:css": "node scripts/bundle-viewer-css.mjs",
+    "bundle:js": "esbuild src/main.ts --bundle --format=iife --platform=browser --target=es2022 --minify --outfile=../src/rootstock_graph/resources/viewer/viewer.bundle.js",
+    "bundle": "npm run bundle:css && npm run bundle:js",
+    "demo:build": "node scripts/build-pages-demo.mjs",
+    "demo:verify": "node scripts/check-pages-demo.mjs",
+    "demo:screenshots": "node scripts/capture-demo-screenshots.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@types/node": "24.13.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "esbuild": "0.28.1",
+    "eslint": "10.10.0",
+    "typescript": "npm:@typescript/typescript6@6.0.3",
+    "typescript-eslint": "8.69.0"
+  }
+}

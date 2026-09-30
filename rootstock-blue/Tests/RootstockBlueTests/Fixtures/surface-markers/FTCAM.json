@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "/Users/kim/jsonl-one",
+        "ftcam.risk_tags" : "jsonl_tag,facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/facetime_camera_surface.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "jsonl-name",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/facetime_camera_surface.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "primary-name",
+        "ftcam.notes" : "synthetic note",
+        "ftcam.path" : "/Users/alice/Library/Markers/primary",
+        "ftcam.risk_tags" : "custom_a,custom_b,custom_a,facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "kind-only",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "/Users/erin/bin/tool",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "label-only",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "42",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "/Users/Shared/shared-marker",
+        "ftcam.risk_tags" : ",facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "/Users/ivy/fractional",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "/Users/jack/bad-time",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "single-kind",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "surface-label",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ftcam|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "facetime.camera",
+      "fields" : {
+        "event.type" : "facetime.camera",
+        "ftcam.name" : "",
+        "ftcam.notes" : "FaceTime camera dual-use markers - never activates camera/mic or dumps FaceTime call history contents",
+        "ftcam.path" : "/Users/nia/array-entry",
+        "ftcam.risk_tags" : "facetime_surface",
+        "ftcam.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/facetime_camera_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "FTCAM"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "FaceTime camera dual-use markers",
+    "id" : "FTCAM",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

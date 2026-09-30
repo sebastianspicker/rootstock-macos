@@ -1,0 +1,1432 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rootstock.dev/schema/scan-result.schema.json",
+  "title": "Rootstock Scan Result",
+  "description": "Validates the JSON output produced by the Rootstock macOS collector. Each scan result captures a full snapshot of a single macOS host's security boundaries, including applications, TCC grants, entitlements, XPC services, keychain ACLs, persistence mechanisms, and system posture metadata.",
+  "type": "object",
+  "required": [
+    "scan_id",
+    "timestamp",
+    "hostname",
+    "macos_version",
+    "collector_version",
+    "elevation",
+    "applications",
+    "tcc_grants",
+    "errors"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "scan_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this scan run."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "minLength": 1,
+      "description": "ISO 8601 timestamp indicating when the scan was performed."
+    },
+    "hostname": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Hostname of the scanned macOS machine."
+    },
+    "macos_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable macOS version string, e.g. 'macOS 15.3 (Build 24D60)'."
+    },
+    "collector_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Semantic version of the Rootstock collector binary that produced this scan."
+    },
+    "elevation": {
+      "$ref": "#/$defs/ElevationInfo"
+    },
+    "applications": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Application" },
+      "default": [],
+      "description": "All discovered applications with code-signing, entitlement, and injection metadata."
+    },
+    "tcc_grants": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TCCGrant" },
+      "default": [],
+      "description": "TCC (Transparency, Consent, and Control) permission grants from user and system TCC databases."
+    },
+    "xpc_services": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/XPCService" },
+      "default": [],
+      "description": "Discovered XPC services (LaunchDaemons/Agents exposing Mach services)."
+    },
+    "keychain_acls": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/KeychainItem" },
+      "default": [],
+      "description": "Keychain item ACL metadata (no secret values are extracted)."
+    },
+    "mdm_profiles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/MDMProfile" },
+      "default": [],
+      "description": "Installed MDM configuration profiles with embedded TCC/PPPC policies."
+    },
+    "launch_items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/LaunchItem" },
+      "default": [],
+      "description": "Persistence mechanisms: LaunchDaemons, LaunchAgents, login items, cron jobs, login hooks."
+    },
+    "local_groups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/LocalGroup" },
+      "default": [],
+      "description": "Local groups and their members."
+    },
+    "remote_access_services": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RemoteAccessService" },
+      "default": [],
+      "description": "Remote access services (SSH, Screen Sharing) and their configuration."
+    },
+    "firewall_status": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/FirewallStatus" },
+      "default": [],
+      "description": "Application firewall status and per-app rules."
+    },
+    "login_sessions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/LoginSession" },
+      "default": [],
+      "description": "Active login sessions at the time of scan."
+    },
+    "authorization_rights": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/AuthorizationRight" },
+      "default": [],
+      "description": "Authorization rights from the macOS authorization database."
+    },
+    "authorization_plugins": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/AuthorizationPlugin" },
+      "default": [],
+      "description": "Third-party SecurityAgent plugins."
+    },
+    "system_extensions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SystemExtension" },
+      "default": [],
+      "description": "System extensions (network, endpoint security, driver)."
+    },
+    "sudoers_rules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SudoersRule" },
+      "default": [],
+      "description": "Parsed sudoers rules, focusing on NOPASSWD entries."
+    },
+    "running_processes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RunningProcess" },
+      "default": [],
+      "description": "Snapshot of running processes at scan time."
+    },
+    "user_details": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/UserDetail" },
+      "default": [],
+      "description": "Local (and AD-bound) user accounts."
+    },
+    "file_acls": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/FileACL" },
+      "default": [],
+      "description": "ACL and permission metadata for security-critical files and directories."
+    },
+    "bluetooth_devices": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/BluetoothDevice" },
+      "default": [],
+      "description": "Paired Bluetooth devices."
+    },
+    "ad_binding": {
+      "oneOf": [
+        { "$ref": "#/$defs/ADBinding" },
+        { "type": "null" }
+      ],
+      "default": null,
+      "description": "Active Directory binding configuration, if present."
+    },
+    "kerberos_artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/KerberosArtifact" },
+      "default": [],
+      "description": "Kerberos credential caches, keytabs, and krb5.conf metadata."
+    },
+    "sandbox_profiles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SandboxProfile" },
+      "default": [],
+      "description": "Parsed SBPL sandbox profiles for sandboxed applications."
+    },
+    "gatekeeper_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether Gatekeeper is enabled on this host."
+    },
+    "sip_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether System Integrity Protection (SIP) is enabled."
+    },
+    "filevault_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether FileVault disk encryption is enabled."
+    },
+    "lockdown_mode_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether Lockdown Mode is enabled (Ventura+)."
+    },
+    "bluetooth_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether Bluetooth is enabled."
+    },
+    "bluetooth_discoverable": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether Bluetooth discoverable mode is active."
+    },
+    "screen_lock_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether a screen lock password is required."
+    },
+    "screen_lock_delay": {
+      "type": ["integer", "null"],
+      "default": null,
+      "description": "Seconds before screen lock activates after sleep/screensaver."
+    },
+    "display_sleep_timeout": {
+      "type": ["integer", "null"],
+      "default": null,
+      "description": "Minutes until display sleeps (0 = never)."
+    },
+    "thunderbolt_security_level": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Thunderbolt/USB-C security level (e.g. 'user_authorization', 'no_security')."
+    },
+    "secure_boot_level": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Secure boot level (e.g. 'full', 'medium', 'no_security')."
+    },
+    "external_boot_allowed": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether booting from external media is allowed."
+    },
+    "icloud_signed_in": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether an iCloud account is signed in."
+    },
+    "icloud_drive_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether iCloud Drive sync is enabled."
+    },
+    "icloud_keychain_enabled": {
+      "type": ["boolean", "null"],
+      "default": null,
+      "description": "Whether iCloud Keychain sync is enabled."
+    },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/CollectionError" },
+      "default": [],
+      "description": "Non-fatal errors encountered during collection."
+    }
+  },
+  "$defs": {
+    "ElevationInfo": {
+      "type": "object",
+      "description": "Indicates the privilege level under which the collector ran.",
+      "required": ["is_root", "has_fda"],
+      "additionalProperties": false,
+      "properties": {
+        "is_root": {
+          "type": "boolean",
+          "description": "Whether the collector ran as root (UID 0)."
+        },
+        "has_fda": {
+          "type": "boolean",
+          "description": "Whether the collector process has Full Disk Access."
+        }
+      }
+    },
+    "EntitlementInfo": {
+      "type": "object",
+      "description": "A single entitlement extracted from a signed application binary.",
+      "required": ["name", "is_private", "category", "is_security_critical"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entitlement key (e.g. 'com.apple.security.cs.disable-library-validation')."
+        },
+        "is_private": {
+          "type": "boolean",
+          "description": "Whether this is a private (com.apple.private.*) entitlement."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["tcc", "injection", "privilege", "sandbox", "keychain", "network", "icloud", "other"],
+          "description": "Functional category of this entitlement."
+        },
+        "is_security_critical": {
+          "type": "boolean",
+          "description": "Whether this entitlement has direct security implications."
+        }
+      }
+    },
+    "CertificateDetail": {
+      "type": "object",
+      "description": "A single certificate in the code-signing certificate chain.",
+      "required": ["sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "common_name": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Certificate Common Name (CN)."
+        },
+        "organization": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Certificate Organization (O)."
+        },
+        "sha256": {
+          "type": "string",
+          "minLength": 1,
+          "description": "SHA-256 fingerprint of the certificate."
+        },
+        "valid_from": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "default": null,
+          "description": "Certificate validity start (ISO 8601)."
+        },
+        "valid_to": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "default": null,
+          "description": "Certificate validity end (ISO 8601)."
+        },
+        "is_root": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this is a root CA certificate."
+        }
+      }
+    },
+    "SandboxProfile": {
+      "type": "object",
+      "description": "Parsed SBPL sandbox profile with rule counts and constraint flags.",
+      "required": ["bundle_id", "profile_source"],
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bundle identifier of the sandboxed application."
+        },
+        "profile_source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Source of the sandbox profile (e.g. 'built-in', 'custom')."
+        },
+        "file_read_rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "File-read allow rules extracted from the SBPL profile."
+        },
+        "file_write_rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "File-write allow rules."
+        },
+        "mach_lookup_rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Mach-lookup allow rules (IPC targets)."
+        },
+        "network_rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Network access allow rules."
+        },
+        "iokit_rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "IOKit access allow rules."
+        },
+        "exception_count": {
+          "type": "integer",
+          "default": 0,
+          "description": "Total number of sandbox exceptions/allow rules."
+        },
+        "has_unconstrained_network": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the profile allows unrestricted network access."
+        },
+        "has_unconstrained_file_read": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the profile allows unrestricted file reads."
+        }
+      }
+    },
+    "QuarantineInfo": {
+      "type": "object",
+      "description": "Gatekeeper quarantine extended attribute metadata.",
+      "required": ["has_quarantine_flag"],
+      "additionalProperties": false,
+      "properties": {
+        "has_quarantine_flag": {
+          "type": "boolean",
+          "description": "Whether the com.apple.quarantine xattr is present."
+        },
+        "quarantine_agent": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Application that downloaded the file (e.g. 'Safari', 'curl')."
+        },
+        "quarantine_timestamp": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "When the quarantine flag was applied."
+        },
+        "was_user_approved": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the user explicitly approved execution."
+        },
+        "was_translocated": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether app translocation was applied."
+        }
+      }
+    },
+    "Application": {
+      "type": "object",
+      "description": "A macOS application with code-signing, entitlement, and injection metadata.",
+      "required": [
+        "name",
+        "bundle_id",
+        "path",
+        "is_electron",
+        "is_system"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the application."
+        },
+        "bundle_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CFBundleIdentifier (e.g. 'com.apple.Safari')."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute filesystem path to the .app bundle."
+        },
+        "version": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "CFBundleShortVersionString."
+        },
+        "team_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Apple Developer Team ID from the code signature."
+        },
+        "hardened_runtime": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the Hardened Runtime is enabled. Null means code-signing analysis failed or state is unknown."
+        },
+        "library_validation": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether library validation is enforced. Null means code-signing analysis failed or state is unknown."
+        },
+        "is_electron": {
+          "type": "boolean",
+          "description": "Whether this is an Electron-based application."
+        },
+        "is_system": {
+          "type": "boolean",
+          "description": "Whether this is an Apple system application."
+        },
+        "signed": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the application has a valid code signature. Null means code-signing analysis failed or state is unknown."
+        },
+        "code_signing_analysis_error": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether code-signing analysis failed for this application. When true, signing posture fields are unknown and should not be treated as false."
+        },
+        "is_sip_protected": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the binary is protected by System Integrity Protection."
+        },
+        "is_sandboxed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the application runs in a sandbox."
+        },
+        "sandbox_exceptions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Sandbox exception entitlements."
+        },
+        "entitlements_available": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether entitlement extraction succeeded for this application. False means an empty entitlements list is unknown, not proven absent."
+        },
+        "entitlement_extraction_error": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Recoverable entitlement extraction error for this application, if entitlement availability is false."
+        },
+        "is_notarized": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the application is notarized by Apple (null if unknown)."
+        },
+        "is_adhoc_signed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the binary uses an ad-hoc signature (no team identity)."
+        },
+        "signing_certificate_cn": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Common Name of the leaf signing certificate."
+        },
+        "signing_certificate_sha256": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "SHA-256 fingerprint of the leaf signing certificate."
+        },
+        "certificate_expires": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "default": null,
+          "description": "Expiration date of the leaf signing certificate (ISO 8601)."
+        },
+        "is_certificate_expired": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the signing certificate has expired."
+        },
+        "certificate_chain_length": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "Number of certificates in the signing chain."
+        },
+        "certificate_trust_valid": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the full certificate chain is trusted."
+        },
+        "certificate_chain": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CertificateDetail" },
+          "default": [],
+          "description": "Full certificate chain from leaf to root."
+        },
+        "entitlements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EntitlementInfo" },
+          "default": [],
+          "description": "Entitlements embedded in the application binary."
+        },
+        "injection_methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "dyld_insert",
+              "dyld_insert_via_entitlement",
+              "missing_library_validation",
+              "electron_env_var"
+            ]
+          },
+          "default": [],
+          "description": "Code injection vectors applicable to this application."
+        },
+        "launch_constraint_category": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Launch constraint category, if any."
+        },
+        "sandbox_profile": {
+          "oneOf": [
+            { "$ref": "#/$defs/SandboxProfile" },
+            { "type": "null" }
+          ],
+          "default": null,
+          "description": "Parsed sandbox profile for this application, if sandboxed."
+        },
+        "quarantine_info": {
+          "oneOf": [
+            { "$ref": "#/$defs/QuarantineInfo" },
+            { "type": "null" }
+          ],
+          "default": null,
+          "description": "Gatekeeper quarantine metadata, if present."
+        }
+      }
+    },
+    "TCCGrant": {
+      "type": "object",
+      "description": "A TCC permission grant from the user or system TCC database.",
+      "required": [
+        "service",
+        "display_name",
+        "client",
+        "client_type",
+        "auth_value",
+        "auth_reason",
+        "scope",
+        "last_modified"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "type": "string",
+          "minLength": 1,
+          "description": "TCC service identifier (e.g. 'kTCCServiceSystemPolicyAllFiles')."
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable service name (e.g. 'Full Disk Access')."
+        },
+        "client": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bundle identifier of the client application."
+        },
+        "client_type": {
+          "type": "integer",
+          "description": "Client type code (0 = bundle ID, 1 = absolute path)."
+        },
+        "auth_value": {
+          "type": "integer",
+          "description": "Authorization value (0 = denied, 2 = allowed, 3 = limited)."
+        },
+        "auth_reason": {
+          "type": "integer",
+          "description": "How the grant was authorized (1 = user prompt, 2 = system settings, 3 = entitlement, 4 = MDM, 5 = system)."
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["user", "system"],
+          "description": "Whether the grant is from the user-level or system-level TCC database."
+        },
+        "last_modified": {
+          "type": "integer",
+          "description": "Unix timestamp of the last modification to this grant."
+        }
+      }
+    },
+    "TCCPolicy": {
+      "type": "object",
+      "description": "A TCC policy from an MDM configuration profile.",
+      "required": ["service", "client_bundle_id", "allowed"],
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "type": "string",
+          "minLength": 1,
+          "description": "TCC service name (e.g. 'SystemPolicyAllFiles')."
+        },
+        "client_bundle_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bundle identifier of the client this policy applies to."
+        },
+        "allowed": {
+          "type": "boolean",
+          "description": "Whether access is allowed by this policy."
+        }
+      }
+    },
+    "MDMProfile": {
+      "type": "object",
+      "description": "An installed MDM configuration profile.",
+      "required": ["identifier", "display_name"],
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Profile identifier (reverse-DNS)."
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable profile name."
+        },
+        "organization": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Organization that issued this profile."
+        },
+        "install_date": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "When the profile was installed."
+        },
+        "tcc_policies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TCCPolicy" },
+          "default": [],
+          "description": "TCC/PPPC policies embedded in this profile."
+        }
+      }
+    },
+    "KeychainItem": {
+      "type": "object",
+      "description": "Metadata for a Keychain item (no secret values are extracted).",
+      "required": ["label", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Keychain item label."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["generic_password", "internet_password", "certificate", "key"],
+          "description": "Type of Keychain item."
+        },
+        "service": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Service attribute (for password items)."
+        },
+        "access_group": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Keychain access group."
+        },
+        "trusted_apps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Bundle identifiers of applications in the ACL trust list."
+        },
+        "sensitivity": {
+          "type": ["string", "null"],
+          "enum": ["critical", "high", "medium", "low", null],
+          "default": null,
+          "description": "Assessed sensitivity level of this Keychain item."
+        }
+      }
+    },
+    "LaunchItem": {
+      "type": "object",
+      "description": "A persistence mechanism (LaunchDaemon, LaunchAgent, login item, cron, login hook).",
+      "required": ["label", "path", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Label identifier of the launch item."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the plist or configuration file."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["daemon", "agent", "login_item", "cron"],
+          "description": "Type of persistence mechanism."
+        },
+        "program": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Absolute path to the executable."
+        },
+        "run_at_load": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the item runs at load/login."
+        },
+        "user": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "User context the item runs under."
+        },
+        "plist_owner": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "File owner of the plist."
+        },
+        "program_owner": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "File owner of the executable."
+        },
+        "plist_writable_by_non_root": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the plist is writable by non-root users."
+        },
+        "program_writable_by_non_root": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the executable is writable by non-root users."
+        }
+      }
+    },
+    "XPCService": {
+      "type": "object",
+      "description": "An XPC service discovered via LaunchDaemon/LaunchAgent plists.",
+      "required": ["label", "path", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Service label."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the service plist."
+        },
+        "program": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Absolute path to the service executable."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["daemon", "agent"],
+          "description": "Whether the service is a daemon (root) or agent (user)."
+        },
+        "user": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "User context the service runs under."
+        },
+        "run_at_load": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the service is loaded automatically."
+        },
+        "keep_alive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether launchd keeps the service alive."
+        },
+        "mach_services": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Mach service names advertised by this XPC service."
+        },
+        "entitlements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Entitlement keys held by the service binary."
+        },
+        "has_client_verification": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the service implements client verification (code signing checks)."
+        }
+      }
+    },
+    "LocalGroup": {
+      "type": "object",
+      "description": "A local group on the macOS system.",
+      "required": ["name", "gid"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Group name."
+        },
+        "gid": {
+          "type": "integer",
+          "description": "Numeric group ID."
+        },
+        "members": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Usernames that are members of this group."
+        }
+      }
+    },
+    "RemoteAccessService": {
+      "type": "object",
+      "description": "A remote access service (SSH or Screen Sharing).",
+      "required": ["service", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "type": "string",
+          "enum": ["ssh", "screen_sharing"],
+          "description": "Service type."
+        },
+        "enabled": {
+          "type": ["boolean", "null"],
+          "description": "Whether the service is enabled. Null means collection could not determine state."
+        },
+        "port": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "Listening port number."
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "default": {},
+          "description": "Key-value pairs of relevant configuration options."
+        }
+      }
+    },
+    "FirewallAppRule": {
+      "type": "object",
+      "description": "A per-application firewall rule.",
+      "required": ["bundle_id", "allow_incoming"],
+      "additionalProperties": false,
+      "properties": {
+        "bundle_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bundle identifier of the application."
+        },
+        "allow_incoming": {
+          "type": ["boolean", "null"],
+          "description": "Whether incoming connections are allowed for this application. Null means the ALF rule state was missing or unreadable."
+        }
+      }
+    },
+    "FirewallStatus": {
+      "type": "object",
+      "description": "macOS application firewall status.",
+      "required": ["enabled", "stealth_mode", "allow_signed", "allow_built_in"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": ["boolean", "null"],
+          "description": "Whether the application firewall is enabled. Null means collection could not determine state."
+        },
+        "stealth_mode": {
+          "type": ["boolean", "null"],
+          "description": "Whether stealth mode is active. Null means collection could not determine state."
+        },
+        "allow_signed": {
+          "type": ["boolean", "null"],
+          "description": "Whether signed applications are automatically allowed. Null means collection could not determine state."
+        },
+        "allow_built_in": {
+          "type": ["boolean", "null"],
+          "description": "Whether built-in (Apple) applications are automatically allowed. Null means collection could not determine state."
+        },
+        "app_rules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/FirewallAppRule" },
+          "default": [],
+          "description": "Per-application firewall rules."
+        }
+      }
+    },
+    "LoginSession": {
+      "type": "object",
+      "description": "An active login session at the time of scan.",
+      "required": ["username", "terminal", "login_time", "session_type"],
+      "additionalProperties": false,
+      "properties": {
+        "username": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Username of the logged-in user."
+        },
+        "terminal": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Terminal device (e.g. 'console', 'ttys000')."
+        },
+        "login_time": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Login time string."
+        },
+        "session_type": {
+          "type": "string",
+          "enum": ["console", "ssh", "screen_sharing", "tmux"],
+          "description": "Type of login session."
+        }
+      }
+    },
+    "AuthorizationRight": {
+      "type": "object",
+      "description": "A right from the macOS authorization database.",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Authorization right name (e.g. 'system.privilege.admin')."
+        },
+        "rule": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Rule that governs this right (e.g. 'authenticate-admin-nonshared', 'allow')."
+        },
+        "allow_root": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether root is automatically granted this right."
+        },
+        "require_authentication": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether user authentication is required."
+        }
+      }
+    },
+    "AuthorizationPlugin": {
+      "type": "object",
+      "description": "A third-party SecurityAgent plugin.",
+      "required": ["name", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Plugin name."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path to the plugin bundle."
+        },
+        "team_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Apple Developer Team ID of the plugin signer."
+        }
+      }
+    },
+    "SystemExtension": {
+      "type": "object",
+      "description": "A macOS system extension (network, endpoint security, or driver).",
+      "required": ["identifier", "extension_type", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Extension bundle identifier."
+        },
+        "team_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Apple Developer Team ID."
+        },
+        "extension_type": {
+          "type": "string",
+          "enum": ["network", "endpoint_security", "driver"],
+          "description": "Type of system extension."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the extension is currently enabled."
+        },
+        "subscribed_events": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "ESF event types the extension subscribes to (endpoint_security type only)."
+        }
+      }
+    },
+    "SudoersRule": {
+      "type": "object",
+      "description": "A parsed sudoers rule, focusing on NOPASSWD entries.",
+      "required": ["user", "command", "nopasswd"],
+      "additionalProperties": false,
+      "properties": {
+        "user": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Username or group the rule applies to."
+        },
+        "host": {
+          "type": "string",
+          "default": "ALL",
+          "description": "Host specification."
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Command specification (e.g. 'ALL', '/usr/bin/dscl')."
+        },
+        "nopasswd": {
+          "type": "boolean",
+          "description": "Whether NOPASSWD is set for this rule."
+        }
+      }
+    },
+    "RunningProcess": {
+      "type": "object",
+      "description": "A running process captured at scan time.",
+      "required": ["pid", "user", "command"],
+      "additionalProperties": false,
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "description": "Process ID."
+        },
+        "user": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Username the process is running as."
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Full command path or command line."
+        },
+        "bundle_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Bundle identifier of the associated application, if any."
+        }
+      }
+    },
+    "UserDetail": {
+      "type": "object",
+      "description": "A local or AD-bound user account.",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Username."
+        },
+        "shell": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Login shell path."
+        },
+        "home_dir": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Home directory path."
+        },
+        "is_hidden": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this is a hidden/system user."
+        },
+        "is_ad_user": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this user originates from Active Directory."
+        }
+      }
+    },
+    "FileACL": {
+      "type": "object",
+      "description": "ACL and permission metadata for a security-critical file or directory.",
+      "required": ["path", "owner", "group", "mode", "category"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path to the file or directory."
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File owner username."
+        },
+        "group": {
+          "type": "string",
+          "minLength": 1,
+          "description": "File group name."
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Octal permission mode (e.g. '644', '775')."
+        },
+        "acl_entries": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Extended ACL entries, if any."
+        },
+        "is_sip_protected": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the file is protected by SIP."
+        },
+        "is_writable_by_non_root": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether any non-root user can write to this file."
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "tcc_database",
+            "keychain",
+            "sudoers",
+            "ssh_config",
+            "launch_agent_dir",
+            "launch_daemon_dir",
+            "authorization_db",
+            "shell_hook"
+          ],
+          "description": "Functional category of this file for risk assessment."
+        }
+      }
+    },
+    "BluetoothDevice": {
+      "type": "object",
+      "description": "A paired Bluetooth device.",
+      "required": ["name", "address", "device_type", "connected"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Device display name."
+        },
+        "address": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bluetooth MAC address."
+        },
+        "device_type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Device type (e.g. 'Keyboard', 'Mouse', 'Headphones')."
+        },
+        "connected": {
+          "type": "boolean",
+          "description": "Whether the device is currently connected."
+        }
+      }
+    },
+    "ADGroupMapping": {
+      "type": "object",
+      "description": "A mapping from an Active Directory group to a local macOS group.",
+      "required": ["ad_group", "local_group"],
+      "additionalProperties": false,
+      "properties": {
+        "ad_group": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Active Directory group name."
+        },
+        "local_group": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Local macOS group name."
+        }
+      }
+    },
+    "ADBinding": {
+      "type": "object",
+      "description": "Active Directory binding configuration.",
+      "required": ["is_bound"],
+      "additionalProperties": false,
+      "properties": {
+        "is_bound": {
+          "type": "boolean",
+          "description": "Whether the Mac is bound to Active Directory."
+        },
+        "realm": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "AD realm/domain name."
+        },
+        "forest": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "AD forest name."
+        },
+        "computer_account": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Computer account name in AD."
+        },
+        "organizational_unit": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Organizational unit the computer is placed in."
+        },
+        "preferred_dc": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Preferred domain controller hostname."
+        },
+        "group_mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ADGroupMapping" },
+          "default": [],
+          "description": "AD-to-local group mappings."
+        }
+      }
+    },
+    "KerberosArtifact": {
+      "type": "object",
+      "description": "A Kerberos artifact (credential cache, keytab, or krb5.conf).",
+      "required": ["path", "artifact_type"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path to the artifact."
+        },
+        "artifact_type": {
+          "type": "string",
+          "enum": ["ccache", "keytab", "config"],
+          "description": "Type of Kerberos artifact."
+        },
+        "owner": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "File owner username."
+        },
+        "group": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "File group name."
+        },
+        "mode": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Octal permission mode."
+        },
+        "modification_time": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "default": null,
+          "description": "Last modification time (ISO 8601)."
+        },
+        "principal_hint": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Kerberos principal name hint (from filename or metadata, never from credential content)."
+        },
+        "is_readable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the artifact is readable by the collector."
+        },
+        "is_world_readable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the artifact is world-readable."
+        },
+        "is_group_readable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the artifact is group-readable."
+        },
+        "default_realm": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Default Kerberos realm from krb5.conf (config type only)."
+        },
+        "permitted_enc_types": {
+          "type": ["array", "null"],
+          "items": { "type": "string" },
+          "default": null,
+          "description": "Permitted encryption types from krb5.conf."
+        },
+        "realm_names": {
+          "type": ["array", "null"],
+          "items": { "type": "string" },
+          "default": null,
+          "description": "Realm names configured in krb5.conf."
+        },
+        "is_forwardable": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether tickets are forwardable by default (krb5.conf)."
+        }
+      }
+    },
+    "CollectionError": {
+      "type": "object",
+      "description": "A non-fatal error encountered during data collection.",
+      "required": ["source", "message", "recoverable"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Collector module that generated the error."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable error description."
+        },
+        "recoverable": {
+          "type": "boolean",
+          "description": "Whether the collector continued after this error."
+        }
+      }
+    }
+  }
+}

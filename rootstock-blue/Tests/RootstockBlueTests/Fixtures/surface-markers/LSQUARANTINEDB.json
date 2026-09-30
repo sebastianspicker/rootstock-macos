@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "/Users/kim/jsonl-one",
+        "lsqdb.risk_tags" : "jsonl_tag,quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/ls_quarantine_db_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "jsonl-name",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/ls_quarantine_db_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "primary-name",
+        "lsqdb.notes" : "synthetic note",
+        "lsqdb.path" : "/Users/alice/Library/Markers/primary",
+        "lsqdb.risk_tags" : "custom_a,custom_b,custom_a,quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "kind-only",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "/Users/erin/bin/tool",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "label-only",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "42",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "/Users/Shared/shared-marker",
+        "lsqdb.risk_tags" : ",quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "/Users/ivy/fractional",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "/Users/jack/bad-time",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "single-kind",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "surface-label",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:lsqdb|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "ls.quarantine_db",
+      "fields" : {
+        "event.type" : "ls.quarantine_db",
+        "lsqdb.name" : "",
+        "lsqdb.notes" : "LS QuarantineEvents depth markers - never deletes QuarantineEvents rows or clears LS quarantine history",
+        "lsqdb.path" : "/Users/nia/array-entry",
+        "lsqdb.risk_tags" : "quarantine_db_surface",
+        "lsqdb.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/ls_quarantine_db_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "LSQUARANTINEDB"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "LS QuarantineEvents depth markers",
+    "id" : "LSQUARANTINEDB",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

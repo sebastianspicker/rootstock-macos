@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "/Users/kim/jsonl-one",
+        "hlthpath.risk_tags" : "jsonl_tag,health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/health_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "jsonl-name",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/health_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "primary-name",
+        "hlthpath.notes" : "synthetic note",
+        "hlthpath.path" : "/Users/alice/Library/Markers/primary",
+        "hlthpath.risk_tags" : "custom_a,custom_b,custom_a,health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "kind-only",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "/Users/erin/bin/tool",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "label-only",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "42",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "/Users/Shared/shared-marker",
+        "hlthpath.risk_tags" : ",health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "/Users/ivy/fractional",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "/Users/jack/bad-time",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "single-kind",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "surface-label",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:hlthpath|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "health.path",
+      "fields" : {
+        "event.type" : "health.path",
+        "hlthpath.name" : "",
+        "hlthpath.notes" : "Health path plane markers - never exports HealthKit samples or medical records",
+        "hlthpath.path" : "/Users/nia/array-entry",
+        "hlthpath.risk_tags" : "health_surface",
+        "hlthpath.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/health_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "HLTHPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Health path plane markers",
+    "id" : "HLTHPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

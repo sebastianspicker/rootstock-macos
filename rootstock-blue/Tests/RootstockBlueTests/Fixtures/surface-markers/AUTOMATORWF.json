@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "/Users/kim/jsonl-one",
+        "automator.risk_tags" : "jsonl_tag,workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/automator_workflow.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "jsonl-name",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/automator_workflow.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "primary-name",
+        "automator.notes" : "synthetic note",
+        "automator.path" : "/Users/alice/Library/Markers/primary",
+        "automator.risk_tags" : "custom_a,custom_b,custom_a,workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "kind-only",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "/Users/erin/bin/tool",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "label-only",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "42",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "/Users/Shared/shared-marker",
+        "automator.risk_tags" : ",workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "/Users/ivy/fractional",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "/Users/jack/bad-time",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "single-kind",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "surface-label",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:automator|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "automator.workflow",
+      "fields" : {
+        "automator.name" : "",
+        "automator.notes" : "Automator workflow delivery markers - never executes Automator workflows or plants malicious .workflow bundles",
+        "automator.path" : "/Users/nia/array-entry",
+        "automator.risk_tags" : "workflow_surface",
+        "automator.secrets_exported" : "false",
+        "event.type" : "automator.workflow",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/automator_workflow.json",
+      "source" : "parser",
+      "sourcePlugin" : "AUTOMATORWF"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Automator workflow delivery markers",
+    "id" : "AUTOMATORWF",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

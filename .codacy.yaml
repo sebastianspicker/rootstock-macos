@@ -1,6 +1,4 @@
 exclude_paths:
-  - ".repowise/**"
-  - "**/.repowise/**"
   - "archive/**"
   - "release/**"
   - "docs/archive/**"

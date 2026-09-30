@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import RootstockMacFacts
 
 /// Scans the filesystem for Kerberos artifacts (ccache, keytab, krb5.conf).
 ///
@@ -15,8 +16,8 @@ public struct KerberosArtifactDataSource: DataSource {
 
     /// Well-known paths to scan for Kerberos artifacts.
     static let ccachePaths = ["/tmp", "/var/db/krb5cc"]
-    static let keytabPaths = ["/etc/krb5.keytab"]
-    static let configPaths = ["/etc/krb5.conf", "/Library/Preferences/edu.mit.Kerberos"]
+    static let keytabPaths = [MacSecurityPaths.krb5Keytabs]
+    static let configPaths = [MacSecurityPaths.krb5Conf, "/Library/Preferences/edu.mit.Kerberos"]
 
     public init() {}
 

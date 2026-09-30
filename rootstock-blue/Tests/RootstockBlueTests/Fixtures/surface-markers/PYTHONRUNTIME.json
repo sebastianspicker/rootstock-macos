@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "/Users/kim/jsonl-one",
+        "pyrun.risk_tags" : "jsonl_tag,python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/python_runtime_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "jsonl-name",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/python_runtime_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "primary-name",
+        "pyrun.notes" : "synthetic note",
+        "pyrun.path" : "/Users/alice/Library/Markers/primary",
+        "pyrun.risk_tags" : "custom_a,custom_b,custom_a,python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "kind-only",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "/Users/erin/bin/tool",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "label-only",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "42",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "/Users/Shared/shared-marker",
+        "pyrun.risk_tags" : ",python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "/Users/ivy/fractional",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "/Users/jack/bad-time",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "single-kind",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "surface-label",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:pyrun|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "python.runtime",
+      "fields" : {
+        "event.type" : "python.runtime",
+        "pyrun.name" : "",
+        "pyrun.notes" : "Python runtime dual-use markers - never executes third-party Python payloads or drops malicious site-packages",
+        "pyrun.path" : "/Users/nia/array-entry",
+        "pyrun.risk_tags" : "python_surface",
+        "pyrun.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/python_runtime_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "PYTHONRUNTIME"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Python runtime dual-use markers",
+    "id" : "PYTHONRUNTIME",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

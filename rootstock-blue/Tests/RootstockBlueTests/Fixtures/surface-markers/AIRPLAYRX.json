@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "/Users/kim/jsonl-one",
+        "airplayrx.risk_tags" : "jsonl_tag,airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/airplay_receiver_surface.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "jsonl-name",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/airplay_receiver_surface.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "primary-name",
+        "airplayrx.notes" : "synthetic note",
+        "airplayrx.path" : "/Users/alice/Library/Markers/primary",
+        "airplayrx.risk_tags" : "custom_a,custom_b,custom_a,airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "kind-only",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "/Users/erin/bin/tool",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "label-only",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "42",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "/Users/Shared/shared-marker",
+        "airplayrx.risk_tags" : ",airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "/Users/ivy/fractional",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "/Users/jack/bad-time",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "single-kind",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "surface-label",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:airplayrx|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "airplay.receiver",
+      "fields" : {
+        "airplayrx.name" : "",
+        "airplayrx.notes" : "AirPlay receiver dual-use markers - never enables AirPlay Receiver or spoofs AirPlay targets",
+        "airplayrx.path" : "/Users/nia/array-entry",
+        "airplayrx.risk_tags" : "airplay_surface",
+        "airplayrx.secrets_exported" : "false",
+        "event.type" : "airplay.receiver",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/airplay_receiver_surface.json",
+      "source" : "parser",
+      "sourcePlugin" : "AIRPLAYRX"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "AirPlay receiver dual-use markers",
+    "id" : "AIRPLAYRX",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

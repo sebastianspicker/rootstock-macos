@@ -37,8 +37,8 @@ folio. The graph also offers system, light, and dark themes. Severity has a
 text label as well as a color; inference uses labels and dashed relationships.
 
 Use the existing CSS variables for text, surfaces, borders, actions, and
-severity. The base palette lives in `graph/viewer-css/base.css`; folio styles
-and dark-theme overrides live in `graph/viewer-css/folio.css`. Read those
+severity. The base palette lives in `graph/viewer/css/base.css`; folio styles
+and dark-theme overrides live in `graph/viewer/css/folio.css`. Read those
 files for the current values.
 
 Use the UI font stack for prose and controls. Use the monospace stack for
@@ -69,10 +69,13 @@ technology.
 
 ## Editing the interface
 
-Edit TypeScript in `graph/viewer-src/` and CSS in `graph/viewer-css/`, then run:
+Edit TypeScript in `graph/viewer/src/` and CSS in `graph/viewer/css/`, then run
+from `graph/viewer`:
 
 ```sh
+npm ci --ignore-scripts
 npm run bundle
+cd ../..
 sh scripts/verify web
 ```
 

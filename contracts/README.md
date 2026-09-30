@@ -12,7 +12,11 @@ object. Each producer keeps its own wire format, owner, and compatibility rule.
 | [Red findings JSONL to Blue](red-findings-to-blue-jsonl/v1/README.md) | `red-findings-to-blue-jsonl/v1/` | Red `JSONLReporter` | Blue `FindingsJSONLImporter` | The producer record is strict; the retained consumer deliberately defaults missing fields and is therefore only object-shaped. |
 
 `scripts/check-contracts.py` checks valid and invalid fixtures, JSON Schema
-format constraints, and rules that span multiple records. Run it with the
+format constraints, and rules that span multiple records. For the collector
+scan it also requires the encoder golden fixture to cover every schema
+property the collector emits, and it requires every packaged mirror under
+`graph/src/rootstock_graph/resources/contracts/` to be byte-identical to its
+canonical file. Run it with the
 graph package's locked environment:
 
 ```bash

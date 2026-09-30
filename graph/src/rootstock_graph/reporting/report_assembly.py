@@ -9,24 +9,22 @@ from datetime import datetime, timezone
 from tabulate import tabulate
 
 from .query_runner import discover_queries
-from .report_html import markdown_to_html as markdown_to_html
-from .report_recommendations import _append_recommendations_section
+from .report_recommendations import append_recommendations_section
 from .report_sections import (
-    _append_extended_query_sections,
-    _append_threat_landscape,
-    _append_vulnerability_mapping,
-    _collect_active_categories,
+    append_extended_query_sections,
+    append_threat_landscape,
+    append_vulnerability_mapping,
+    collect_active_categories,
 )
-from .report_diagrams import (
+from .report_campaign_diagrams import (
     format_family_findings_section,
     format_multi_plane_campaign_section,
     format_multi_plane_severity_board,
     format_purple_engagement_matrix,
     format_kill_chain_stage_timeline,
     format_fleet_campaign_dashboard,
-    mermaid_attack_paths_block,
-    mermaid_tcc_pie,
 )
+from .report_diagrams import mermaid_attack_paths_block, mermaid_tcc_pie
 from .report_formatters import (
     escape_report_value,
     format_generic_table,
@@ -39,7 +37,7 @@ from .report_formatters import (
 )
 
 
-__all__ = ["assemble_report", "markdown_to_html"]
+__all__ = ["assemble_report"]
 
 
 @dataclass
@@ -413,16 +411,16 @@ def _append_report_body(
     """Append sections in the stable public report order from normalized rows."""
     _append_vulnerability_intelligence(sections)
     _append_core_finding_sections(sections, rows)
-    _append_extended_query_sections(
+    append_extended_query_sections(
         sections,
         query_results,
         queries,
         rows.tier_counts,
         rows.icloud[0],
     )
-    _append_vulnerability_mapping(
+    append_vulnerability_mapping(
         sections,
-        _collect_active_categories(
+        collect_active_categories(
             query_results,
             rows.injectable,
             rows.electron,
@@ -431,8 +429,8 @@ def _append_report_body(
             rows.certificate,
         ),
     )
-    _append_threat_landscape(sections, query_results)
-    _append_recommendations_section(
+    append_threat_landscape(sections, query_results)
+    append_recommendations_section(
         sections,
         query_results,
         rows,

@@ -30,7 +30,8 @@ from typing import Any
 from tabulate import tabulate
 
 from ..paths import package_resource_dir
-from ..utils import first_cypher_statement, list_or_str, run_query
+from ..cypher import first_cypher_statement, run_query
+from .value_format import list_or_str
 
 try:
     from neo4j.exceptions import Neo4jError

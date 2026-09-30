@@ -30,7 +30,7 @@ from pathlib import Path
 from neo4j import GraphDatabase
 from neo4j.exceptions import DriverError, Neo4jError
 
-from ..utils import sanitize_id, truncate
+from .report_diagram_common import sanitize_id, truncate
 
 
 # ── Color / Style Tables ──────────────────────────────────────────────────────

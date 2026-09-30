@@ -22,7 +22,7 @@ from ..constants import (
     CRITICAL_FINDING_COUNT_PROPERTY,
     HIGH_FINDING_COUNT_PROPERTY,
 )
-from .category_predicates import RISK_CATEGORY_PREDICATES
+from ..category_predicates import RISK_CATEGORY_PREDICATES
 
 
 # Categories that count as critical findings

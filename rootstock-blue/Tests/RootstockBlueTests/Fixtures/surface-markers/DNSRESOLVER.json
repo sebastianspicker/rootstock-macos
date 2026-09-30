@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "/Users/kim/jsonl-one",
+        "dnsres.risk_tags" : "jsonl_tag,dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/dns_resolver_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "jsonl-name",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/dns_resolver_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "primary-name",
+        "dnsres.notes" : "synthetic note",
+        "dnsres.path" : "/Users/alice/Library/Markers/primary",
+        "dnsres.risk_tags" : "custom_a,custom_b,custom_a,dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "kind-only",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "/Users/erin/bin/tool",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "label-only",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "42",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "/Users/Shared/shared-marker",
+        "dnsres.risk_tags" : ",dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "/Users/ivy/fractional",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "/Users/jack/bad-time",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "single-kind",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "surface-label",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:dnsres|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "dns.resolver",
+      "fields" : {
+        "dnsres.name" : "",
+        "dnsres.notes" : "DNS resolver dual-use markers - never rewrites resolver config or poisons DNS caches",
+        "dnsres.path" : "/Users/nia/array-entry",
+        "dnsres.risk_tags" : "dns_surface",
+        "dnsres.secrets_exported" : "false",
+        "event.type" : "dns.resolver",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/dns_resolver_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "DNSRESOLVER"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "DNS resolver dual-use markers",
+    "id" : "DNSRESOLVER",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

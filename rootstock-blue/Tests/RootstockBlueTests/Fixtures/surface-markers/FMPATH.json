@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "/Users/kim/jsonl-one",
+        "fmpath.risk_tags" : "jsonl_tag,findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/findmy_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "jsonl-name",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/findmy_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "primary-name",
+        "fmpath.notes" : "synthetic note",
+        "fmpath.path" : "/Users/alice/Library/Markers/primary",
+        "fmpath.risk_tags" : "custom_a,custom_b,custom_a,findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "kind-only",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "/Users/erin/bin/tool",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "label-only",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "42",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "/Users/Shared/shared-marker",
+        "fmpath.risk_tags" : ",findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "/Users/ivy/fractional",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "/Users/jack/bad-time",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "single-kind",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "surface-label",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fmpath|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "findmy.path",
+      "fields" : {
+        "event.type" : "findmy.path",
+        "fmpath.name" : "",
+        "fmpath.notes" : "Find My path plane markers - never queries Find My device locations or dumps owner tokens",
+        "fmpath.path" : "/Users/nia/array-entry",
+        "fmpath.risk_tags" : "findmy_surface",
+        "fmpath.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/findmy_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "FMPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Find My path plane markers",
+    "id" : "FMPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

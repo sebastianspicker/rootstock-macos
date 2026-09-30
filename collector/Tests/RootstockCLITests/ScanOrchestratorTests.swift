@@ -1,50 +1,58 @@
-import XCTest
+import Testing
 @testable import Models
 @testable import RootstockCLI
 
-final class ScanOrchestratorTests: XCTestCase {
-    func testModuleConfigNormalizesWhitespaceAndDuplicates() throws {
+@Suite struct ScanOrchestratorTests {
+    @Test func moduleConfigNormalizesWhitespaceAndDuplicates() throws {
         let config = try ScanOrchestrator.ModuleConfig.from(" tcc, entitlements, tcc ")
 
-        XCTAssertEqual(config.selectedModuleNames, ["entitlements", "tcc"])
-        XCTAssertTrue(config.includes(.tcc))
-        XCTAssertTrue(config.includes(.entitlements))
-        XCTAssertFalse(config.includes(.xpc))
+        #expect(config.selectedModuleNames == ["entitlements", "tcc"])
+        #expect(config.includes(.tcc))
+        #expect(config.includes(.entitlements))
+        #expect(!(config.includes(.xpc)))
     }
 
-    func testModuleConfigAllSelectsEveryModule() throws {
+    @Test func moduleConfigAllSelectsEveryModule() throws {
         let config = try ScanOrchestrator.ModuleConfig.from("all, tcc")
 
-        XCTAssertEqual(config.selectedModuleNames, Set(RootstockModuleID.allCases.map(\.rawValue)))
+        #expect(config.selectedModuleNames == Set(RootstockModuleID.allCases.map(\.rawValue)))
     }
 
-    func testModuleConfigRejectsSortedUnknownModules() {
-        XCTAssertThrowsError(try ScanOrchestrator.ModuleConfig.from("tcc, zebra, alpha")) { error in
+    @Test func moduleConfigRejectsSortedUnknownModules() {
+        do {
+            _ = try ScanOrchestrator.ModuleConfig.from("tcc, zebra, alpha")
+            Issue.record("Expected error to be thrown")
+        } catch {
             guard case let .unknownModules(modules) = error as? RootstockModuleConfigError else {
-                return XCTFail("Expected unknown module error, got \(error)")
+                Issue.record("Expected unknown module error, got \(error)")
+                return
             }
-            XCTAssertEqual(modules, ["alpha", "zebra"])
+            #expect(modules == ["alpha", "zebra"])
         }
     }
 
-    func testApplicationEnrichmentsRequireEntitlements() {
+    @Test func applicationEnrichmentsRequireEntitlements() {
         for module in ["sandbox", "quarantine", "sandbox, quarantine"] {
-            XCTAssertThrowsError(try ScanOrchestrator.ModuleConfig.from(module)) { error in
+            do {
+                _ = try ScanOrchestrator.ModuleConfig.from(module)
+                Issue.record("Expected error to be thrown")
+            } catch {
                 guard case let .missingPrerequisites(messages) = error as? RootstockModuleConfigError else {
-                    return XCTFail("Expected entitlement prerequisite error, got \(error)")
+                    Issue.record("Expected entitlement prerequisite error, got \(error)")
+                    continue
                 }
-                XCTAssertFalse(messages.isEmpty)
-                XCTAssertTrue(messages.allSatisfy { $0.contains("requires module 'entitlements'") })
+                #expect(!messages.isEmpty)
+                #expect(messages.allSatisfy { $0.contains("requires module 'entitlements'") })
             }
         }
     }
 
-    func testInjectedExecutionReturnsCanonicalScanWithoutHostCollection() async throws {
+    @Test func injectedExecutionReturnsCanonicalScanWithoutHostCollection() async throws {
         let expected = canonicalScan()
         let orchestrator = ScanOrchestrator(
             verbose: false,
             execution: .injected { config in
-                XCTAssertTrue(config.includes(.tcc))
+                #expect(config.includes(.tcc))
                 return expected
             }
         )
@@ -52,12 +60,12 @@ final class ScanOrchestratorTests: XCTestCase {
 
         let actual = await orchestrator.run(config: config)
 
-        XCTAssertEqual(actual.scanId, "canonical-scan")
-        XCTAssertEqual(actual.timestamp, "2026-09-04T00:00:00Z")
-        XCTAssertEqual(actual.hostname, "fixture-host")
-        XCTAssertEqual(actual.collectorVersion, "0.1.0-alpha.1")
-        XCTAssertTrue(actual.applications.isEmpty)
-        XCTAssertTrue(actual.errors.isEmpty)
+        #expect(actual.scanId == "canonical-scan")
+        #expect(actual.timestamp == "2026-09-04T00:00:00Z")
+        #expect(actual.hostname == "fixture-host")
+        #expect(actual.collectorVersion == "0.1.0-alpha.1")
+        #expect(actual.applications.isEmpty)
+        #expect(actual.errors.isEmpty)
     }
 
     private func canonicalScan() -> ScanResult {

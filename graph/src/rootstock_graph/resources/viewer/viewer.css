@@ -1,5 +1,5 @@
-/* Rootstock Graph Viewer CSS — assembled by scripts/bundle-viewer-css.mjs */
-/* Source modules: graph/viewer-css/  |  rebuild: npm run bundle:css */
+/* Rootstock Graph Viewer CSS — assembled by graph/viewer/scripts/bundle-viewer-css.mjs */
+/* Source modules: graph/viewer/css/  |  rebuild: npm --prefix graph/viewer run bundle:css */
 /* Graphite Laboratory v2 */
 
 /* ===== tokens.css ===== */

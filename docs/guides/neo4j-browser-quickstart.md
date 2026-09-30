@@ -43,7 +43,7 @@ The compose file creates `rootstock-neo4j` and maps ports 7474 and 7687 on
 Validate the scan and create the graph constraints before importing:
 
 ```sh
-uv run --project graph --locked python scripts/validate-scan.py /path/to/scan.json
+uv run --project graph --locked rootstock-graph-validate-scan /path/to/scan.json
 uv run --project graph --locked rootstock-graph-setup-schema
 uv run --project graph --locked rootstock-graph-import-scan \
   --input /path/to/scan.json --neo4j bolt://localhost:7687

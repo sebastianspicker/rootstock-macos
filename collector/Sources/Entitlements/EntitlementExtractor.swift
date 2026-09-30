@@ -2,6 +2,7 @@ import Foundation
 import Security
 import os.log
 import Models
+import HostCommand
 
 /// Entitlement extraction result with explicit uncertainty.
 public struct EntitlementExtractionResult {

@@ -7,7 +7,8 @@ import html as html_mod
 
 from tabulate import tabulate
 
-from ..utils import list_or_str
+from ..vulnerability.cve_reference_models import AttackContext
+from .value_format import list_or_str
 
 logger = logging.getLogger(__name__)
 
@@ -397,8 +398,6 @@ def format_vulnerability_summary(contexts: list) -> str:
     When live enrichment data (EPSS + CISA KEV) is available, includes EPSS score
     and KEV status columns and sorts by EPSS descending (more actionable than CVSS).
     """
-    from ..vulnerability.cve_reference import AttackContext  # deferred to avoid circular import
-
     if not contexts:
         return "_No CVE or ATT&CK references applicable to findings on this host._"
 

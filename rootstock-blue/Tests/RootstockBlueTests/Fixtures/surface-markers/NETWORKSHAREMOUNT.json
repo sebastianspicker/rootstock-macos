@@ -1,0 +1,424 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/kim/jsonl-one",
+        "share.risk_tags" : "jsonl_tag,share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/network_share_mount.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "jsonl-name",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/network_share_mount.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/Users/lee/jsonl-tile"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.depth" : "2",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/lee/jsonl-tile",
+        "share.risk_tags" : "share_surface",
+        "share.runs_script" : "true",
+        "share.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/network_share_mount.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.depth" : "3",
+        "share.name" : "primary-name",
+        "share.notes" : "synthetic note",
+        "share.path" : "/Users/alice/Library/Markers/primary",
+        "share.risk_tags" : "custom_a,custom_b,custom_a,share_surface",
+        "share.runs_script" : "true",
+        "share.secrets_exported" : "false",
+        "share.share_url" : "smb://share.example.invalid/x",
+        "share.tool_present" : "true",
+        "share.url_host" : "host.example.invalid",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|rule-only"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "rule-only",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/bob/tile",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "bob"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "kind-only",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/erin/bin/tool",
+        "share.risk_tags" : "share_surface",
+        "share.runs_script" : "true",
+        "share.secrets_exported" : "false",
+        "share.tool_present" : "true",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "label-only",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/frank/handler",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "frank"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.depth" : "deep",
+        "share.name" : "42",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "share.url_host" : "7",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/Shared/shared-marker",
+        "share.risk_tags" : ",share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|rule-name-only"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "rule-name-only",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "hank"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/private/var/tile-no-user"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/private/var/tile-no-user",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/ivy/fractional",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/jack/bad-time",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "single-kind",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "surface-label",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/private/var/tile-only"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/private/var/tile-only",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "share.share_url" : "smb://share.example.invalid/one",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/TileOnly/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/Users/nia/array-entry",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/network_share_mount.json",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:share|/opt/handler"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "network.share_mount",
+      "fields" : {
+        "event.type" : "network.share_mount",
+        "share.name" : "",
+        "share.notes" : "Network share mount markers - never mounts attacker shares or writes credentials to NetAuth",
+        "share.path" : "/opt/handler",
+        "share.risk_tags" : "share_surface",
+        "share.secrets_exported" : "false",
+        "user.name" : "mo"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/network_share_mount.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "NETWORKSHAREMOUNT"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Network share mount surface markers",
+    "id" : "NETWORKSHAREMOUNT",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

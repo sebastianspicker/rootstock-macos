@@ -1,6 +1,6 @@
 # Collector benchmarks
 
-Use `scripts/benchmark.sh` to compare collector runs on the same Mac. It runs
+Use `collector/scripts/benchmark.sh` to compare collector runs on the same Mac. It runs
 real host collection, so its output contains private data and belongs outside
 version control.
 
@@ -10,7 +10,7 @@ From the repository root:
 
 ```sh
 (cd collector && swift build -c release)
-bash scripts/benchmark.sh
+bash collector/scripts/benchmark.sh
 ```
 
 The script needs the release binary, Python 3, `bc`, macOS `/usr/bin/time`, and
@@ -30,7 +30,7 @@ appends a Markdown result table to `docs/private/benchmark-results.md`. To
 change the table destination:
 
 ```sh
-BENCHMARK_OUTPUT=/private/path/benchmark-results.md bash scripts/benchmark.sh
+BENCHMARK_OUTPUT=/private/path/benchmark-results.md bash collector/scripts/benchmark.sh
 ```
 
 `BENCHMARK_OUTPUT` does not change the scan and timing-log paths. The collector

@@ -1,5 +1,7 @@
 import Foundation
 import Models
+import RootstockMacFacts
+import HostCommand
 
 /// Scans installed MDM configuration profiles and extracts TCC policy payloads.
 ///
@@ -109,7 +111,7 @@ struct MDMProfileScanner {
 
     private func tccServices(from item: [String: Any]) -> [String: Any] {
         guard let payloadType = item["PayloadType"] as? String,
-              payloadType == "com.apple.TCC.configuration-profile-policy",
+              payloadType == MacSecurityPaths.pppcPayloadType,
               let payloadContent = item["PayloadContent"] as? [String: Any],
               let services = payloadContent["Services"] as? [String: Any] else {
             return [:]

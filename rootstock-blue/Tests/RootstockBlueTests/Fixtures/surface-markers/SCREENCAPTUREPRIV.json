@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "/Users/kim/jsonl-one",
+        "scpriv.risk_tags" : "jsonl_tag,capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/screencapture_privacy_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "jsonl-name",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/screencapture_privacy_dualuse.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "primary-name",
+        "scpriv.notes" : "synthetic note",
+        "scpriv.path" : "/Users/alice/Library/Markers/primary",
+        "scpriv.risk_tags" : "custom_a,custom_b,custom_a,capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "kind-only",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "/Users/erin/bin/tool",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "label-only",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "42",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "/Users/Shared/shared-marker",
+        "scpriv.risk_tags" : ",capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "/Users/ivy/fractional",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "/Users/jack/bad-time",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "single-kind",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "surface-label",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:scpriv|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "screencapture.privacy",
+      "fields" : {
+        "event.type" : "screencapture.privacy",
+        "scpriv.name" : "",
+        "scpriv.notes" : "ScreenCapture privacy dual-use markers - never captures screens or dumps Screen Recording TCC rows",
+        "scpriv.path" : "/Users/nia/array-entry",
+        "scpriv.risk_tags" : "capture_surface",
+        "scpriv.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/screencapture_privacy_dualuse.json",
+      "source" : "parser",
+      "sourcePlugin" : "SCREENCAPTUREPRIV"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "ScreenCapture privacy dual-use surface markers",
+    "id" : "SCREENCAPTUREPRIV",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

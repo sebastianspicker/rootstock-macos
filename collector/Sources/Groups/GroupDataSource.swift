@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Collects local group memberships for security-relevant macOS groups.
 ///

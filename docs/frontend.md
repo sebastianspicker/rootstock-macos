@@ -7,8 +7,8 @@ external asset downloads.
 
 The packaged template and generated browser assets live in
 `graph/src/rootstock_graph/resources/viewer/`. Author modular styles in
-`graph/viewer-css/` and typed code in `graph/viewer-src/`; `npm run bundle`
-assembles them into the packaged assets. The renderer and API live under
+`graph/viewer/css/` and typed code in `graph/viewer/src/`; `npm run bundle`
+(run from `graph/viewer`) assembles them into the packaged assets. The renderer and API live under
 `graph/src/rootstock_graph/reporting/viewer.py` and
 `graph/src/rootstock_graph/api.py` and are exposed by `rootstock-graph-viewer`
 and `rootstock-graph-api`.
@@ -72,13 +72,15 @@ tools opens the existing workspaces without discarding the folio context.
 Build and validate the self-contained page locally:
 
 ```bash
+cd graph/viewer
+npm ci --ignore-scripts
 npm run demo:build
 npm run demo:verify
 ```
 
 The generated page is `graph/generated/pages-demo/index.html`. It is ignored
 build output; the Pages workflow recreates it from the packaged production
-template, styles, bundle, and `scripts/viewer-demo-data.mjs`.
+template, styles, bundle, and `graph/viewer/scripts/viewer-demo-data.mjs`.
 
 The public screenshots use the same synthetic data and production viewer. See
 [Screenshot capture](screenshots.md) for the browser setup, capture command,
@@ -121,7 +123,7 @@ sh scripts/verify web
 
 The lane typechecks and lints the viewer, runs Node logic tests, and compares a
 temporary asset rebuild with the working-tree packaged assets. Run `npm run
-bundle` after changing viewer source. Browser interaction and visual checks
+bundle` in `graph/viewer` after changing viewer source. Browser interaction and visual checks
 are separate from this lane.
 
-`node_modules/` and `graph/generated/` are local artifacts ignored by Git.
+`graph/viewer/node_modules/` and `graph/generated/` are local artifacts ignored by Git.

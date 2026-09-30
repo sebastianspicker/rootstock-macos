@@ -134,9 +134,9 @@ examples and tests use synthetic values.
 - [Lab boundary](NOT_FOR_PRODUCTION_IMPLANT.md)
 - [Security policy](SECURITY.md)
 
-The default executable links `RootstockCore`, `MacOpsecKit`, `MacArtifactKit`,
-`MacEnumKit`, `MacVulnKit`, `MacLolKit`, `MacIdentityKit`, `MacMdmKit`,
-`MacPersistKit`, and `MacReportKit`.
+The default executable links `RootstockCore`, `MacEnumKit` (collectors plus
+opsec, artifact, LOOBin, identity, MDM, and persistence modules), `MacVulnKit`,
+and `MacReportKit`.
 
 ## License
 

@@ -6,7 +6,7 @@ import json
 import re
 from collections import defaultdict
 
-from .import_cve_scan import CveScanExport, IMPORT_SOURCE, _node_id, _node_label
+from .cve_scan_contract import CveScanExport, IMPORT_SOURCE, require_node_id, require_node_label
 
 
 _CVE_RE = re.compile(r"CVE-\d{4}-\d+", re.IGNORECASE)
@@ -28,8 +28,8 @@ def build_node_records(export: CveScanExport) -> dict[str, list[dict[str, object
     """Build grouped node MERGE records. Exposed for unit tests."""
     grouped: dict[str, list[dict[str, object]]] = {}
     for node in export.nodes:
-        label = _node_label(node, "node")
-        node_id = _node_id(node, "node")
+        label = require_node_label(node, "node")
+        node_id = require_node_id(node, "node")
         props = _neo4j_properties(node, export)
         cve_id = _extract_cve_id(node) if label == "Vulnerability" else None
         record = {"id": node_id, "props": props, "cve_id": cve_id}
@@ -47,7 +47,9 @@ def build_edge_records(export: CveScanExport) -> dict[str, list[dict[str, str]]]
 
 def build_affected_by_alias_records(export: CveScanExport) -> list[dict[str, str]]:
     """Return asset -> vulnerability alias edge records derived from AFFECTS."""
-    types_by_id = {_node_id(node, "node"): _node_label(node, "node") for node in export.nodes}
+    types_by_id = {
+        require_node_id(node, "node"): require_node_label(node, "node") for node in export.nodes
+    }
     aliasable_assets = {"Host", "Package", "Service", "WebApp"}
     records = []
     for edge in export.edges:

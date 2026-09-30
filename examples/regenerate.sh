@@ -77,7 +77,7 @@ NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")
 
 # Check Neo4j connectivity
 echo "==> Checking Neo4j at $NEO4J_URI ..."
-python3 - <<'PY' || {
+uv run --project graph --locked python - <<'PY' || {
 import os
 from neo4j import GraphDatabase
 d = GraphDatabase.driver(
@@ -94,7 +94,7 @@ PY
 
 # 1. Validate checked-in synthetic scan JSON
 echo "==> Validating demo-scan.json ..."
-python3 scripts/validate-scan.py examples/demo-scan.json
+uv run --project graph --locked rootstock-graph-validate-scan examples/demo-scan.json
 
 # 2. Run full pipeline (schema → import → infer → classify)
 echo "==> Running pipeline ..."

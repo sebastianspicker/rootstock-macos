@@ -1,9 +1,6 @@
 /// Assess collector registry: host inventory modules feeding CollectedState for vectors/checks.
 import Foundation
 import RootstockCore
-import MacIdentityKit
-import MacMdmKit
-import MacPersistKit
 
 /// Default assess collector set for RootstockRed.
 public enum EnumModuleRegistry {

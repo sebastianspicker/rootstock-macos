@@ -1,15 +1,16 @@
 # Screenshot capture
 
 The [README tour](../README.md#screenshot-tour) and the Pages screenshot tour
-use the same four PNGs in `docs/assets/screenshots/`. They show the viewer running with `scripts/viewer-demo-data.mjs`, a fictional dataset.
+use the same four PNGs in `docs/assets/screenshots/`. They show the viewer running with `graph/viewer/scripts/viewer-demo-data.mjs`, a fictional dataset.
 Never substitute captures from a real scan or case.
 
 ## Reproduce the tour
 
-From the repository root, use Node from `.node-version` and the npm version
-in `package.json`:
+From `graph/viewer`, use the Node version in `.node-version` and the npm
+version in `package.json`:
 
 ```sh
+cd graph/viewer
 npm ci --ignore-scripts
 npm run bundle
 npm run demo:build
@@ -46,6 +47,8 @@ live API calls. Open the captures to review layout before including them in a
 pull request; automated checks do not judge visual quality.
 
 ## Preview locally
+
+From the repository root:
 
 ```sh
 python3 -m http.server 8765 --bind 127.0.0.1 --directory graph/generated/pages-demo

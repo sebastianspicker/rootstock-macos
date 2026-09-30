@@ -1,24 +1,24 @@
 import Foundation
-import XCTest
+import Testing
 import RootstockCore
 import RootstockLab
 
-final class ActionRegistryProofTests: XCTestCase {
-    func testProductionActionIDsAreNonEmptyUniqueAndResolvable() {
+@Suite struct ActionRegistryProofTests {
+    @Test func productionActionIDsAreNonEmptyUniqueAndResolvable() {
         let registry = ActionRegistry.production()
         let ids = registry.actions.map { type(of: $0).id }
 
-        XCTAssertFalse(ids.isEmpty)
-        XCTAssertEqual(ids.count, Set(ids).count, "production action IDs must be unique")
-        XCTAssertTrue(ids.allSatisfy { !$0.isEmpty }, "production action IDs must be non-empty")
-        XCTAssertEqual(registry.actionIds, ids.sorted())
+        #expect(!ids.isEmpty)
+        #expect(ids.count == Set(ids).count, "production action IDs must be unique")
+        #expect(ids.allSatisfy { !$0.isEmpty }, "production action IDs must be non-empty")
+        #expect(registry.actionIds == ids.sorted())
 
         for id in ids {
-            XCTAssertEqual(type(of: registry.action(id: id)!).id, id)
+            #expect(type(of: registry.action(id: id)!).id == id)
         }
     }
 
-    func testEveryProductionActionPlansAndDryRunsWithoutMutation() async throws {
+    @Test func everyProductionActionPlansAndDryRunsWithoutMutation() async throws {
         let root = try makeTemporaryLabRoot()
         defer { removeTemporaryLabRoot(root) }
 
@@ -30,25 +30,25 @@ final class ActionRegistryProofTests: XCTestCase {
                 request: request(for: id, operation: .plan, root: root),
                 context: context
             )
-            XCTAssertTrue(plan.success, "plan failed for \(id)")
-            XCTAssertTrue(plan.dryRun, "plan must remain dry-run for \(id)")
-            XCTAssertEqual(plan.actionId, id)
+            #expect(plan.success, "plan failed for \(id)")
+            #expect(plan.dryRun, "plan must remain dry-run for \(id)")
+            #expect(plan.actionId == id)
             assertArtifactsStayUnderTemporaryRoot(plan, root: root)
 
             let dryRun = try await pipeline.run(
                 request: request(for: id, operation: .install, root: root),
                 context: context
             )
-            XCTAssertTrue(dryRun.success, "dry-run install failed for \(id)")
-            XCTAssertTrue(dryRun.dryRun, "install must remain dry-run for \(id)")
-            XCTAssertEqual(dryRun.actionId, id)
+            #expect(dryRun.success, "dry-run install failed for \(id)")
+            #expect(dryRun.dryRun, "install must remain dry-run for \(id)")
+            #expect(dryRun.actionId == id)
             assertArtifactsStayUnderTemporaryRoot(dryRun, root: root)
         }
 
-        XCTAssertTrue(directoryContents(at: root).isEmpty, "plan and dry-run must not write under the test root")
+        #expect(directoryContents(at: root).isEmpty, "plan and dry-run must not write under the test root")
     }
 
-    func testAbsentAndPartialConsentFailClosedForEveryProductionAction() async throws {
+    @Test func absentAndPartialConsentFailClosedForEveryProductionAction() async throws {
         let root = try makeTemporaryLabRoot()
         defer { removeTemporaryLabRoot(root) }
 
@@ -90,10 +90,10 @@ final class ActionRegistryProofTests: XCTestCase {
             context: noConfirm,
             message: "noop action must require its action-specific confirmation token"
         )
-        XCTAssertTrue(directoryContents(at: root).isEmpty, "rejected requests must not mutate the test root")
+        #expect(directoryContents(at: root).isEmpty, "rejected requests must not mutate the test root")
     }
 
-    func testRepresentativeReversibleLifecyclesApplyStatusAndRemoveInTemporaryRoot() async throws {
+    @Test func representativeReversibleLifecyclesApplyStatusAndRemoveInTemporaryRoot() async throws {
         let root = try makeTemporaryLabRoot()
         defer { removeTemporaryLabRoot(root) }
 
@@ -130,34 +130,34 @@ final class ActionRegistryProofTests: XCTestCase {
             request: request(for: actionID, operation: .install, root: root),
             context: context
         )
-        XCTAssertTrue(install.success, "install failed for \(actionID)")
-        XCTAssertFalse(install.dryRun, "explicit test consent should permit only temporary-root marker writes")
-        XCTAssertFalse(install.artifacts.isEmpty, "install should report a reversible artifact for \(actionID)")
+        #expect(install.success, "install failed for \(actionID)")
+        #expect(!install.dryRun, "explicit test consent should permit only temporary-root marker writes")
+        #expect(!install.artifacts.isEmpty, "install should report a reversible artifact for \(actionID)")
         assertArtifactsStayUnderTemporaryRoot(install, root: root)
-        XCTAssertTrue(install.artifacts.allSatisfy { FileManager.default.fileExists(atPath: $0) })
+        #expect(install.artifacts.allSatisfy { FileManager.default.fileExists(atPath: $0) })
 
         let present = try await pipeline.run(
             request: request(for: actionID, operation: .status, root: root),
             context: context
         )
-        XCTAssertTrue(present.success, "status failed for \(actionID)")
-        XCTAssertFalse(present.artifacts.isEmpty, "status should find the temporary-root artifact for \(actionID)")
+        #expect(present.success, "status failed for \(actionID)")
+        #expect(!present.artifacts.isEmpty, "status should find the temporary-root artifact for \(actionID)")
         assertArtifactsStayUnderTemporaryRoot(present, root: root)
 
         let remove = try await pipeline.run(
             request: request(for: actionID, operation: .remove, root: root),
             context: context
         )
-        XCTAssertTrue(remove.success, "remove failed for \(actionID)")
-        XCTAssertFalse(remove.dryRun, "remove should be a real temporary-root cleanup for \(actionID)")
+        #expect(remove.success, "remove failed for \(actionID)")
+        #expect(!remove.dryRun, "remove should be a real temporary-root cleanup for \(actionID)")
         assertArtifactsStayUnderTemporaryRoot(remove, root: root)
 
         let absent = try await pipeline.run(
             request: request(for: actionID, operation: .status, root: root),
             context: context
         )
-        XCTAssertTrue(absent.success, "post-remove status failed for \(actionID)")
-        XCTAssertTrue(absent.artifacts.isEmpty, "removed artifact must be absent for \(actionID)")
+        #expect(absent.success, "post-remove status failed for \(actionID)")
+        #expect(absent.artifacts.isEmpty, "removed artifact must be absent for \(actionID)")
     }
 
     private func testConsentContext(dryRun: Bool) -> EvaluationContext {
@@ -209,10 +209,7 @@ final class ActionRegistryProofTests: XCTestCase {
     private func assertArtifactsStayUnderTemporaryRoot(_ result: ActionResult, root: URL) {
         let prefix = root.standardizedFileURL.path + "/"
         for artifact in result.artifacts {
-            XCTAssertTrue(
-                URL(fileURLWithPath: artifact).standardizedFileURL.path.hasPrefix(prefix),
-                "artifact escaped the temporary root: \(artifact)"
-            )
+            #expect(URL(fileURLWithPath: artifact).standardizedFileURL.path.hasPrefix(prefix), "artifact escaped the temporary root: \(artifact)")
         }
     }
 
@@ -224,7 +221,7 @@ final class ActionRegistryProofTests: XCTestCase {
     ) async {
         do {
             _ = try await pipeline.run(request: request, context: context)
-            XCTFail(message)
+            Issue.record("\(message)")
         } catch {
             // Expected: consent must fail before any lab action is routed.
         }

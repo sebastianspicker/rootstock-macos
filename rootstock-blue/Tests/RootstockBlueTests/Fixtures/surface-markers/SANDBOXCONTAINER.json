@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "/Users/kim/jsonl-one",
+        "sbxctr.risk_tags" : "jsonl_tag,sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/sandbox_container_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "jsonl-name",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/sandbox_container_depth.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "primary-name",
+        "sbxctr.notes" : "synthetic note",
+        "sbxctr.path" : "/Users/alice/Library/Markers/primary",
+        "sbxctr.risk_tags" : "custom_a,custom_b,custom_a,sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "kind-only",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "/Users/erin/bin/tool",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "label-only",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "42",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "/Users/Shared/shared-marker",
+        "sbxctr.risk_tags" : ",sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "/Users/ivy/fractional",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "/Users/jack/bad-time",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "single-kind",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "surface-label",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:sbxctr|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "sandbox.container",
+      "fields" : {
+        "event.type" : "sandbox.container",
+        "sbxctr.name" : "",
+        "sbxctr.notes" : "Sandbox container depth markers - never breaks app sandbox or forges container entitlements",
+        "sbxctr.path" : "/Users/nia/array-entry",
+        "sbxctr.risk_tags" : "sandbox_surface",
+        "sbxctr.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/sandbox_container_depth.json",
+      "source" : "parser",
+      "sourcePlugin" : "SANDBOXCONTAINER"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Sandbox container depth markers",
+    "id" : "SANDBOXCONTAINER",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

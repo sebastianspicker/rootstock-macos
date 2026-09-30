@@ -22,16 +22,11 @@ import argparse
 import logging
 import sys
 
-from ..inference.category_predicates import VULNERABILITY_CATEGORY_PREDICATES
+from ..category_predicates import VULNERABILITY_CATEGORY_PREDICATES
 from ..neo4j import add_neo4j_args, connect_from_args
-from ..vulnerability.cve_reference import (
-    _REGISTRY,
-    _GROUP_REGISTRY,
-    _GROUP_TECHNIQUE_MAP,
-    CveEntry,
-    CWE_REGISTRY,
-    REGISTRY_VERSION,
-)
+from ..vulnerability.cve_reference import CWE_REGISTRY, REGISTRY_VERSION
+from ..vulnerability.cve_reference_catalog import GROUP_REGISTRY, GROUP_TECHNIQUE_MAP, REGISTRY
+from ..vulnerability.cve_reference_models import CveEntry
 from ..vulnerability.cve_enrichment import enrich_registry, EnrichedCveEntry, temporal_score
 from ..vulnerability.version_matcher import (
     extract_macos_max_version,
@@ -143,7 +138,7 @@ def import_technique_nodes(session) -> int:
     seen: set[str] = set()
     batch = []
 
-    for ctx in _REGISTRY.values():
+    for ctx in REGISTRY.values():
         for tech in ctx.techniques:
             if tech.technique_id in seen:
                 continue
@@ -175,7 +170,7 @@ def import_technique_nodes(session) -> int:
 def import_technique_edges(session) -> int:
     """Create (:Vulnerability)-[:MAPS_TO_TECHNIQUE]->(:AttackTechnique) edges (batched)."""
     batch = []
-    for ctx in _REGISTRY.values():
+    for ctx in REGISTRY.values():
         for cve in ctx.cves:
             for tech in ctx.techniques:
                 batch.append(
@@ -213,7 +208,7 @@ def _collect_precise_cves() -> list[CveEntry]:
     """Return all CVEs that have affected_bundle_ids set (Tier 1 candidates)."""
     seen: set[str] = set()
     result: list[CveEntry] = []
-    for ctx in _REGISTRY.values():
+    for ctx in REGISTRY.values():
         for cve in ctx.cves:
             if cve.affected_bundle_ids and cve.cve_id not in seen:
                 seen.add(cve.cve_id)
@@ -332,7 +327,7 @@ def import_affected_by_edges(session) -> tuple[int, int]:
     count = 0
     warning_count = 0
 
-    for category, ctx in _REGISTRY.items():
+    for category, ctx in REGISTRY.items():
         fallback_cves = _category_fallback_cves(ctx.cves, precise_cve_ids)
         if not fallback_cves:
             continue
@@ -387,7 +382,7 @@ def import_threat_group_nodes(session) -> int:
     """MERGE ThreatGroup nodes from the registry (batched)."""
     batch = [
         {"group_id": g.group_id, "name": g.name, "aliases": list(g.aliases)}
-        for g in _GROUP_REGISTRY.values()
+        for g in GROUP_REGISTRY.values()
     ]
     if not batch:
         return 0
@@ -409,7 +404,7 @@ def import_group_technique_edges(session) -> int:
     """Create (:ThreatGroup)-[:USES_TECHNIQUE]->(:AttackTechnique) edges (batched)."""
     batch = [
         {"gid": group_id, "tid": tid}
-        for group_id, technique_ids in _GROUP_TECHNIQUE_MAP.items()
+        for group_id, technique_ids in GROUP_TECHNIQUE_MAP.items()
         for tid in technique_ids
     ]
     if not batch:

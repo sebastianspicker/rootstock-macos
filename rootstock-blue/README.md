@@ -142,7 +142,7 @@ See [Limitations](docs/limitations.md), [Non-goals](docs/non-goals.md), and
 - [Detection content](Content/detections/README.md)
 - [Synthetic event profiles](docs/synthetic-event-profiles.md)
 - [Case format](docs/case-package-v0.md)
-- [Integration package](Packages/RootstockBlueIntegrations/Sources/RootstockBlueIntegrations/README.md)
+- [Integration package](docs/integrate/README.md)
 - [Santa integration](docs/integrate/santa.md)
 - [Fleet and osquery integration](docs/integrate/fleet-osquery.md)
 - [Unified Log sidecar](Tools/sidecars/macos-unifiedlogs/README.md)

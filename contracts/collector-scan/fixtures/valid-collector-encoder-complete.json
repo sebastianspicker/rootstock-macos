@@ -1,0 +1,533 @@
+{
+  "ad_binding" : {
+    "computer_account" : "acme-macbook-pro$",
+    "forest" : "corp.acme.example",
+    "group_mappings" : [
+      {
+        "ad_group" : "Domain Admins",
+        "local_group" : "admin"
+      }
+    ],
+    "is_bound" : true,
+    "organizational_unit" : "OU=Macs,DC=corp,DC=acme,DC=example",
+    "preferred_dc" : "dc01.corp.acme.example",
+    "realm" : "CORP.ACME.EXAMPLE"
+  },
+  "applications" : [
+    {
+      "bundle_id" : "com.acme.widget",
+      "certificate_chain" : [
+        {
+          "common_name" : "Developer ID Application: Acme Corp (ACME123456)",
+          "is_root" : false,
+          "organization" : "Acme Corp",
+          "sha256" : "abababababababababababababababababababababababababababababababab",
+          "valid_from" : "2025-06-15T00:00:00Z",
+          "valid_to" : "2030-06-15T00:00:00Z"
+        },
+        {
+          "common_name" : "Acme Fixture Root CA",
+          "is_root" : true,
+          "organization" : "Acme Fixture Trust",
+          "sha256" : "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "valid_from" : "2020-01-01T00:00:00Z",
+          "valid_to" : "2040-01-01T00:00:00Z"
+        }
+      ],
+      "certificate_chain_length" : 2,
+      "certificate_expires" : "2030-06-15T00:00:00Z",
+      "certificate_trust_valid" : true,
+      "code_signing_analysis_error" : false,
+      "entitlement_extraction_error" : "synthetic partial extraction warning",
+      "entitlements" : [
+        {
+          "category" : "injection",
+          "is_private" : false,
+          "is_security_critical" : true,
+          "name" : "com.apple.security.cs.allow-dyld-environment-variables"
+        }
+      ],
+      "entitlements_available" : true,
+      "hardened_runtime" : false,
+      "injection_methods" : [
+        "dyld_insert",
+        "dyld_insert_via_entitlement",
+        "missing_library_validation",
+        "electron_env_var"
+      ],
+      "is_adhoc_signed" : false,
+      "is_certificate_expired" : false,
+      "is_electron" : true,
+      "is_notarized" : true,
+      "is_sandboxed" : true,
+      "is_sip_protected" : false,
+      "is_system" : false,
+      "launch_constraint_category" : "acme-fixture-category",
+      "library_validation" : false,
+      "name" : "AcmeWidget",
+      "path" : "\/Applications\/AcmeWidget.app",
+      "quarantine_info" : {
+        "has_quarantine_flag" : true,
+        "quarantine_agent" : "com.acme.browser",
+        "quarantine_timestamp" : "2026-02-01T08:00:00Z",
+        "was_translocated" : true,
+        "was_user_approved" : true
+      },
+      "sandbox_exceptions" : [
+        "com.apple.security.temporary-exception.files.absolute-path.read-write"
+      ],
+      "sandbox_profile" : {
+        "bundle_id" : "com.acme.widget",
+        "exception_count" : 1,
+        "file_read_rules" : [
+          "\/Users\/acme-admin\/Documents"
+        ],
+        "file_write_rules" : [
+          "\/Users\/acme-admin\/Downloads"
+        ],
+        "has_unconstrained_file_read" : true,
+        "has_unconstrained_network" : true,
+        "iokit_rules" : [
+          "IOUSBDevice"
+        ],
+        "mach_lookup_rules" : [
+          "com.acme.widget.helper.xpc"
+        ],
+        "network_rules" : [
+          "network-client"
+        ],
+        "profile_source" : "entitlements"
+      },
+      "signed" : true,
+      "signing_certificate_cn" : "Developer ID Application: Acme Corp (ACME123456)",
+      "signing_certificate_sha256" : "abababababababababababababababababababababababababababababababab",
+      "team_id" : "ACME123456",
+      "version" : "4.2.0"
+    }
+  ],
+  "authorization_plugins" : [
+    {
+      "name" : "AcmeAuthPlugin",
+      "path" : "\/Library\/Security\/SecurityAgentPlugins\/AcmeAuthPlugin.bundle",
+      "team_id" : "ACME123456"
+    }
+  ],
+  "authorization_rights" : [
+    {
+      "allow_root" : true,
+      "name" : "system.privilege.admin",
+      "require_authentication" : true,
+      "rule" : "authenticate-admin-nonshared"
+    }
+  ],
+  "bluetooth_devices" : [
+    {
+      "address" : "00-11-22-33-44-55",
+      "connected" : true,
+      "device_type" : "keyboard",
+      "name" : "Acme Keyboard"
+    }
+  ],
+  "bluetooth_discoverable" : false,
+  "bluetooth_enabled" : true,
+  "collector_version" : "0.0.0-fixture",
+  "display_sleep_timeout" : 10,
+  "elevation" : {
+    "has_fda" : false,
+    "is_root" : true
+  },
+  "errors" : [
+    {
+      "message" : "synthetic recoverable error",
+      "recoverable" : true,
+      "source" : "Acme Source"
+    }
+  ],
+  "external_boot_allowed" : false,
+  "file_acls" : [
+    {
+      "acl_entries" : [
+        "group:everyone deny delete"
+      ],
+      "category" : "tcc_database",
+      "group" : "wheel",
+      "is_sip_protected" : false,
+      "is_writable_by_non_root" : false,
+      "mode" : "644",
+      "owner" : "root",
+      "path" : "\/Library\/Application Support\/com.apple.TCC\/TCC.db"
+    }
+  ],
+  "filevault_enabled" : true,
+  "firewall_status" : [
+    {
+      "allow_built_in" : true,
+      "allow_signed" : true,
+      "app_rules" : [
+        {
+          "allow_incoming" : true,
+          "bundle_id" : "com.acme.widget"
+        }
+      ],
+      "enabled" : true,
+      "stealth_mode" : false
+    }
+  ],
+  "gatekeeper_enabled" : true,
+  "hostname" : "acme-macbook-pro",
+  "icloud_drive_enabled" : true,
+  "icloud_keychain_enabled" : false,
+  "icloud_signed_in" : true,
+  "kerberos_artifacts" : [
+    {
+      "artifact_type" : "ccache",
+      "default_realm" : "CORP.ACME.EXAMPLE",
+      "group" : "staff",
+      "is_forwardable" : true,
+      "is_group_readable" : false,
+      "is_readable" : true,
+      "is_world_readable" : false,
+      "mode" : "600",
+      "modification_time" : "2026-03-19T12:00:00Z",
+      "owner" : "acme-admin",
+      "path" : "\/var\/db\/acme-fixture\/ccache",
+      "permitted_enc_types" : [
+        "aes256-cts-hmac-sha1-96"
+      ],
+      "principal_hint" : "acme-admin",
+      "realm_names" : [
+        "CORP.ACME.EXAMPLE"
+      ]
+    },
+    {
+      "artifact_type" : "keytab",
+      "default_realm" : "CORP.ACME.EXAMPLE",
+      "group" : "staff",
+      "is_forwardable" : true,
+      "is_group_readable" : false,
+      "is_readable" : true,
+      "is_world_readable" : false,
+      "mode" : "600",
+      "modification_time" : "2026-03-19T12:00:00Z",
+      "owner" : "acme-admin",
+      "path" : "\/var\/db\/acme-fixture\/keytab",
+      "permitted_enc_types" : [
+        "aes256-cts-hmac-sha1-96"
+      ],
+      "principal_hint" : "acme-admin",
+      "realm_names" : [
+        "CORP.ACME.EXAMPLE"
+      ]
+    },
+    {
+      "artifact_type" : "config",
+      "default_realm" : "CORP.ACME.EXAMPLE",
+      "group" : "staff",
+      "is_forwardable" : true,
+      "is_group_readable" : false,
+      "is_readable" : true,
+      "is_world_readable" : false,
+      "mode" : "600",
+      "modification_time" : "2026-03-19T12:00:00Z",
+      "owner" : "acme-admin",
+      "path" : "\/var\/db\/acme-fixture\/config",
+      "permitted_enc_types" : [
+        "aes256-cts-hmac-sha1-96"
+      ],
+      "principal_hint" : "acme-admin",
+      "realm_names" : [
+        "CORP.ACME.EXAMPLE"
+      ]
+    }
+  ],
+  "keychain_acls" : [
+    {
+      "access_group" : "ACME123456.com.acme.widget",
+      "kind" : "generic_password",
+      "label" : "Acme Fixture generic_password",
+      "service" : "com.acme.widget.sync",
+      "trusted_apps" : [
+        "com.acme.widget"
+      ]
+    },
+    {
+      "access_group" : "ACME123456.com.acme.widget",
+      "kind" : "internet_password",
+      "label" : "Acme Fixture internet_password",
+      "service" : "com.acme.widget.sync",
+      "trusted_apps" : [
+        "com.acme.widget"
+      ]
+    },
+    {
+      "access_group" : "ACME123456.com.acme.widget",
+      "kind" : "certificate",
+      "label" : "Acme Fixture certificate",
+      "service" : "com.acme.widget.sync",
+      "trusted_apps" : [
+        "com.acme.widget"
+      ]
+    },
+    {
+      "access_group" : "ACME123456.com.acme.widget",
+      "kind" : "key",
+      "label" : "Acme Fixture key",
+      "service" : "com.acme.widget.sync",
+      "trusted_apps" : [
+        "com.acme.widget"
+      ]
+    }
+  ],
+  "launch_items" : [
+    {
+      "label" : "com.acme.widget.daemon",
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.daemon.plist",
+      "plist_owner" : "root",
+      "plist_writable_by_non_root" : false,
+      "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_owner" : "acme-admin",
+      "program_writable_by_non_root" : true,
+      "run_at_load" : true,
+      "type" : "daemon",
+      "user" : "acme-admin"
+    },
+    {
+      "label" : "com.acme.widget.agent",
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.agent.plist",
+      "plist_owner" : "root",
+      "plist_writable_by_non_root" : false,
+      "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_owner" : "acme-admin",
+      "program_writable_by_non_root" : true,
+      "run_at_load" : true,
+      "type" : "agent",
+      "user" : "acme-admin"
+    },
+    {
+      "label" : "com.acme.widget.login_item",
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.login_item.plist",
+      "plist_owner" : "root",
+      "plist_writable_by_non_root" : false,
+      "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_owner" : "acme-admin",
+      "program_writable_by_non_root" : true,
+      "run_at_load" : true,
+      "type" : "login_item",
+      "user" : "acme-admin"
+    },
+    {
+      "label" : "com.acme.widget.cron",
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.cron.plist",
+      "plist_owner" : "root",
+      "plist_writable_by_non_root" : false,
+      "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_owner" : "acme-admin",
+      "program_writable_by_non_root" : true,
+      "run_at_load" : true,
+      "type" : "cron",
+      "user" : "acme-admin"
+    }
+  ],
+  "local_groups" : [
+    {
+      "gid" : 80,
+      "members" : [
+        "acme-admin"
+      ],
+      "name" : "admin"
+    }
+  ],
+  "lockdown_mode_enabled" : false,
+  "login_sessions" : [
+    {
+      "login_time" : "Mar 20 09:00",
+      "session_type" : "console",
+      "terminal" : "ttys-console",
+      "username" : "acme-admin"
+    },
+    {
+      "login_time" : "Mar 20 09:00",
+      "session_type" : "ssh",
+      "terminal" : "ttys-ssh",
+      "username" : "acme-admin"
+    },
+    {
+      "login_time" : "Mar 20 09:00",
+      "session_type" : "screen_sharing",
+      "terminal" : "ttys-screen_sharing",
+      "username" : "acme-admin"
+    },
+    {
+      "login_time" : "Mar 20 09:00",
+      "session_type" : "tmux",
+      "terminal" : "ttys-tmux",
+      "username" : "acme-admin"
+    }
+  ],
+  "macos_version" : "macOS 15.3 (Build 24D60)",
+  "mdm_profiles" : [
+    {
+      "display_name" : "Acme Privacy Preferences",
+      "identifier" : "com.acme.mdm.pppc",
+      "install_date" : "2026-01-15 09:30:00 +0000",
+      "organization" : "Acme Corp",
+      "tcc_policies" : [
+        {
+          "allowed" : true,
+          "client_bundle_id" : "com.acme.widget",
+          "service" : "SystemPolicyAllFiles"
+        }
+      ]
+    }
+  ],
+  "remote_access_services" : [
+    {
+      "config" : {
+        "PasswordAuthentication" : "no",
+        "PermitRootLogin" : "no"
+      },
+      "enabled" : true,
+      "port" : 22,
+      "service" : "ssh"
+    },
+    {
+      "config" : {
+
+      },
+      "enabled" : false,
+      "port" : 5900,
+      "service" : "screen_sharing"
+    }
+  ],
+  "running_processes" : [
+    {
+      "bundle_id" : "com.acme.widget",
+      "command" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "pid" : 4242,
+      "user" : "acme-admin"
+    }
+  ],
+  "sandbox_profiles" : [
+    {
+      "bundle_id" : "com.acme.widget",
+      "exception_count" : 1,
+      "file_read_rules" : [
+        "\/Users\/acme-admin\/Documents"
+      ],
+      "file_write_rules" : [
+        "\/Users\/acme-admin\/Downloads"
+      ],
+      "has_unconstrained_file_read" : true,
+      "has_unconstrained_network" : true,
+      "iokit_rules" : [
+        "IOUSBDevice"
+      ],
+      "mach_lookup_rules" : [
+        "com.acme.widget.helper.xpc"
+      ],
+      "network_rules" : [
+        "network-client"
+      ],
+      "profile_source" : "entitlements"
+    }
+  ],
+  "scan_id" : "fixture-complete-acme-macbook-pro",
+  "screen_lock_delay" : 5,
+  "screen_lock_enabled" : true,
+  "secure_boot_level" : "full",
+  "sip_enabled" : true,
+  "sudoers_rules" : [
+    {
+      "command" : "\/usr\/bin\/acme-widget-cli",
+      "host" : "ALL",
+      "nopasswd" : true,
+      "user" : "%admin"
+    }
+  ],
+  "system_extensions" : [
+    {
+      "enabled" : true,
+      "extension_type" : "network",
+      "identifier" : "com.acme.widget.extension.network",
+      "subscribed_events" : [
+        "ES_EVENT_TYPE_NOTIFY_EXEC"
+      ],
+      "team_id" : "ACME123456"
+    },
+    {
+      "enabled" : true,
+      "extension_type" : "endpoint_security",
+      "identifier" : "com.acme.widget.extension.endpoint_security",
+      "subscribed_events" : [
+        "ES_EVENT_TYPE_NOTIFY_EXEC"
+      ],
+      "team_id" : "ACME123456"
+    },
+    {
+      "enabled" : true,
+      "extension_type" : "driver",
+      "identifier" : "com.acme.widget.extension.driver",
+      "subscribed_events" : [
+        "ES_EVENT_TYPE_NOTIFY_EXEC"
+      ],
+      "team_id" : "ACME123456"
+    }
+  ],
+  "tcc_grants" : [
+    {
+      "auth_reason" : 4,
+      "auth_value" : 2,
+      "client" : "com.acme.widget",
+      "client_type" : 0,
+      "display_name" : "Full Disk Access",
+      "last_modified" : 1742464800,
+      "scope" : "user",
+      "service" : "kTCCServiceSystemPolicyAllFiles"
+    }
+  ],
+  "thunderbolt_security_level" : "secure",
+  "timestamp" : "2026-03-20T10:00:00Z",
+  "user_details" : [
+    {
+      "home_dir" : "\/Users\/acme-admin",
+      "is_ad_user" : true,
+      "is_hidden" : false,
+      "name" : "acme-admin",
+      "shell" : "\/bin\/zsh"
+    }
+  ],
+  "xpc_services" : [
+    {
+      "entitlements" : [
+        "com.apple.private.acme-fixture"
+      ],
+      "has_client_verification" : true,
+      "keep_alive" : true,
+      "label" : "com.acme.widget.helper.daemon",
+      "mach_services" : [
+        "com.acme.widget.helper.xpc"
+      ],
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.helper.daemon.plist",
+      "program" : "\/Library\/PrivilegedHelperTools\/com.acme.widget.helper",
+      "run_at_load" : true,
+      "type" : "daemon",
+      "user" : "root"
+    },
+    {
+      "entitlements" : [
+        "com.apple.private.acme-fixture"
+      ],
+      "has_client_verification" : true,
+      "keep_alive" : true,
+      "label" : "com.acme.widget.helper.agent",
+      "mach_services" : [
+        "com.acme.widget.helper.xpc"
+      ],
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.helper.agent.plist",
+      "program" : "\/Library\/PrivilegedHelperTools\/com.acme.widget.helper",
+      "run_at_load" : true,
+      "type" : "agent",
+      "user" : "root"
+    }
+  ]
+}

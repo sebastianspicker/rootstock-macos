@@ -1,0 +1,16 @@
+#!/bin/sh
+# Run `swift test` with any arguments in the current Swift package.
+#
+# The CommandLineTools toolchain ships Swift Testing without registering its
+# macro plugin, so pass the plugin path there; Xcode toolchains need no flag.
+# Usage (from a package directory): sh <repo>/scripts/swift-test [swift test args]
+
+set -eu
+
+developer_dir=${DEVELOPER_DIR:-$(xcode-select -p 2>/dev/null || true)}
+testing_plugins="$developer_dir/usr/lib/swift/host/plugins/testing"
+if [ "${developer_dir%/CommandLineTools}" != "$developer_dir" ] &&
+    [ -d "$testing_plugins" ]; then
+    set -- "$@" -Xswiftc -plugin-path -Xswiftc "$testing_plugins"
+fi
+exec swift test "$@"

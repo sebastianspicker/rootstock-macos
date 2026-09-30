@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "/Users/kim/jsonl-one",
+        "shplug.risk_tags" : "jsonl_tag,shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/shell_plugin_manager.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "jsonl-name",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/shell_plugin_manager.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "primary-name",
+        "shplug.notes" : "synthetic note",
+        "shplug.path" : "/Users/alice/Library/Markers/primary",
+        "shplug.risk_tags" : "custom_a,custom_b,custom_a,shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "kind-only",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "/Users/erin/bin/tool",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "label-only",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "42",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "/Users/Shared/shared-marker",
+        "shplug.risk_tags" : ",shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "/Users/ivy/fractional",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "/Users/jack/bad-time",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "single-kind",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "surface-label",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:shplug|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "shell.plugin_manager",
+      "fields" : {
+        "event.type" : "shell.plugin_manager",
+        "shplug.name" : "",
+        "shplug.notes" : "Shell plugin manager dual-use markers - never installs oh-my-zsh plugins or rewrites shell init for persistence",
+        "shplug.path" : "/Users/nia/array-entry",
+        "shplug.risk_tags" : "shell_plugin_surface",
+        "shplug.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/shell_plugin_manager.json",
+      "source" : "parser",
+      "sourcePlugin" : "SHELLPLUGINMGR"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Shell plugin manager dual-use markers",
+    "id" : "SHELLPLUGINMGR",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

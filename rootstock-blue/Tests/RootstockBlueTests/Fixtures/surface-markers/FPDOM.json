@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "/Users/kim/jsonl-one",
+        "fpdom.risk_tags" : "jsonl_tag,fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/fileprovider_domain.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "jsonl-name",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/fileprovider_domain.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "primary-name",
+        "fpdom.notes" : "synthetic note",
+        "fpdom.path" : "/Users/alice/Library/Markers/primary",
+        "fpdom.risk_tags" : "custom_a,custom_b,custom_a,fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "kind-only",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "/Users/erin/bin/tool",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "label-only",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "42",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "/Users/Shared/shared-marker",
+        "fpdom.risk_tags" : ",fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "/Users/ivy/fractional",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "/Users/jack/bad-time",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "single-kind",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "surface-label",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:fpdom|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "fileprovider.domain",
+      "fields" : {
+        "event.type" : "fileprovider.domain",
+        "fpdom.name" : "",
+        "fpdom.notes" : "File Provider domain markers - never registers malicious File Provider domains or exfiltrates provider caches",
+        "fpdom.path" : "/Users/nia/array-entry",
+        "fpdom.risk_tags" : "fileprovider_surface",
+        "fpdom.secrets_exported" : "false",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/fileprovider_domain.json",
+      "source" : "parser",
+      "sourcePlugin" : "FPDOM"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "File Provider domain markers",
+    "id" : "FPDOM",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

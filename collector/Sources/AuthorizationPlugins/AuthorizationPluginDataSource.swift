@@ -1,12 +1,14 @@
 import Foundation
 import Models
+import RootstockMacFacts
+import HostCommand
 
 /// Scans /Library/Security/SecurityAgentPlugins/ for authorization plugin bundles.
 public struct AuthorizationPluginDataSource: DataSource {
     public let name = "Authorization Plugins"
     public let requiresElevation = false
 
-    private static let pluginDir = "/Library/Security/SecurityAgentPlugins"
+    private static let pluginDir = MacSecurityPaths.authorizationPlugins
 
     public init() {}
 

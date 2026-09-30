@@ -21,6 +21,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
                 "Models",
+                "HostCommand",
                 "TCC",
                 "Entitlements",
                 "CodeSigning",
@@ -52,6 +53,20 @@ let package = Package(
             dependencies: []
         ),
         .target(
+            name: "HostCommand",
+            dependencies: []
+        ),
+        .target(
+            name: "LaunchdPlists",
+            dependencies: [
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
+        ),
+        .target(
+            name: "FileACLInspection",
+            dependencies: ["Models", "HostCommand"]
+        ),
+        .target(
             name: "TCC",
             dependencies: [
                 "Models",
@@ -61,12 +76,12 @@ let package = Package(
         ),
         .target(
             name: "Entitlements",
-            dependencies: ["Models"],
+            dependencies: ["Models", "HostCommand"],
             linkerSettings: [.linkedFramework("Security")]
         ),
         .target(
             name: "CodeSigning",
-            dependencies: ["Models"],
+            dependencies: ["Models", "HostCommand"],
             linkerSettings: [.linkedFramework("Security")]
         ),
         .target(
@@ -77,6 +92,8 @@ let package = Package(
             name: "XPCServices",
             dependencies: [
                 "Models",
+                "HostCommand",
+                "LaunchdPlists",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ]
         ),
@@ -84,7 +101,8 @@ let package = Package(
             name: "Persistence",
             dependencies: [
                 "Models",
-                "XPCServices",
+                "HostCommand",
+                "LaunchdPlists",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ]
         ),
@@ -95,15 +113,19 @@ let package = Package(
         ),
         .target(
             name: "MDM",
-            dependencies: ["Models"]
+            dependencies: [
+                "Models",
+                "HostCommand",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "Groups",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "RemoteAccess",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "Firewall",
@@ -111,47 +133,61 @@ let package = Package(
         ),
         .target(
             name: "LoginSession",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "AuthorizationDB",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "AuthorizationPlugins",
-            dependencies: ["Models"]
+            dependencies: [
+                "Models",
+                "HostCommand",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "SystemExtensions",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "Sudoers",
-            dependencies: ["Models"]
+            dependencies: [
+                "Models",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "ProcessSnapshot",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "FileACLs",
-            dependencies: ["Models"]
+            dependencies: [
+                "Models",
+                "FileACLInspection",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "ShellHooks",
-            dependencies: ["Models", "FileACLs"]
+            dependencies: ["Models", "FileACLInspection"]
         ),
         .target(
             name: "PhysicalSecurity",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "ActiveDirectory",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "KerberosArtifacts",
-            dependencies: ["Models"]
+            dependencies: [
+                "Models",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "Sandbox",

@@ -7,19 +7,8 @@ and return formatted diagram strings suitable for embedding in Markdown.
 
 from __future__ import annotations
 
-from . import _report_campaign_diagrams as _campaign_diagrams
 from .report_diagram_common import safe_label as _safe_label
-from ..utils import sanitize_id as sanitize_mermaid_id
-
-
-# Public compatibility exports retained after the campaign diagram split.
-format_family_findings_section = _campaign_diagrams.format_family_findings_section
-format_fleet_campaign_dashboard = _campaign_diagrams.format_fleet_campaign_dashboard
-format_kill_chain_stage_timeline = _campaign_diagrams.format_kill_chain_stage_timeline
-format_multi_plane_campaign_section = _campaign_diagrams.format_multi_plane_campaign_section
-format_multi_plane_severity_board = _campaign_diagrams.format_multi_plane_severity_board
-format_purple_engagement_matrix = _campaign_diagrams.format_purple_engagement_matrix
-mermaid_family_findings_block = _campaign_diagrams.mermaid_family_findings_block
+from .report_diagram_common import sanitize_id as sanitize_mermaid_id
 
 
 # ── TCC Node Detection ────────────────────────────────────────────────────────

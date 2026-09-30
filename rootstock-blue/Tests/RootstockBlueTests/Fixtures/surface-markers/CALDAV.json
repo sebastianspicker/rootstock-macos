@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "/Users/kim/jsonl-one",
+        "caldav.risk_tags" : "jsonl_tag,caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/calendar_server_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "jsonl-name",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/calendar_server_path.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "primary-name",
+        "caldav.notes" : "synthetic note",
+        "caldav.path" : "/Users/alice/Library/Markers/primary",
+        "caldav.risk_tags" : "custom_a,custom_b,custom_a,caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "kind-only",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "/Users/erin/bin/tool",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "label-only",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "42",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "/Users/Shared/shared-marker",
+        "caldav.risk_tags" : ",caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "/Users/ivy/fractional",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "/Users/jack/bad-time",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "single-kind",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "surface-label",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:caldav|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "calendar.caldav",
+      "fields" : {
+        "caldav.name" : "",
+        "caldav.notes" : "Calendar CalDAV residual markers - never reads calendar event bodies or credentials from CalDAV stores",
+        "caldav.path" : "/Users/nia/array-entry",
+        "caldav.risk_tags" : "caldav_surface",
+        "caldav.secrets_exported" : "false",
+        "event.type" : "calendar.caldav",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/calendar_server_path.json",
+      "source" : "parser",
+      "sourcePlugin" : "CALDAV"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Calendar CalDAV residual markers",
+    "id" : "CALDAV",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

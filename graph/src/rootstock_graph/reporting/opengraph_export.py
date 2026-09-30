@@ -22,35 +22,14 @@ from neo4j import Query
 
 from ..constants import NODE_KEY_PROPERTY
 
-from . import opengraph_mapping as _mapping
+from .opengraph_mapping import (
+    EDGE_TYPE_MAP,
+    NODE_TYPE_MAP,
+    map_edge_for_opengraph,
+    map_node_for_opengraph,
+    primary_label,
+)
 from ..neo4j import add_neo4j_args, connect_from_args
-
-
-# ── Public compatibility exports for type and record mapping ───────────────
-
-EDGE_TYPE_MAP = _mapping.EDGE_TYPE_MAP
-FAMILY_FINDING_TYPE = _mapping.FAMILY_FINDING_TYPE
-FAMILY_HAS_FINDING_TYPE = _mapping.FAMILY_HAS_FINDING_TYPE
-FAMILY_HOST_TYPE = _mapping.FAMILY_HOST_TYPE
-NODE_TYPE_MAP = _mapping.NODE_TYPE_MAP
-_node_display_name = _mapping._node_display_name
-_node_key = _mapping._node_key
-_primary_label = _mapping._primary_label
-_sanitize = _mapping._sanitize
-_serialize_props = _mapping._serialize_props
-family_source = _mapping.family_source
-make_node_id = _mapping.make_node_id
-map_edge_for_opengraph = _mapping.map_edge_for_opengraph
-map_node_for_opengraph = _mapping.map_node_for_opengraph
-resolve_edge_type_info = _mapping.resolve_edge_type_info
-resolve_node_type_info = _mapping.resolve_node_type_info
-
-
-def family_export_to_opengraph(export) -> dict:
-    """Convert a validated FamilyExport into an OpenGraph/viewer payload."""
-    from .opengraph_family import family_export_to_opengraph as build_family_opengraph
-
-    return build_family_opengraph(export)
 
 
 # ── Export functions ─────────────────────────────────────────────────────────
@@ -98,7 +77,7 @@ def export_nodes(
     for record in result:
         if maximum_records is not None and len(nodes) >= maximum_records:
             break
-        label = _primary_label(record["labels"])
+        label = primary_label(record["labels"])
         props = dict(record["n"])
         mapped = map_node_for_opengraph(hostname, label, props)
         if mapped is not None:
@@ -135,8 +114,8 @@ def export_edges(
         if maximum_records is not None and len(edges) >= maximum_records:
             break
         rel_type = record["rel_type"]
-        src_label = _primary_label(record["src_labels"])
-        tgt_label = _primary_label(record["tgt_labels"])
+        src_label = primary_label(record["src_labels"])
+        tgt_label = primary_label(record["tgt_labels"])
         src_props = _endpoint_properties(record["src"])
         tgt_props = _endpoint_properties(record["tgt"])
         rel_props = dict(record["rel"])

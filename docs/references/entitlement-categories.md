@@ -58,6 +58,6 @@ CVE relationships, certificate issues, and Electron permission inheritance.
 It does not assign a weight to each of the eight entitlement categories.
 
 Risk and vulnerability rules use the predicates in
-[`category_predicates.py`](../../graph/src/rootstock_graph/inference/category_predicates.py).
+[`category_predicates.py`](../../graph/src/rootstock_graph/category_predicates.py).
 Read the supporting relationships and the [severity reference](severity-mapping.md)
 alongside a score.

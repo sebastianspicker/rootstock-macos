@@ -1,6 +1,6 @@
 import Foundation
 import Models
-import FileACLs
+import FileACLInspection
 
 /// Collects shell hook file metadata for persistence and credential theft analysis.
 ///
@@ -32,10 +32,11 @@ public struct ShellHookDataSource: DataSource {
         var results: [FileACL] = []
         var errors: [CollectionError] = []
         let fm = FileManager.default
+        let inspector = FileACLInspector()
 
         for rawPath in Self.hookPaths {
-            let path = FileACLDataSource.expandTilde(rawPath)
-            let (fileACL, error) = FileACLDataSource().collectPath(
+            let path = FileACLInspector.expandTilde(rawPath)
+            let (fileACL, error) = inspector.collectPath(
                 path,
                 category: "shell_hook",
                 fm: fm,

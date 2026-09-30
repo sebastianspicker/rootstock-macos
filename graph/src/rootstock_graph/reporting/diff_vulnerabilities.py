@@ -42,14 +42,14 @@ def diff_vulnerabilities(before: ScanResult, after: ScanResult) -> Vulnerability
 def _load_vulnerability_diff_registry() -> tuple[dict, dict] | None:
     try:
         from ..vulnerability.cve_enrichment import enrich_registry
-        from ..vulnerability.cve_reference import _REGISTRY
+        from ..vulnerability.cve_reference_catalog import REGISTRY
     except ImportError:
         return None
 
     enriched = enrich_registry()
     if not enriched:
         return None
-    return enriched, _REGISTRY
+    return enriched, REGISTRY
 
 
 def _injection_cve_ids(registry: dict) -> set[str]:

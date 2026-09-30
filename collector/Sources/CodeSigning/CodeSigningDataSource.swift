@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Enriches Application objects with code signing metadata and injection assessment.
 ///

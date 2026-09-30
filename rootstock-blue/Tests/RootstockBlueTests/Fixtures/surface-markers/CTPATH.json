@@ -1,0 +1,280 @@
+{
+  "adversarialTree" : [
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|/Users/kim/jsonl-one"
+      ],
+      "eventTime" : "2024-02-03T04:05:06.000Z",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "/Users/kim/jsonl-one",
+        "ctpath.risk_tags" : "jsonl_tag,contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "kim"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/contacts_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|jsonl-name"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "jsonl-name",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "lee"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Logs/contacts_path_plane.jsonl",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|primary-name"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.000Z",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "primary-name",
+        "ctpath.notes" : "synthetic note",
+        "ctpath.path" : "/Users/alice/Library/Markers/primary",
+        "ctpath.risk_tags" : "custom_a,custom_b,custom_a,contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "alice"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|kind-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.000Z",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "kind-only",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "/Users/erin/bin/tool",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "erin"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|label-only"
+      ],
+      "eventTime" : "2023-11-14T22:13:20.123Z",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "label-only",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|42"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "42",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "gina"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|/Users/Shared/shared-marker"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "/Users/Shared/shared-marker",
+        "ctpath.risk_tags" : ",contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "fallback"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|/Users/ivy/fractional"
+      ],
+      "eventTime" : "2024-01-02T03:04:05.678Z",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "/Users/ivy/fractional",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "ivy"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|/Users/jack/bad-time"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "/Users/jack/bad-time",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "jack"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Library/Preferences/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|single-kind"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "single-kind",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "carol"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/KindOnly/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|surface-label"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "surface-label",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "dana"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/Users/carol/Library/Vendor/Surfaces/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    },
+    {
+      "collectedAt" : "<now>",
+      "confidence" : 0.88,
+      "entityRefs" : [
+        "host:ctpath|/Users/nia/array-entry"
+      ],
+      "eventTime" : "<now>",
+      "eventType" : "contacts.path",
+      "fields" : {
+        "ctpath.name" : "",
+        "ctpath.notes" : "Contacts path plane markers - never exports contact cards or dumps AddressBook database contents",
+        "ctpath.path" : "/Users/nia/array-entry",
+        "ctpath.risk_tags" : "contacts_surface",
+        "ctpath.secrets_exported" : "false",
+        "event.type" : "contacts.path",
+        "user.name" : "nia"
+      },
+      "id" : "<uuid>",
+      "rawRef" : "<root>/opt/data/contacts_path_plane.json",
+      "source" : "parser",
+      "sourcePlugin" : "CTPATH"
+    }
+  ],
+  "emptyTree" : [
+
+  ],
+  "manifest" : {
+    "description" : "Contacts path plane markers",
+    "id" : "CTPATH",
+    "supportedOS" : [
+      "14+",
+      "15+"
+    ],
+    "tier" : 2
+  }
+}

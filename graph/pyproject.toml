@@ -33,7 +33,7 @@ dev = [
 rootstock-graph-api = "rootstock_graph.api:main"
 rootstock-graph-bloodhound-import = "rootstock_graph.ingestion.bloodhound_import:main"
 rootstock-graph-clear-owned = "rootstock_graph.inference.clear_owned:main"
-rootstock-graph-cve-enrichment = "rootstock_graph.vulnerability.cve_enrichment:main"
+rootstock-graph-cve-enrichment = "rootstock_graph.vulnerability.cve_enrichment_cli:main"
 rootstock-graph-diff-scans = "rootstock_graph.reporting.diff_scans:main"
 rootstock-graph-import-cve-scan = "rootstock_graph.ingestion.import_cve_scan:main"
 rootstock-graph-import-family-export = "rootstock_graph.ingestion.import_family_export:main"
@@ -48,6 +48,7 @@ rootstock-graph-report = "rootstock_graph.reporting.report:main"
 rootstock-graph-report-graphviz = "rootstock_graph.reporting.report_graphviz:main"
 rootstock-graph-setup-schema = "rootstock_graph.ingestion.setup_schema:main"
 rootstock-graph-tier-classification = "rootstock_graph.inference.tier_classification:main"
+rootstock-graph-validate-scan = "rootstock_graph.ingestion.validate_scan:main"
 rootstock-graph-viewer = "rootstock_graph.reporting.viewer:main"
 
 [tool.setuptools.packages.find]
@@ -57,6 +58,7 @@ where = ["src"]
 rootstock_graph = [
     "resources/queries/*.cypher",
     "resources/queries/README.md",
+    "resources/contracts/collector-scan/legacy-unversioned.schema.json",
     "resources/contracts/family-open-export/v1/schema.json",
     "resources/contracts/cve-scan-export/v7/schema.json",
     "resources/contracts/README.md",
@@ -67,13 +69,3 @@ rootstock_graph = [
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-
-[tool.ruff]
-target-version = "py311"
-line-length = 100
-
-[tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "C901"]
-
-[tool.ruff.lint.mccabe]
-max-complexity = 8

@@ -17,70 +17,26 @@ Exit code 0 on success, 1 on failure.
 from __future__ import annotations
 
 import argparse
-import importlib
-import logging
 import os
 import sys
 from contextlib import asynccontextmanager
-from typing import Any
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator
-from neo4j import GraphDatabase, READ_ACCESS
+from neo4j import GraphDatabase
 from neo4j.exceptions import AuthError, ServiceUnavailable
 
 # ── Imports from existing Rootstock modules ─────────────────────────────────
 
 
+from .api_support.routes import router
 from .server_validation import (
     matches_api_token as _matches_api_token,
     validate_api_token as _validate_api_token,
     validate_bind_host as _validate_bind_host,
     validate_neo4j_uri as _validate_neo4j_uri,
 )
-
-
-# ── Request/Response models ─────────────────────────────────────────────────
-
-
-class MarkOwnedRequest(BaseModel):
-    bundle_ids: list[str] | None = None
-    usernames: list[str] | None = None
-    label: str | None = None
-    keys: list[str] | None = None
-
-    @model_validator(mode="after")
-    def has_one_selector(self) -> "MarkOwnedRequest":
-        generic_selector = self.label is not None or self.keys is not None
-        selectors = sum(
-            (
-                bool(self.bundle_ids),
-                bool(self.usernames),
-                generic_selector,
-            )
-        )
-        if selectors != 1:
-            raise ValueError("Specify exactly one owned-node selector")
-        if generic_selector and ((self.label is None) != (self.keys is None) or not self.keys):
-            raise ValueError("label and keys must be supplied together")
-        return self
-
-
-class ClearOwnedRequest(BaseModel):
-    all: bool = False
-    bundle_ids: list[str] | None = None
-    usernames: list[str] | None = None
-
-
-class QueryRunRequest(BaseModel):
-    params: dict[str, Any] | None = None
-
-
-class CypherRequest(BaseModel):
-    cypher: str
-    params: dict[str, Any] | None = None
 
 
 # ── App lifecycle ───────────────────────────────────────────────────────────
@@ -146,31 +102,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-# ── Dependencies ────────────────────────────────────────────────────────────
-
-logger = logging.getLogger("rootstock.api")
-MAX_ADHOC_CYPHER_LENGTH = 10_000
-MAX_ADHOC_CYPHER_ROWS = 1_000
-ADHOC_CYPHER_TIMEOUT_SECONDS = 5.0
-
-
-def get_session(request: Request):
-    """Yield a mutation-capable session from the writer principal."""
-    with request.app.state.writer_driver.session() as session:
-        yield session
-
-
-def get_read_session(request: Request):
-    """Yield a read-routed session from the distinct read-only principal."""
-    with request.app.state.read_driver.session(default_access_mode=READ_ACCESS) as session:
-        yield session
-
-
-SESSION_DEPENDENCY = Depends(get_session)
-READ_SESSION_DEPENDENCY = Depends(get_read_session)
-
-# Import after dependencies exist so route decorators attach to this stable facade.
-_routes = importlib.import_module(".api_support.routes", __package__)
+app.include_router(router)
 
 
 @app.middleware("http")

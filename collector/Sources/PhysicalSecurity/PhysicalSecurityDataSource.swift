@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Result of the physical security collection pass. Custom struct because a single
 /// `system_profiler` call yields both Bluetooth device nodes and host posture properties.
