@@ -40,7 +40,7 @@ enum CaseFilesystem {
     }
 
     static func openRegularFileNoFollow(at url: URL, label: String) throws -> Int32 {
-        let descriptor = open(url.path, O_RDONLY | O_NOFOLLOW)
+        let descriptor = open(url.path, O_RDONLY | O_NONBLOCK | O_NOFOLLOW)
         guard descriptor >= 0 else {
             throw RootstockBlueError.invalidCasePackage("cannot open \(label) without following links")
         }

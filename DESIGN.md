@@ -22,28 +22,45 @@ mode can generate the full graph assessment.
 
 ## Layout
 
-The folio uses a task column and a narrower context column. On small screens,
-the context follows the task. Each step focuses its heading and returns to the
-top of the document.
+The folio is a sheet with a margin: a task column for the question, path, and
+facts, and a narrower margin column for the reading key, recommendations, and
+identity. On screens below 860 pixels the margin follows the task. Collection
+metadata is set as a ruled specimen label. Each step focuses its heading and
+returns to the top of the document. The footer stays in reach and holds the
+step's actions.
 
 Graph tools uses a searchable node list, a central workspace, and an evidence
 inspector. Triage, Graph, Paths, and Queries share the same selected data.
-The node list provides an alternative to choosing nodes on the canvas.
+The node list provides an alternative to choosing nodes on the canvas. On
+phones, the Triage, Paths, and Queries workspaces come before the node list.
 
 ## Color and typography
 
-Dark surfaces, fine borders, and green action controls define the default
-folio. The graph also offers system, light, and dark themes. Severity has a
-text label as well as a color; inference uses labels and dashed relationships.
+The interface is ink on paper. Dark mode shows the same sheet on a lightbox.
+Theme follows the system by default; the folio and Graph tools both offer a
+theme control. All values are tokens in `graph/viewer/css/tokens.css`.
 
-Use the existing CSS variables for text, surfaces, borders, actions, and
-severity. The base palette lives in `graph/viewer/css/base.css`; folio styles
-and dark-theme overrides live in `graph/viewer/css/folio.css`. Read those
-files for the current values.
+- Actions are set in ink (solid ink buttons). They never borrow a severity hue.
+- Pencil blue (`--annotation`, also `--path`) marks inferred and modeled
+  material only: dashed relationships, the modeled starting point, analysis
+  notes, and highlighted paths. Do not use it for anything else.
+- Severity uses earth pigments (`--critical`, `--high`, `--medium`, `--low`)
+  and always appears with its word.
+- Collection gaps use the ochre `--gap` band. The oxide red `--oxide` is
+  reserved for the brand mark.
 
-Use the UI font stack for prose and controls. Use the monospace stack for
-identifiers, timestamps, paths, and query text. Fonts must remain usable without
-an external font download.
+Three type families, all installed locally or system-provided, so offline
+viewers download nothing:
+
+- `--font-serif` (Iowan Old Style, falling back to Charter and Georgia) for
+  headings, lead text, and field names, set in small caps.
+- `--font-ui` (the system sans) for controls, tables, and dense UI.
+- `--font-mono` for identifiers, timestamps, paths, relationship names, and
+  query text.
+
+Use the `--size-*` and `--space-*` scales rather than ad-hoc values. Radius
+is 2px. Floating panels use the offset `--slip-shadow`, not blurred shadows.
+Node kind colors come from graph data and are not themed.
 
 ## Controls and copy
 

@@ -175,7 +175,7 @@ public struct CollectRunner: Sendable {
     private static func openRegularArtifact(
         name: String, parent: (descriptor: Int32, url: URL), root: URL
     ) throws -> (descriptor: Int32, url: URL)? {
-        let fileDescriptor = openat(parent.descriptor, name, O_RDONLY | O_NOFOLLOW)
+        let fileDescriptor = openat(parent.descriptor, name, O_RDONLY | O_NONBLOCK | O_NOFOLLOW)
         guard fileDescriptor >= 0 else {
             if errno == ENOENT { return nil }
             throw RootstockBlueError.io("collection source contains an unsafe artifact path: \(parent.url.appendingPathComponent(name).path)")

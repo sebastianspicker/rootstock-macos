@@ -146,8 +146,8 @@ extension HostIRPosture {
     }
 
     private static func securityPostureCoversSoftwareUpdate(root: ArtifactRoot) -> Bool {
-        guard root.exists("Library/Preferences/security_posture.json"),
-              let json = ArtifactIO.jsonDict(contentsOf: root.file("Library/Preferences/security_posture.json")) else { return false }
+        guard let posture = root.firstExisting(["Library/Preferences/security_posture.json"]),
+              let json = ArtifactIO.jsonDict(contentsOf: posture) else { return false }
         return !rootPostureMissingBool(root, key: "software_update_automatic_check") && json["software_update_catalog_url"] != nil
     }
 
@@ -176,8 +176,8 @@ extension HostIRPosture {
     }
 
     private static func securityPostureCoversLockdownMode(root: ArtifactRoot) -> Bool {
-        guard root.exists("Library/Preferences/security_posture.json"),
-              let json = ArtifactIO.jsonDict(contentsOf: root.file("Library/Preferences/security_posture.json")) else { return false }
+        guard let posture = root.firstExisting(["Library/Preferences/security_posture.json"]),
+              let json = ArtifactIO.jsonDict(contentsOf: posture) else { return false }
         return !rootPostureMissingBool(root, key: "lockdown_mode_enabled") || json["lockdown_mode"] != nil
     }
 

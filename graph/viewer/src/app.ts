@@ -473,7 +473,7 @@ export function initializeController(controller: Controller): void {
     worldPosition,
   });
   const savedTheme = localStorage.getItem(THEME_STORAGE_NAME);
-  const theme: Theme = savedTheme === "light" || savedTheme === "system" ? savedTheme : "dark";
+  const theme: Theme = savedTheme === "light" || savedTheme === "dark" ? savedTheme : "system";
   controller.dom.themeSelect.value = theme;
   applyTheme(controller, theme);
   updateVisibility(controller);

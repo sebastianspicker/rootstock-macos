@@ -1,105 +1,90 @@
 /** Small semantic building blocks for the evidence document. Untrusted data is always text. */
 import { element } from "./runtime";
 import { value, nodeName, injectionEdges, fdaEdges, coverageText } from "./folio-data";
-import type { GraphModel, ViewerNode } from "./types";
+import type { Controller } from "./runtime";
+import type { GraphModel, Theme, ViewerNode } from "./types";
 export const el = element;
 export const para = (text: string, className = ""): HTMLParagraphElement =>
   el("p", { text, class: className });
 export const heading = (text: string): HTMLHeadingElement => el("h2", { text });
-export function icon(name: string): SVGSVGElement {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 32 32");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("class", "folio-icon");
-  const paths: Record<string, string> = {
-    cube: "M16 2 29 9v15l-13 7L3 24V9z M3 9l13 8 13-8 M16 17v14 M9 6l13 8",
-    drive: "M6 3h20l3 23H3z M3 26v4h26v-4 M8 27h2 M14 7c8 1 8 11 3 15",
-    document: "M7 3h12l7 7v19H7z M19 3v8h7 M12 16h9 M12 21h9 M12 25h6",
-    scope:
-      "M16 2v6 M16 24v6 M2 16h6 M24 16h6 M28 16a12 12 0 1 1-24 0 12 12 0 0 1 24 0 M19 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
-    inspect:
-      "M16 28H5V3h13l6 6v7 M18 3v7h6 M10 14h7 M10 19h4 M27 23a6 6 0 1 1-12 0 6 6 0 0 1 12 0 M25 27l5 4",
-    report: "M5 28V18h3v10 M14 28V12h3v16 M24 28V4h3v24",
-  };
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("d", paths[name] ?? paths.document ?? "");
-  svg.append(path);
-  return svg;
-}
 export function button(text: string, action: () => void, primary = false): HTMLButtonElement {
   const control = el("button", {
     type: "button",
     text,
     class: primary ? "folio-primary" : "folio-button",
   });
-  if (primary) control.replaceChildren(icon("document"), el("span", { text }));
   control.addEventListener("click", action);
   return control;
 }
-export function facts(rows: [string, string][]): HTMLDListElement {
+/** Name/value pairs; `label` sets them as the ruled specimen label for collection metadata. */
+export function facts(rows: [string, string][], label = false): HTMLDListElement {
   return el(
     "dl",
-    { class: "folio-facts" },
+    { class: label ? "folio-facts folio-label" : "folio-facts" },
     rows.flatMap(([name, content]) => [el("dt", { text: name }), el("dd", { text: content })]),
   );
 }
+/** Mirrors the Graph tools theme select so the folio can be read on paper or lightbox. */
+export function themeControl(controller: Controller): HTMLElement {
+  const shared = controller.dom.themeSelect;
+  const select = el("select", { id: "folio-theme", class: "folio-theme" });
+  for (const option of Array.from(shared.options))
+    select.append(el("option", { value: option.value, text: option.text }));
+  select.value = shared.value;
+  select.addEventListener("change", () => {
+    shared.value = select.value;
+    controller.actions.applyTheme(controller, select.value as Theme);
+  });
+  return el("div", { class: "folio-theme-field" }, [
+    el("label", { for: "folio-theme", class: "sr-only", text: "Theme" }),
+    select,
+  ]);
+}
 export function warning(graph: GraphModel): HTMLElement {
   return el("div", { class: "folio-warning", role: "note" }, [
-    el("span", { text: "!", class: "folio-warning-icon", "aria-hidden": "true" }),
+    el("span", { text: "Gap", class: "folio-warning-mark", "aria-hidden": "true" }),
     para(coverageText(graph)),
   ]);
 }
-export function intro(title: string, text: string, note = "/* hello, friend. */"): HTMLElement {
+export function intro(title: string, text: string, sheet: string): HTMLElement {
   return el("header", { class: "folio-intro" }, [
-    para(note, "folio-code"),
+    para(sheet, "folio-sheet"),
     el("h1", { text: title, tabindex: "-1" }),
     para(text, "folio-lead"),
   ]);
 }
-export function sequence(): HTMLElement {
-  const aside = el("aside", { class: "folio-aside" }, [heading("Investigation sequence")]);
+/** Marginal key to the folio's two inks: what was recorded versus what was modeled. */
+export function conventions(): HTMLElement {
   const items = [
+    ["observed", "Observed", "Recorded by the collector on this host. Set in ink on a solid rule."],
     [
-      "Review scope",
-      "Confirm the data source, collection coverage, and selected question for analysis.",
-      "scope",
+      "inferred",
+      "Inferred",
+      "Modeled by Rootstock from observed facts. Set in pencil blue on a dashed rule.",
     ],
-    [
-      "Inspect evidence",
-      "Explore modeled relationships in the local graph to validate the hypothesis.",
-      "inspect",
-    ],
-    [
-      "Export report",
-      "Prepare evidence and recommendations from the loaded graph for review.",
-      "report",
-    ],
+    ["unknown", "Unknown", "Not collected. Unknown is never read as false, or as safe."],
   ];
-  aside.append(
+  return el("aside", { class: "folio-aside" }, [
+    heading("Reading this folio"),
     el(
-      "ol",
-      { class: "folio-sequence" },
-      items.map(([title, description, symbol], index) =>
-        el("li", {}, [
-          el("span", { class: "folio-number", text: `0${index + 1}` }),
-          el("span", { class: "folio-sequence-icon", "aria-hidden": "true" }, [
-            icon(symbol ?? "document"),
-          ]),
-          el("div", {}, [el("h3", { text: title ?? "" }), para(description ?? "")]),
-        ]),
-      ),
+      "dl",
+      { class: "folio-conventions" },
+      items.flatMap(([kind, term, description]) => [
+        el("dt", { class: `folio-mark ${kind ?? ""}`, text: term ?? "" }),
+        el("dd", { text: description ?? "" }),
+      ]),
     ),
-  );
-  return aside;
+    para(
+      "A modeled path is a chain of preconditions. It does not show that anything was exploited, and this viewer never changes host settings.",
+      "folio-note",
+    ),
+  ]);
 }
 export function appIdentity(node: ViewerNode): HTMLElement {
   return el("div", { class: "folio-identity" }, [
-    el("span", { class: "folio-document-icon", "aria-hidden": "true" }, [icon("document")]),
-    el("div", {}, [
-      heading(nodeName(node)),
-      para(value(node.properties.bundle_id), "folio-code"),
-      para(value(node.properties.path), "folio-code"),
-    ]),
+    heading(nodeName(node)),
+    para(value(node.properties.bundle_id), "folio-code"),
+    para(value(node.properties.path), "folio-code"),
   ]);
 }
 export function evidenceTable(graph: GraphModel, node: ViewerNode): HTMLElement {
@@ -142,7 +127,7 @@ export function evidenceTable(graph: GraphModel, node: ViewerNode): HTMLElement 
               class: `folio-tag ${content === "disabled" || content === "false" ? "negative" : ""}`,
             }),
           ]),
-          el("td", { text: basis ?? "" }),
+          el("td", { text: basis ?? "", class: `folio-basis ${basis ?? ""}` }),
         ]),
       ),
     ),
@@ -157,20 +142,19 @@ export function modeledPath(graph: GraphModel, node: ViewerNode): HTMLElement {
       "folio-note",
     );
   const source = graph.nodeById.get(injection.source);
-  const point = (name: string, detail: string, symbol: string): HTMLElement =>
-    el("div", { class: "folio-path-node" }, [
-      icon(symbol),
-      el("div", {}, [el("strong", { text: name }), para(detail)]),
+  const point = (name: string, detail: string): HTMLElement =>
+    el("div", { class: "folio-path-node" }, [el("strong", { text: name }), para(detail)]);
+  const edge = (kind: string, basis: "inferred" | "observed"): HTMLElement =>
+    el("div", { class: `folio-path-edge ${basis}` }, [
+      el("code", { text: kind }),
+      el("span", { class: `folio-mark ${basis}`, text: basis }),
     ]);
   return el("div", { class: "folio-path", role: "group", "aria-label": "Modeled exposure path" }, [
-    point(source ? nodeName(source) : "attacker.payload", "synthetic starting point", "cube"),
-    el("div", { class: "folio-path-edge inferred" }, [
-      para("CAN_INJECT_INTO · inferred"),
-      para("→"),
-    ]),
-    point(nodeName(node), value(node.properties.bundle_id), "document"),
-    el("div", { class: "folio-path-edge" }, [para("HAS_TCC_GRANT · observed"), para("→")]),
-    point("Full Disk Access", "TCC service", "drive"),
+    point(source ? nodeName(source) : "attacker.payload", "Modeled starting point"),
+    edge("CAN_INJECT_INTO", "inferred"),
+    point(nodeName(node), value(node.properties.bundle_id)),
+    edge("HAS_TCC_GRANT", "observed"),
+    point("Full Disk Access", "kTCCServiceSystemPolicyAllFiles"),
   ]);
 }
 function recommendationTitle(node: ViewerNode): string {
@@ -195,33 +179,37 @@ export function recommendationList(nodes: ViewerNode[]): HTMLElement {
   return el(
     "ol",
     { class: "folio-recommendations" },
-    nodes.map((node, index) =>
-      el("li", {}, [
-        el("span", { class: "folio-number", text: String(index + 1).padStart(2, "0") }),
-        el("div", {}, [
-          el("span", {
-            class: "folio-priority",
-            text: value(node.properties.priority).toUpperCase(),
-          }),
-          el("h3", { text: recommendationTitle(node) }),
-          para(value(node.properties.text ?? node.properties.description)),
-        ]),
-      ]),
-    ),
+    nodes.map((node, index) => {
+      const priority = value(node.properties.priority).toLowerCase();
+      const tone = ["critical", "high", "medium", "low"].includes(priority) ? priority : "";
+      const title = recommendationTitle(node);
+      const text = value(node.properties.text ?? node.properties.description);
+      const body = el("div", {}, [
+        el("h3", { text: title }),
+        el("span", { class: `folio-priority ${tone}`, text: priority }),
+      ]);
+      // Many recorded recommendations repeat their title as text; print it once.
+      if (text.replace(/\.$/, "").toLowerCase() !== title.toLowerCase()) body.append(para(text));
+      return el("li", {}, [el("span", { class: "folio-number", text: String(index + 1) }), body]);
+    }),
   );
 }
 
 /** Restore a focused control when an asynchronous update replaces the document content. */
 export function retainFolioFocus(root: HTMLElement): () => void {
   const active = document.activeElement;
-  const controls = Array.from(root.querySelectorAll<HTMLElement>("button, input, [tabindex]"));
+  const controls = Array.from(
+    root.querySelectorAll<HTMLElement>("button, input, select, [tabindex]"),
+  );
   const index = controls.indexOf(active as HTMLElement);
   if (index < 0) return () => {};
   const identity = active?.getAttribute("id");
   const name = active?.getAttribute("name");
   const value = active?.getAttribute("value");
   return () => {
-    const current = Array.from(root.querySelectorAll<HTMLElement>("button, input, [tabindex]"));
+    const current = Array.from(
+      root.querySelectorAll<HTMLElement>("button, input, select, [tabindex]"),
+    );
     const match = identity
       ? current.find((item) => item.id === identity)
       : current.find(

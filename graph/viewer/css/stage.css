@@ -30,10 +30,8 @@
 .risk-heading h1,
 .risk-heading h2,
 #workspace-title {
-  font-size: 12px;
-  font-weight: 550;
   color: var(--text);
-  letter-spacing: -0.01em;
+  font: 400 var(--size-4) / 1.2 var(--font-serif);
   text-transform: none;
 }
 .risk-summary {
@@ -170,11 +168,6 @@
   min-height: 0;
   overflow: hidden;
   background-color: var(--ink-deep);
-  background-image: radial-gradient(
-    ellipse 70% 55% at 50% 45%,
-    rgba(42, 64, 96, 0.14),
-    transparent 68%
-  );
 }
 .workspace-panel {
   position: absolute;
@@ -197,8 +190,7 @@
 .workspace-panel-heading h2 {
   margin: 4px 0 8px;
   color: var(--text);
-  font-size: 20px;
-  font-weight: 600;
+  font: 400 var(--size-6) / 1.15 var(--font-serif);
 }
 .workspace-panel-heading p:last-child {
   color: var(--muted);
@@ -288,14 +280,6 @@
 #graph-container[data-workspace="queries"] #stats {
   visibility: hidden;
 }
-:root[data-theme="light"] #graph-container,
-body[data-theme="light"] #graph-container {
-  background-image: radial-gradient(
-    ellipse 70% 55% at 50% 45%,
-    rgba(100, 140, 200, 0.08),
-    transparent 68%
-  );
-}
 #graph-canvas {
   position: relative;
   z-index: 1;
@@ -321,9 +305,9 @@ body[data-theme="light"] #graph-container {
   max-width: calc(100% - 80px);
   padding: 4px;
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--pane);
-  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--slip-shadow);
 }
 #controls [role="group"] {
   display: flex;
@@ -335,7 +319,7 @@ body[data-theme="light"] #graph-container {
   border-left: 1px solid var(--rule);
 }
 #controls [role="group"] button {
-  border-radius: 6px;
+  border-radius: var(--radius);
   border-right-width: 1px;
   border-color: transparent;
   background: transparent;
@@ -344,10 +328,10 @@ body[data-theme="light"] #graph-container {
   font-size: 12px;
 }
 #controls [role="group"] button:first-child {
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 #controls [role="group"] button:last-child {
-  border-radius: 6px;
+  border-radius: var(--radius);
   border-right-width: 1px;
 }
 #controls button {
@@ -356,7 +340,7 @@ body[data-theme="light"] #graph-container {
   color: var(--muted);
 }
 #controls button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hover);
   color: var(--muted);
   border-color: transparent;
 }
@@ -380,7 +364,7 @@ body[data-theme="light"] #graph-container {
   width: 32px;
   min-height: 32px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 0;
   border-bottom-width: 0;
   background: var(--pane);
@@ -392,15 +376,15 @@ body[data-theme="light"] #graph-container {
   height: 14px;
 }
 #zoom-controls button:first-child {
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 #zoom-controls button:last-child {
   border-bottom-width: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 #zoom-controls button:hover:not(:disabled) {
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hover);
 }
 #stats {
   position: absolute;
@@ -430,7 +414,7 @@ body[data-theme="light"] #graph-container {
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
   background: var(--pane-raised);
-  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--slip-shadow);
   opacity: 0;
   pointer-events: none;
 }
@@ -456,7 +440,7 @@ body[data-theme="light"] #graph-container {
   display: inline-block;
   padding: 2px 6px;
   border: 1px solid currentColor;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: 10px;
 }
 .critical-badge,
@@ -504,17 +488,18 @@ body[data-theme="light"] #graph-container {
 }
 #path-banner strong {
   color: var(--path);
-  font: 500 11px var(--font-mono);
-  letter-spacing: 0.04em;
+  font: italic 400 var(--size-3) / 1 var(--font-serif);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
 }
 #path-banner strong::before {
   content: "";
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 16px;
+  height: 0;
   margin-right: 7px;
-  border-radius: 50%;
-  background: var(--path);
+  border-top: 2px dashed var(--path);
+  vertical-align: middle;
 }
 #path-banner button,
 #focus-banner button {
@@ -542,7 +527,7 @@ body[data-theme="light"] #graph-container {
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
   background: var(--pane);
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--slip-shadow);
 }
 .ctx-item,
 .ctx-sub {
@@ -553,13 +538,13 @@ body[data-theme="light"] #graph-container {
   gap: 8px;
   padding: 6px 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   text-align: left;
   background: transparent;
 }
 .ctx-item:hover,
 .ctx-sub:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hover);
 }
 .ctx-separator {
   height: 1px;

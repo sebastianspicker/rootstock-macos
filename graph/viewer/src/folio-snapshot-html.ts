@@ -11,18 +11,20 @@ import {
   value,
 } from "./folio-data";
 
+// A printed sheet: ink on paper, serif headings, small-caps field names, mono identifiers.
 const stylesheet = `
-:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0c1213;color:#f2f1ee}
-*{box-sizing:border-box}body{margin:0}main{max-width:1100px;margin:auto;padding:48px 32px 64px}
-header{border-bottom:1px solid #43514e;padding-bottom:28px;margin-bottom:28px}.brand{color:#ff897c;font:14px ui-monospace,monospace;letter-spacing:1px}
-h1{font-size:clamp(30px,5vw,48px);line-height:1.15;letter-spacing:-1px;margin:20px 0}h2{font-size:24px;margin:36px 0 18px}
-p{line-height:1.65;color:#bdc9d0}dl{display:grid;grid-template-columns:150px minmax(0,1fr);margin:20px 0}dt,dd{margin:0;padding:12px 0;border-bottom:1px solid #303d3e}dd{font:14px/1.6 ui-monospace,monospace;color:#bdc9d0}
-.warning{padding:18px;border:1px solid #756d3f;background:#202217;border-radius:4px;color:#e8ddb0}.boundary{color:#bdc9d0}
-table{width:100%;border-collapse:collapse;text-align:left}caption{text-align:left;color:#bdc9d0;margin-bottom:12px}th,td{padding:14px 12px 14px 0;border-bottom:1px solid #303d3e;vertical-align:top}thead th{color:#b3d7ad;font-size:13px;font-weight:500}td{font-size:14px;line-height:1.5}td:nth-child(n+2){font-family:ui-monospace,monospace}
-ol{padding-left:24px}li{padding:16px 0;border-bottom:1px solid #303d3e}li p{margin:8px 0}.priority{color:#ff978d;font:12px ui-monospace,monospace}.count{font:13px ui-monospace,monospace;color:#b3d7ad}
-footer{border-top:1px solid #43514e;margin-top:40px;padding-top:20px;font:12px ui-monospace,monospace;color:#bdc9d0}p,dd,td,li{overflow-wrap:anywhere}.table-wrap{overflow-x:auto}
-@media(max-width:600px){main{padding:28px 18px}dl{grid-template-columns:90px minmax(0,1fr)}th,td{font-size:12px;padding:10px 8px 10px 0}h2{font-size:21px}}
-@media print{:root{color-scheme:light;background:white;color:#111}p,dd,footer,.boundary{color:#333}.warning{background:#faf8e9;color:#333}.brand,.priority,.count,thead th{color:#333}main{padding:0}header,section,li,tr{break-inside:avoid}}
+:root{color-scheme:light dark;--paper:#f3efe6;--ink:#1d1b17;--muted:#4d483f;--rule:rgba(29,27,23,.16);--rule-strong:rgba(29,27,23,.34);--gap:#7c5d0a;--gap-rule:#b08a1e;--gap-dim:rgba(176,138,30,.12);--critical:#a3341d;--oxide:#b23f28;--serif:"Iowan Old Style",Charter,"Sitka Text",Cambria,Georgia,serif;--mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}
+@media(prefers-color-scheme:dark){:root{--paper:#151411;--ink:#ebe5d8;--muted:#bbb3a3;--rule:rgba(235,229,216,.13);--rule-strong:rgba(235,229,216,.32);--gap:#d9b75e;--gap-rule:#8f7630;--gap-dim:rgba(217,183,94,.09);--critical:#e58a72;--oxide:#d9644b}}
+*{box-sizing:border-box}body{margin:0}main{max-width:960px;margin:auto;padding:56px 32px 72px}
+header{border-bottom:1px solid var(--rule-strong);padding-bottom:28px;margin-bottom:28px}.brand{color:var(--oxide);font:400 17px var(--serif)}
+h1{font:400 clamp(30px,5vw,46px)/1.1 var(--serif);letter-spacing:-.01em;margin:18px 0}h2{font:400 23px/1.25 var(--serif);margin:40px 0 14px}
+p{line-height:1.65;color:var(--muted)}dl{display:grid;grid-template-columns:150px minmax(0,1fr);margin:20px 0;padding:6px 20px;border:1px solid var(--rule-strong);outline:1px solid var(--rule);outline-offset:3px}dt,dd{margin:0;padding:10px 0;border-bottom:1px solid var(--rule)}dt{color:var(--muted);font:15px var(--serif);font-variant-caps:all-small-caps;letter-spacing:.05em}dd{font:13px/1.6 var(--mono)}dt:nth-last-child(2),dd:last-child{border-bottom:0}
+.warning{padding:12px 16px;border-left:3px solid var(--gap-rule);background:var(--gap-dim)}p.warning{color:var(--ink)}.boundary{color:var(--muted)}
+table{width:100%;border-collapse:collapse;text-align:left}caption{text-align:left;color:var(--muted);margin-bottom:12px}th,td{padding:12px 12px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top}thead th{color:var(--muted);font:15px var(--serif);font-variant-caps:all-small-caps;letter-spacing:.06em;border-bottom-color:var(--rule-strong)}td{font-size:14px;line-height:1.5}td:nth-child(n+2){font-family:var(--mono);font-size:13px}
+ol{padding-left:24px}li{padding:14px 0;border-bottom:1px solid var(--rule)}li p{margin:6px 0}.priority{color:var(--critical);font:15px var(--serif);font-variant-caps:all-small-caps;letter-spacing:.06em}.count{font:13px var(--mono);color:var(--muted)}
+footer{border-top:1px solid var(--rule-strong);margin-top:44px;padding-top:18px;font:12px var(--mono);color:var(--muted)}p,dd,td,li{overflow-wrap:anywhere}.table-wrap{overflow-x:auto}
+@media(max-width:600px){main{padding:28px 18px}dl{grid-template-columns:minmax(0,1fr);padding:4px 14px}dt{padding-bottom:0;border-bottom:0}th,td{font-size:12px;padding:10px 8px 10px 0}h2{font-size:21px}}
+@media print{:root{--paper:#fff;--ink:#111;--muted:#333;--rule:#ccc;--rule-strong:#888;--gap:#5c4508;--gap-rule:#b08a1e;--gap-dim:#f7f3e3;--critical:#8f2c18;--oxide:#9c3622}main{padding:0}header,section,li,tr{break-inside:avoid}}
 `;
 
 function metadata(graph: GraphModel): HTMLElement {
@@ -125,7 +127,7 @@ export function snapshotHtml(graph: GraphModel): string {
     el("body", {}, [
       el("main", {}, [
         el("header", {}, [
-          el("p", { class: "brand", text: "ROOTSTOCK / CORE" }),
+          el("p", { class: "brand", text: "Rootstock · Core" }),
           el("h1", { text: "Local snapshot summary" }),
           el("p", {
             class: "boundary",

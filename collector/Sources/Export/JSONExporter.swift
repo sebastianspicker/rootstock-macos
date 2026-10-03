@@ -73,21 +73,37 @@ public struct JSONExporter {
             force: force
         )
 
-        let temporaryName = makeTemporaryFilename(for: filename)
+        let stagingName = ".\(filename).\(UUID().uuidString).tmpdir"
+        guard mkdirat(directoryFD, stagingName, mode_t(S_IRWXU)) == 0 else {
+            throw JSONExporterError.cannotOpen(path, String(cString: strerror(errno)))
+        }
+        defer { _ = unlinkat(directoryFD, stagingName, AT_REMOVEDIR) }
+        let stagingFD = openat(directoryFD, stagingName, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+        guard stagingFD >= 0 else {
+            throw JSONExporterError.cannotOpen(path, String(cString: strerror(errno)))
+        }
+        defer { _ = close(stagingFD) }
+        try enforceOwnerOnlyPermissions(stagingFD, mode: mode_t(S_IRWXU), path: path)
+
+        let temporaryName = "payload"
         var shouldRemoveTemporaryFile = true
         defer {
             if shouldRemoveTemporaryFile {
-                _ = unlinkat(directoryFD, temporaryName, 0)
+                _ = unlinkat(stagingFD, temporaryName, 0)
             }
         }
 
         let temporaryFD = try openTemporaryFile(
             temporaryName,
-            directoryFD: directoryFD,
+            directoryFD: stagingFD,
             outputPath: path
         )
         do {
-            try enforceOwnerOnlyPermissions(temporaryFD, path: path)
+            try enforceOwnerOnlyPermissions(
+                temporaryFD,
+                mode: mode_t(S_IRUSR | S_IWUSR),
+                path: path
+            )
             try writeAll(data, to: temporaryFD, path: path)
             try finishTemporaryFile(temporaryFD, path: path)
         } catch {
@@ -112,7 +128,8 @@ public struct JSONExporter {
         try publishTemporaryFile(
             temporaryName,
             as: filename,
-            directoryFD: directoryFD,
+            sourceDirectoryFD: stagingFD,
+            destinationDirectoryFD: directoryFD,
             outputPath: path,
             force: force
         )
@@ -139,10 +156,6 @@ public struct JSONExporter {
             throw JSONExporterError.cannotOpen(path, "output path has no filename")
         }
         return filename
-    }
-
-    private func makeTemporaryFilename(for filename: String) -> String {
-        ".\(filename).\(UUID().uuidString).tmp"
     }
 
     private func validateOutputPath(
@@ -196,8 +209,15 @@ public struct JSONExporter {
         return fd
     }
 
-    private func enforceOwnerOnlyPermissions(_ fd: Int32, path: String) throws {
-        guard fchmod(fd, mode_t(S_IRUSR | S_IWUSR)) == 0 else {
+    private func enforceOwnerOnlyPermissions(_ fd: Int32, mode: mode_t, path: String) throws {
+        guard fchmod(fd, mode) == 0 else {
+            throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
+        }
+        guard let emptyACL = acl_init(0) else {
+            throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
+        }
+        defer { _ = acl_free(UnsafeMutableRawPointer(emptyACL)) }
+        guard acl_set_fd_np(fd, emptyACL, ACL_TYPE_EXTENDED) == 0 else {
             throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
         }
     }
@@ -227,24 +247,36 @@ public struct JSONExporter {
     private func publishTemporaryFile(
         _ temporaryName: String,
         as filename: String,
-        directoryFD: Int32,
+        sourceDirectoryFD: Int32,
+        destinationDirectoryFD: Int32,
         outputPath: String,
         force: Bool
     ) throws {
         if force {
-            guard renameat(directoryFD, temporaryName, directoryFD, filename) == 0 else {
+            guard renameat(
+                sourceDirectoryFD,
+                temporaryName,
+                destinationDirectoryFD,
+                filename
+            ) == 0 else {
                 throw JSONExporterError.writeFailed(outputPath, String(cString: strerror(errno)))
             }
             return
         }
 
-        guard linkat(directoryFD, temporaryName, directoryFD, filename, 0) == 0 else {
+        guard linkat(
+            sourceDirectoryFD,
+            temporaryName,
+            destinationDirectoryFD,
+            filename,
+            0
+        ) == 0 else {
             if errno == EEXIST {
                 throw JSONExporterError.outputExists(outputPath)
             }
             throw JSONExporterError.writeFailed(outputPath, String(cString: strerror(errno)))
         }
-        guard unlinkat(directoryFD, temporaryName, 0) == 0 else {
+        guard unlinkat(sourceDirectoryFD, temporaryName, 0) == 0 else {
             throw JSONExporterError.writeFailed(
                 outputPath,
                 "output was published but temporary cleanup failed: \(String(cString: strerror(errno)))"

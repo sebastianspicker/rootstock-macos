@@ -71,8 +71,8 @@ public enum HostIRPosture {
         var seenProducts = Set<String>()
         return securityProductCatalog.compactMap { name, absolutePath in
             let relativePath = absolutePath.hasPrefix("/") ? String(absolutePath.dropFirst()) : absolutePath
-            let candidate = root.file(relativePath)
-            guard FileManager.default.fileExists(atPath: candidate.path), seenProducts.insert(name).inserted else { return nil }
+            guard let candidate = root.firstExisting([relativePath]),
+                  seenProducts.insert(name).inserted else { return nil }
             return securityProductEvent(name: name, path: candidate.path, mode: "offline")
         }
     }

@@ -72,12 +72,7 @@ public struct BTMParser: ArtifactParser {
             "private/var/db/com.apple.backgroundtaskmanagement",
             "var/db/com.apple.backgroundtaskmanagement",
         ] {
-            let dir = root.file(dirRel)
-            guard let items = try? FileManager.default.contentsOfDirectory(
-                at: dir,
-                includingPropertiesForKeys: nil,
-                options: [.skipsHiddenFiles]
-            ) else { continue }
+            let items = root.contentsOfDirectory(dirRel, options: [.skipsHiddenFiles])
             for item in items where isBTMFile(item) {
                 ArtifactRoot.appendUnique(&urls, item)
             }

@@ -62,6 +62,11 @@ let package = Package(
             dependencies: ["RootstockCore"],
             path: "Sources/MacReportKit"
         ),
+        .testTarget(
+            name: "MacReportKitTests",
+            dependencies: ["MacReportKit", "RootstockCore"],
+            path: "Tests/MacReportKitTests"
+        ),
 
         // MARK: - Optional (compile-only; not linked into rootstock-red)
         .target(

@@ -63,11 +63,7 @@ public struct ConfigProfilesParser: ArtifactParser {
             "private/var/db/ConfigurationProfiles/Settings",
             "Library/ConfigurationProfiles/Settings",
         ] {
-            let dir = root.file(dirRel)
-            guard let items = try? FileManager.default.contentsOfDirectory(
-                at: dir,
-                includingPropertiesForKeys: nil
-            ) else { continue }
+            let items = root.contentsOfDirectory(dirRel)
             for item in items where item.pathExtension == "plist" || item.pathExtension == "json" {
                 if !seen.insert(item) { continue }
                 if item.pathExtension == "json" {
@@ -86,11 +82,7 @@ public struct ConfigProfilesParser: ArtifactParser {
             "Library/Managed Preferences",
             "private/var/db/Managed Preferences",
         ] {
-            let dir = root.file(dirRel)
-            guard let items = try? FileManager.default.contentsOfDirectory(
-                at: dir,
-                includingPropertiesForKeys: nil
-            ) else { continue }
+            let items = root.contentsOfDirectory(dirRel)
             for item in items where item.pathExtension == "plist" {
                 if !seen.insert(item) { continue }
                 if let e = parsePayloadPlist(at: item) {

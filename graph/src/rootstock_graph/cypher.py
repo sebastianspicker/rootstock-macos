@@ -147,9 +147,37 @@ def _strip_cypher_comments(cypher: str) -> str:
 def cypher_code_only(cypher: str) -> str:
     """Remove comments, quoted strings, and escaped identifiers for policy checks."""
     cleaned = _strip_cypher_comments(cypher)
-    cleaned = re.sub(r"'(?:[^'\\]|\\.)*'", "''", cleaned)
-    cleaned = re.sub(r'"(?:[^"\\]|\\.)*"', '""', cleaned)
-    return re.sub(r"`(?:[^`]|``)*`", "``", cleaned)
+    output: list[str] = []
+    quote: str | None = None
+    escaped = False
+    index = 0
+    while index < len(cleaned):
+        char = cleaned[index]
+        if quote is None:
+            if char in ("'", '"', "`"):
+                quote = char
+                output.append(" ")
+            else:
+                output.append(char)
+            index += 1
+            continue
+
+        # Preserve newlines and whitespace so tokens on either side of a
+        # literal cannot be accidentally joined by the policy scanner.
+        output.append(char if char.isspace() else " ")
+        following = cleaned[index + 1] if index + 1 < len(cleaned) else ""
+        if quote == "`" and char == "`" and following == "`":
+            output.append(" ")
+            index += 2
+            continue
+        if escaped:
+            escaped = False
+        elif char == "\\" and quote != "`":
+            escaped = True
+        elif char == quote:
+            quote = None
+        index += 1
+    return "".join(output)
 
 
 def run_query(

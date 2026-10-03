@@ -1,4 +1,5 @@
 import Foundation
+import HostCommand
 import RootstockMacFacts
 
 /// Parses launchd plist files (XML and binary) from LaunchDaemon/LaunchAgent directories.
@@ -23,7 +24,7 @@ public struct LaunchdPlistParser {
 
     /// Parse a single plist file. Returns nil if the file is missing, unreadable, or malformed.
     public func parse(at path: String) -> ParsedEntry? {
-        guard let data = FileManager.default.contents(atPath: path) else { return nil }
+        guard let data = try? BoundedFileReader.read(path: path) else { return nil }
 
         var format = PropertyListSerialization.PropertyListFormat.xml
         guard let plist = try? PropertyListSerialization.propertyList(

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import html
+from html.parser import HTMLParser
+
 REPORT_HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; script-src 'none'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Rootstock Security Assessment Report</title>
   <style>
     :root {{
@@ -269,6 +273,98 @@ def _responsive_tables(body: str) -> str:
     ).replace("</table>", "</table></figure></div>")
 
 
+_SAFE_REPORT_TAGS = {
+    "p",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "ul",
+    "ol",
+    "li",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "pre",
+    "code",
+    "em",
+    "strong",
+    "blockquote",
+    "a",
+    "br",
+    "hr",
+}
+_DROP_REPORT_CONTENT_TAGS = {
+    "script",
+    "style",
+    "iframe",
+    "object",
+    "embed",
+    "svg",
+    "math",
+    "form",
+    "template",
+}
+
+
+class _InertReportHTML(HTMLParser):
+    """Retain Markdown structure while removing every active-content surface."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.output: list[str] = []
+        self._dropped_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        del attrs
+        tag = tag.lower()
+        if tag in _DROP_REPORT_CONTENT_TAGS:
+            self._dropped_depth += 1
+            return
+        if self._dropped_depth or tag == "img" or tag not in _SAFE_REPORT_TAGS:
+            return
+        # Links intentionally keep their readable text but no href. Report
+        # evidence is untrusted and must never become a navigation surface.
+        self.output.append(f"<{tag}>")
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        del attrs
+        tag = tag.lower()
+        if not self._dropped_depth and tag in {"br", "hr"}:
+            self.output.append(f"<{tag}>")
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        if tag in _DROP_REPORT_CONTENT_TAGS:
+            if self._dropped_depth:
+                self._dropped_depth -= 1
+            return
+        if not self._dropped_depth and tag in _SAFE_REPORT_TAGS and tag not in {"br", "hr"}:
+            self.output.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        if not self._dropped_depth:
+            self.output.append(html.escape(data, quote=False))
+
+    def handle_entityref(self, name: str) -> None:
+        if not self._dropped_depth:
+            self.output.append(f"&{name};")
+
+    def handle_charref(self, name: str) -> None:
+        if not self._dropped_depth:
+            self.output.append(f"&#{name};")
+
+
+def _inert_report_html(body: str) -> str:
+    parser = _InertReportHTML()
+    parser.feed(body)
+    parser.close()
+    return "".join(parser.output)
+
+
 def markdown_to_html(md: str) -> str:
     """Convert a Markdown report to accessible HTML using the required renderer."""
     try:
@@ -280,6 +376,7 @@ def markdown_to_html(md: str) -> str:
         ) from exc
 
     body = md_lib.markdown(md, extensions=["tables", "fenced_code", "sane_lists"])
+    body = _inert_report_html(body)
     body = _responsive_tables(body)
 
     return REPORT_HTML_TEMPLATE.format(body=body)

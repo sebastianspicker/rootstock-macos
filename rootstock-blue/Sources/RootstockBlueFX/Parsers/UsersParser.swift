@@ -19,10 +19,7 @@ public struct UsersParser: ArtifactParser {
         ]
         var plists: [URL] = []
         for dir in userDirs {
-            let url = root.file(dir)
-            if let items = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil) {
-                plists.append(contentsOf: items.filter { $0.pathExtension == "plist" })
-            }
+            plists.append(contentsOf: root.contentsOfDirectory(dir).filter { $0.pathExtension == "plist" })
         }
         // Also pick up any users/*.plist under the tree
         plists.append(contentsOf: root.enumerate {

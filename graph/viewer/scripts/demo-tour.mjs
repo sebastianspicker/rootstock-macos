@@ -36,23 +36,26 @@ export function renderTour() {
 <meta name="description" content="A screenshot tour of Rootstock's macOS security evidence viewer, using synthetic data.">
 <title>Rootstock | Screenshot tour</title>
 <style>
-  :root { color-scheme: dark; font: 17px/1.6 system-ui, sans-serif; background: #0c1213; color: #f2f1ee; }
+  :root { color-scheme: light dark; --paper: #f3efe6; --ink: #1d1b17; --muted: #4d483f; --rule: rgba(29, 27, 23, 0.16); --oxide: #b23f28; --serif: "Iowan Old Style", Charter, "Sitka Text", Cambria, Georgia, serif; font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--paper); color: var(--ink); }
+  @media (prefers-color-scheme: dark) { :root { --paper: #151411; --ink: #ebe5d8; --muted: #bbb3a3; --rule: rgba(235, 229, 216, 0.14); --oxide: #d9644b; } }
   body { max-width: 1120px; margin: auto; padding: 28px 24px 64px; }
-  a { color: #b3d7ad; text-underline-offset: 4px; }
-  a:focus-visible { outline: 2px solid #b3d7ad; outline-offset: 5px; }
-  nav { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid #303d3e; padding-bottom: 20px; }
+  a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: 4px; }
+  a:hover { text-decoration-color: currentColor; }
+  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
+  nav { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 20px; }
+  nav strong { color: var(--oxide); font: 400 19px var(--serif); }
   header { max-width: 780px; margin: 56px 0; }
-  h1 { font-size: clamp(32px, 6vw, 56px); line-height: 1.12; letter-spacing: -1px; }
-  h2 { font-size: 26px; margin-bottom: 8px; }
-  p { color: #b7c4ce; max-width: 780px; }
-  .label { color: #b3d7ad; }
-  figure { margin: 0 0 64px; scroll-margin-top: 24px; }
-  img { width: 100%; height: auto; display: block; border: 1px solid #303d3e; box-sizing: border-box; margin-top: 24px; }
-  footer { border-top: 1px solid #303d3e; padding-top: 24px; }
+  h1 { font: 400 clamp(32px, 6vw, 54px)/1.1 var(--serif); letter-spacing: -0.015em; }
+  h2 { font: 400 27px/1.2 var(--serif); margin-bottom: 8px; }
+  p { color: var(--muted); max-width: 780px; }
+  .label { color: var(--muted); font: 17px var(--serif); font-variant-caps: all-small-caps; letter-spacing: 0.06em; }
+  figure { margin: 0 0 72px; scroll-margin-top: 24px; }
+  img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); box-sizing: border-box; margin-top: 24px; }
+  footer { border-top: 1px solid var(--rule); padding-top: 24px; }
 </style>
 </head>
 <body>
-<nav aria-label="Demo navigation"><strong>ROOTSTOCK / CORE</strong><a href="./">Open interactive demo →</a></nav>
+<nav aria-label="Demo navigation"><strong>Rootstock</strong><a href="./">Open interactive demo →</a></nav>
 <header><p class="label">Screenshot tour · Synthetic data</p>
 <h1>From a security question to the evidence behind it.</h1>
 <p>Rootstock connects macOS permissions, application hardening, and modeled exposure paths. These captures show the actual viewer with a fictional dataset. No host is scanned and no database connection is needed.</p>

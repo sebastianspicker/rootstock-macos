@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import RootstockCore
 
 /// Launch-constraint / library-validation injectability truth (path + codesign note heuristics).
@@ -86,23 +87,71 @@ public struct LaunchConstraintCollector: Collector {
     /// Best-effort codesign display via Process (allowlisted security tooling).
     private static func codesignProbe(path: String) -> CodesignSample {
         var sample = CodesignSample(path: path, notes: ["launch_constraint_collector_probe"])
+        let captureURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("rootstock-codesign-\(UUID().uuidString)")
+        do {
+            try Data().write(to: captureURL, options: .withoutOverwriting)
+        } catch {
+            sample.notes.append("codesign capture setup failed: \(error.localizedDescription)")
+            return sample
+        }
+        defer { try? FileManager.default.removeItem(at: captureURL) }
+        _ = chmod(captureURL.path, mode_t(S_IRUSR | S_IWUSR))
+
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
         proc.arguments = ["-d", "--entitlements", ":-", path]
-        let out = Pipe()
-        let err = Pipe()
-        proc.standardOutput = out
-        proc.standardError = err
+        guard let capture = try? FileHandle(forWritingTo: captureURL) else {
+            sample.notes.append("codesign capture open failed")
+            return sample
+        }
+        proc.standardOutput = capture
+        proc.standardError = capture
+        let completed = DispatchSemaphore(value: 0)
+        proc.terminationHandler = { _ in completed.signal() }
         do {
             try proc.run()
-            proc.waitUntilExit()
         } catch {
+            try? capture.close()
             sample.notes.append("codesign spawn failed: \(error.localizedDescription)")
             return sample
         }
-        let errData = err.fileHandleForReading.readDataToEndOfFile()
-        let outData = out.fileHandleForReading.readDataToEndOfFile()
-        let text = String(data: errData + outData, encoding: .utf8) ?? ""
+        let outputLimit = 2 * 1024 * 1024
+        let deadline = Date().addingTimeInterval(5)
+        var timedOut = false
+        var outputExceeded = false
+        while completed.wait(timeout: .now() + .milliseconds(50)) == .timedOut {
+            var info = stat()
+            if fstat(capture.fileDescriptor, &info) == 0, info.st_size > outputLimit {
+                outputExceeded = true
+                break
+            }
+            if Date() >= deadline {
+                timedOut = true
+                break
+            }
+        }
+        if timedOut || outputExceeded {
+            proc.terminate()
+            if completed.wait(timeout: .now() + 1) == .timedOut {
+                kill(proc.processIdentifier, SIGKILL)
+                _ = completed.wait(timeout: .now() + 1)
+            }
+            try? capture.close()
+            sample.notes.append(
+                timedOut ? "codesign probe timed out" : "codesign output exceeded size limit"
+            )
+            return sample
+        }
+        try? capture.close()
+        let reader = try? FileHandle(forReadingFrom: captureURL)
+        let captured = (try? reader?.read(upToCount: outputLimit + 1)) ?? Data()
+        try? reader?.close()
+        let bounded = captured.prefix(outputLimit)
+        let text = String(data: Data(bounded), encoding: .utf8) ?? ""
+        if captured.count > outputLimit {
+            sample.notes.append("codesign output truncated")
+        }
         sample.signed = proc.terminationStatus == 0 || text.contains("Authority=")
         if text.localizedCaseInsensitiveContains("flags=0x")
             || text.localizedCaseInsensitiveContains("runtime")

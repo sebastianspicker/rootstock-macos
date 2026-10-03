@@ -59,6 +59,7 @@ let package = Package(
         .target(
             name: "LaunchdPlists",
             dependencies: [
+                "HostCommand",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
             ]
         ),
@@ -203,7 +204,7 @@ let package = Package(
         ),
         .testTarget(
             name: "RootstockCLITests",
-            dependencies: ["RootstockCLI", "Models", "Export"]
+            dependencies: ["RootstockCLI", "Models", "Export", "HostCommand"]
         ),
     ],
     swiftLanguageModes: [.v6]

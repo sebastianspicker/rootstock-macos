@@ -115,6 +115,7 @@ public struct LaunchAgentLabAction: LabAction {
     }
 
     private func writePlist(for request: LaunchAgentInstallRequest) throws {
+        try LabMarkerLifecycle.assertNoUnsafeSymlinks(to: request.plistURL)
         try FileManager.default.createDirectory(at: request.directory, withIntermediateDirectories: true)
         let plistData = try Self.plistXML(
             label: request.label,
@@ -146,7 +147,7 @@ public struct LaunchAgentLabAction: LabAction {
     }
 
     private func status(plistURL: URL, label: String) -> ActionResult {
-        let exists = FileManager.default.fileExists(atPath: plistURL.path)
+        let exists = LabMarkerLifecycle.markerExists(at: plistURL)
         let steps = [
             "Check plist exists at \(plistURL.path): \(exists)",
             "Note: status does not query launchctl or BTM store (FileManager-only)",
@@ -171,7 +172,7 @@ public struct LaunchAgentLabAction: LabAction {
             "Document BTM residual risk for operator cleanup",
         ]
         let cleanup = [Self.btmCleanupNote]
-        let exists = FileManager.default.fileExists(atPath: plistURL.path)
+        let exists = LabMarkerLifecycle.markerExists(at: plistURL)
 
         if dryRun {
             return ActionResult(
@@ -189,7 +190,7 @@ public struct LaunchAgentLabAction: LabAction {
         }
 
         if exists {
-            try FileManager.default.removeItem(at: plistURL)
+            try LabMarkerLifecycle.removeMarker(at: plistURL)
         }
 
         return ActionResult(

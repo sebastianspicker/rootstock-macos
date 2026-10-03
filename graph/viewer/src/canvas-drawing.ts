@@ -60,6 +60,14 @@ export function drawPolygon(
   context.closePath();
 }
 
+/** Modeled-path edges use the inference color; other edges are graphite, faint when not traversable. */
+function edgeColor(onPath: boolean, traversable: boolean): string {
+  if (onPath) return canvasLabelColor("--path", "#33528a");
+  return traversable
+    ? canvasLabelColor("--edge", "#4a453b")
+    : canvasLabelColor("--edge-faint", "#5c564b");
+}
+
 export function drawEdges(input: VisibleEdgeDrawInput): void {
   const { controller, worldPosition } = input;
   const {
@@ -96,7 +104,7 @@ function drawEdge({ controller, edge, context, worldPosition, labelColor }: Edge
   };
   if (intersects(viewport, lineBounds)) {
     drawEdgeStroke(context, segment, onPath, edge.properties?._traversable === true);
-    drawArrowhead(context, segment.source, segment.target, onPath ? "#6aafff" : "#8ea6bf");
+    drawArrowhead(context, segment.source, segment.target, edgeColor(onPath, true));
   }
   drawVisibleEdgeLabel(controller, edge, sourcePosition, targetPosition, labelColor);
 }
@@ -139,7 +147,7 @@ function drawEdgeStroke(
   context.beginPath();
   context.moveTo(segment.source.x, segment.source.y);
   context.lineTo(segment.target.x, segment.target.y);
-  context.strokeStyle = onPath ? "#6aafff" : traversable ? "#8ea6bf" : "#59697a";
+  context.strokeStyle = edgeColor(onPath, traversable);
   context.globalAlpha = onPath ? 1 : 0.68;
   context.lineWidth = onPath ? 2.4 : 1.35;
   context.stroke();
@@ -248,7 +256,10 @@ function drawVisibleNodeShape(
     context.fillStyle = safeNodeColor(node.properties._color);
     context.fill();
     context.lineWidth = selected ? 2.5 : 1.5;
-    context.strokeStyle = selected ? "#f3f6f9" : "rgba(243, 246, 249, .72)";
+    // Nodes sit on the sheet with a ground-colored keyline; selection draws it in ink.
+    context.strokeStyle = selected
+      ? canvasLabelColor("--text", "#1d1b17")
+      : canvasLabelColor("--ink", "#f3efe6");
     context.stroke();
   }
 }
@@ -287,9 +298,11 @@ export function drawSelectionRings(
   ] as const) {
     context.beginPath();
     context.arc(position.x, position.y, radius + offset, 0, Math.PI * 2);
-    context.strokeStyle = `rgba(106, 175, 255, ${alpha})`;
-    context.lineWidth = offset === 7 ? 3 : 2;
+    context.globalAlpha = alpha;
+    context.strokeStyle = canvasLabelColor("--path", "#33528a");
+    context.lineWidth = offset === 7 ? 2 : 1;
     context.stroke();
+    context.globalAlpha = 1;
   }
 }
 

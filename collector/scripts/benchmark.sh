@@ -16,7 +16,6 @@ now_ms() {
 }
 
 BINARY="${1:-$(dirname "$0")/../.build/release/RootstockCLI}"
-OUTFILE_PREFIX="/tmp/rootstock-bench"
 BENCHMARK_OUTPUT="${BENCHMARK_OUTPUT:-$(dirname "$0")/../../docs/private/benchmark-results.md}"
 
 if [[ ! -x "$BINARY" ]]; then
@@ -25,7 +24,12 @@ if [[ ! -x "$BINARY" ]]; then
 	exit 1
 fi
 
+umask 077
+BENCHMARK_DIR=$(mktemp -d "${TMPDIR:-/tmp}/rootstock-bench.XXXXXX")
+OUTFILE_PREFIX="${BENCHMARK_DIR}/rootstock-bench"
+
 echo "Binary: $BINARY"
+echo "Artifacts: $BENCHMARK_DIR"
 echo "Running 3 benchmark iterations..."
 echo ""
 

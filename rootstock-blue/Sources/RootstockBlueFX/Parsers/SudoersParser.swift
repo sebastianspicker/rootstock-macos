@@ -38,12 +38,7 @@ public struct SudoersParser: ArtifactParser {
     private func parseSudoersDirectories(root: ArtifactRoot, seen: inout PathDeduper) -> [EventEnvelope] {
         var events: [EventEnvelope] = []
         for path in ["etc/sudoers.d", "private/etc/sudoers.d"] {
-            let directory = root.file(path)
-            guard let items = try? FileManager.default.contentsOfDirectory(
-                at: directory,
-                includingPropertiesForKeys: [.isRegularFileKey],
-                options: [.skipsHiddenFiles]
-            ) else { continue }
+            let items = root.contentsOfDirectory(path, options: [.skipsHiddenFiles])
             for item in items where seen.insert(item) && isSudoersInclude(item) {
                 events.append(contentsOf: parseSudoersFile(at: item))
             }

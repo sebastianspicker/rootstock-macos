@@ -1,4 +1,5 @@
 import Foundation
+import HostCommand
 
 /// Parses crontab files into LaunchItem records.
 ///
@@ -11,7 +12,7 @@ struct CronParser {
     struct CronEntry {
         let label: String
         let path: String
-        let program: String
+        let program: String?
         let runAtLoad: Bool
         let user: String?
     }
@@ -50,7 +51,8 @@ struct CronParser {
     private func readCrontab(at path: String, errors: inout [String], kind: String) -> String? {
         let fm = FileManager.default
         guard fm.fileExists(atPath: path) else { return nil }
-        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
+        guard let data = try? BoundedFileReader.read(path: path),
+              let text = String(data: data, encoding: .utf8) else {
             errors.append("Cannot read \(kind) crontab: \(path)")
             return nil
         }
@@ -99,7 +101,7 @@ struct CronParser {
             results.append(CronEntry(
                 label: "cron.\(parsed.labelUser).\(index)",
                 path: filePath,
-                program: parsed.command,
+                program: nil,
                 runAtLoad: parsed.runAtLoad,
                 user: parsed.user
             ))

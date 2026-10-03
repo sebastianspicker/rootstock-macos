@@ -21,8 +21,8 @@ export function renderReport(content: HTMLElement, view: ReportView): void {
       title,
       view.live
         ? "Export the current graph assessment. The report covers the loaded graph, not only the selected application."
-        : "Export a local summary of the loaded snapshot. This is distinct from a full Neo4j assessment report.",
-      "/* leave a paper trail. */",
+        : "Export a summary of the loaded snapshot. It is not the full Neo4j assessment report, which needs a live session.",
+      "Sheet 3 of 3 · Report",
     ),
   );
   const left = el("section", { class: "folio-main-column" });
@@ -48,8 +48,8 @@ export function renderReport(content: HTMLElement, view: ReportView): void {
           el("strong", { text: label }),
           para(
             format === "html"
-              ? "Formatted document for offline review."
-              : "Plain text format for local review.",
+              ? "A formatted page that opens and prints offline."
+              : "Plain text for tickets, diffs and further editing.",
           ),
         ]),
       ]),
@@ -91,12 +91,9 @@ function reportContext(view: ReportView): HTMLElement {
             : "Recorded applications, modeled FDA relationships, and loaded recommendations.",
         ],
         ["Available source metadata", "Missing collection metadata remains explicitly unknown."],
-        ["Recommendations", "Prioritized advice and supporting context; no automatic remediation."],
+        ["Recommendations", "Prioritized advice and supporting context; nothing is remediated."],
       ].map(([title, description]) =>
-        el("li", {}, [
-          el("span", { text: "✓", "aria-hidden": "true" }),
-          el("div", {}, [el("h3", { text: title ?? "" }), para(description ?? "")]),
-        ]),
+        el("li", {}, [el("h3", { text: title ?? "" }), para(description ?? "")]),
       ),
     ),
   ]);

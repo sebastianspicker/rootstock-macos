@@ -28,6 +28,7 @@ import {
   evidenceTable,
   modeledPath,
   recommendationList,
+  themeControl,
 } from "./folio-ui";
 
 type Stage = "scope" | "evidence" | "report" | "complete";
@@ -37,6 +38,7 @@ export function mountFolio(controller: Controller): void {
   if (!root) return;
   const folio = new EvidenceFolio(controller, root);
   instances.set(controller, folio);
+  controller.dom.themeSelect.addEventListener("change", () => folio.render());
   folio.render();
 }
 export function refreshFolio(controller: Controller): void {
@@ -119,20 +121,19 @@ class EvidenceFolio {
     });
     return el("header", { class: "folio-topbar" }, [
       el("div", { class: "folio-brand" }, [
-        el("span", { text: "ROOTSTOCK" }),
-        el("span", { text: " / CORE" }),
+        el("span", { class: "folio-mark-r", text: "R", "aria-hidden": "true" }),
+        el("span", { text: "Rootstock" }),
       ]),
-      para(host, "folio-top-meta"),
-      para(collected, "folio-top-meta"),
+      para(`${host} · ${collected}`, "folio-top-meta"),
       para(
         /synthetic|public.?demo/i.test(source)
-          ? "SYNTHETIC EXAMPLE"
+          ? "Synthetic example"
           : this.live
-            ? "LOCAL GRAPH"
-            : "OFFLINE SNAPSHOT",
+            ? "Local graph"
+            : "Offline snapshot",
         "folio-source-label",
       ),
-      para("Modeled exposure · not a confirmed compromise", "folio-boundary"),
+      themeControl(this.controller),
       controls,
     ]);
   }
@@ -144,17 +145,18 @@ class EvidenceFolio {
     ];
     const nav = el("nav", { class: "folio-navigation", "aria-label": "Investigation stages" });
     stages.forEach(([stage, label], index) => {
-      const control = button(`0x0${index + 1}   ${label}`, () => this.go(stage));
+      const control = el("button", { type: "button", class: "folio-stage" }, [
+        el("span", { class: "folio-stage-number", text: String(index + 1), "aria-hidden": "true" }),
+        el("span", { text: label }),
+      ]);
+      control.addEventListener("click", () => this.go(stage));
       control.disabled = this.busy || (stage !== "scope" && !this.result);
       if (this.stage === stage || (this.stage === "complete" && stage === "report"))
         control.setAttribute("aria-current", "step");
       nav.append(control);
     });
     nav.append(
-      para(
-        `${this.live ? "Local analysis" : "Offline snapshot"}  |  TCC · Signing · Hardening · Injection (modeled)`,
-        "folio-code",
-      ),
+      para("TCC grants · code signing · hardening · injection, modeled", "folio-coverage"),
     );
     return nav;
   }
@@ -227,11 +229,12 @@ class EvidenceFolio {
       left.append(
         modeledPath(this.graph, selected),
         evidenceTable(this.graph, selected),
-        heading("Analysis notes"),
-        para(
-          "Dashed relationships represent modeled inference. Observed values describe recorded collection evidence; unknown values are not equivalent to false. Application identity includes the installation path.",
-          "folio-note",
-        ),
+        el("section", { class: "folio-slip", "aria-labelledby": "folio-slip-title" }, [
+          el("h2", { id: "folio-slip-title", text: "Analysis notes" }),
+          para(
+            "Dashed relationships are modeled inference. Observed values are recorded collection evidence; an unknown value is not the same as false. The application is identified by its installation path as well as its bundle ID.",
+          ),
+        ]),
       );
       if ((this.result?.rows.length ?? 0) > 1)
         left.append(
@@ -257,6 +260,7 @@ class EvidenceFolio {
         ? `Inspect the recorded facts and modeled relationships for ${nodeName(selected)}. This explains an exposure, not confirmation of compromise.`
         : (questions.find((question) => question.id === this.question)?.text ??
             "Review the analysis results."),
+      "Sheet 2 of 3 · Evidence",
     );
   }
   private evidenceAside(): HTMLElement {
@@ -425,16 +429,22 @@ class EvidenceFolio {
     content.append(
       intro(
         this.live ? "Assessment report download started" : "Snapshot summary download started",
-        "Your browser handles the destination and completion. Recommendations still require review and action.",
-        "/* paper trail prepared. */",
+        "Your browser chooses where the file goes and whether it finishes. The recommendations below still need someone to review and act on them.",
+        "Receipt",
       ),
-      facts([
-        ["File", this.filename],
-        ["Location", "Browser download destination · disk write not verified"],
-        ["Format", this.format === "html" ? "HTML" : "Markdown"],
-        ["Scope", this.live ? "Current loaded graph assessment" : "Local viewer snapshot summary"],
-        ["Source scan", scopeMetadata(this.graph).collected],
-      ]),
+      facts(
+        [
+          ["File", this.filename],
+          ["Location", "Browser download destination · disk write not verified"],
+          ["Format", this.format === "html" ? "HTML" : "Markdown"],
+          [
+            "Scope",
+            this.live ? "Current loaded graph assessment" : "Local viewer snapshot summary",
+          ],
+          ["Source scan", scopeMetadata(this.graph).collected],
+        ],
+        true,
+      ),
       warning(this.graph),
       heading("Recommendations still require review"),
       recommendationList(
@@ -445,17 +455,19 @@ class EvidenceFolio {
       el("div", { class: "folio-actions" }, [
         button("Download again", () => this.download(), true),
         button("Return to evidence", () => this.go("evidence")),
-        para("Host settings unchanged", "folio-code"),
+        para("No host settings were changed", "folio-code"),
       ]),
     );
   }
   private footer(): HTMLElement {
     const footer = el("footer", { class: "folio-footer" }, [
       para(
-        this.live ? "127.0.0.1 / local analysis" : "Local snapshot / offline analysis",
+        this.live
+          ? "Loopback session · 127.0.0.1"
+          : "Offline snapshot · nothing leaves this browser",
         "folio-code",
       ),
-      para("Evidence and inference remain distinct", "folio-code"),
+      para("Modeled exposure, not a confirmed compromise", "folio-code"),
     ]);
     if (this.stage === "evidence")
       footer.append(

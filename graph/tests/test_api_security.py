@@ -11,6 +11,7 @@ from neo4j.exceptions import ServiceUnavailable
 
 from rootstock_graph import api
 from rootstock_graph.api_support import dependencies
+from rootstock_graph.cypher import cypher_code_only, validate_read_only_cypher
 
 
 TOKEN = "t" * 32
@@ -132,6 +133,16 @@ def test_api_rejects_write_procedure_and_multistatement_cypher(api_client, cyphe
     response = client.post("/api/cypher", headers=AUTH, json={"cypher": cypher})
     assert response.status_code == 403
     assert not session.queries
+
+
+def test_cypher_policy_uses_one_lexical_context_for_mixed_quotes() -> None:
+    harmless = "RETURN 'quoted ` SET n.p = 1 ` text', \"CREATE (n)\", `CALL db.labels()`"
+    code = cypher_code_only(harmless)
+    assert "SET" not in code
+    assert "CREATE" not in code
+    assert "CALL" not in code
+    assert validate_read_only_cypher(harmless) is None
+    assert validate_read_only_cypher(harmless + " SET n.p = 1") is not None
 
 
 def test_api_bounds_cypher_size_rows_timeout_and_read_access(api_client) -> None:

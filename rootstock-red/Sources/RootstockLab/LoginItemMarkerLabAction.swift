@@ -88,6 +88,7 @@ public struct LoginItemMarkerLabAction: LabAction {
             )
         }
 
+        try LabMarkerLifecycle.assertNoUnsafeSymlinks(to: markerURL)
         let fm = FileManager.default
         try fm.createDirectory(
             at: markerURL.deletingLastPathComponent(),

@@ -1,122 +1,165 @@
-/* Graphite Laboratory v2 — design tokens
-   Variable NAMES preserved for JS / inline styles.
-   Dark --muted/--subtle meet WCAG AA ≥4.5:1 on --ink and --pane. */
+/* Herbarium sheet — design tokens.
+   Ink on paper. Recorded facts are set in ink; inference is pencil blue (--annotation)
+   and nothing else uses that hue. Severity uses earth pigments and always carries a word.
+   Variable names --ink/--pane/--muted/--subtle/--text are read by canvas code; keep them.
+   --ink is the page ground (paper in light, lightbox in dark), --text is the ink. */
 
 :root {
-  color-scheme: dark;
-  --ink: #08090d;
-  --ink-deep: #08090d;
-  --pane: #0e1118;
-  --pane-raised: #151a25;
-  --pane-selected: #1c2434;
-  --rule: rgba(148, 163, 190, 0.09);
-  --rule-strong: rgba(148, 163, 190, 0.18);
-  --text: #e9ecf2;
-  --muted: #9aa4b8;
-  --subtle: #8993a8;
-  --action: #5ea2ff;
-  --action-strong: #438de8;
-  --oxide: #e0563c;
-  --critical: #f0655d;
-  --high: #e0a34e;
-  --medium: #d3c04f;
-  --low: #6f9fe0;
-  --verified: #58c184;
-  --path: #4fd6b8;
-  --overlay: rgba(8, 9, 13, 0.94);
-  --focus-ring: #5ea2ff;
-  --radius: 8px;
-  --font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+
+  /* Ground and surfaces */
+  --ink: #f3efe6;
+  --ink-deep: #f8f5ef;
+  --pane: #ede8de;
+  --pane-raised: #e4ded1;
+  --pane-selected: #e6e0d3;
+  --hover: rgba(29, 27, 23, 0.05);
+  --signal-dim: rgba(29, 27, 23, 0.08);
+  --overlay: rgba(243, 239, 230, 0.96);
+
+  /* Ink */
+  --text: #1d1b17;
+  --muted: #4d483f;
+  --subtle: #635d51;
+  --rule: rgba(29, 27, 23, 0.14);
+  --rule-strong: rgba(29, 27, 23, 0.34);
+
+  /* Roles */
+  --action: #1d1b17;
+  --action-strong: #000;
+  --on-action: #f8f5ef;
+  --focus-ring: #1d1b17;
+  --annotation: #33528a;
+  --annotation-dim: rgba(51, 82, 138, 0.09);
+  --path: var(--annotation);
+  --path-dim: var(--annotation-dim);
+  --gap: #7c5d0a;
+  --gap-rule: #b08a1e;
+  --gap-dim: rgba(176, 138, 30, 0.12);
+  --oxide: #b23f28;
+
+  /* Severity: rust, ochre, olive, slate */
+  --critical: #a3341d;
+  --high: #84570a;
+  --medium: #5b6519;
+  --low: #3c5a74;
+  --verified: #2f6a45;
+
+  /* Graph canvas */
+  /* Canvas edges are drawn at 0.68 alpha; these keep ≥3:1 against the ground after blending. */
+  --edge: #4a453b;
+  --edge-faint: #5c564b;
+
+  /* Type */
+  --font-serif:
+    "Iowan Old Style", "Iowan Old Style BT", Charter, "Bitstream Charter", "Sitka Text", Cambria,
+    Georgia, serif;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --size-1: 12px;
+  --size-2: 13px;
+  --size-3: 15px;
+  --size-4: 17px;
+  --size-5: 21px;
+  --size-6: 27px;
+  --size-7: 34px;
+  --size-8: 44px;
+
+  /* Space (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --sheet-gutter: clamp(18px, 4vw, 56px);
+
+  /* Shape, elevation, motion */
+  --radius: 2px;
+  --slip-shadow: 3px 3px 0 var(--rule);
+  --duration: 120ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
   --z-toolbar: 10;
   --z-sticky: 20;
   --z-backdrop: 30;
   --z-drawer: 40;
   --z-status: 50;
   --z-tooltip: 60;
-  --signal-dim: rgba(94, 162, 255, 0.14);
-  --path-dim: rgba(79, 214, 184, 0.16);
 }
 
-:root[data-theme="light"],
-body[data-theme="light"] {
-  color-scheme: light;
-  --ink: #eef0f4;
-  --ink-deep: #f7f8fa;
-  --pane: #ffffff;
-  --pane-raised: #e8ebf0;
-  --pane-selected: #dce8f6;
-  --rule: rgba(18, 24, 38, 0.08);
-  --rule-strong: rgba(18, 24, 38, 0.14);
-  --text: #12141a;
-  --muted: #4a5266;
-  --subtle: #5c6478;
-  --action: #2563c7;
-  --action-strong: #1a4fa3;
-  --critical: #c23b45;
-  --high: #a86b12;
-  --medium: #8a7820;
-  --low: #2a6aa8;
-  --verified: #1f7a48;
-  --path: #2a9a84;
-  --overlay: rgba(247, 248, 250, 0.96);
-  --focus-ring: #2563c7;
-  --signal-dim: rgba(37, 99, 199, 0.1);
-  --path-dim: rgba(42, 154, 132, 0.12);
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-    --ink: #eef0f4;
-    --ink-deep: #f7f8fa;
-    --pane: #ffffff;
-    --pane-raised: #e8ebf0;
-    --pane-selected: #dce8f6;
-    --rule: rgba(18, 24, 38, 0.08);
-    --rule-strong: rgba(18, 24, 38, 0.14);
-    --text: #12141a;
-    --muted: #4a5266;
-    --subtle: #5c6478;
-    --action: #2563c7;
-    --action-strong: #1a4fa3;
-    --critical: #c23b45;
-    --high: #a86b12;
-    --medium: #8a7820;
-    --low: #2a6aa8;
-    --verified: #1f7a48;
-    --path: #2a9a84;
-    --overlay: rgba(247, 248, 250, 0.96);
-    --focus-ring: #2563c7;
-    --signal-dim: rgba(37, 99, 199, 0.1);
-    --path-dim: rgba(42, 154, 132, 0.12);
+/* Dark: the same sheet on a lightbox. Values mirror the light roles. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ink: #151411;
+    --ink-deep: #100f0d;
+    --pane: #1b1a16;
+    --pane-raised: #24221d;
+    --pane-selected: #302d26;
+    --hover: rgba(235, 229, 216, 0.05);
+    --signal-dim: rgba(235, 229, 216, 0.09);
+    --overlay: rgba(21, 20, 17, 0.96);
+    --text: #ebe5d8;
+    --muted: #bbb3a3;
+    --subtle: #9e9686;
+    --rule: rgba(235, 229, 216, 0.13);
+    --rule-strong: rgba(235, 229, 216, 0.32);
+    --action: #ebe5d8;
+    --action-strong: #fff;
+    --on-action: #151411;
+    --focus-ring: #ebe5d8;
+    --annotation: #a3b8df;
+    --annotation-dim: rgba(163, 184, 223, 0.11);
+    --gap: #d9b75e;
+    --gap-rule: #8f7630;
+    --gap-dim: rgba(217, 183, 94, 0.09);
+    --oxide: #d9644b;
+    --critical: #e58a72;
+    --high: #d8a84c;
+    --medium: #b5bf6c;
+    --low: #9fb3c9;
+    --verified: #91c39d;
+    --edge: #b0a999;
+    --edge-faint: #948d7e;
+    --slip-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
   }
 }
 
-:root[data-theme="dark"],
-body[data-theme="dark"] {
+:root[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #08090d;
-  --ink-deep: #08090d;
-  --pane: #0e1118;
-  --pane-raised: #151a25;
-  --pane-selected: #1c2434;
-  --rule: rgba(148, 163, 190, 0.09);
-  --rule-strong: rgba(148, 163, 190, 0.18);
-  --text: #e9ecf2;
-  --muted: #9aa4b8;
-  --subtle: #8993a8;
-  --action: #5ea2ff;
-  --action-strong: #438de8;
-  --oxide: #e0563c;
-  --critical: #f0655d;
-  --high: #e0a34e;
-  --medium: #d3c04f;
-  --low: #6f9fe0;
-  --verified: #58c184;
-  --path: #4fd6b8;
-  --overlay: rgba(8, 9, 13, 0.94);
-  --focus-ring: #5ea2ff;
-  --signal-dim: rgba(94, 162, 255, 0.14);
-  --path-dim: rgba(79, 214, 184, 0.16);
+  --ink: #151411;
+  --ink-deep: #100f0d;
+  --pane: #1b1a16;
+  --pane-raised: #24221d;
+  --pane-selected: #302d26;
+  --hover: rgba(235, 229, 216, 0.05);
+  --signal-dim: rgba(235, 229, 216, 0.09);
+  --overlay: rgba(21, 20, 17, 0.96);
+  --text: #ebe5d8;
+  --muted: #bbb3a3;
+  --subtle: #9e9686;
+  --rule: rgba(235, 229, 216, 0.13);
+  --rule-strong: rgba(235, 229, 216, 0.32);
+  --action: #ebe5d8;
+  --action-strong: #fff;
+  --on-action: #151411;
+  --focus-ring: #ebe5d8;
+  --annotation: #a3b8df;
+  --annotation-dim: rgba(163, 184, 223, 0.11);
+  --gap: #d9b75e;
+  --gap-rule: #8f7630;
+  --gap-dim: rgba(217, 183, 94, 0.09);
+  --oxide: #d9644b;
+  --critical: #e58a72;
+  --high: #d8a84c;
+  --medium: #b5bf6c;
+  --low: #9fb3c9;
+  --verified: #91c39d;
+  --edge: #b0a999;
+  --edge-faint: #948d7e;
+  --slip-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
 }

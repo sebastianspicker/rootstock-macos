@@ -82,6 +82,7 @@ public struct ShellRCLabAction: LabAction {
             return installDryRunResult(rcURL: rcURL, steps: steps, cleanup: cleanup)
         }
 
+        try LabMarkerLifecycle.assertNoUnsafeSymlinks(to: rcURL)
         let fm = FileManager.default
         let parent = rcURL.deletingLastPathComponent()
         try fm.createDirectory(at: parent, withIntermediateDirectories: true)
@@ -115,6 +116,7 @@ public struct ShellRCLabAction: LabAction {
     }
 
     private func status(rcURL: URL, marker: String) throws -> ActionResult {
+        try LabMarkerLifecycle.assertNoUnsafeSymlinks(to: rcURL)
         let fm = FileManager.default
         let exists = fm.fileExists(atPath: rcURL.path)
         var present = false
@@ -146,6 +148,7 @@ public struct ShellRCLabAction: LabAction {
             "Drop lines containing \(Self.markerPrefix)",
             "Rewrite file or leave absent files untouched",
         ]
+        try LabMarkerLifecycle.assertNoUnsafeSymlinks(to: rcURL)
         let fm = FileManager.default
         let exists = fm.fileExists(atPath: rcURL.path)
 

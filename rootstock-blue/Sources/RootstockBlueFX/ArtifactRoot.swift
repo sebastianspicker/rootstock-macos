@@ -17,14 +17,13 @@ public struct ArtifactRoot: Sendable {
     }
 
     public func exists(_ relative: String) -> Bool {
-        FileManager.default.fileExists(atPath: file(relative).path)
+        eligibleNode(relative) != nil
     }
 
     /// Search common absolute-style paths relative to the artifact root.
     public func firstExisting(_ relatives: [String]) -> URL? {
         for rel in relatives {
-            let url = file(rel)
-            if FileManager.default.fileExists(atPath: url.path) {
+            if let url = eligibleNode(rel) {
                 return url
             }
         }
@@ -48,11 +47,77 @@ public struct ArtifactRoot: Sendable {
         ) else { return [] }
         for case let url as URL in enumerator {
             let standardized = url.standardizedFileURL
-            if predicate(standardized) {
+            if eligibleURL(standardized) && predicate(standardized) {
                 results.append(standardized)
             }
         }
         return results
+    }
+
+    /// List immediate children without following a directory or child outside the evidence root.
+    public func contentsOfDirectory(
+        _ relative: String,
+        options: FileManager.DirectoryEnumerationOptions = []
+    ) -> [URL] {
+        guard let directory = eligibleNode(relative, requireDirectory: true),
+              let items = directoryContents(directory, options: options) else { return [] }
+        return items
+    }
+
+    public func contentsOfDirectory(
+        at directory: URL,
+        options: FileManager.DirectoryEnumerationOptions = []
+    ) -> [URL] {
+        guard eligibleURL(directory),
+              let values = try? directory.resourceValues(forKeys: [.isDirectoryKey]),
+              values.isDirectory == true,
+              let items = directoryContents(directory, options: options)
+        else { return [] }
+        return items
+    }
+
+    private func directoryContents(
+        _ directory: URL,
+        options: FileManager.DirectoryEnumerationOptions
+    ) -> [URL]? {
+        guard let items = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey, .isDirectoryKey],
+            options: options
+        ) else { return nil }
+        return items.map(\.standardizedFileURL).filter(eligibleURL)
+    }
+
+    private func eligibleNode(_ relative: String, requireDirectory: Bool = false) -> URL? {
+        let candidate = file(relative)
+        guard eligibleURL(candidate) else { return nil }
+        if requireDirectory {
+            let values = try? candidate.resourceValues(forKeys: [.isDirectoryKey])
+            guard values?.isDirectory == true else { return nil }
+        }
+        return candidate
+    }
+
+    private func eligibleURL(_ candidate: URL) -> Bool {
+        let lexicalRoot = root.standardizedFileURL.path
+        let lexicalCandidate = candidate.standardizedFileURL.path
+        guard Self.contains(lexicalCandidate, under: lexicalRoot),
+              FileManager.default.fileExists(atPath: lexicalCandidate)
+        else { return false }
+
+        let canonicalRoot = root.resolvingSymlinksInPath().standardizedFileURL.path
+        let canonicalCandidate = candidate.resolvingSymlinksInPath().standardizedFileURL.path
+        let resolvedCandidate = candidate.resolvingSymlinksInPath().standardizedFileURL
+        guard Self.contains(canonicalCandidate, under: canonicalRoot),
+              let values = try? resolvedCandidate.resourceValues(
+                  forKeys: [.isRegularFileKey, .isDirectoryKey]
+              )
+        else { return false }
+        return values.isRegularFile == true || values.isDirectory == true
+    }
+
+    private static func contains(_ candidate: String, under root: String) -> Bool {
+        candidate == root || candidate.hasPrefix(root.hasSuffix("/") ? root : root + "/")
     }
 
     /// Append unique URLs using standardized path keys.

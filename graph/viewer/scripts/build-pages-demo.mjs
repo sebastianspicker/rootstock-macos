@@ -24,8 +24,8 @@ const defaultOutput = path.join(repositoryRoot, "graph", "generated", "pages-dem
 
 const demoCss = `
 .demo-tour-link {
-  color: var(--action, #b3d7ad);
-  font: 13px/1.5 system-ui, sans-serif;
+  color: var(--text, #1d1b17);
+  font: 13px/1.5 -apple-system, system-ui, sans-serif;
   white-space: nowrap;
   text-underline-offset: 4px;
 }

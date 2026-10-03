@@ -33,7 +33,7 @@ export function invalidateCanvasColors(): void {
 }
 
 export function canvasLabelColor(
-  variable: "--muted" | "--subtle" | "--text",
+  variable: "--muted" | "--subtle" | "--text" | "--ink" | "--path" | "--edge" | "--edge-faint",
   fallback: string,
 ): string {
   let color = colors.get(variable);

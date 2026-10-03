@@ -4,6 +4,25 @@ import RootstockCore
 import RootstockLab
 
 @Suite struct ActionRegistryProofTests {
+    @Test func markerLifecycleRejectsIntermediateSymlinkEscape() throws {
+        let scratch = try makeTemporaryLabRoot()
+        defer { removeTemporaryLabRoot(scratch) }
+        let labRoot = scratch.appendingPathComponent("lab", isDirectory: true)
+        let outside = scratch.appendingPathComponent("outside", isDirectory: true)
+        try FileManager.default.createDirectory(at: labRoot, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(
+            at: labRoot.appendingPathComponent("linked"),
+            withDestinationURL: outside
+        )
+        let marker = labRoot.appendingPathComponent("linked/marker.txt")
+
+        #expect(throws: (any Error).self) {
+            try LabMarkerLifecycle.writeMarker(at: marker, body: "synthetic")
+        }
+        #expect(!FileManager.default.fileExists(atPath: outside.appendingPathComponent("marker.txt").path))
+    }
+
     @Test func productionActionIDsAreNonEmptyUniqueAndResolvable() {
         let registry = ActionRegistry.production()
         let ids = registry.actions.map { type(of: $0).id }

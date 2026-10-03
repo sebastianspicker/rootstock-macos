@@ -77,7 +77,7 @@ extension ScanOrchestrator {
 
     /// Detect iCloud sign-in, Drive, and Keychain sync status from MobileMeAccounts.plist.
     static func detectICloudStatus(
-        readFile: (String) -> Data? = { FileManager.default.contents(atPath: $0) }
+        readFile: (String) -> Data? = { try? BoundedFileReader.read(path: $0) }
     ) -> ICloudProbeResult {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let plistPath = "\(home)/Library/Preferences/MobileMeAccounts.plist"

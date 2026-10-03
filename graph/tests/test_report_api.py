@@ -74,6 +74,24 @@ def test_report_metadata_renders_as_semantic_html():
     assert "<td>Synthetic host</td>" in html
 
 
+def test_html_report_makes_untrusted_links_images_and_raw_html_inert():
+    from rootstock_graph.reporting.report_html import markdown_to_html
+
+    html = markdown_to_html(
+        "# Evidence\n\n[click](javascript:alert(1)) "
+        "![beacon](https://attacker.example/collect) "
+        "<script>alert(2)</script><iframe src=https://attacker.example></iframe>"
+    )
+
+    assert "javascript:" not in html
+    assert "attacker.example" not in html
+    assert "<img" not in html
+    assert "<script" not in html
+    assert "<iframe" not in html
+    assert "<a>click</a>" in html
+    assert "default-src 'none'" in html
+
+
 @pytest.mark.parametrize(
     "body",
     [

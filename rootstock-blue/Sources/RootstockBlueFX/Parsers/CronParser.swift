@@ -36,8 +36,7 @@ public struct CronParser: ArtifactParser {
 
     private func explicitAtTabs(_ root: ArtifactRoot, seen: inout PathDeduper) -> [EventEnvelope] {
         ["private/var/at/tabs", "var/at/tabs"].flatMap { base in
-            let directory = root.file(base)
-            let items = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
+            let items = root.contentsOfDirectory(base, options: [.skipsHiddenFiles])
             return items.flatMap { seen.insert($0) ? parseCrontab(at: $0, kind: "at", defaultUser: $0.lastPathComponent) : [] }
         }
     }

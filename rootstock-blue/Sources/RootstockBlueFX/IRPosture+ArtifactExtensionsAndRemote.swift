@@ -9,7 +9,7 @@ extension HostIRPosture {
     static func offlineSystemExtensions(root: ArtifactRoot) -> [EventEnvelope] {
         guard !securityPostureListsSystemExtensions(root: root),
               let marker = root.firstExisting(["Library/SystemExtensions", "Library/SystemExtensions/db.plist"]) else { return [] }
-        let childEvents = systemExtensionChildEvents(marker: marker)
+        let childEvents = systemExtensionChildEvents(marker: marker, root: root)
         return childEvents.isEmpty ? [systemExtensionMarkerEvent(marker)] : childEvents
     }
 
@@ -20,11 +20,8 @@ extension HostIRPosture {
         return !extensions.isEmpty
     }
 
-    private static func systemExtensionChildEvents(marker: URL) -> [EventEnvelope] {
-        var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: marker.path, isDirectory: &isDirectory),
-              isDirectory.boolValue,
-              let children = try? FileManager.default.contentsOfDirectory(at: marker, includingPropertiesForKeys: nil) else { return [] }
+    private static func systemExtensionChildEvents(marker: URL, root: ArtifactRoot) -> [EventEnvelope] {
+        let children = root.contentsOfDirectory(at: marker)
         return children.filter { !$0.lastPathComponent.hasPrefix(".") }.map(systemExtensionEvent)
     }
 

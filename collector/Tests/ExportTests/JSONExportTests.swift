@@ -241,6 +241,7 @@ import Darwin
         var info = stat()
         #expect(stat(tmpPath, &info) == 0)
         #expect(info.st_mode & 0o777 == 0o600)
+        #expect(!hasExtendedACL(tmpPath))
     }
 
     @Test func writeCreatesNewFileWithOwnerOnlyMode() throws {
@@ -253,6 +254,30 @@ import Darwin
         var info = stat()
         #expect(stat(tmpPath, &info) == 0)
         #expect(info.st_mode & 0o777 == 0o600)
+        #expect(!hasExtendedACL(tmpPath))
+    }
+
+    @Test func writeRemovesInheritedExtendedACL() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("rootstock-export-acl-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let chmodProcess = Process()
+        chmodProcess.executableURL = URL(fileURLWithPath: "/bin/chmod")
+        chmodProcess.arguments = [
+            "+a",
+            "everyone allow read,readattr,readextattr,readsecurity,file_inherit",
+            directory.path,
+        ]
+        try chmodProcess.run()
+        chmodProcess.waitUntilExit()
+        try #require(chmodProcess.terminationStatus == 0)
+
+        let output = directory.appendingPathComponent("scan.json")
+        try JSONExporter().write(makeSampleScanResult(), to: output.path)
+
+        #expect(!hasExtendedACL(output.path))
     }
 
     @Test func forcedOverwriteFailurePreservesExistingBytes() throws {
@@ -272,7 +297,7 @@ import Darwin
         let directory = (path as NSString).deletingLastPathComponent
         let filename = (path as NSString).lastPathComponent
         let temporaryFiles = try FileManager.default.contentsOfDirectory(atPath: directory)
-            .filter { $0.hasPrefix(".\(filename).") && $0.hasSuffix(".tmp") }
+            .filter { $0.hasPrefix(".\(filename).") && $0.hasSuffix(".tmpdir") }
         #expect(temporaryFiles.isEmpty)
     }
 
@@ -330,6 +355,16 @@ import Darwin
         let path = NSTemporaryDirectory() + "rootstock-test-\(UUID().uuidString).json"
         try "existing".write(toFile: path, atomically: false, encoding: .utf8)
         return path
+    }
+
+    private func hasExtendedACL(_ path: String) -> Bool {
+        let descriptor = open(path, O_RDONLY)
+        guard descriptor >= 0 else { return true }
+        defer { _ = close(descriptor) }
+        guard let acl = acl_get_fd_np(descriptor, ACL_TYPE_EXTENDED) else { return false }
+        defer { _ = acl_free(UnsafeMutableRawPointer(acl)) }
+        var entry: acl_entry_t?
+        return acl_get_entry(acl, Int32(ACL_FIRST_ENTRY.rawValue), &entry) == 0
     }
 
     @Test func writeRefusesSymlinkEvenWithForce() throws {

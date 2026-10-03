@@ -1,7 +1,7 @@
 /** Scope and question form, kept independent of asynchronous investigation state. */
 import type { GraphModel } from "./types";
 import { scopeMetadata, questions } from "./folio-data";
-import { el, intro, facts, warning, para, sequence, button } from "./folio-ui";
+import { el, intro, facts, warning, para, conventions, button } from "./folio-ui";
 interface ScopeView {
   graph: GraphModel;
   live: boolean;
@@ -14,22 +14,26 @@ export function renderScope(content: HTMLElement, view: ScopeView): void {
   const left = el("section", { class: "folio-main-column" }, [
     intro(
       "What needs investigation?",
-      "Use the prepared local graph and review collection coverage.",
+      "Confirm where this evidence came from and what the collector could not see, then choose the question to put to it.",
+      "Sheet 1 of 3 · Scope",
     ),
   ]);
   const metadata = scopeMetadata(view.graph);
   left.append(
-    facts([
-      ["Source", metadata.source],
-      ["Collected", metadata.collected],
+    facts(
       [
-        "Analysis",
-        view.live
-          ? "Prepared graph · live read-only query access"
-          : "Loaded snapshot · local inspection only",
+        ["Source", metadata.source],
+        ["Collected", metadata.collected],
+        [
+          "Analysis",
+          view.live
+            ? "Prepared graph · live read-only query access"
+            : "Loaded snapshot · local inspection only",
+        ],
+        ["Scope", metadata.scope],
       ],
-      ["Scope", metadata.scope],
-    ]),
+      true,
+    ),
     warning(view.graph),
   );
   const choices = el("fieldset", { class: "folio-choices" }, [
@@ -50,7 +54,10 @@ export function renderScope(content: HTMLElement, view: ScopeView): void {
     choices,
     el("div", { class: "folio-actions" }, [
       run,
-      para(view.live ? "Read-only analysis" : "No Cypher is executed", "folio-code"),
+      para(
+        view.live ? "Runs a packaged read-only query" : "Reads the loaded snapshot; no query runs",
+        "folio-code",
+      ),
     ]),
   );
   if (!view.graph.nodes.length)
@@ -62,7 +69,7 @@ export function renderScope(content: HTMLElement, view: ScopeView): void {
         "folio-note",
       ),
     );
-  content.append(left, sequence());
+  content.append(left, conventions());
 }
 function runLabel(view: ScopeView): string {
   if (view.busy) return view.live ? "Running read-only query…" : "Inspecting snapshot…";

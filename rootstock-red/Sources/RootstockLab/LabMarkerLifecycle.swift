@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import RootstockCore
 
 /// Shared plan / install / status / remove lifecycle for reversible lab file markers.
@@ -10,6 +11,7 @@ public enum LabMarkerLifecycle: Sendable {
 
     /// Create parent directories and write `body` atomically to `markerURL`.
     public static func writeMarker(at markerURL: URL, body: String) throws {
+        try assertNoUnsafeSymlinks(to: markerURL)
         try FileManager.default.createDirectory(
             at: markerURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -19,17 +21,44 @@ public enum LabMarkerLifecycle: Sendable {
 
     /// Whether a marker file currently exists.
     public static func markerExists(at markerURL: URL) -> Bool {
-        FileManager.default.fileExists(atPath: markerURL.path)
+        guard (try? assertNoUnsafeSymlinks(to: markerURL)) != nil else { return false }
+        return FileManager.default.fileExists(atPath: markerURL.path)
     }
 
     /// Delete the marker if present. Returns whether it was present before removal.
     @discardableResult
     public static func removeMarker(at markerURL: URL) throws -> Bool {
+        try assertNoUnsafeSymlinks(to: markerURL)
         let exists = markerExists(at: markerURL)
         if exists {
             try FileManager.default.removeItem(at: markerURL)
         }
         return exists
+    }
+
+    /// Reject attacker-controlled links in any existing path component. macOS's
+    /// fixed compatibility aliases are permitted, but descendants are checked.
+    public static func assertNoUnsafeSymlinks(to url: URL) throws {
+        let standardized = url.standardizedFileURL
+        guard standardized.isFileURL, standardized.path.hasPrefix("/") else {
+            throw RootstockError.invalidArgument("lab marker path must be absolute")
+        }
+        let allowedSystemAliases: Set<String> = ["/tmp", "/var", "/etc"]
+        var current = URL(fileURLWithPath: "/", isDirectory: true)
+        for component in standardized.pathComponents.dropFirst() {
+            current.appendPathComponent(component)
+            var info = stat()
+            if lstat(current.path, &info) != 0 {
+                if errno == ENOENT { continue }
+                throw RootstockError.invalidArgument("cannot inspect lab marker path: \(current.path)")
+            }
+            if (info.st_mode & S_IFMT) == S_IFLNK,
+               !allowedSystemAliases.contains(current.path) {
+                throw RootstockError.invalidArgument(
+                    "lab marker path contains a symbolic link: \(current.path)"
+                )
+            }
+        }
     }
 
     // MARK: - Operation results
@@ -119,7 +148,7 @@ public enum LabMarkerLifecycle: Sendable {
             )
         }
         if exists {
-            try FileManager.default.removeItem(at: input.markerURL)
+            try removeMarker(at: input.markerURL)
         }
         return ActionResult(
             actionId: input.actionId,

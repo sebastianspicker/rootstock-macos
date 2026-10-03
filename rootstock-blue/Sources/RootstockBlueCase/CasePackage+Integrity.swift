@@ -33,6 +33,7 @@ extension CasePackage {
 
     /// Load all JSONL events from es/ and net/ streams.
     public func loadAllEvents() throws -> [EventEnvelope] {
+        try verifyIntegrity()
         var events: [EventEnvelope] = []
         try forEachEvent { events.append($0) }
         return events
