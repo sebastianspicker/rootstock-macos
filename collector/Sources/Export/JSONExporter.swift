@@ -93,26 +93,7 @@ public struct JSONExporter {
             }
         }
 
-        let temporaryFD = try openTemporaryFile(
-            temporaryName,
-            directoryFD: stagingFD,
-            outputPath: path
-        )
-        do {
-            try enforceOwnerOnlyPermissions(
-                temporaryFD,
-                mode: mode_t(S_IRUSR | S_IWUSR),
-                path: path
-            )
-            try writeAll(data, to: temporaryFD, path: path)
-            try finishTemporaryFile(temporaryFD, path: path)
-        } catch {
-            _ = close(temporaryFD)
-            throw error
-        }
-        guard close(temporaryFD) == 0 else {
-            throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
-        }
+        try writePayload(data, named: temporaryName, stagingFD: stagingFD, path: path)
 
         if testFailure == .beforePublish {
             throw JSONExporterError.writeFailed(path, "test-injected failure before atomic publish")
@@ -143,6 +124,34 @@ public struct JSONExporter {
         }
 
         try synchronizeDirectory(directoryFD, outputPath: path)
+    }
+
+    private func writePayload(
+        _ data: Data,
+        named temporaryName: String,
+        stagingFD: Int32,
+        path: String
+    ) throws {
+        let temporaryFD = try openTemporaryFile(
+            temporaryName,
+            directoryFD: stagingFD,
+            outputPath: path
+        )
+        do {
+            try enforceOwnerOnlyPermissions(
+                temporaryFD,
+                mode: mode_t(S_IRUSR | S_IWUSR),
+                path: path
+            )
+            try writeAll(data, to: temporaryFD, path: path)
+            try finishTemporaryFile(temporaryFD, path: path)
+        } catch {
+            _ = close(temporaryFD)
+            throw error
+        }
+        guard close(temporaryFD) == 0 else {
+            throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
+        }
     }
 
     private func outputDirectory(for path: String) -> String {

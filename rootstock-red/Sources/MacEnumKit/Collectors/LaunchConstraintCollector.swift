@@ -98,12 +98,27 @@ public struct LaunchConstraintCollector: Collector {
         defer { try? FileManager.default.removeItem(at: captureURL) }
         _ = chmod(captureURL.path, mode_t(S_IRUSR | S_IWUSR))
 
+        switch runCodesign(path: path, capturingTo: captureURL) {
+        case .failed(let note):
+            sample.notes.append(note)
+            return sample
+        case .completed(let status):
+            applyCodesignOutput(from: captureURL, status: status, to: &sample)
+            return sample
+        }
+    }
+
+    private enum CodesignRunOutcome {
+        case completed(Int32)
+        case failed(String)
+    }
+
+    private static func runCodesign(path: String, capturingTo captureURL: URL) -> CodesignRunOutcome {
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
         proc.arguments = ["-d", "--entitlements", ":-", path]
         guard let capture = try? FileHandle(forWritingTo: captureURL) else {
-            sample.notes.append("codesign capture open failed")
-            return sample
+            return .failed("codesign capture open failed")
         }
         proc.standardOutput = capture
         proc.standardError = capture
@@ -113,8 +128,7 @@ public struct LaunchConstraintCollector: Collector {
             try proc.run()
         } catch {
             try? capture.close()
-            sample.notes.append("codesign spawn failed: \(error.localizedDescription)")
-            return sample
+            return .failed("codesign spawn failed: \(error.localizedDescription)")
         }
         let outputLimit = 2 * 1024 * 1024
         let deadline = Date().addingTimeInterval(5)
@@ -138,12 +152,18 @@ public struct LaunchConstraintCollector: Collector {
                 _ = completed.wait(timeout: .now() + 1)
             }
             try? capture.close()
-            sample.notes.append(
-                timedOut ? "codesign probe timed out" : "codesign output exceeded size limit"
-            )
-            return sample
+            return .failed(timedOut ? "codesign probe timed out" : "codesign output exceeded size limit")
         }
         try? capture.close()
+        return .completed(proc.terminationStatus)
+    }
+
+    private static func applyCodesignOutput(
+        from captureURL: URL,
+        status: Int32,
+        to sample: inout CodesignSample
+    ) {
+        let outputLimit = 2 * 1024 * 1024
         let reader = try? FileHandle(forReadingFrom: captureURL)
         let captured = (try? reader?.read(upToCount: outputLimit + 1)) ?? Data()
         try? reader?.close()
@@ -152,7 +172,7 @@ public struct LaunchConstraintCollector: Collector {
         if captured.count > outputLimit {
             sample.notes.append("codesign output truncated")
         }
-        sample.signed = proc.terminationStatus == 0 || text.contains("Authority=")
+        sample.signed = status == 0 || text.contains("Authority=")
         if text.localizedCaseInsensitiveContains("flags=0x")
             || text.localizedCaseInsensitiveContains("runtime")
         {
@@ -179,9 +199,8 @@ public struct LaunchConstraintCollector: Collector {
             key: "com.apple.security.cs.allow-unsigned-executable-memory"
         )
         if sample.signed == false {
-            sample.notes.append("codesign exit=\(proc.terminationStatus)")
+            sample.notes.append("codesign exit=\(status)")
         }
-        return sample
     }
 
     /// Parse a boolean entitlement from codesign XML using key-adjacent true/false only.
