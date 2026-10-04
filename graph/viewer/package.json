@@ -19,12 +19,12 @@
     "demo:screenshots": "node scripts/capture-demo-screenshots.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
-    "@types/node": "24.13.2",
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "26.6.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "esbuild": "0.28.1",
-    "eslint": "10.10.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.11.0",
     "typescript": "npm:@typescript/typescript6@6.0.3",
-    "typescript-eslint": "8.69.0"
+    "typescript-eslint": "8.71.0"
   }
 }
