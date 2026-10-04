@@ -221,11 +221,9 @@ public struct CasePackage: Sendable {
         let fm = FileManager.default
         let requestedDestination = try artifactDestination(relativeName: relativeName)
         // Re-check containment on the resolved path immediately before any file operation.
-        let resolvedRoot = artifactsURL.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        let resolvedRoot = artifactsURL.standardizedFileURL.resolvingSymlinksInPath().path
         let destination = requestedDestination.standardizedFileURL.resolvingSymlinksInPath()
-        guard destination.pathComponents.count > resolvedRoot.count,
-              destination.pathComponents.starts(with: resolvedRoot)
-        else {
+        guard destination.path.hasPrefix(resolvedRoot + "/") else {
             throw RootstockBlueError.invalidCasePackage("artifact path escapes case package")
         }
         guard !fm.fileExists(atPath: destination.path) else {

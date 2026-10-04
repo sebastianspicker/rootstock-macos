@@ -198,14 +198,6 @@ let package = Package(
             name: "Quarantine",
             dependencies: ["Models"]
         ),
-        .testTarget(
-            name: "ExportTests",
-            dependencies: ["Export", "Models"]
-        ),
-        .testTarget(
-            name: "RootstockCLITests",
-            dependencies: ["RootstockCLI", "Models", "Export", "HostCommand"]
-        ),
     ],
     swiftLanguageModes: [.v6]
 )

@@ -9,7 +9,7 @@ import {
   runCustomCypher,
   startLiveSession,
 } from "./live";
-import { HISTORY_STORAGE_NAME, SESSION_STORAGE_NAME } from "./storage";
+import { HISTORY_STORAGE_NAME, setApiToken } from "./storage";
 import { buildFilters } from "./view";
 import { resetFilters } from "./model";
 import { runPath } from "./paths";
@@ -158,7 +158,7 @@ function wireLiveControls(controller: Controller): void {
     event.preventDefault();
     const token = dom.apiToken.value.trim();
     if (!token) return;
-    sessionStorage.setItem(SESSION_STORAGE_NAME, token);
+    setApiToken(token);
     dom.apiToken.value = "";
     startLiveSession(controller);
   });

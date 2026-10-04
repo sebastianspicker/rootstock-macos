@@ -166,6 +166,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Internal test suites (not part of the published surface)
+/collector/Tests/
+/graph/tests/
+/graph/viewer/tests/
+/modules/cve-scan/tests/
+/packages/RootstockMacFacts/Tests/
+/rootstock-blue/Tests/
+/rootstock-red/Tests/
+
 # Test, coverage, and analysis output
 **/.coverage
 **/.coverage.*

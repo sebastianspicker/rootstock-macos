@@ -12,7 +12,7 @@ import {
   resolveSameOriginApiTarget,
   responseErrorDetail,
 } from "./protocol";
-import { HISTORY_STORAGE_NAME, SESSION_STORAGE_NAME } from "./storage";
+import { HISTORY_STORAGE_NAME, clearApiToken, getApiToken } from "./storage";
 import type { Controller } from "./runtime";
 import type { NodeId, QueryDescriptor, QueryResult, ViewerNode } from "./types";
 
@@ -24,7 +24,7 @@ export async function apiFetch(
 ): Promise<Response> {
   const target = resolveApiTarget(controller.state.live.apiBaseUrl, path);
   const headers = new Headers(init.headers);
-  const token = sessionStorage.getItem(SESSION_STORAGE_NAME);
+  const token = getApiToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetchWithTimeout(target, init, headers);
   return validatedResponse(controller, response);
@@ -70,7 +70,7 @@ export async function validatedResponse(
 }
 
 export function expireSession(controller: Controller): void {
-  sessionStorage.removeItem(SESSION_STORAGE_NAME);
+  clearApiToken();
   controller.actions.showConnectionGate(
     controller,
     "Session expired or token rejected. Enter the current API token.",

@@ -86,7 +86,7 @@ def _run_report_query(session, query: dict) -> tuple[str, list[dict] | str]:
         return filename, rows
     except (DriverError, Neo4jError, TypeError, ValueError) as error:
         print(f"  ✗ {filename}: {error}", file=sys.stderr)
-        return filename, f"Query failed: {error}"
+        return filename, "Query failed; see server logs for details."
 
 
 # ── Scan Metadata ─────────────────────────────────────────────────────────────

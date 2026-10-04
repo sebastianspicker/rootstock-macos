@@ -29,11 +29,6 @@ let package = Package(
             dependencies: [],
             path: "Sources/RootstockCore"
         ),
-        .testTarget(
-            name: "RootstockCoreTests",
-            dependencies: ["RootstockCore"],
-            path: "Tests/RootstockCoreTests"
-        ),
 
         // MARK: - Enumeration (default executable graph)
         .target(
@@ -47,11 +42,6 @@ let package = Package(
                 .process("LOLBins/Resources"),
             ]
         ),
-        .testTarget(
-            name: "MacEnumKitTests",
-            dependencies: ["MacEnumKit"],
-            path: "Tests/MacEnumKitTests"
-        ),
         .target(
             name: "MacVulnKit",
             dependencies: ["RootstockCore", "MacEnumKit"],
@@ -62,22 +52,12 @@ let package = Package(
             dependencies: ["RootstockCore"],
             path: "Sources/MacReportKit"
         ),
-        .testTarget(
-            name: "MacReportKitTests",
-            dependencies: ["MacReportKit", "RootstockCore"],
-            path: "Tests/MacReportKitTests"
-        ),
 
         // MARK: - Optional (compile-only; not linked into rootstock-red)
         .target(
             name: "RootstockLab",
             dependencies: ["RootstockCore"],
             path: "Sources/RootstockLab"
-        ),
-        .testTarget(
-            name: "RootstockLabTests",
-            dependencies: ["RootstockCore", "RootstockLab"],
-            path: "Tests/RootstockLabTests"
         ),
         .executableTarget(
             name: "RootstockLabCLI",

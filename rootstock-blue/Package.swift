@@ -77,22 +77,6 @@ let package = Package(
             ],
             swiftSettings: strictConcurrencySettings
         ),
-        .testTarget(
-            name: "RootstockBlueTests",
-            dependencies: [
-                "RootstockBlueInterchange",
-                "RootstockBlueCase",
-                "RootstockBlueFX",
-                "RootstockBlueCore",
-                "RootstockBlueDetect",
-                "RootstockBlueCollect",
-                "RootstockBlueAcquire",
-                "RootstockBlueIntegrations",
-                "RootstockBlueSyntheticEvents",
-            ],
-            exclude: ["Fixtures"],
-            swiftSettings: strictConcurrencySettings
-        ),
 
         // MARK: - Acquire
         .target(

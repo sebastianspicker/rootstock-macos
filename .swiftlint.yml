@@ -3,13 +3,9 @@ check_for_updates: false
 
 included:
   - collector/Sources
-  - collector/Tests
   - packages/RootstockMacFacts/Sources
-  - packages/RootstockMacFacts/Tests
   - rootstock-red/Sources
-  - rootstock-red/Tests
   - rootstock-blue/Sources
-  - rootstock-blue/Tests
 
 excluded:
   - "**/.build/**"

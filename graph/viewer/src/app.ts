@@ -27,7 +27,7 @@ import {
   renderStats,
 } from "./view";
 import { readHistory, renderHistory, startLiveSession } from "./live";
-import { SESSION_STORAGE_NAME } from "./storage";
+import { getApiToken } from "./storage";
 import { element, setPressed } from "./runtime";
 import type { Controller, ViewerActions } from "./runtime";
 import { inspectNode } from "./inspector";
@@ -402,7 +402,7 @@ export function configureMode(controller: Controller): void {
   }
   controller.dom.liveActions.classList.add("live");
   controller.dom.customQuerySection.hidden = false;
-  if (sessionStorage.getItem(SESSION_STORAGE_NAME)) startLiveSession(controller);
+  if (getApiToken()) startLiveSession(controller);
   else showConnectionGate(controller);
 }
 

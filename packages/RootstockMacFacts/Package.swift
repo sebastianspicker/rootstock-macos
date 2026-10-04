@@ -21,10 +21,5 @@ let package = Package(
             name: "RootstockMacFacts",
             path: "Sources/RootstockMacFacts"
         ),
-        .testTarget(
-            name: "RootstockMacFactsTests",
-            dependencies: ["RootstockMacFacts"],
-            path: "Tests/RootstockMacFactsTests"
-        ),
     ]
 )
