@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import socket
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -36,6 +37,7 @@ from .report_formatters import (
     format_executive_summary,
 )
 
+logger = logging.getLogger(__name__)
 
 __all__ = ["assemble_report"]
 
@@ -195,11 +197,12 @@ def _append_vulnerability_intelligence(sections: list[str]) -> None:
         from ..vulnerability.cve_enrichment import enrich_registry
 
         enriched = enrich_registry()
-    except Exception as exc:
+    except Exception:
+        logger.exception("CVE enrichment unavailable")
         sections.append("### Vulnerability Intelligence")
         sections.append(
             "> Warning: CVE enrichment unavailable; vulnerability "
-            f"intelligence summary omitted. Detail: {escape_report_value(exc)}"
+            "intelligence summary omitted. See the server log for details."
         )
         sections.append("")
         return

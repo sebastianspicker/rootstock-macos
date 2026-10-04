@@ -64,7 +64,7 @@ def _run_escalation_inference(session) -> dict[str, int]:
         "a11y": infer_accessibility.infer(session),
         "esf": infer_esf.infer(session),
         "group_cap": infer_group_capabilities.infer(session),
-        "password": infer_password.infer(session),
+        "credential_change": infer_password.infer(session),
         "kerberos": infer_kerberos.infer(session),
     }
     print(f"  MDM_OVERGRANT:         {counts['mdm_overgrant']:>4} edges")
@@ -74,7 +74,7 @@ def _run_escalation_inference(session) -> dict[str, int]:
     print(f"  CAN_CONTROL_VIA_A11Y:  {counts['a11y']:>4} edges")
     print(f"  CAN_BLIND_MONITORING:  {counts['esf']:>4} edges")
     print(f"  CAN_DEBUG:             {counts['group_cap']:>4} edges")
-    print(f"  CAN_CHANGE_PASSWORD:   {counts['password']:>4} edges")
+    print(f"  CAN_CHANGE_PASSWORD:   {counts['credential_change']:>4} edges")
     print(f"  CAN_READ_KERBEROS:     {counts['kerberos']:>4} edges")
     return counts
 

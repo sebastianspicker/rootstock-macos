@@ -40,37 +40,85 @@ public struct SandboxProfileParser {
     /// Extract top-level `(allow ...)` and `(deny ...)` directives from SBPL text.
     func extractRules(from text: String) -> [Rule] {
         var rules: [Rule] = []
+        let scalars = Array(text.unicodeScalars)
 
-        // Match (allow|deny <operation> ...) patterns.
-        // The regex captures: action, operation, and optional filter text.
-        // NOTE: This regex uses a non-greedy match for the filter body and
-        // does not handle arbitrarily nested parentheses. SBPL directives
-        // with deeply nested sub-expressions (e.g. nested `require-any` /
-        // `require-all`) may only capture partial filter text. A full
-        // recursive-descent parser would be needed for complete accuracy,
-        // but the current approach is sufficient for extracting the
-        // operation type and top-level filter for categorization purposes.
-        let pattern = #"\((allow|deny)\s+([\w\-\*]+)(?:\s+((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*)?)?\)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
-            return rules
-        }
-
-        let nsText = text as NSString
-        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
-
-        for match in matches {
-            let action = nsText.substring(with: match.range(at: 1))
-            let operation = nsText.substring(with: match.range(at: 2))
-            let filter: String
-            if match.range(at: 3).location != NSNotFound {
-                filter = nsText.substring(with: match.range(at: 3))
-            } else {
-                filter = ""
+        // Linear scan for `(allow|deny <operation> [filter])`. The filter body
+        // may contain parenthesised groups nested up to two levels deep; deeper
+        // nesting is not matched. A full recursive-descent parser would be
+        // needed for complete accuracy, but this is sufficient for extracting
+        // the operation type and top-level filter for categorization purposes.
+        // Each start position is scanned once with no backtracking, so run time
+        // is bounded by the input length per directive start.
+        var index = 0
+        while index < scalars.count {
+            guard scalars[index] == "(", let parsed = parseRule(scalars, openIndex: index) else {
+                index += 1
+                continue
             }
-            rules.append(Rule(action: action, operation: operation, filter: filter))
+            rules.append(parsed.rule)
+            index = parsed.endIndex
         }
 
         return rules
+    }
+
+    private func parseRule(_ scalars: [Unicode.Scalar], openIndex: Int) -> (rule: Rule, endIndex: Int)? {
+        func isSpace(_ scalar: Unicode.Scalar) -> Bool { scalar.properties.isWhitespace }
+        func isOperationScalar(_ scalar: Unicode.Scalar) -> Bool {
+            scalar == "_" || scalar == "-" || scalar == "*"
+                || scalar.properties.isAlphabetic
+                || scalar.properties.numericType != nil
+        }
+        func skipSpaces(_ position: Int) -> Int {
+            var position = position
+            while position < scalars.count, isSpace(scalars[position]) { position += 1 }
+            return position
+        }
+
+        var position = openIndex + 1
+        var action = ""
+        for candidate in ["allow", "deny"] {
+            let end = position + candidate.unicodeScalars.count
+            if end <= scalars.count, String(String.UnicodeScalarView(scalars[position..<end])) == candidate {
+                action = candidate
+                position = end
+                break
+            }
+        }
+        guard !action.isEmpty else { return nil }
+
+        let afterAction = skipSpaces(position)
+        guard afterAction > position else { return nil }
+        position = afterAction
+
+        let operationStart = position
+        while position < scalars.count, isOperationScalar(scalars[position]) { position += 1 }
+        guard position > operationStart else { return nil }
+        let operation = String(String.UnicodeScalarView(scalars[operationStart..<position]))
+
+        var filter = ""
+        let afterOperation = skipSpaces(position)
+        if afterOperation > position {
+            position = afterOperation
+            let filterStart = position
+            var depth = 0
+            while position < scalars.count {
+                let scalar = scalars[position]
+                if scalar == "(" {
+                    depth += 1
+                    if depth > 2 { return nil }
+                } else if scalar == ")" {
+                    if depth == 0 { break }
+                    depth -= 1
+                }
+                position += 1
+            }
+            guard depth == 0 else { return nil }
+            filter = String(String.UnicodeScalarView(scalars[filterStart..<position]))
+        }
+
+        guard position < scalars.count, scalars[position] == ")" else { return nil }
+        return (Rule(action: action, operation: operation, filter: filter), position + 1)
     }
 
     /// Categorize parsed rules by operation prefix.

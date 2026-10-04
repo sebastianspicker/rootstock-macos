@@ -115,7 +115,7 @@ def get_scan_metadata_from_session(session) -> dict:
         )
     except (DriverError, Neo4jError) as e:
         print(f"  ⚠ Metadata query failed: {e}", file=sys.stderr)
-        errors.append(f"metadata counts: {e}")
+        errors.append(f"metadata counts: {type(e).__name__}")
         row = {}
 
     try:
@@ -144,7 +144,7 @@ def get_scan_metadata_from_session(session) -> dict:
         )
     except (DriverError, Neo4jError) as e:
         print(f"  ⚠ Scan metadata query failed: {e}", file=sys.stderr)
-        errors.append(f"scan metadata: {e}")
+        errors.append(f"scan metadata: {type(e).__name__}")
         meta_row = {}
 
     metadata = {**row, **meta_row}

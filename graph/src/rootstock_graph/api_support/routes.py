@@ -84,7 +84,7 @@ def run_query_endpoint(
 
     cypher = first_cypher_statement(query["cypher"])
     if _validate_api_cypher(cypher):
-        logger.error("Configured query %s is not read-only", query_id)
+        logger.error("Configured query %s is not read-only", query["id"])
         raise HTTPException(status_code=500, detail="Configured query is not read-only")
     params = body.params if body else {}
     try:
@@ -97,7 +97,7 @@ def run_query_endpoint(
     except HTTPException:
         raise
     except (DriverError, Neo4jError) as error:
-        logger.warning("Query %s failed: %s", query_id, error)
+        logger.warning("Query %s failed: %s", query["id"], error)
         raise HTTPException(status_code=400, detail="Query execution failed") from error
 
     truncated = len(rows) > MAX_ADHOC_CYPHER_ROWS

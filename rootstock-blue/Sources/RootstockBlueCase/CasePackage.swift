@@ -219,7 +219,15 @@ public struct CasePackage: Sendable {
         afterStagedCopy: (() throws -> Void)?
     ) throws -> URL {
         let fm = FileManager.default
-        let destination = try artifactDestination(relativeName: relativeName)
+        let requestedDestination = try artifactDestination(relativeName: relativeName)
+        // Re-check containment on the resolved path immediately before any file operation.
+        let resolvedRoot = artifactsURL.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+        let destination = requestedDestination.standardizedFileURL.resolvingSymlinksInPath()
+        guard destination.pathComponents.count > resolvedRoot.count,
+              destination.pathComponents.starts(with: resolvedRoot)
+        else {
+            throw RootstockBlueError.invalidCasePackage("artifact path escapes case package")
+        }
         guard !fm.fileExists(atPath: destination.path) else {
             throw RootstockBlueError.invalidCasePackage("artifact already exists: \(relativeName)")
         }
