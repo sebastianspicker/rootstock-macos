@@ -1,4 +1,4 @@
-/** Renders the graph key: relationship inks, shapes, severity marks, and node-kind toggles. */
+/** Renders the graph key: relationship styles, shapes, severity marks, and node-kind toggles. */
 
 import { NODE_SHAPE_RULES } from "./canvas-drawing";
 import type { NodeShape } from "./canvas-drawing";

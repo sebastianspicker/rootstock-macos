@@ -31,9 +31,9 @@ scans no host, and connects to no database. Its
 [screenshot tour](https://sebastianspicker.github.io/rootstock-macos/tour.html) walks
 through the same flow.
 
-### 1. Choose a question
+### 1. Assessment scope
 
-Review the source and collection gaps, then choose what to investigate.
+Verify the scan source and collection coverage, then choose the question to run.
 The demo includes a missing-evidence warning so you can see how partial
 collection is presented.
 
@@ -42,8 +42,8 @@ collection is presented.
 ### 2. Read the evidence
 
 Follow the modeled injection path to a fictional app with Full Disk Access.
-Recorded values, inferred relationships, and recommendations appear together
-so you can assess the basis for the finding.
+Recorded values (observed), inferred relationships (violet), and recommendations
+appear together so you can assess the basis for the finding.
 
 ![Fixture Notes evidence, modeled exposure path, and recommendations](docs/assets/screenshots/evidence.png)
 

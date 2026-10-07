@@ -1,4 +1,4 @@
-/** Draws relationships: observed ink, inferred pencil dashes, modeled-path emphasis, and labels. */
+/** Draws relationships: observed solid lines, inferred dashes, modeled-path emphasis, and labels. */
 import {
   intersects,
   viewportBounds,
@@ -44,22 +44,22 @@ export function edgeIsTraversable(edge: GraphEdge): boolean {
   return edge.properties?._traversable !== false;
 }
 
-/** Inferred material is pencil blue and dashed; observed relationships are solid ink. */
+/** Inferred material is violet and dashed; observed relationships are solid. */
 export function edgeStyle(edge: GraphEdge, onPath: boolean, k: number): EdgeStyle {
   const inferred = edgeIsInferred(edge);
   const dash = inferred ? [7 / k, 5 / k] : [];
   if (onPath)
-    return { color: canvasLabelColor("--path", "#33528a"), dash, width: 2.6 / k, alpha: 1 };
+    return { color: canvasLabelColor("--path", "#6d28d9"), dash, width: 2.6 / k, alpha: 1 };
   if (inferred)
     return {
-      color: canvasLabelColor("--annotation", "#33528a"),
+      color: canvasLabelColor("--annotation", "#6d28d9"),
       dash,
       width: 1.3 / k,
       alpha: 0.68,
     };
   if (edgeIsTraversable(edge))
-    return { color: canvasLabelColor("--edge", "#4a453b"), dash, width: 1.3 / k, alpha: 0.68 };
-  return { color: canvasLabelColor("--edge-faint", "#5c564b"), dash, width: 1.3 / k, alpha: 0.5 };
+    return { color: canvasLabelColor("--edge", "#475569"), dash, width: 1.3 / k, alpha: 0.68 };
+  return { color: canvasLabelColor("--edge-faint", "#334155"), dash, width: 1.3 / k, alpha: 0.5 };
 }
 
 export function drawEdges(
@@ -235,7 +235,7 @@ function drawEdgeEnd(
   const back = towards(curve.target, curve.control, 3 / k);
   context.beginPath();
   context.arc(back.x, back.y, 3 / k, 0, Math.PI * 2);
-  context.fillStyle = canvasLabelColor("--ink-deep", "#f8f5ef");
+  context.fillStyle = canvasLabelColor("--ink-deep", "#ffffff");
   context.fill();
   context.lineWidth = 1.2 / k;
   context.strokeStyle = style.color;
@@ -299,14 +299,14 @@ export function drawEdgeLabel(controller: Controller, job: EdgeLabelJob): void {
   context.translate(point.x, point.y);
   context.rotate(angle);
   context.globalAlpha = 0.9;
-  context.fillStyle = canvasLabelColor("--ink-deep", "#f8f5ef");
+  context.fillStyle = canvasLabelColor("--ink-deep", "#ffffff");
   context.beginPath();
   context.roundRect(-width / 2 - 5 / k, -height / 2, width + 10 / k, height, height / 2);
   context.fill();
   context.globalAlpha = job.onPath ? 1 : 0.95;
   context.fillStyle = job.onPath
-    ? canvasLabelColor("--path", "#33528a")
-    : canvasLabelColor("--muted", "#4d483f");
+    ? canvasLabelColor("--path", "#6d28d9")
+    : canvasLabelColor("--muted", "#475569");
   context.font = canvasFont("400", 11 / k);
   context.textAlign = "center";
   context.textBaseline = "middle";

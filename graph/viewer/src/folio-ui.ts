@@ -7,6 +7,7 @@ import {
   fdaEdges,
   deniedFdaEdges,
   coverageText,
+  isPartialCollection,
   edgeKindLabel,
   edgeBasis,
 } from "./folio-data";
@@ -25,7 +26,7 @@ export function button(text: string, action: () => void, primary = false): HTMLB
   control.addEventListener("click", action);
   return control;
 }
-/** Name/value pairs; `label` sets them as the ruled specimen label for collection metadata. */
+/** Name/value pairs; `label` sets them as the labelled key-value table for scan metadata. */
 export function facts(rows: [string, string][], label = false): HTMLDListElement {
   return el(
     "dl",
@@ -33,7 +34,7 @@ export function facts(rows: [string, string][], label = false): HTMLDListElement
     rows.flatMap(([name, content]) => [el("dt", { text: name }), el("dd", { text: content })]),
   );
 }
-/** Mirrors the Graph tools theme select so the folio can be read on paper or lightbox. */
+/** Mirrors the Graph tools theme select so the assessment flow follows the same theme. */
 export function themeControl(controller: Controller): HTMLElement {
   const shared = controller.dom.themeSelect;
   const select = el("select", { id: "folio-theme", class: "folio-theme" });
@@ -49,40 +50,42 @@ export function themeControl(controller: Controller): HTMLElement {
     select,
   ]);
 }
+/** Coverage note; amber only when the scan reports collection errors or host coverage gaps. */
 export function warning(graph: GraphModel): HTMLElement {
-  return el("div", { class: "folio-warning", role: "note" }, [
-    el("span", { text: "Gap", class: "folio-warning-mark", "aria-hidden": "true" }),
+  const partial = isPartialCollection(graph);
+  return el("div", { class: partial ? "folio-warning" : "folio-warning neutral", role: "note" }, [
+    el("span", {
+      text: partial ? "Partial collection" : "Coverage",
+      class: "folio-warning-mark",
+      "aria-hidden": "true",
+    }),
     para(coverageText(graph)),
   ]);
 }
-export function intro(title: string, text: string, sheet: string): HTMLElement {
+export function intro(title: string, text: string, step: string): HTMLElement {
   return el("header", { class: "folio-intro" }, [
-    para(sheet, "folio-sheet"),
+    para(step, "folio-sheet"),
     el("h1", { text: title, tabindex: "-1" }),
     para(text, "folio-lead"),
   ]);
 }
-/** Marginal key to the folio's two inks: what was recorded versus what was modeled. */
+/** Key to the evidence basis: what was recorded, what was inferred, and what is missing. */
 export function conventions(): HTMLElement {
   return el("aside", { class: "folio-aside" }, [
-    heading("Reading this folio"),
+    heading("Evidence basis"),
     conventionList(),
     para(
-      "A modeled path is a chain of preconditions. It does not show that anything was exploited, and this viewer never changes host settings.",
+      "A modeled path is a chain of preconditions. It does not show that anything was exploited. This viewer never changes host settings.",
       "folio-note",
     ),
   ]);
 }
-/** The three bases as a definition list; `compact` drops the descriptions for the margin. */
+/** The three bases as a definition list; `compact` drops the descriptions. */
 export function conventionList(compact = false): HTMLDListElement {
   const items = [
-    ["observed", "Observed", "Recorded by the collector on this host. Set in ink on a solid rule."],
-    [
-      "inferred",
-      "Inferred",
-      "Modeled by Rootstock from observed facts. Set in pencil blue on a dashed rule.",
-    ],
-    ["unknown", "Unknown", "Not collected. Unknown is never read as false, or as safe."],
+    ["observed", "Observed", "Recorded by the collector on this host."],
+    ["inferred", "Inferred", "Derived by Rootstock rules from observed facts."],
+    ["unknown", "Not collected", "Missing from the scan. Never treated as false or as safe."],
   ];
   return el(
     "dl",
@@ -211,7 +214,7 @@ function pathPoint(graph: GraphModel, id: string, first: boolean): HTMLElement {
     para(modeled ? "Modeled starting point" : pathPointDetail(node)),
   ]);
 }
-/** Any ordered node list as specimens joined by the recorded relationship between neighbours. */
+/** Any ordered node list as boxes joined by the recorded relationship between neighbours. */
 export function pathFigure(
   graph: GraphModel,
   nodeIds: string[],

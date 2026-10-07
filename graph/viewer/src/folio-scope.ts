@@ -13,13 +13,14 @@ interface ScopeView {
 export function renderScope(content: HTMLElement, view: ScopeView): void {
   const left = el("section", { class: "folio-main-column" }, [
     intro(
-      "What needs investigation?",
-      "Confirm where this evidence came from and what the collector could not see, then choose the question to put to it.",
-      "Sheet 1 of 3 · Scope",
+      "Assessment scope",
+      "Verify the scan source and collection coverage, then choose the question to run against this snapshot.",
+      "Step 1 of 3 · Scope",
     ),
   ]);
   const metadata = scopeMetadata(view.graph);
   left.append(
+    el("h2", { class: "folio-section-label", text: "Scan metadata" }),
     facts(
       [
         ["Source", metadata.source],
@@ -46,7 +47,13 @@ export function renderScope(content: HTMLElement, view: ScopeView): void {
     input.addEventListener("change", () => {
       view.selectQuestion(question.id);
     });
-    choices.append(el("label", {}, [input, el("span", { text: question.text })]));
+    choices.append(
+      el("label", {}, [
+        input,
+        el("code", { class: "folio-qid", text: `Q${question.id}`, "aria-hidden": "true" }),
+        el("span", { text: question.text }),
+      ]),
+    );
   }
   const run = button(runLabel(view), () => void view.run(), true);
   run.disabled = view.busy || (!view.live && !view.graph.nodes.length);

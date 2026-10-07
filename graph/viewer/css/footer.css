@@ -1,27 +1,29 @@
-/* Provenance timeline (thin line) + live status toast */
+/* Provenance status strip + live status toast */
 
-/* Chain of custody stays visible without competing with the investigation. */
+/* Chain of custody stays visible as a compact monospace status strip. */
 #provenance-timeline {
   grid-column: 1 / 4;
   grid-row: 3;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--space-4);
   min-width: 0;
-  min-height: 40px;
-  padding: 0 20px;
+  min-height: 32px;
+  padding: 0 var(--space-4);
   border-top: 1px solid var(--rule);
-  background: var(--ink);
+  background: var(--pane);
+  color: var(--subtle);
+  font: var(--size-1) / 1 var(--font-mono);
 }
 #provenance-timeline ol {
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
   align-items: center;
   gap: 0;
   min-width: 0;
   padding: 0;
-  flex: 1;
 }
 #provenance-timeline li {
   position: relative;
@@ -31,27 +33,24 @@
   gap: 6px;
   min-width: 0;
   color: var(--subtle);
-  font-size: 11.5px;
+  font-size: var(--size-1);
 }
 #provenance-timeline li::before {
   content: "";
+  flex: none;
   width: 6px;
   height: 6px;
-  border: 1px solid var(--verified);
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--rule-strong);
 }
 #provenance-timeline li:not(:last-child)::after {
   content: "";
-  display: inline-block;
-  width: 16px;
-  height: 1px;
-  margin: 0 10px;
-  background: var(--rule-strong);
   position: static;
-  left: auto;
-  right: auto;
-  top: auto;
+  display: inline-block;
+  width: 1px;
+  height: 12px;
+  margin: 0 var(--space-3);
+  background: var(--rule);
 }
 .timeline-marker {
   position: relative;
@@ -75,37 +74,37 @@
   z-index: 1;
   padding-right: 0;
   background: transparent;
-  font-size: 11.5px;
-  font-weight: 400;
   color: var(--subtle);
+  font: 600 var(--size-1) / 1 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 #provenance-timeline li > span:last-child {
   display: inline;
   grid-column: auto;
-  color: var(--subtle);
-  font: 9px var(--font-mono);
+  color: var(--muted);
+  font: var(--size-1) / 1 var(--font-mono);
 }
 #provenance-timeline > p {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
-  max-width: 280px;
+  max-width: 320px;
   padding: 0;
   border-left: 0;
   color: var(--subtle);
-  font-size: 11px;
-  font-family: var(--font-mono);
+  font: var(--size-1) / 1 var(--font-mono);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 #provenance-timeline > p strong {
   overflow: hidden;
-  color: var(--subtle);
-  font-size: 11px;
+  color: var(--muted);
+  font-size: var(--size-1);
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -116,7 +115,7 @@
   color: var(--critical);
 }
 .live-status.pending {
-  color: var(--high);
+  color: var(--muted);
 }
 .live-status.ok {
   color: var(--verified);
@@ -124,17 +123,17 @@
 #live-status {
   position: fixed;
   z-index: var(--z-status);
-  right: 16px;
-  bottom: 52px;
+  right: var(--space-4);
+  bottom: 44px;
   max-width: min(440px, calc(100vw - 32px));
   min-height: 0;
   padding: 0;
 }
 #live-status:not(:empty) {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--pane);
-  box-shadow: var(--slip-shadow);
-  font-size: 12px;
+  box-shadow: var(--shadow-float);
+  font-size: var(--size-2);
 }

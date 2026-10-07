@@ -2,67 +2,113 @@
 export const tourSteps = [
   {
     file: "scope.png",
-    title: "1. Choose a question",
-    text: "Start with the source and collection warning. Choose a security question, then select Inspect snapshot. The demo inspects its bundled evidence locally.",
+    title: "Choose a question",
+    text: "Check the source and the collection warning, pick a security question, then select Inspect snapshot. The demo reads its bundled data in the browser.",
     alt: "Scope screen with synthetic source metadata, a collection warning, and three security questions",
   },
   {
     file: "evidence.png",
-    title: "2. Read the evidence",
-    text: "Follow the modeled injection path into Fixture Notes and its recorded Full Disk Access grant. The evidence table separates recorded values from inference; recommendations explain what to review.",
+    title: "Read the evidence",
+    text: "The modeled injection path leads to Fixture Notes and its recorded Full Disk Access grant. Recorded values and inferred relationships are marked separately, next to the recommendations.",
     alt: "Fixture Notes evidence showing a modeled injection path, Full Disk Access grant, and recommendations",
   },
   {
     file: "report.png",
-    title: "3. Export a summary",
-    text: "Select Prepare report to download a Markdown or HTML snapshot summary. This browser-only export summarizes the loaded data; the full assessment report requires the local Neo4j workflow.",
+    title: "Export a summary",
+    text: "Prepare report downloads a Markdown or HTML summary of the loaded snapshot. The full assessment report needs the local Neo4j workflow.",
     alt: "Snapshot summary screen with Markdown and HTML options, filename, and included context",
   },
   {
     file: "graph.png",
-    title: "4. Explore the graph",
-    text: "Open Graph tools, then Graph, to inspect nodes and relationships. Search the node list, review a dossier, or use Paths to trace explicit endpoints. Saved Cypher queries require a live local session.",
+    title: "Explore the graph",
+    text: "Graph tools opens triage, the graph, paths, and queries. Search or filter nodes, open its evidence, or trace a route between two endpoints. Saved Cypher queries need a live local session.",
     alt: "Interactive synthetic graph with node filters, search, and an evidence inspector",
   },
 ];
 
-export function renderTour() {
+/** Layout for the tour only; everything else comes from the viewer's own stylesheet. */
+const tourCss = `
+.tour-content { grid-template-columns: minmax(0, 1fr); }
+.tour-open {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin-left: auto;
+  padding: 4px 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: var(--size-2) / 1 var(--font-ui);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tour-open:hover { border-color: var(--text); background: var(--hover); }
+.tour-open:focus-visible, .tour-step a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+.tour-step { margin: 0; padding: var(--space-6) 0; border-top: 1px solid var(--rule); }
+.tour-step figcaption { max-width: 44em; }
+.tour-step figcaption p { margin-top: var(--space-2); color: var(--muted); }
+.tour-step img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: var(--space-4);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+`;
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"]/g, (character) => `&#${character.charCodeAt(0)};`);
+}
+
+function renderStep(step, index) {
+  const id = step.file.replace(".png", "");
+  return `<figure class="tour-step" id="${id}">
+<figcaption><p class="folio-sheet">Step ${index + 1} of ${tourSteps.length}</p><h2>${escapeHtml(step.title)}</h2><p>${escapeHtml(step.text)}</p></figcaption>
+<a href="screenshots/${step.file}" aria-label="View full-size capture: ${escapeHtml(step.title)}"><img src="screenshots/${step.file}" alt="${step.alt}" width="1440" height="1050" loading="lazy"></a>
+</figure>`;
+}
+
+/** Renders tour.html with the viewer's stylesheet so it matches the product it shows. */
+export function renderTour(viewerCss) {
   return `<!doctype html>
 <html lang="en">
 <head>
 <link rel="icon" href="data:,">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A screenshot tour of Rootstock's macOS security evidence viewer, using synthetic data.">
-<title>Rootstock | Screenshot tour</title>
+<meta name="description" content="Screenshots of the Rootstock evidence viewer using synthetic data.">
+<title>Rootstock - Screenshot tour</title>
 <style>
-  :root { color-scheme: light dark; --paper: #f3efe6; --ink: #1d1b17; --muted: #4d483f; --rule: rgba(29, 27, 23, 0.16); --oxide: #b23f28; --serif: "Iowan Old Style", Charter, "Sitka Text", Cambria, Georgia, serif; font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--paper); color: var(--ink); }
-  @media (prefers-color-scheme: dark) { :root { --paper: #151411; --ink: #ebe5d8; --muted: #bbb3a3; --rule: rgba(235, 229, 216, 0.14); --oxide: #d9644b; } }
-  body { max-width: 1120px; margin: auto; padding: 28px 24px 64px; }
-  a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: 4px; }
-  a:hover { text-decoration-color: currentColor; }
-  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
-  nav { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--rule); padding-bottom: 20px; }
-  nav strong { color: var(--oxide); font: 400 19px var(--serif); }
-  header { max-width: 780px; margin: 56px 0; }
-  h1 { font: 400 clamp(32px, 6vw, 54px)/1.1 var(--serif); letter-spacing: -0.015em; }
-  h2 { font: 400 27px/1.2 var(--serif); margin-bottom: 8px; }
-  p { color: var(--muted); max-width: 780px; }
-  .label { color: var(--muted); font: 17px var(--serif); font-variant-caps: all-small-caps; letter-spacing: 0.06em; }
-  figure { margin: 0 0 72px; scroll-margin-top: 24px; }
-  img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); box-sizing: border-box; margin-top: 24px; }
-  footer { border-top: 1px solid var(--rule); padding-top: 24px; }
+${viewerCss}
+${tourCss}
 </style>
 </head>
-<body>
-<nav aria-label="Demo navigation"><strong>Rootstock</strong><a href="./">Open interactive demo →</a></nav>
-<header><p class="label">Screenshot tour · Synthetic data</p>
-<h1>From a security question to the evidence behind it.</h1>
-<p>Rootstock connects macOS permissions, application hardening, and modeled exposure paths. These captures show the actual viewer with a fictional dataset. No host is scanned and no database connection is needed.</p>
-<a href="./">Try the demo</a></header>
-<main>
-${tourSteps.map((step) => `<figure id="${step.file.replace(".png", "")}"><figcaption><h2>${step.title}</h2><p>${step.text}</p></figcaption><a href="screenshots/${step.file}" aria-label="View full-size capture: ${step.title}"><img src="screenshots/${step.file}" alt="${step.alt}" width="1440" height="1050" loading="lazy"></a></figure>`).join("\n")}
+<body class="folio-enabled">
+<div id="evidence-folio">
+<header class="folio-topbar">
+<div class="folio-brand"><span class="folio-mark-r" aria-hidden="true">R</span><span>Rootstock</span></div>
+<p class="folio-top-meta">Graphite Laboratory Bench (synthetic) · screenshot tour</p>
+<p class="folio-source-label">Synthetic data</p>
+<a class="tour-open" href="./">Open the demo</a>
+</header>
+<main class="folio-content tour-content">
+<section class="folio-main-column">
+<header class="folio-intro">
+<p class="folio-sheet">Rootstock viewer · four captures</p>
+<h1>Screenshot tour</h1>
+<p class="folio-lead">Rootstock collects macOS security metadata, builds a graph in Neo4j, and shows the evidence in this viewer. These captures use a fictional dataset. The demo scans no host and connects to no database.</p>
+</header>
+${tourSteps.map(renderStep).join("\n")}
+</section>
 </main>
-<footer><p>Modeled paths describe preconditions, not confirmed compromise. Collection gaps remain visible. This demo cannot collect host data, run Cypher, or change host settings.</p><a href="./">Explore the synthetic dataset →</a></footer>
-</body></html>\n`;
+<footer class="folio-footer">
+<p class="folio-code">Synthetic data · nothing leaves this browser</p>
+<p class="folio-code">Modeled exposure, not a confirmed compromise</p>
+</footer>
+</div>
+</body>
+</html>
+`;
 }

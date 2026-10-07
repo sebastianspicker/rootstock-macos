@@ -13,7 +13,7 @@
 <div id="evidence-folio"></div>
 <div id="app">
   <header id="status-bar">
-    <button id="graph-tools-toggle" type="button" aria-expanded="false" aria-controls="workspace-shell">Return to evidence folio</button>
+    <button id="graph-tools-toggle" type="button" aria-expanded="false" aria-controls="workspace-shell">Back to assessment</button>
     <div class="brand" aria-label="Rootstock">
       <span class="brand-icon" aria-hidden="true">R</span>
       <strong class="brand-name">Rootstock</strong>
@@ -63,7 +63,7 @@
 
   <div id="workspace-shell">
     <a class="skip-link" href="#graph-container">Skip to graph</a>
-    <aside id="sidebar" aria-label="Analysis navigation">
+    <aside id="sidebar" aria-label="Node index">
       <div class="sidebar-lead">
         <div class="search-field">
           <label class="sr-only" for="search">Search nodes</label>
@@ -155,7 +155,7 @@
 
     <main id="graph-container" aria-labelledby="graph-title" tabindex="-1">
       <section id="triage-workspace" class="workspace-panel" aria-labelledby="workspace-title">
-        <div class="workspace-panel-heading"><p class="eyebrow">Evidence queue</p><h2>Prioritized findings</h2><p>Risk score, severity, label, then ID. Select a finding to review its dossier.</p></div>
+        <div class="workspace-panel-heading"><p class="eyebrow">Evidence queue</p><h2>Prioritized findings</h2><p>Risk score, severity, label, then ID. Select a finding to review its evidence.</p></div>
         <p id="triage-empty" class="empty-state" hidden>No findings are available in this snapshot.</p>
         <button id="triage-unscored" class="secondary-action triage-unscored" type="button" aria-pressed="false" hidden>Show nodes without a severity</button>
         <ul id="triage-list" aria-label="Triage queue"></ul>
@@ -171,7 +171,7 @@
           <p class="path-steps-caveat">A modeled path lists preconditions. It does not show that anything was exploited.</p>
         </div>
       </section>
-      <section id="queries-workspace" class="workspace-panel" hidden aria-labelledby="workspace-title"><div class="workspace-panel-heading"><p class="eyebrow">Read-only queries</p><h2>Saved and custom queries</h2><p>Query controls are in the analysis index. Results appear in the evidence dossier.</p></div></section>
+      <section id="queries-workspace" class="workspace-panel" hidden aria-labelledby="workspace-title"><div class="workspace-panel-heading"><p class="eyebrow">Read-only queries</p><h2>Saved and custom queries</h2><p>Query controls are in the node index. Results appear in the evidence inspector.</p></div></section>
       <h2 id="graph-title" class="sr-only">Attack graph</h2>
       <canvas id="graph-canvas" role="img" aria-label="Rootstock attack graph visualization" aria-describedby="graph-description"></canvas>
       <p id="graph-description" class="sr-only">Visual attack graph. Use the synchronized node list to select, inspect, and build paths without a pointer.</p>

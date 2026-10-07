@@ -16,6 +16,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Redesigned the viewer, the snapshot summary export, the graph and CVE HTML
+  reports, and the Pages demo and screenshot tour around one flat,
+  sans-serif interface with standard severity colours. Inferred and modeled
+  material is now violet, actions are blue, and collection gaps are amber.
+  The assessment flow uses plain labels, and "Return to evidence folio" is
+  now "Back to assessment".
+- Node and relationship kinds keep acronyms whole, for example
+  "TCC Permission" instead of "T C C Permission".
 - Kept private test suites and their fixtures out of the public repository;
   verification lanes run them only when installed locally.
 - Scan validation is the installed `rootstock-graph-validate-scan` command;

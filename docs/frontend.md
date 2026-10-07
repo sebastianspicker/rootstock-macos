@@ -26,6 +26,8 @@ path, and query workspace.
   packaged query; offline mode inspects only relationships in the loaded snapshot.
 - Inspect application evidence, distinguish observed grants from inferred paths,
   and review recommendations before preparing a Markdown or HTML download.
+  The Evidence basis key labels each fact Observed, Inferred (violet) or Not
+  collected; actions are blue and collection gaps are amber.
 - Download a full assessment in live mode or a clearly labelled snapshot summary
   offline. The browser controls the destination; completion confirms that the
   download started, not that a file was saved to a particular directory.
@@ -48,12 +50,12 @@ announced range. Filtering or refreshing starts at the first page; selecting
 a visible node opens its page. Selection updates preserve unchanged rows.
 Dragging updates only the moved node in the hit-test index. Canvas drawing
 skips primitives outside the viewport while retaining intersecting labels and
-edges. PNG export captures the current viewport on the sheet's ground color
+edges. PNG export captures the current viewport on the canvas ground color
 and adds a footer with the host, snapshot time, the modeled-exposure caveat, and
 the observed and inferred line samples.
 
-Observed relationships are drawn as solid ink lines and inferred ones as
-dashed pencil-blue lines; a modeled path is drawn thicker in pencil blue with
+Observed relationships are drawn as solid lines and inferred ones as
+dashed violet lines; a modeled path is drawn thicker in violet with
 numbered steps on its nodes. Traversable relationships end in an arrowhead and
 non-traversable ones in a small open circle. The Key at the top left of the
 Graph workspace explains these marks, the node shapes and severity marks, and
@@ -61,7 +63,7 @@ lists node kinds as buttons that hide or show each kind. A kind whose nodes carr
 different colors shows a segmented swatch (up to four colors) in the Key and in
 the node-kind filters, with a "n colours in this kind" note.
 The header's provenance chip appears only when the status is Partial or
-Unavailable, in the ochre gap color, because collection gaps are evidence. Relationship labels
+Unavailable, in the amber gap color, because collection gaps are evidence. Relationship labels
 appear from 75% zoom when there are at most 150 visible relationships; from
 that zoom they also appear for the modeled path and for the selected or hovered
 node when the graph is denser. Below 45% zoom
@@ -86,7 +88,7 @@ state.
 
 The demo opens at Scope and supports the complete offline evidence and summary
 flow. Its deliberately partial scan keeps collection warnings visible. Graph
-tools opens the existing workspaces without discarding the folio context.
+tools opens the existing workspaces without discarding the assessment context. Its Back to assessment button returns to the flow.
 
 Build and validate the self-contained page locally:
 
@@ -127,7 +129,7 @@ controls, Escape for open menus and path mode, and Cmd+Enter or
 Ctrl+Enter to run Cypher. Reduced-motion preference disables nonessential
 transitions.
 
-The folio stacks its context panel below the main task on narrow screens. Step
+The assessment flow stacks its context panel below the main task on narrow screens. Step
 changes reset scroll and focus the task heading. Authentication makes the
 background inert and focuses the token field; validation and request failures
 use announced feedback. Empty results and unavailable evidence are explicit.

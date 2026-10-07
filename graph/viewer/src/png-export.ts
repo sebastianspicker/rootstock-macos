@@ -1,4 +1,4 @@
-/** Exports the graph viewport as a PNG on an offscreen sheet, with a provenance footer. */
+/** Exports the graph viewport as a PNG on an offscreen canvas, with a provenance footer. */
 
 import { canvasFont, canvasLabelColor } from "./canvas-cache";
 import { metadataTimestamp } from "./view";
@@ -7,23 +7,23 @@ import type { Controller } from "./runtime";
 const FOOTER_HEIGHT = 32;
 const FOOTER_PADDING = 12;
 
-/** Exports on the ground color so dark-theme labels are not left on a transparent sheet. */
+/** Exports on the ground color so dark-theme labels are not left on a transparent canvas. */
 export function exportPng(controller: Controller): void {
   const source = controller.dom.canvas;
   const scale = source.clientWidth > 0 ? source.width / source.clientWidth : 1;
   const footer = Math.round(FOOTER_HEIGHT * scale);
-  const sheet = document.createElement("canvas");
-  sheet.width = source.width;
-  sheet.height = source.height + footer;
-  const context = sheet.getContext("2d");
+  const surface = document.createElement("canvas");
+  surface.width = source.width;
+  surface.height = source.height + footer;
+  const context = surface.getContext("2d");
   if (!context) return;
-  context.fillStyle = canvasLabelColor("--ink-deep", "#f8f5ef");
-  context.fillRect(0, 0, sheet.width, sheet.height);
+  context.fillStyle = canvasLabelColor("--ink-deep", "#ffffff");
+  context.fillRect(0, 0, surface.width, surface.height);
   context.drawImage(source, 0, 0);
   drawFooter(context, controller, scale, source.height, footer);
   const link = document.createElement("a");
   link.download = `rootstock-graph-${exportName(controller)}.png`;
-  link.href = sheet.toDataURL("image/png");
+  link.href = surface.toDataURL("image/png");
   link.click();
 }
 
@@ -45,7 +45,7 @@ function drawFooter(
   const pad = FOOTER_PADDING * scale;
   const middle = top + height / 2;
   context.save();
-  context.strokeStyle = canvasLabelColor("--edge-faint", "#c9c2b2");
+  context.strokeStyle = canvasLabelColor("--edge-faint", "#334155");
   context.lineWidth = scale;
   context.beginPath();
   context.moveTo(0, top + scale / 2);
@@ -54,13 +54,13 @@ function drawFooter(
   context.textBaseline = "middle";
   context.font = canvasFont("400", 12 * scale);
   const samples = drawLineSamples(context, scale, context.canvas.width - pad, middle);
-  context.fillStyle = canvasLabelColor("--muted", "#4d483f");
+  context.fillStyle = canvasLabelColor("--muted", "#475569");
   context.textAlign = "left";
   context.fillText(fitText(context, footerText(controller), samples - 2 * pad), pad, middle);
   context.restore();
 }
 
-/** Observed (solid ink) and inferred (dashed pencil) samples, right-aligned; returns their left edge. */
+/** Observed (solid) and inferred (dashed violet) samples, right-aligned; returns their left edge. */
 function drawLineSamples(
   context: CanvasRenderingContext2D,
   scale: number,
@@ -72,15 +72,15 @@ function drawLineSamples(
   const entries = [
     {
       label: "Inferred",
-      color: canvasLabelColor("--annotation", "#33528a"),
+      color: canvasLabelColor("--annotation", "#6d28d9"),
       dash: [7 * scale, 5 * scale],
     },
-    { label: "Observed", color: canvasLabelColor("--edge", "#4a453b"), dash: [] as number[] },
+    { label: "Observed", color: canvasLabelColor("--edge", "#475569"), dash: [] as number[] },
   ];
   let x = right;
   context.textAlign = "right";
   for (const entry of entries) {
-    context.fillStyle = canvasLabelColor("--muted", "#4d483f");
+    context.fillStyle = canvasLabelColor("--muted", "#475569");
     context.fillText(entry.label, x, middle);
     x -= context.measureText(entry.label).width + gap;
     context.strokeStyle = entry.color;

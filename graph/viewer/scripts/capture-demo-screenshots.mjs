@@ -33,7 +33,7 @@ async function assertNoOverflow(page) {
 async function desktopFlow(page) {
   await page.goto(origin);
   assert.equal(await page.title(), "Rootstock - Synthetic static demo");
-  await page.getByRole("heading", { name: "What needs investigation?" }).waitFor();
+  await page.getByRole("heading", { name: "Assessment scope" }).waitFor();
   await capture(page, "scope.png");
   await page.getByRole("button", { name: "Inspect snapshot", exact: true }).click();
   await page.getByRole("heading", { name: "Why can this app reach Full Disk Access?" }).waitFor();

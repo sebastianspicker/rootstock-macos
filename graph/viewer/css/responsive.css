@@ -2,7 +2,6 @@
 
 @media (max-width: 1280px) {
   #status-bar {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     gap: 12px;
     padding-inline: 16px;
   }
@@ -16,7 +15,7 @@
     display: none;
   }
   #workspace-shell {
-    grid-template-columns: 220px minmax(0, 1fr) 300px;
+    grid-template-columns: 240px minmax(0, 1fr) 320px;
   }
   #risk-posture {
     padding-inline: 16px;
@@ -26,12 +25,6 @@
 @media (max-width: 1040px) {
   .breadcrumb {
     display: none;
-  }
-  #status-bar {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-  #global-nav {
-    justify-self: center;
   }
   .status-group {
     gap: 8px;
@@ -74,20 +67,11 @@
   }
   #status-bar {
     position: static;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 52px 48px;
     gap: 0;
     min-width: 0;
     padding: 0 12px;
   }
-  .brand {
-    grid-column: 1;
-    grid-row: 1;
-  }
   #global-nav {
-    grid-column: 1 / 3;
-    grid-row: 2;
-    justify-self: stretch;
     overflow-x: auto;
     border-top: 1px solid var(--rule);
     padding: 8px 0;
@@ -96,10 +80,6 @@
   .global-nav-item {
     flex: 1;
     min-width: 72px;
-  }
-  .status-group {
-    grid-column: 2;
-    grid-row: 1;
   }
   .status-group .status-chip {
     max-width: 118px;
@@ -126,10 +106,14 @@
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px 14px;
-    padding: 10px 12px;
+    justify-content: flex-start;
+    gap: 8px 12px;
+    padding: 8px 12px;
     overflow-x: auto;
+  }
+  .workspace-caveat {
+    flex: 1 0 100%;
+    margin-left: 0;
   }
   .risk-heading {
     position: static;
@@ -165,17 +149,35 @@
     min-height: 540px;
   }
   .workspace-panel {
-    padding: 20px 16px;
+    padding: 12px;
   }
   .triage-item {
     grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 10px;
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
+  .triage-row {
+    grid-template-columns: 12px minmax(0, 1fr);
+    padding-right: 12px;
+  }
+  .triage-meta {
+    grid-column: 2;
+    grid-row: auto;
+    max-width: none;
+    text-align: left;
   }
   .triage-inspect {
     justify-self: start;
+    margin-left: 34px;
   }
   .path-fields {
     grid-template-columns: 1fr;
+  }
+  .path-step {
+    grid-template-columns: 20px 10px minmax(0, 1fr);
+  }
+  .path-step-kind {
+    grid-column: 3;
   }
   #detail-dock {
     order: 4;
@@ -210,10 +212,13 @@
     transform: none;
     width: 100%;
     max-width: none;
-    padding: 8px;
+    padding: 0;
     overflow-x: auto;
-    background: var(--pane);
+    border: 0;
     border-bottom: 1px solid var(--rule);
+    border-radius: 0;
+    background: var(--pane);
+    box-shadow: none;
   }
   #controls [role="group"] {
     flex: none;
@@ -233,17 +238,23 @@
   #focus-banner,
   #path-banner {
     top: 66px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
     width: calc(100% - 16px);
+    padding-block: 4px;
     white-space: normal;
   }
   .connection-gate {
     inset: 0;
   }
   .inspector-summary {
-    padding: 24px 48px 14px 20px;
+    padding: 12px;
   }
   .inspector-panel {
-    padding-inline: 20px;
+    padding-inline: 12px;
+  }
+  .inspector-actions {
+    padding-inline: 12px;
   }
   #live-status {
     bottom: 12px;
@@ -251,9 +262,6 @@
 }
 
 @media (max-width: 430px) {
-  .brand-name {
-    letter-spacing: 0.1em;
-  }
   .status-group .status-chip {
     max-width: 92px;
     font-size: 11px;

@@ -1,6 +1,6 @@
-/* Graph key, modeled path steps, grouped triage queue, and small Graph tools affordances */
+/* Graph tools: workspace header, severity badges, triage queue, paths, queries */
 
-/* Skip link: hidden until focused, then a slip at the top of the workspace */
+/* Skip link: hidden until focused, then a floating link at the top of the workspace */
 .skip-link {
   position: absolute;
   z-index: var(--z-status);
@@ -10,9 +10,9 @@
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
   background: var(--pane);
-  box-shadow: var(--slip-shadow);
+  box-shadow: var(--shadow-float);
   color: var(--text);
-  font: 600 var(--size-1) var(--font-ui);
+  font: 600 var(--size-2) var(--font-ui);
 }
 .skip-link:not(:focus) {
   width: 1px;
@@ -27,256 +27,519 @@
   outline: none;
 }
 
-/* Graph key: a slip pinned to the top left of the canvas */
-.stage-key {
+/* Severity badge: solid fill with the word; unscored nodes use an outline. */
+.severity-badge,
+.node-list-risk {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border: 1px solid var(--info);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--info);
+  font: 700 var(--size-1) / 16px var(--font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.severity-badge.critical,
+.node-list-risk.critical {
+  border-color: var(--critical);
+  background: var(--critical);
+  color: var(--on-severity);
+}
+.severity-badge.high,
+.node-list-risk.high {
+  border-color: var(--high);
+  background: var(--high);
+  color: var(--on-severity);
+}
+.severity-badge.medium,
+.node-list-risk.medium {
+  border-color: var(--medium);
+  background: var(--medium);
+  color: var(--on-severity);
+}
+.severity-badge.low,
+.node-list-risk.low {
+  border-color: var(--low);
+  background: var(--low);
+  color: var(--on-severity);
+}
+
+/* Workspace header: title, severity summary, caveat, evidence coverage */
+#risk-posture {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px 16px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--pane);
+}
+.risk-heading {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0;
+  border-right: 0;
+}
+.risk-heading .eyebrow {
+  display: none;
+}
+.risk-heading h1,
+.risk-heading h2,
+#workspace-title {
+  color: var(--text);
+  font: 600 var(--size-5) / 1.25 var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.risk-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+.risk-metric {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 10px 2px 8px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--info);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--ink-deep);
+}
+.risk-metric.critical {
+  border-left-color: var(--critical);
+}
+.risk-metric.high {
+  border-left-color: var(--high);
+}
+.risk-metric.medium {
+  border-left-color: var(--medium);
+}
+.risk-metric.low {
+  border-left-color: var(--low);
+}
+.risk-metric strong {
+  order: 1;
+  color: var(--text);
+  font: 600 var(--size-6) / 1.2 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.risk-metric span {
+  order: 2;
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.workspace-caveat {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: var(--size-2);
+  text-wrap: pretty;
+}
+.coverage-metric {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border-right: 0;
+}
+.coverage-metric > span:first-of-type {
+  order: 1;
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.coverage-metric strong {
+  order: 2;
+  color: var(--text);
+  font: 500 var(--size-2) / 1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.coverage-metric .coverage-track {
+  order: 3;
+  display: block;
+  width: 64px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--rule);
+}
+.coverage-track > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--muted);
+  transition: width var(--duration) var(--ease);
+}
+
+/* Workspace panels (Triage, Paths, Queries) cover the canvas */
+.workspace-panel {
   position: absolute;
-  z-index: var(--z-toolbar);
-  top: 12px;
-  left: 12px;
-  width: 220px;
-  max-height: 60%;
+  z-index: calc(var(--z-toolbar) + 1);
+  inset: 0;
   overflow: auto;
+  padding: 16px 24px 24px;
+  background: var(--ink);
+  font-size: var(--size-3);
+}
+#graph-workspace:not([hidden]) {
+  display: contents;
+}
+.workspace-panel[hidden] {
+  display: none;
+}
+.workspace-panel-heading {
+  max-width: 960px;
+  margin: 0 0 16px;
+}
+.workspace-panel-heading .eyebrow {
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.workspace-panel-heading h2 {
+  margin: 4px 0;
+  color: var(--text);
+  font: 600 18px / 1.3 var(--font-ui);
+}
+.workspace-panel-heading p:last-child {
+  color: var(--muted);
+  font-size: var(--size-3);
+  line-height: 1.45;
+}
+.workspace-panel > .empty-state {
+  max-width: 960px;
+  padding: 12px 16px;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--pane);
-  box-shadow: var(--slip-shadow);
-  color: var(--muted);
-  font: 12px / 1.35 var(--font-ui);
 }
-.stage-key summary {
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 30px;
-  padding: 4px 10px;
+
+/* Triage queue: a data table of findings grouped by severity */
+.triage-unscored {
+  display: block;
+  min-height: 32px;
+  margin: 0 0 var(--space-3);
+  padding: 0 12px;
   background: var(--pane);
-  color: var(--text);
-  cursor: pointer;
-  list-style: none;
-  font: 400 var(--size-2) / 1 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
+  font-size: var(--size-2);
 }
-.stage-key summary::-webkit-details-marker {
-  display: none;
+.triage-unscored[aria-pressed="true"] {
+  background: var(--signal-dim);
 }
-.stage-key summary::before {
-  content: "›";
-  color: var(--subtle);
-}
-.stage-key[open] summary::before {
-  rotate: 90deg;
-}
-.stage-key summary:hover {
-  background: var(--hover);
-}
-#graph-key-body {
-  padding: 0 10px 10px;
-}
-.key-section h3 {
-  margin: 10px 0 4px;
-  color: var(--subtle);
-  font: 400 var(--size-2) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
-}
-.key-section ul {
+#triage-list {
+  max-width: 960px;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
   list-style: none;
 }
-.key-row {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+#triage-list:empty {
+  display: none;
+}
+.triage-section {
+  display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 22px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--rule);
+  border-left: 3px solid var(--info);
+  background: var(--pane-raised);
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
-.key-row .node-symbol {
-  justify-self: center;
-  margin-top: 0;
+.triage-section.critical {
+  border-left-color: var(--critical);
 }
-.key-sample {
-  display: block;
-  justify-self: center;
-  overflow: visible;
+.triage-section.high {
+  border-left-color: var(--high);
 }
-.key-line {
-  stroke: var(--edge);
-  stroke-width: 1.3;
+.triage-section.medium {
+  border-left-color: var(--medium);
 }
-.key-line.inferred {
-  stroke: var(--annotation);
-  stroke-dasharray: 7 5;
+.triage-section.low {
+  border-left-color: var(--low);
 }
-.key-line.on-path {
-  stroke: var(--path);
-  stroke-width: 2.6;
-}
-.key-head {
-  fill: var(--edge);
-}
-.key-end {
-  fill: var(--ink-deep);
-  stroke: var(--edge);
-  stroke-width: 1.2;
-}
-.key-shape {
-  fill: var(--pane-raised);
-  stroke: var(--text);
-  stroke-width: 1.25;
-}
-.key-owned {
-  justify-self: center;
-  width: 8px;
-  height: 8px;
-  background: var(--text);
-}
-.key-kind {
+.triage-item {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
   align-items: center;
-  gap: var(--space-2);
+  padding-right: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.triage-item:last-child {
+  border-bottom: 0;
+}
+.triage-item:hover {
+  background: var(--hover);
+}
+.triage-row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 0 10px;
+  align-items: center;
   width: 100%;
-  min-height: 26px;
-  padding: 2px 4px;
+  min-height: 36px;
+  padding: 4px 0 4px 12px;
   border: 0;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: transparent;
-  color: var(--muted);
-  font: inherit;
   text-align: left;
 }
-.key-kind .color-dot {
-  justify-self: center;
-}
-.key-kind:hover {
-  background: var(--hover);
+.triage-row:hover:not(:disabled) {
+  background: transparent;
   color: var(--text);
 }
-.key-kind[aria-pressed="false"] {
-  color: var(--subtle);
-  text-decoration: line-through;
+.triage-row:focus-visible {
+  outline-offset: -2px;
 }
-.key-kind[aria-pressed="false"] .color-dot {
-  opacity: 0.35;
+.triage-row .node-symbol {
+  margin-top: 0;
+  justify-self: center;
+}
+.triage-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-size: var(--size-3);
+  font-weight: 600;
+  line-height: 16px;
+}
+.triage-meta {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  max-width: 40ch;
+  color: var(--muted);
+  font: var(--size-1) / 1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.triage-kind {
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--subtle);
+  font: var(--size-1) / 14px var(--font-mono);
+}
+.triage-inspect {
+  min-height: 28px;
+  padding: 0 10px;
+  background: var(--pane);
+  font-size: var(--size-2);
+  white-space: nowrap;
 }
 
 /* Paths: endpoints, then the ordered steps with their relationship basis */
+.path-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  max-width: 720px;
+  margin: 0 0 12px;
+}
+.path-fields label {
+  display: grid;
+  gap: 4px;
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.path-fields select {
+  min-height: 32px;
+  padding: 0 8px;
+  background: var(--ink-deep);
+  color: var(--text);
+  font: 400 var(--size-3) var(--font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+}
+#paths-workspace .field-row,
+#paths-workspace .inline-status {
+  max-width: 720px;
+  margin-inline: 0;
+}
+#paths-workspace .field-row {
+  flex-wrap: wrap;
+}
+#paths-workspace .field-row > button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: var(--size-3);
+}
+#paths-workspace .field-row > .secondary-action {
+  background: var(--pane);
+}
+#paths-workspace .inline-status:not(:empty) {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: var(--size-2);
+}
 #paths-workspace .path-result {
-  max-width: 680px;
-  margin: var(--space-5) auto 0;
+  max-width: 720px;
+  margin: var(--space-4) 0 0;
 }
 .path-steps {
   margin: 0;
   padding: 0;
   list-style: none;
+  counter-reset: path-step;
 }
 .path-step {
+  counter-increment: path-step;
   display: grid;
-  grid-template-columns: 12px minmax(0, 1fr) auto;
+  grid-template-columns: 20px 10px minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2) var(--space-3);
-  padding: var(--space-2) 0;
+  gap: 4px 10px;
+  min-height: 40px;
+  padding: 4px 12px 4px 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--pane);
+}
+.path-step::before {
+  content: counter(path-step);
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--path);
+  border-radius: 50%;
+  color: var(--path);
+  font: 600 var(--size-1) / 1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.path-step:first-child {
+  border-color: var(--annotation);
+  background: var(--annotation-dim);
 }
 .path-step .node-symbol {
   grid-row: auto;
   margin-top: 0;
+  justify-self: center;
 }
 .path-step-node {
   justify-self: start;
-  min-height: 32px;
-  padding: 2px 6px;
+  min-width: 0;
+  min-height: 28px;
+  padding: 0 4px;
   border: 0;
   background: transparent;
   color: var(--text);
+  font-size: var(--size-3);
   font-weight: 600;
   text-align: left;
   overflow-wrap: anywhere;
 }
-.path-step-node:hover {
+.path-step-node:hover:not(:disabled) {
   background: var(--hover);
+  text-decoration: underline;
 }
 .path-step-kind {
   color: var(--subtle);
-  font-size: var(--size-1);
+  font: var(--size-1) var(--font-mono);
 }
 .path-edge {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-1) var(--space-3);
-  margin-left: 5px;
+  margin-left: 18px;
   padding: var(--space-2) 0 var(--space-2) var(--space-4);
-  border-left: 1.5px solid var(--text);
+  border-left: 2px solid var(--text);
   color: var(--muted);
 }
 .path-edge.inferred {
-  border-left: 1.5px dashed var(--annotation);
+  border-left: 2px dashed var(--annotation);
 }
 .path-edge.unknown {
-  border-left: 1.5px dotted var(--subtle);
+  border-left: 2px dotted var(--subtle);
+  font-size: var(--size-2);
 }
 .path-edge-kind {
   color: var(--text);
-  font: var(--size-1) var(--font-mono);
+  font: 500 var(--size-2) var(--font-mono);
 }
 .path-edge .folio-mark {
-  font-size: var(--size-2);
+  color: var(--text);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.path-edge.inferred .folio-mark {
+  color: var(--annotation);
 }
 .path-edge-traversal {
   color: var(--subtle);
   font-size: var(--size-1);
 }
 .path-steps-caveat {
-  margin-top: var(--space-4);
-  color: var(--subtle);
-  font-size: var(--size-1);
-}
-
-/* Triage: severity headings and the explicit unscored toggle */
-.triage-unscored {
-  display: block;
-  max-width: 880px;
-  margin: 0 auto var(--space-4);
-}
-.triage-section {
-  padding: var(--space-5) 0 var(--space-2);
-  color: var(--text);
-  font: 400 var(--size-3) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
-}
-.triage-section.critical {
-  color: var(--critical);
-}
-.triage-section.high {
-  color: var(--high);
-}
-.triage-section.medium {
-  color: var(--medium);
-}
-.triage-section.low {
-  color: var(--low);
-}
-.triage-section.unknown,
-.triage-section.informational {
-  color: var(--subtle);
+  margin-top: var(--space-3);
+  color: var(--muted);
+  font-size: var(--size-2);
 }
 
 /* Saved queries with parameters open a small inline form */
+.query-entry {
+  border-bottom: 1px solid var(--rule);
+}
+.query-entry > .query-item {
+  border-bottom: 0;
+}
 .query-params {
   display: grid;
   gap: var(--space-1);
-  margin: 0 var(--space-4) var(--space-3) var(--space-6);
-  color: var(--muted);
+  padding: var(--space-1) var(--space-3) var(--space-3) var(--space-6);
+  color: var(--subtle);
   font-size: var(--size-1);
+}
+.query-params label {
+  color: var(--subtle);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.query-params input {
+  min-height: 32px;
+  font: var(--size-2) var(--font-mono);
 }
 .query-params button {
   justify-self: start;
+  min-height: 32px;
   margin-top: var(--space-1);
+  padding: 0 12px;
+  background: var(--pane);
+  font-size: var(--size-2);
 }
 
 /* Windows High Contrast: pressed state cannot rely on a background tint */
@@ -302,5 +565,10 @@
   .node-severity-low,
   .node-severity-informational {
     background: transparent;
+  }
+  /* Badges keep their word and gain a system border once fills are dropped */
+  .severity-badge,
+  .node-list-risk {
+    border-color: CanvasText;
   }
 }

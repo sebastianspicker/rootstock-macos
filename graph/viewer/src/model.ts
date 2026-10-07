@@ -114,10 +114,12 @@ export function safeNodeColor(value: unknown): string {
   return HEX_COLOR.test(color) || functionalColor(color) ? color : DEFAULT_COLOR;
 }
 
+/** Splits a PascalCase kind into words and keeps acronyms whole: HasTCCGrant → Has TCC Grant. */
 export function displayKind(kind: string): string {
   return kind
     .replace(/^rs_/, "")
-    .replace(/([A-Z])/g, " $1")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
     .trim();
 }
 

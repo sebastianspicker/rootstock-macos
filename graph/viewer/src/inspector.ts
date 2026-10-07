@@ -1,6 +1,7 @@
 /** Renders the node dossier inspector: summary, tabs, evidence, relations, and remediation. */
 
 import { toggleOwned } from "./live";
+import { displayKind } from "./model";
 import { element, propertyValue } from "./runtime";
 import type { Controller } from "./runtime";
 import type { NodeId, ViewerNode } from "./types";
@@ -183,7 +184,7 @@ export function scrollBehavior(): ScrollBehavior {
 }
 
 export function displayNodeKind(kind: string): string {
-  return kind.replace(/^rs_/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
+  return displayKind(kind);
 }
 
 export function displayPropertyKey(key: string): string {

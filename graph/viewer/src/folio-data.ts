@@ -1,4 +1,4 @@
-/** Evidence folio selectors operate on the loaded snapshot without inventing collection facts. */
+/** Assessment flow selectors operate on the loaded snapshot without inventing collection facts. */
 import type { GraphModel, ViewerNode, GraphEdge, QueryResult } from "./types";
 import { propertyValue } from "./runtime";
 import { shortestPath } from "./model";
@@ -160,6 +160,12 @@ function hostCoverage(graph: GraphModel): string[] {
       if (p.import_status === "partial") messages.push("Partial import");
       return messages;
     });
+}
+/** True when the scan recorded collection warnings or skipped evidence. */
+export function isPartialCollection(graph: GraphModel): boolean {
+  const metadata = graph.payload.metadata ?? {};
+  const errors = metadata.collection_errors ?? metadata.errors;
+  return (Array.isArray(errors) && errors.length > 0) || hostCoverage(graph).length > 0;
 }
 export function coverageText(graph: GraphModel): string {
   const metadata = graph.payload.metadata ?? {};

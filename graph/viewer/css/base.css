@@ -12,10 +12,11 @@ body {
   overflow: hidden;
   background: var(--ink);
   color: var(--text);
-  font: var(--size-2) / 1.45 var(--font-ui);
+  font: var(--size-3) / 1.45 var(--font-ui);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-synthesis: none;
+  scrollbar-color: var(--rule-strong) transparent;
 }
 button,
 select,
@@ -28,11 +29,14 @@ textarea {
   color: var(--text);
 }
 button,
-select {
-  min-height: 34px;
+select,
+input:not([type="radio"], [type="checkbox"]) {
+  min-height: 32px;
 }
 button {
-  padding: 6px 12px;
+  padding: 0 12px;
+  background: var(--pane);
+  font-weight: 500;
   cursor: pointer;
   transition:
     color var(--duration) var(--ease),
@@ -40,7 +44,7 @@ button {
     border-color var(--duration) var(--ease);
 }
 button:hover:not(:disabled) {
-  border-color: var(--text);
+  border-color: var(--muted);
   background: var(--hover);
 }
 button:active:not(:disabled) {
@@ -53,19 +57,21 @@ button:disabled,
 }
 :focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 input,
 select,
 textarea {
   min-width: 0;
-  padding: 7px 10px;
+  padding: 0 8px;
+}
+textarea {
+  padding: 6px 8px;
 }
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline-offset: 0;
-  border-color: var(--text);
+  border-color: var(--focus-ring);
 }
 input::placeholder,
 textarea::placeholder {
@@ -80,7 +86,7 @@ textarea {
   width: 100%;
   resize: vertical;
   font-family: var(--font-mono);
-  font-size: var(--size-1);
+  font-size: var(--size-2);
   line-height: 1.6;
 }
 label {
@@ -95,16 +101,13 @@ p {
   margin: 0;
 }
 h1 {
-  font: 400 var(--size-5) / 1.2 var(--font-serif);
-  letter-spacing: -0.01em;
+  font: 600 var(--size-6) / 1.25 var(--font-ui);
 }
 h2 {
-  font-size: var(--size-2);
-  line-height: 1.3;
-  font-weight: 600;
+  font: 600 var(--size-3) / 1.3 var(--font-ui);
 }
 h3 {
-  font: 400 var(--size-5) / 1.2 var(--font-serif);
+  font: 600 var(--size-4) / 1.3 var(--font-ui);
 }
 ul,
 ol {
@@ -117,12 +120,30 @@ kbd {
   font-family: var(--font-mono);
 }
 kbd {
+  display: inline-block;
+  min-width: 18px;
   border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
+  border-radius: 3px;
   padding: 0 4px;
-  background: transparent;
-  font-size: 10px;
+  background: var(--pane-raised);
   color: var(--muted);
+  font-size: var(--size-1);
+  line-height: 16px;
+  text-align: center;
+}
+table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+th {
+  text-align: left;
+}
+thead th {
+  color: var(--subtle);
+  font-size: var(--size-1);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 [hidden] {
   display: none !important;
@@ -138,17 +159,17 @@ kbd {
   white-space: nowrap;
   border: 0;
 }
-/* Field names are set like a specimen label: serif small caps, never tracked uppercase sans. */
+/* Field and column label style. */
 .eyebrow {
-  color: var(--muted);
-  font: 400 var(--size-2) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.3 var(--font-ui);
   letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .field-help,
 .meta {
   color: var(--muted);
-  font-size: var(--size-1);
+  font-size: var(--size-2);
 }
 .field-row {
   display: flex;
@@ -168,17 +189,17 @@ kbd {
 }
 .text-button {
   min-height: 28px;
-  padding: 2px 0;
+  padding: 0 4px;
   border: 0;
   background: transparent;
-  color: var(--text);
-  text-decoration: underline;
-  text-decoration-color: var(--rule-strong);
-  text-underline-offset: 3px;
+  color: var(--link);
+  font-weight: 500;
 }
 .text-button:hover:not(:disabled) {
   background: transparent;
-  text-decoration-color: currentColor;
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .primary-action {
   border-color: var(--action);
@@ -192,7 +213,7 @@ kbd {
 }
 .secondary-action {
   border-color: var(--rule-strong);
-  background: transparent;
+  background: var(--pane);
   color: var(--text);
 }
 
@@ -217,13 +238,14 @@ kbd {
 .search-trailing kbd {
   border: 0;
   padding: 0;
-  font-size: 10px;
+  background: transparent;
+  font-size: var(--size-1);
   color: var(--subtle);
 }
 .control-icon {
   display: block;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;

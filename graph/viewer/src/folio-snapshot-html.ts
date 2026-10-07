@@ -1,5 +1,5 @@
 /** Standalone offline summary: semantic HTML, local styling, and escaped snapshot text only. */
-import type { GraphModel } from "./types";
+import type { GraphModel, ViewerNode } from "./types";
 import { element as el } from "./runtime";
 import {
   scopeMetadata,
@@ -11,20 +11,20 @@ import {
   value,
 } from "./folio-data";
 
-// A printed sheet: ink on paper, serif headings, small-caps field names, mono identifiers.
+// Plain scanner report: light by default with a dark variant, sans text, mono identifiers, flat tables.
 const stylesheet = `
-:root{color-scheme:light dark;--paper:#f3efe6;--ink:#1d1b17;--muted:#4d483f;--rule:rgba(29,27,23,.16);--rule-strong:rgba(29,27,23,.34);--gap:#7c5d0a;--gap-rule:#b08a1e;--gap-dim:rgba(176,138,30,.12);--critical:#a3341d;--oxide:#b23f28;--serif:"Iowan Old Style",Charter,"Sitka Text",Cambria,Georgia,serif;--mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}
-@media(prefers-color-scheme:dark){:root{--paper:#151411;--ink:#ebe5d8;--muted:#bbb3a3;--rule:rgba(235,229,216,.13);--rule-strong:rgba(235,229,216,.32);--gap:#d9b75e;--gap-rule:#8f7630;--gap-dim:rgba(217,183,94,.09);--critical:#e58a72;--oxide:#d9644b}}
-*{box-sizing:border-box}body{margin:0}main{max-width:960px;margin:auto;padding:56px 32px 72px}
-header{border-bottom:1px solid var(--rule-strong);padding-bottom:28px;margin-bottom:28px}.brand{color:var(--oxide);font:400 17px var(--serif)}
-h1{font:400 clamp(30px,5vw,46px)/1.1 var(--serif);letter-spacing:-.01em;margin:18px 0}h2{font:400 23px/1.25 var(--serif);margin:40px 0 14px}
-p{line-height:1.65;color:var(--muted)}dl{display:grid;grid-template-columns:150px minmax(0,1fr);margin:20px 0;padding:6px 20px;border:1px solid var(--rule-strong);outline:1px solid var(--rule);outline-offset:3px}dt,dd{margin:0;padding:10px 0;border-bottom:1px solid var(--rule)}dt{color:var(--muted);font:15px var(--serif);font-variant-caps:all-small-caps;letter-spacing:.05em}dd{font:13px/1.6 var(--mono)}dt:nth-last-child(2),dd:last-child{border-bottom:0}
-.warning{padding:12px 16px;border-left:3px solid var(--gap-rule);background:var(--gap-dim)}p.warning{color:var(--ink)}.boundary{color:var(--muted)}
-table{width:100%;border-collapse:collapse;text-align:left}caption{text-align:left;color:var(--muted);margin-bottom:12px}th,td{padding:12px 12px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top}thead th{color:var(--muted);font:15px var(--serif);font-variant-caps:all-small-caps;letter-spacing:.06em;border-bottom-color:var(--rule-strong)}td{font-size:14px;line-height:1.5}td:nth-child(n+2){font-family:var(--mono);font-size:13px}
-ol{padding-left:24px}li{padding:14px 0;border-bottom:1px solid var(--rule)}li p{margin:6px 0}.priority{color:var(--critical);font:15px var(--serif);font-variant-caps:all-small-caps;letter-spacing:.06em}.count{font:13px var(--mono);color:var(--muted)}
-footer{border-top:1px solid var(--rule-strong);margin-top:44px;padding-top:18px;font:12px var(--mono);color:var(--muted)}p,dd,td,li{overflow-wrap:anywhere}.table-wrap{overflow-x:auto}
-@media(max-width:600px){main{padding:28px 18px}dl{grid-template-columns:minmax(0,1fr);padding:4px 14px}dt{padding-bottom:0;border-bottom:0}th,td{font-size:12px;padding:10px 8px 10px 0}h2{font-size:21px}}
-@media print{:root{--paper:#fff;--ink:#111;--muted:#333;--rule:#ccc;--rule-strong:#888;--gap:#5c4508;--gap-rule:#b08a1e;--gap-dim:#f7f3e3;--critical:#8f2c18;--oxide:#9c3622}main{padding:0}header,section,li,tr{break-inside:avoid}}
+:root{color-scheme:light dark;--ink:#f4f6f9;--ink-deep:#fff;--pane:#fff;--pane-raised:#eef1f5;--text:#0f172a;--muted:#475569;--subtle:#5b6678;--rule:#dde3ea;--rule-strong:#768396;--gap:#8a5a00;--gap-rule:#b07d00;--gap-dim:rgba(217,154,0,.12);--critical:#b4123a;--high:#c2410c;--medium:#8f6a00;--low:#0e7490;--info:#5b6678;--on-severity:#fff;--font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;--font-mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;font:14px/1.5 var(--font-ui);background:var(--ink);color:var(--text)}
+@media(prefers-color-scheme:dark){:root{--ink:#0d1117;--ink-deep:#090c10;--pane:#131820;--pane-raised:#1a212b;--text:#e6edf3;--muted:#a6b1bd;--subtle:#8a96a3;--rule:#262e39;--rule-strong:#6a7686;--gap:#e3b341;--gap-rule:#9e7a1e;--gap-dim:rgba(227,179,65,.1);--critical:#ff5c7c;--high:#ff8f4d;--medium:#e8c547;--low:#4fc3d9;--info:#8a96a3;--on-severity:#0d1117}}
+*{box-sizing:border-box}body{margin:0}main{max-width:960px;margin:auto;padding:24px 24px 48px}
+header{border-bottom:1px solid var(--rule);padding-bottom:16px;margin-bottom:16px}.brand{display:flex;align-items:center;gap:8px;margin:0;color:var(--text);font:600 14px var(--font-ui)}.mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;background:var(--text);color:var(--ink);font:700 13px var(--font-mono)}
+h1{font:600 22px/1.3 var(--font-ui);margin:12px 0 8px}h2{font:600 16px/1.3 var(--font-ui);margin:28px 0 8px}
+p{margin:8px 0;color:var(--muted)}dl{display:grid;grid-template-columns:150px minmax(0,1fr);margin:12px 0;border:1px solid var(--rule);border-radius:4px;background:var(--pane)}dt,dd{margin:0;padding:8px 12px;border-bottom:1px solid var(--rule)}dt{background:var(--pane-raised);color:var(--subtle);font:600 11px/1.5 var(--font-ui);text-transform:uppercase;letter-spacing:.06em}dd{font:13px/1.5 var(--font-mono)}dt:nth-last-child(2),dd:last-child{border-bottom:0}
+.warning{padding:8px 12px;border-left:3px solid var(--gap-rule);background:var(--gap-dim)}p.warning{color:var(--text)}.boundary{color:var(--muted)}
+table{width:100%;border-collapse:collapse;text-align:left;background:var(--pane);border:1px solid var(--rule)}caption{text-align:left;color:var(--muted);margin-bottom:8px}th,td{padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top}thead th{background:var(--pane-raised);color:var(--subtle);font:600 11px var(--font-ui);text-transform:uppercase;letter-spacing:.06em}tbody th{font-weight:600}td:nth-child(n+2){font-family:var(--font-mono);font-size:13px}
+ol{padding-left:24px}li{padding:8px 0;border-bottom:1px solid var(--rule)}li p{margin:4px 0}.priority{display:inline-block;padding:1px 6px;border-radius:3px;background:var(--info);color:var(--on-severity);font:700 11px var(--font-ui);text-transform:uppercase;letter-spacing:.04em}.priority.critical{background:var(--critical)}.priority.high{background:var(--high)}.priority.medium{background:var(--medium)}.priority.low{background:var(--low)}.count{font:12px var(--font-mono);color:var(--muted)}
+footer{border-top:1px solid var(--rule);margin-top:24px;padding-top:12px;font:12px var(--font-mono);color:var(--muted)}p,dd,td,li{overflow-wrap:anywhere}.table-wrap{overflow-x:auto}
+@media(max-width:600px){main{padding:16px 12px}dl{grid-template-columns:minmax(0,1fr)}dt{border-bottom:0;padding-bottom:0}th,td{font-size:12px;padding:8px}}
+@media print{:root{color-scheme:light;--ink:#fff;--ink-deep:#fff;--pane:#fff;--pane-raised:#eee;--text:#111;--muted:#333;--subtle:#444;--rule:#ccc;--rule-strong:#777;--gap:#6b4600;--gap-rule:#b07d00;--gap-dim:#f7f3e3;--critical:#b4123a;--high:#c2410c;--medium:#8f6a00;--low:#0e7490;--info:#5b6678;--on-severity:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}main{padding:0}header,section,li,tr{break-inside:avoid}}
 `;
 
 function metadata(graph: GraphModel): HTMLElement {
@@ -84,6 +84,12 @@ function applications(graph: GraphModel): HTMLElement {
   section.append(el("div", { class: "table-wrap" }, [table]));
   return section;
 }
+function priorityClass(node: ViewerNode): string {
+  const priority = value(node.properties.priority).toLowerCase();
+  return ["critical", "high", "medium", "low"].includes(priority)
+    ? `priority ${priority}`
+    : "priority";
+}
 function advice(graph: GraphModel): HTMLElement {
   const nodes = recommendations(graph);
   const section = el("section", {}, [el("h2", { text: "Loaded recommendations" })]);
@@ -102,7 +108,7 @@ function advice(graph: GraphModel): HTMLElement {
       nodes.map((node) =>
         el("li", {}, [
           el("span", {
-            class: "priority",
+            class: priorityClass(node),
             text: `${value(node.properties.priority).toUpperCase()} PRIORITY`,
           }),
           el("p", { text: value(node.properties.text ?? node.label) }),
@@ -127,7 +133,10 @@ export function snapshotHtml(graph: GraphModel): string {
     el("body", {}, [
       el("main", {}, [
         el("header", {}, [
-          el("p", { class: "brand", text: "Rootstock · Core" }),
+          el("p", { class: "brand" }, [
+            el("span", { class: "mark", text: "R", "aria-hidden": "true" }),
+            el("span", { text: "Rootstock · Core" }),
+          ]),
           el("h1", { text: "Local snapshot summary" }),
           el("p", {
             class: "boundary",

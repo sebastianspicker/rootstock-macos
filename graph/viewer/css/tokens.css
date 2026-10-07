@@ -1,70 +1,69 @@
-/* Herbarium sheet — design tokens.
-   Ink on paper. Recorded facts are set in ink; inference is pencil blue (--annotation)
-   and nothing else uses that hue. Severity uses earth pigments and always carries a word.
-   Variable names --ink/--pane/--muted/--subtle/--text are read by canvas code; keep them.
-   --ink is the page ground (paper in light, lightbox in dark), --text is the ink. */
+/* Rootstock design tokens: a flat, dense security assessment interface (see DESIGN.md).
+   Blue is action and focus, violet is inferred or modeled, amber is a collection gap, and the
+   severity scale is only for severity. Canvas code reads several names here; keep them. */
 
 :root {
   color-scheme: light;
 
   /* Ground and surfaces */
-  --ink: #f3efe6;
-  --ink-deep: #f8f5ef;
-  --pane: #ede8de;
-  --pane-raised: #e4ded1;
-  --pane-selected: #e6e0d3;
-  --hover: rgba(29, 27, 23, 0.05);
-  --signal-dim: rgba(29, 27, 23, 0.08);
-  --overlay: rgba(243, 239, 230, 0.96);
+  --ink: #f4f6f9;
+  --ink-deep: #ffffff;
+  --pane: #ffffff;
+  --pane-raised: #eef1f5;
+  --pane-selected: #e1ebfb;
+  --hover: rgba(15, 23, 42, 0.05);
+  --signal-dim: rgba(11, 92, 213, 0.1);
+  --overlay: rgba(244, 246, 249, 0.96);
 
-  /* Ink */
-  --text: #1d1b17;
-  --muted: #4d483f;
-  --subtle: #635d51;
-  --rule: rgba(29, 27, 23, 0.14);
+  /* Text and rules */
+  --text: #0f172a;
+  --muted: #475569;
+  --subtle: #5b6678;
+  --rule: #dde3ea;
   /* Control borders: ≥ 3:1 against --ink-deep and --pane in both themes. */
-  --rule-strong: rgba(29, 27, 23, 0.5);
+  --rule-strong: #768396;
 
   /* Roles */
-  --action: #1d1b17;
-  --action-strong: #000;
-  --on-action: #f8f5ef;
-  --focus-ring: #1d1b17;
-  --annotation: #33528a;
-  --annotation-dim: rgba(51, 82, 138, 0.09);
+  --action: #0b5cd5;
+  --link: #0b5cd5;
+  --action-strong: #0948a8;
+  --on-action: #ffffff;
+  --focus-ring: #0b5cd5;
+  --annotation: #6d28d9;
+  --annotation-dim: rgba(109, 40, 217, 0.08);
   --path: var(--annotation);
   --path-dim: var(--annotation-dim);
-  --gap: #7c5d0a;
-  --gap-rule: #b08a1e;
-  --gap-dim: rgba(176, 138, 30, 0.12);
-  --oxide: #b23f28;
+  --gap: #8a5a00;
+  --gap-rule: #b07d00;
+  --gap-dim: rgba(217, 154, 0, 0.12);
 
-  /* Severity: rust, ochre, olive, teal slate (kept apart from the pencil-blue annotation) */
-  --critical: #a3341d;
-  --high: #84570a;
-  --medium: #5b6519;
-  --low: #3f6f6f;
-  --verified: #2f6a45;
+  /* Severity */
+  --critical: #b4123a;
+  --high: #c2410c;
+  --medium: #8f6a00;
+  --low: #0e7490;
+  --info: #5b6678;
+  --verified: #15803d;
+  --on-severity: #ffffff;
 
   /* Graph canvas */
-  /* Canvas edges are drawn at 0.68 alpha; these keep ≥3:1 against the ground after blending. */
-  --edge: #4a453b;
-  --edge-faint: #5c564b;
+  --edge: #475569;
+  --edge-faint: #334155;
 
   /* Type */
-  --font-serif:
-    "Iowan Old Style", "Iowan Old Style BT", Charter, "Bitstream Charter", "Sitka Text", Cambria,
-    Georgia, serif;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
-  --size-1: 12px;
-  --size-2: 13px;
-  --size-3: 15px;
-  --size-4: 17px;
-  --size-5: 21px;
-  --size-6: 27px;
-  --size-7: 34px;
-  --size-8: 44px;
+  --font-ui:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-mono:
+    "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --size-1: 11px;
+  --size-2: 12px;
+  --size-3: 13px;
+  --size-4: 14px;
+  --size-5: 16px;
+  --size-6: 20px;
+  --size-7: 24px;
+  --size-8: 28px;
 
   /* Space (4px base) */
   --space-1: 4px;
@@ -76,11 +75,11 @@
   --space-7: 48px;
   --space-8: 64px;
   --space-9: 96px;
-  --sheet-gutter: clamp(18px, 4vw, 56px);
+  --sheet-gutter: clamp(16px, 4vw, 24px);
 
   /* Shape, elevation, motion */
-  --radius: 2px;
-  --slip-shadow: 3px 3px 0 var(--rule);
+  --radius: 4px;
+  --shadow-float: 0 8px 24px rgba(15, 23, 42, 0.16);
   --duration: 120ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 
@@ -92,75 +91,79 @@
   --z-tooltip: 60;
 }
 
-/* Dark: the same sheet on a lightbox. Values mirror the light roles. */
+/* Dark: the same roles on a near-black ground. Keep both blocks identical. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --ink: #151411;
-    --ink-deep: #100f0d;
-    --pane: #1b1a16;
-    --pane-raised: #24221d;
-    --pane-selected: #302d26;
-    --hover: rgba(235, 229, 216, 0.05);
-    --signal-dim: rgba(235, 229, 216, 0.09);
-    --overlay: rgba(21, 20, 17, 0.96);
-    --text: #ebe5d8;
-    --muted: #bbb3a3;
-    --subtle: #9e9686;
-    --rule: rgba(235, 229, 216, 0.13);
-    --rule-strong: rgba(235, 229, 216, 0.5);
-    --action: #ebe5d8;
-    --action-strong: #fff;
-    --on-action: #151411;
-    --focus-ring: #ebe5d8;
-    --annotation: #a3b8df;
-    --annotation-dim: rgba(163, 184, 223, 0.11);
-    --gap: #d9b75e;
-    --gap-rule: #8f7630;
-    --gap-dim: rgba(217, 183, 94, 0.09);
-    --oxide: #d9644b;
-    --critical: #e58a72;
-    --high: #d8a84c;
-    --medium: #b5bf6c;
-    --low: #8fbcbc;
-    --verified: #91c39d;
-    --edge: #b0a999;
-    --edge-faint: #948d7e;
-    --slip-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+    --ink: #0d1117;
+    --ink-deep: #090c10;
+    --pane: #131820;
+    --pane-raised: #1a212b;
+    --pane-selected: #1c2b45;
+    --hover: rgba(148, 163, 184, 0.08);
+    --signal-dim: rgba(77, 148, 255, 0.14);
+    --overlay: rgba(13, 17, 23, 0.96);
+    --text: #e6edf3;
+    --muted: #a6b1bd;
+    --subtle: #8a96a3;
+    --rule: #262e39;
+    --rule-strong: #6a7686;
+    --action: #1d6ae5;
+    --link: #4d94ff;
+    --action-strong: #1558c7;
+    --on-action: #ffffff;
+    --focus-ring: #4d94ff;
+    --annotation: #b392f0;
+    --annotation-dim: rgba(179, 146, 240, 0.12);
+    --gap: #e3b341;
+    --gap-rule: #9e7a1e;
+    --gap-dim: rgba(227, 179, 65, 0.1);
+    --critical: #ff5c7c;
+    --high: #ff8f4d;
+    --medium: #e8c547;
+    --low: #4fc3d9;
+    --info: #8a96a3;
+    --verified: #56d364;
+    --on-severity: #0d1117;
+    --edge: #8b96a5;
+    --edge-faint: #6b7686;
+    --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #151411;
-  --ink-deep: #100f0d;
-  --pane: #1b1a16;
-  --pane-raised: #24221d;
-  --pane-selected: #302d26;
-  --hover: rgba(235, 229, 216, 0.05);
-  --signal-dim: rgba(235, 229, 216, 0.09);
-  --overlay: rgba(21, 20, 17, 0.96);
-  --text: #ebe5d8;
-  --muted: #bbb3a3;
-  --subtle: #9e9686;
-  --rule: rgba(235, 229, 216, 0.13);
-  --rule-strong: rgba(235, 229, 216, 0.5);
-  --action: #ebe5d8;
-  --action-strong: #fff;
-  --on-action: #151411;
-  --focus-ring: #ebe5d8;
-  --annotation: #a3b8df;
-  --annotation-dim: rgba(163, 184, 223, 0.11);
-  --gap: #d9b75e;
-  --gap-rule: #8f7630;
-  --gap-dim: rgba(217, 183, 94, 0.09);
-  --oxide: #d9644b;
-  --critical: #e58a72;
-  --high: #d8a84c;
-  --medium: #b5bf6c;
-  --low: #8fbcbc;
-  --verified: #91c39d;
-  --edge: #b0a999;
-  --edge-faint: #948d7e;
-  --slip-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+  --ink: #0d1117;
+  --ink-deep: #090c10;
+  --pane: #131820;
+  --pane-raised: #1a212b;
+  --pane-selected: #1c2b45;
+  --hover: rgba(148, 163, 184, 0.08);
+  --signal-dim: rgba(77, 148, 255, 0.14);
+  --overlay: rgba(13, 17, 23, 0.96);
+  --text: #e6edf3;
+  --muted: #a6b1bd;
+  --subtle: #8a96a3;
+  --rule: #262e39;
+  --rule-strong: #6a7686;
+  --action: #1d6ae5;
+  --link: #4d94ff;
+  --action-strong: #1558c7;
+  --on-action: #ffffff;
+  --focus-ring: #4d94ff;
+  --annotation: #b392f0;
+  --annotation-dim: rgba(179, 146, 240, 0.12);
+  --gap: #e3b341;
+  --gap-rule: #9e7a1e;
+  --gap-dim: rgba(227, 179, 65, 0.1);
+  --critical: #ff5c7c;
+  --high: #ff8f4d;
+  --medium: #e8c547;
+  --low: #4fc3d9;
+  --info: #8a96a3;
+  --verified: #56d364;
+  --on-severity: #0d1117;
+  --edge: #8b96a5;
+  --edge-faint: #6b7686;
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
 }

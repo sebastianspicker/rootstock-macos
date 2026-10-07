@@ -147,9 +147,9 @@ function drawVisibleNodeShape(controller: Controller, { node, position, radius }
   drawNodeShape(context, position.x, position.y, radius, node.kind);
   context.fillStyle = safeNodeColor(node.properties._color);
   context.fill();
-  // Data colors can be pale on paper; an ink keyline keeps every node distinguishable.
+  // Data colors can be pale on a light ground; a text-colored outline keeps every node distinguishable.
   context.lineWidth = (selected ? 2.5 : 1.25) / k;
-  context.strokeStyle = canvasLabelColor("--text", "#1d1b17");
+  context.strokeStyle = canvasLabelColor("--text", "#0f172a");
   context.stroke();
   context.globalAlpha = 1;
 }
@@ -163,7 +163,7 @@ function drawHoverRing(
   context.beginPath();
   context.arc(position.x, position.y, radius + 4 / k, 0, Math.PI * 2);
   context.lineWidth = 1 / k;
-  context.strokeStyle = canvasLabelColor("--muted", "#4d483f");
+  context.strokeStyle = canvasLabelColor("--muted", "#475569");
   context.stroke();
 }
 
@@ -211,7 +211,7 @@ export function drawSelectionRings(
     context.beginPath();
     context.arc(position.x, position.y, radius + offset / k, 0, Math.PI * 2);
     context.globalAlpha = alpha;
-    context.strokeStyle = canvasLabelColor("--text", "#1d1b17");
+    context.strokeStyle = canvasLabelColor("--text", "#0f172a");
     context.lineWidth = (offset === 7 ? 2 : 1) / k;
     context.stroke();
   }
@@ -228,7 +228,7 @@ function haloText(
 ): void {
   context.lineWidth = 3 / k;
   context.lineJoin = "round";
-  context.strokeStyle = canvasLabelColor("--ink-deep", "#f8f5ef");
+  context.strokeStyle = canvasLabelColor("--ink-deep", "#ffffff");
   context.strokeText(text, x, y);
   context.fillText(text, x, y);
 }
@@ -239,7 +239,7 @@ export function drawNodeLabel(controller: Controller, { node, position, radius }
   const k = controller.state.viewport.transform.k;
   context.globalAlpha = nodeAlpha(controller, node.id);
   context.textAlign = "center";
-  context.fillStyle = canvasLabelColor("--text", "#1d1b17");
+  context.fillStyle = canvasLabelColor("--text", "#0f172a");
   context.font = canvasFont("600", 16);
   haloText(context, truncateLabel(node.label ?? node.id), position.x, position.y + radius + 18, k);
   const kind = displayCanvasKind(node.kind);
@@ -251,17 +251,17 @@ export function drawNodeLabel(controller: Controller, { node, position, radius }
   const y = position.y + radius + 32;
   context.font = font;
   context.textAlign = "start";
-  context.fillStyle = canvasLabelColor("--subtle", "#635d51");
+  context.fillStyle = canvasLabelColor("--subtle", "#5b6678");
   haloText(context, kindText, position.x - total / 2, y, k);
   const token = SEVERITY_TOKENS[severity];
   if (token) {
-    context.fillStyle = canvasLabelColor(token, "#635d51");
+    context.fillStyle = canvasLabelColor(token, "#5b6678");
     haloText(context, severity, position.x - total / 2 + kindWidth, y, k);
   }
   context.globalAlpha = 1;
 }
 
-/** Numbered modeled-path steps at the top left; an ink owned flag at the top right. */
+/** Numbered modeled-path steps at the top left; an owned flag at the top right. */
 function drawNodeBadges(controller: Controller, { node, position, radius }: NodeFrame): void {
   const { context } = controller.dom;
   const k = controller.state.viewport.transform.k;
@@ -273,9 +273,9 @@ function drawNodeBadges(controller: Controller, { node, position, radius }: Node
     const center = { x: position.x - corner, y: position.y - corner };
     context.beginPath();
     context.arc(center.x, center.y, 9 / k, 0, Math.PI * 2);
-    context.fillStyle = canvasLabelColor("--path", "#33528a");
+    context.fillStyle = canvasLabelColor("--path", "#6d28d9");
     context.fill();
-    context.fillStyle = canvasLabelColor("--ink", "#f3efe6");
+    context.fillStyle = canvasLabelColor("--ink", "#f4f6f9");
     context.font = canvasFont("700", 11 / k);
     context.textAlign = "center";
     context.textBaseline = "middle";
@@ -285,7 +285,7 @@ function drawNodeBadges(controller: Controller, { node, position, radius }: Node
   }
   if (node.properties.owned === true) {
     const size = 8 / k;
-    context.fillStyle = canvasLabelColor("--text", "#1d1b17");
+    context.fillStyle = canvasLabelColor("--text", "#0f172a");
     context.fillRect(position.x + corner - size / 2, position.y - corner - size / 2, size, size);
   }
 }

@@ -24,11 +24,13 @@ const defaultOutput = path.join(repositoryRoot, "graph", "generated", "pages-dem
 
 const demoCss = `
 .demo-tour-link {
-  color: var(--text, #1d1b17);
-  font: 13px/1.5 -apple-system, system-ui, sans-serif;
+  color: var(--text);
+  font: var(--size-2) / 1.5 var(--font-ui);
   white-space: nowrap;
+  text-decoration-color: var(--rule-strong);
   text-underline-offset: 4px;
 }
+.demo-tour-link:hover { text-decoration-color: currentColor; }
 .demo-tour-link:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 .demo-disclosure {
   position: absolute;
@@ -106,28 +108,28 @@ async function renderDemo() {
     readFile(path.join(viewerResources, "viewer.bundle.js"), "utf8"),
   ]);
 
-  return (
-    template
-      // Function replacers keep `$&`, `$'` and similar sequences in the inserted text literal.
-      .replace("<head>", () => '<head>\n<link rel="icon" href="data:,">')
-      .replace(
-        '<html lang="en">',
-        () => '<html lang="en" data-rootstock-pages-demo="synthetic-graphite-laboratory-bench">',
-      )
-      .replace("{{VIEWER_TITLE}}", () => "Synthetic static demo")
-      .replace("{{VIEWER_CSS}}", () => `${css}\n${demoCss}`)
-      .replace('<div id="app">', () => `<div id="app">${disclosureMarkup()}`)
-      .replace("{{VIEWER_JS}}", () => staticOnlyBundle(bundle))
-      .replace("{{VIEWER_BOOTSTRAP}}", () => bootstrapScript())
-  );
+  const page = template
+    // Function replacers keep `$&`, `$'` and similar sequences in the inserted text literal.
+    .replace("<head>", () => '<head>\n<link rel="icon" href="data:,">')
+    .replace(
+      '<html lang="en">',
+      () => '<html lang="en" data-rootstock-pages-demo="synthetic-graphite-laboratory-bench">',
+    )
+    .replace("{{VIEWER_TITLE}}", () => "Synthetic static demo")
+    .replace("{{VIEWER_CSS}}", () => `${css}\n${demoCss}`)
+    .replace('<div id="app">', () => `<div id="app">${disclosureMarkup()}`)
+    .replace("{{VIEWER_JS}}", () => staticOnlyBundle(bundle))
+    .replace("{{VIEWER_BOOTSTRAP}}", () => bootstrapScript());
+  return { page, tour: renderTour(css) };
 }
 
 async function main() {
   const outputPath = path.resolve(process.argv[2] ?? defaultOutput);
   await mkdir(path.dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, await renderDemo(), "utf8");
+  const { page, tour } = await renderDemo();
+  await writeFile(outputPath, page, "utf8");
   const outputDirectory = path.dirname(outputPath);
-  await writeFile(path.join(outputDirectory, "tour.html"), renderTour(), "utf8");
+  await writeFile(path.join(outputDirectory, "tour.html"), tour, "utf8");
   await mkdir(path.join(outputDirectory, "screenshots"), { recursive: true });
   for (const step of tourSteps) {
     await copyFile(

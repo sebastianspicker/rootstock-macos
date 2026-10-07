@@ -22,7 +22,7 @@ export function renderReport(content: HTMLElement, view: ReportView): void {
       view.live
         ? "Export the current graph assessment. The report covers the loaded graph, not only the selected application."
         : "Export a summary of the loaded snapshot. It is not the full Neo4j assessment report, which needs a live session.",
-      "Sheet 3 of 3 · Report",
+      "Step 3 of 3 · Report",
     ),
   );
   const left = el("section", { class: "folio-main-column" });

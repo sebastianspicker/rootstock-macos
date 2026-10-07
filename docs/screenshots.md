@@ -36,7 +36,7 @@ PLAYWRIGHT_CHANNEL=chrome \
 
 The capture command serves only the built synthetic viewer on a temporary
 loopback port. It checks the scope, evidence, report download, graph inspector,
-search, and empty search state at 1440 × 1050. It also checks the main folio flow
+search, and empty search state at 1440 × 1050. It also checks the main assessment flow
 at 390 × 844 for horizontal overflow. Browser errors and external requests
 fail the run. The command replaces the four PNGs only after these checks pass.
 

@@ -16,6 +16,7 @@ import {
   shortestFdaPath,
   recommendations,
   matchApplication,
+  isPartialCollection,
 } from "./folio-data";
 import {
   el,
@@ -135,6 +136,9 @@ class EvidenceFolio {
             : "Offline snapshot",
         "folio-source-label",
       ),
+      ...(isPartialCollection(this.graph)
+        ? [el("span", { class: "status-chip gap", text: "Partial collection" })]
+        : []),
       themeControl(this.controller),
       controls,
     ]);
@@ -158,7 +162,7 @@ class EvidenceFolio {
       nav.append(control);
     });
     nav.append(
-      para("TCC grants · code signing · hardening · injection, modeled", "folio-coverage"),
+      para("Coverage: TCC · Code signing · Hardening · Injection (modeled)", "folio-coverage"),
     );
     return nav;
   }
@@ -265,7 +269,7 @@ class EvidenceFolio {
         ? `Inspect the recorded facts and modeled relationships for ${nodeName(selected)}. This explains an exposure, not confirmation of compromise.`
         : (questions.find((question) => question.id === this.question)?.text ??
             "Review the analysis results."),
-      "Sheet 2 of 3 · Evidence",
+      "Step 2 of 3 · Evidence",
     );
   }
   private evidenceAside(): HTMLElement {

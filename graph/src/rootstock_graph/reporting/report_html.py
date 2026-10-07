@@ -14,214 +14,243 @@ REPORT_HTML_TEMPLATE = """<!DOCTYPE html>
   <title>Rootstock Security Assessment Report</title>
   <style>
     :root {{
-      color-scheme: dark;
-      --ink: #0b0d0e;
-      --ink-deep: #080a0b;
-      --pane: #14181a;
-      --pane-raised: #1b2022;
-      --rule: #30373a;
-      --rule-strong: #52605e;
-      --text: #e8ece8;
-      --muted: #b0bcbf;
-      --subtle: #94a3a7;
-      --action: #aec59b;
-      --critical: #f07c73;
-      --high: #ff984b;
-      --medium: #f5c84d;
-      --verified: #6fc981;
-      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-      --font-mono: "SF Mono", Menlo, Consolas, monospace;
+      color-scheme: light;
+      --ink: #f4f6f9;
+      --ink-deep: #ffffff;
+      --pane: #ffffff;
+      --pane-raised: #eef1f5;
+      --pane-selected: #e1ebfb;
+      --hover: rgba(15, 23, 42, 0.05);
+      --text: #0f172a;
+      --muted: #475569;
+      --subtle: #5b6678;
+      --rule: #dde3ea;
+      --rule-strong: #768396;
+      --action: #0b5cd5;
+      --link: #0b5cd5;
+      --focus-ring: #0b5cd5;
+      --annotation: #6d28d9;
+      --gap: #8a5a00;
+      --gap-rule: #b07d00;
+      --gap-dim: rgba(217, 154, 0, 0.12);
+      --critical: #b4123a;
+      --high: #c2410c;
+      --medium: #8f6a00;
+      --low: #0e7490;
+      --info: #5b6678;
+      --verified: #15803d;
+      --on-severity: #ffffff;
+      --radius: 4px;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+    }}
+    @media (prefers-color-scheme: dark) {{
+      :root {{
+        color-scheme: dark;
+        --ink: #0d1117;
+        --ink-deep: #090c10;
+        --pane: #131820;
+        --pane-raised: #1a212b;
+        --pane-selected: #1c2b45;
+        --hover: rgba(148, 163, 184, 0.08);
+        --text: #e6edf3;
+        --muted: #a6b1bd;
+        --subtle: #8a96a3;
+        --rule: #262e39;
+        --rule-strong: #6a7686;
+        --action: #1d6ae5;
+        --link: #4d94ff;
+        --focus-ring: #4d94ff;
+        --annotation: #b392f0;
+        --gap: #e3b341;
+        --gap-rule: #9e7a1e;
+        --gap-dim: rgba(227, 179, 65, 0.10);
+        --critical: #ff5c7c;
+        --high: #ff8f4d;
+        --medium: #e8c547;
+        --low: #4fc3d9;
+        --info: #8a96a3;
+        --verified: #56d364;
+        --on-severity: #0d1117;
+      }}
     }}
     * {{ box-sizing: border-box; }}
     html {{ background: var(--ink); }}
     body {{
-      max-width: 1240px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 32px 56px;
+      padding: 0 24px 48px;
       background: var(--ink);
       color: var(--text);
-      font: 15px/1.65 var(--font-ui);
+      font: 14px/1.55 var(--font-ui);
       -webkit-font-smoothing: antialiased;
     }}
-    a {{ color: var(--action); text-underline-offset: 3px; }}
-    a:hover {{ text-decoration-thickness: 2px; }}
+    a {{ color: var(--link); text-underline-offset: 2px; }}
     a:focus-visible, [tabindex]:focus-visible {{
-      outline: 2px solid var(--action);
-      outline-offset: 3px;
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 1px;
     }}
     .report-header {{
       display: flex;
       align-items: center;
       gap: 12px;
-      min-height: 58px;
-      margin-bottom: 48px;
+      height: 48px;
+      margin: 0 -24px 24px;
+      padding: 0 24px;
+      background: var(--pane);
       border-bottom: 1px solid var(--rule);
     }}
     .report-mark {{
       display: grid;
       place-items: center;
-      width: 28px;
-      height: 28px;
-      border: 1px solid var(--text);
-      border-radius: 2px;
-      font: 600 13px var(--font-mono);
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius);
+      background: var(--text);
+      color: var(--ink);
+      font: 700 13px var(--font-mono);
     }}
-    .report-brand {{
-      font: 700 12px var(--font-mono);
-      letter-spacing: .22em;
-    }}
+    .report-brand {{ font: 600 14px var(--font-ui); }}
     .report-kind {{
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
       margin-left: auto;
+      padding: 0 8px;
+      border: 1px solid var(--rule-strong);
+      border-radius: var(--radius);
       color: var(--muted);
-      font: 10px var(--font-mono);
-      letter-spacing: .08em;
+      font: 600 11px var(--font-ui);
+      letter-spacing: .06em;
       text-transform: uppercase;
     }}
-    #report-content {{ max-width: 980px; margin: 0 auto; }}
+    #report-content {{ max-width: 1200px; margin: 0 auto; }}
     h1 {{
-      max-width: 24ch;
-      margin: 0 0 28px;
-      padding-bottom: 20px;
+      margin: 0 0 16px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--rule-strong);
-      color: var(--text);
-      font-size: clamp(2rem, 5vw, 3.4rem);
-      font-weight: 620;
-      line-height: 1.06;
-      letter-spacing: -.035em;
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.25;
     }}
     h2 {{
-      margin: 3.2em 0 1em;
-      padding: 0 0 10px;
+      margin: 32px 0 12px;
+      padding-bottom: 8px;
       border-bottom: 1px solid var(--rule);
-      color: var(--text);
-      font-size: 1.25rem;
-      font-weight: 620;
-      line-height: 1.2;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.3;
     }}
     h3 {{
-      margin: 2em 0 .65em;
-      color: var(--action);
-      font-size: 1rem;
-      font-weight: 650;
+      margin: 20px 0 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
     }}
     h4 {{
-      margin: 1.4em 0 .5em;
-      color: var(--muted);
-      font-size: .85rem;
-      font-weight: 650;
-      letter-spacing: .04em;
+      margin: 16px 0 8px;
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
       text-transform: uppercase;
     }}
-    p {{ margin: .8em 0; color: var(--text); }}
+    p {{ margin: 8px 0; }}
     em {{ color: var(--muted); }}
     .table-scroll {{
-      margin: 1.2em 0;
+      margin: 12px 0;
       overflow-x: auto;
       border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      background: var(--ink-deep);
       scrollbar-color: var(--rule-strong) transparent;
     }}
     figure {{ margin: 0; }}
     figcaption {{
-      padding: 9px 12px;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--rule);
-      color: var(--muted);
-      font: 10px var(--font-mono);
-      letter-spacing: .05em;
+      background: var(--pane-raised);
+      color: var(--subtle);
+      font: 600 11px var(--font-ui);
+      letter-spacing: .06em;
       text-transform: uppercase;
     }}
     table {{
       border-collapse: collapse;
       width: 100%;
       min-width: 560px;
-      font-size: .86rem;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
     }}
     th, td {{
-      padding: 10px 12px;
+      padding: 7px 12px;
       text-align: left;
       border-bottom: 1px solid var(--rule);
       vertical-align: top;
     }}
     th {{
-      background: var(--ink-deep);
-      color: var(--muted);
-      font: 650 10px var(--font-mono);
-      letter-spacing: .04em;
+      background: var(--pane-raised);
+      color: var(--subtle);
+      font: 600 11px var(--font-ui);
+      letter-spacing: .06em;
       text-transform: uppercase;
     }}
     tr:last-child td {{ border-bottom: 0; }}
-    tr:hover td {{ background: var(--pane); }}
+    tr:hover td {{ background: var(--hover); }}
     blockquote {{
-      margin: 1.2em 0;
-      padding: 12px 16px;
-      border: 1px solid var(--rule);
-      border-left: 3px solid var(--high);
-      background: var(--ink-deep);
-      color: var(--muted);
-      font-size: .92rem;
+      margin: 12px 0;
+      padding: 8px 12px;
+      border-left: 3px solid var(--gap-rule);
+      background: var(--gap-dim);
+      color: var(--text);
     }}
-    blockquote strong {{ color: var(--high); }}
+    blockquote p {{ margin: 4px 0; }}
+    blockquote strong {{ color: var(--gap); }}
     code {{
       border: 1px solid var(--rule);
       border-radius: 3px;
-      background: var(--ink-deep);
-      padding: 2px 6px;
-      color: var(--action);
-      font: .84em var(--font-mono);
+      background: var(--pane-raised);
+      padding: 1px 5px;
+      color: var(--text);
+      font: 12px var(--font-mono);
     }}
     pre {{
-      padding: 16px;
+      padding: 12px;
       overflow-x: auto;
       border: 1px solid var(--rule);
+      border-radius: var(--radius);
       background: var(--ink-deep);
-      font-size: .84rem;
+      font-size: 12px;
     }}
-    pre code {{
-      border: 0;
-      padding: 16px;
-      padding: 0;
-      background: transparent;
-    }}
-    ul, ol {{ padding-left: 24px; margin: 0.8em 0; }}
-    li {{ margin: .42em 0; color: var(--text); line-height: 1.5; }}
+    pre code {{ border: 0; padding: 0; background: transparent; }}
+    td code {{ border: 0; padding: 0; background: transparent; }}
+    ul, ol {{ padding-left: 24px; margin: 8px 0; }}
+    li {{ margin: 4px 0; }}
     li::marker {{ color: var(--subtle); }}
     strong {{ color: var(--text); }}
-    .tier-0 {{ color: var(--critical); font-weight: 700; }}
-    .tier-1 {{ color: var(--high); font-weight: 700; }}
-    .tier-2 {{ color: var(--action); font-weight: 600; }}
-    .mermaid {{ margin: 1.5em 0; }}
-    @media (prefers-color-scheme: light) {{
-      :root {{
-        color-scheme: light;
-        --ink: #eef4f8;
-        --ink-deep: #f7fafc;
-        --pane: #ffffff;
-        --pane-raised: #e7eff5;
-        --rule: #b8c8d4;
-        --rule-strong: #8da3b2;
-        --text: #102331;
-        --muted: #445d6f;
-        --subtle: #5f7585;
-        --action: #075dc9;
-        --critical: #b72d32;
-        --high: #9a4d00;
-        --medium: #735c00;
-        --verified: #116c3a;
-      }}
+    .tier-0, .tier-1, .tier-2 {{
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      color: var(--on-severity);
+      font: 700 11px var(--font-ui);
+      text-transform: uppercase;
     }}
+    .tier-0 {{ background: var(--critical); }}
+    .tier-1 {{ background: var(--high); }}
+    .tier-2 {{ background: var(--medium); }}
+    .mermaid {{ margin: 16px 0; }}
     .report-footer {{
-      max-width: 980px;
-      margin: 56px auto 0;
-      padding-top: 16px;
+      margin: 40px 0 0;
+      padding-top: 12px;
       border-top: 1px solid var(--rule);
       color: var(--subtle);
-      font: 10px var(--font-mono);
+      font: 11px var(--font-mono);
     }}
     @media (max-width: 640px) {{
       body {{ padding-inline: 16px; }}
-      .report-header {{ margin-bottom: 32px; }}
+      .report-header {{ margin-inline: -16px; padding-inline: 16px; }}
       .report-kind {{ display: none; }}
-      h1 {{ font-size: 2.15rem; }}
-      dl {{ grid-template-columns: 1fr; }}
     }}
     @media (prefers-reduced-motion: reduce) {{
       *, *::before, *::after {{
@@ -231,27 +260,37 @@ REPORT_HTML_TEMPLATE = """<!DOCTYPE html>
     }}
     @media print {{
       :root {{
+        color-scheme: light;
         --ink: #fff;
         --ink-deep: #fff;
         --pane: #fff;
+        --pane-raised: #f0f0f0;
+        --hover: transparent;
         --rule: #c8c8c8;
         --rule-strong: #777;
-        --text: #111;
-        --muted: #333;
-        --subtle: #555;
+        --text: #000;
+        --muted: #222;
+        --subtle: #444;
         --action: #134f9b;
+        --gap: #5c3c00;
+        --gap-dim: #fdf3d8;
+        --critical: #b4123a;
+        --high: #c2410c;
+        --medium: #8f6a00;
+        --on-severity: #fff;
       }}
+      * {{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
       body {{ max-width: none; padding: 0; }}
-      .report-header {{ min-height: 42px; margin-bottom: 28px; }}
+      .report-header {{ margin: 0 0 16px; padding: 0; }}
       .table-scroll {{ overflow: visible; }}
-      a {{ color: #111; text-decoration: underline; }}
+      a {{ color: #000; text-decoration: underline; }}
     }}
   </style>
 </head>
 <body>
 <header class="report-header">
   <span class="report-mark" aria-hidden="true">R</span>
-  <span class="report-brand">ROOTSTOCK</span>
+  <span class="report-brand">Rootstock</span>
   <span class="report-kind">Security assessment / generated local output</span>
 </header>
 <main id="report-content">

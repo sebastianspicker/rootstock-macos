@@ -1,8 +1,8 @@
-/* Evidence folio — the herbarium sheet.
-   Main column holds the specimen (question, path, facts); the margin holds the key and
-   advice. Recorded metadata is a ruled specimen label; inference is a pencil-blue slip. */
+/* Assessment flow: Scope, Evidence, Report.
+   App bar and step bar on top, a main column beside a 320px context panel, and a sticky
+   action bar. Recorded facts, inferred material (violet) and collection gaps (amber) stay apart. */
 
-/* Workspace switching (folio ↔ graph tools) */
+/* Workspace switching (assessment ↔ graph tools) */
 body.folio-enabled {
   overflow: auto;
 }
@@ -19,25 +19,6 @@ body.folio-enabled {
 .graph-tools-open #app {
   grid-template-rows: auto minmax(0, 1fr);
 }
-.graph-tools-open #status-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-5);
-  height: auto;
-  min-height: 52px;
-  padding: var(--space-2) var(--space-5);
-}
-.graph-tools-open #global-nav {
-  margin-inline: auto;
-}
-#graph-tools-toggle {
-  min-height: 32px;
-  padding: 0 var(--space-3);
-  border-color: var(--rule-strong);
-  background: transparent;
-  font-size: var(--size-2);
-}
 
 #evidence-folio {
   min-height: 100dvh;
@@ -45,191 +26,241 @@ body.folio-enabled {
   flex-direction: column;
   color: var(--text);
   background: var(--ink);
-  font: var(--size-3) / 1.55 var(--font-ui);
+  font: var(--size-4) / 1.5 var(--font-ui);
 }
 #evidence-folio p {
   overflow-wrap: anywhere;
 }
 #evidence-folio h2 {
-  font: 400 var(--size-5) / 1.25 var(--font-serif);
-  letter-spacing: -0.005em;
+  font: 600 var(--size-5) / 1.3 var(--font-ui);
 }
 #evidence-folio h3 {
-  font: 600 var(--size-3) / 1.35 var(--font-ui);
+  font: 600 var(--size-4) / 1.35 var(--font-ui);
+}
+/* Field, column and section label style. */
+#evidence-folio h2.folio-section-label,
+.folio-sheet,
+.folio-choices legend,
+.folio-output legend,
+.folio-table caption,
+.folio-facts dt,
+.folio-output-fields > label,
+.folio-output-fields > span,
+#evidence-folio .folio-aside > h2,
+#evidence-folio .folio-slip h2,
+.folio-main-column > label[for="folio-result-search"] {
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.4 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+#evidence-folio h2.folio-section-label {
+  margin: 0 0 var(--space-2);
 }
 
-/* Masthead */
+/* App bar */
 .folio-topbar {
   display: flex;
   align-items: center;
-  gap: var(--space-4) var(--space-5);
-  min-height: 56px;
+  gap: var(--space-2) var(--space-3);
+  min-height: 48px;
   padding: var(--space-2) var(--sheet-gutter);
   border-bottom: 1px solid var(--rule);
+  background: var(--pane);
 }
 .folio-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   white-space: nowrap;
-  font: 400 19px / 1 var(--font-serif);
-  letter-spacing: 0.01em;
+  font: 600 var(--size-4) / 1 var(--font-ui);
 }
-.folio-mark-r,
-.brand-icon {
+.folio-mark-r {
   display: inline-grid;
+  flex: none;
   place-items: center;
   width: 22px;
   height: 22px;
   border-radius: var(--radius);
-  background: var(--oxide);
-  color: #fbf7ef;
-  font: 400 15px / 1 var(--font-serif);
+  background: var(--text);
+  color: var(--ink);
+  font: 700 13px / 1 var(--font-mono);
 }
 .folio-top-meta {
   min-width: 0;
-  padding-left: var(--space-5);
-  border-left: 1px solid var(--rule-strong);
+  margin-left: var(--space-1);
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--rule);
   color: var(--muted);
-  font-size: var(--size-2);
+  font: var(--size-2) / 20px var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.folio-source-label {
+.folio-source-label,
+.folio-topbar .status-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
   color: var(--muted);
-  font: 400 var(--size-3) / 1 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
+  font: 600 var(--size-1) / 1 var(--font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
+}
+.folio-topbar .status-chip::before {
+  content: none;
+}
+.folio-topbar .status-chip.gap {
+  border-color: var(--gap-rule);
+  color: var(--gap);
 }
 .folio-theme-field {
   margin-left: auto;
 }
 .folio-theme {
-  min-height: 34px;
-  padding-block: 4px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--muted);
+  min-height: 32px;
+  border-color: var(--rule-strong);
+  background: var(--ink-deep);
+  color: var(--text);
   font-size: var(--size-2);
 }
-.folio-theme:hover {
-  color: var(--text);
-  border-color: var(--rule-strong);
-}
 #evidence-folio .folio-topbar .folio-button {
-  min-height: 34px;
-  padding: 4px 14px;
+  min-height: 32px;
+  padding: 0 var(--space-3);
   font-size: var(--size-2);
 }
 .folio-topbar .demo-tour-link {
-  color: var(--text);
-  font: var(--size-2) / 1.5 var(--font-ui);
-  text-decoration-color: var(--rule-strong);
+  color: var(--link);
+  font: 500 var(--size-2) / 1.5 var(--font-ui);
+  text-decoration: none;
+}
+.folio-topbar .demo-tour-link:hover {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* Stage sequence */
+/* Step bar */
 .folio-navigation {
   display: flex;
   align-items: stretch;
-  gap: var(--space-6);
-  margin: 0 var(--sheet-gutter);
-  border-bottom: 1px solid var(--rule-strong);
+  gap: 0;
+  padding: 0 var(--sheet-gutter);
+  border-bottom: 1px solid var(--rule);
+  background: var(--pane);
 }
 #evidence-folio .folio-stage {
   display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  min-height: 52px;
-  padding: 14px 2px 12px;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   margin-bottom: -1px;
   background: transparent;
   color: var(--muted);
-  font-size: var(--size-3);
+  font: 500 var(--size-3) / 1 var(--font-ui);
+}
+#evidence-folio .folio-stage:first-child {
+  padding-left: 0;
 }
 #evidence-folio .folio-stage:hover:not(:disabled) {
-  color: var(--text);
+  border-bottom-color: var(--rule-strong);
   background: transparent;
+  color: var(--text);
 }
 #evidence-folio .folio-stage[aria-current] {
+  border-bottom-color: var(--action);
   color: var(--text);
-  border-bottom-color: var(--text);
   font-weight: 600;
 }
 .folio-stage-number {
-  font: 400 var(--size-4) / 1 var(--font-serif);
-  font-variant-numeric: oldstyle-nums;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 50%;
+  font: 600 var(--size-1) / 1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.folio-stage[aria-current] .folio-stage-number {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--on-action);
 }
 #evidence-folio .folio-stage:disabled {
-  opacity: 0.55;
+  opacity: 1;
+  color: var(--subtle);
+}
+#evidence-folio .folio-stage:disabled .folio-stage-number {
+  border-color: var(--rule);
 }
 .folio-coverage {
   align-self: center;
   margin-left: auto;
   color: var(--subtle);
-  font: italic var(--size-2) / 1.4 var(--font-serif);
+  font: var(--size-1) / 1.4 var(--font-ui);
   text-align: right;
 }
 
-/* Sheet */
+/* Content: main column beside the context panel */
 .folio-content {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 8fr) minmax(260px, 4fr);
-  column-gap: clamp(32px, 5vw, 88px);
+  grid-template-columns: minmax(0, 1fr) 320px;
+  column-gap: var(--space-5);
   row-gap: var(--space-5);
   align-content: start;
   width: 100%;
   max-width: 1440px;
-  padding: var(--space-6) var(--sheet-gutter) var(--space-8);
+  padding: var(--space-5) var(--sheet-gutter) var(--space-7);
 }
 .folio-main-column {
   min-width: 0;
 }
 .folio-intro {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 .folio-sheet {
-  margin-bottom: var(--space-3);
-  color: var(--subtle);
-  font: 400 var(--size-3) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  font-variant-numeric: oldstyle-nums;
-  letter-spacing: 0.06em;
+  margin-bottom: var(--space-1);
 }
 #evidence-folio h1 {
-  max-width: 20em;
-  font: 400 clamp(34px, 3.6vw, 50px) / 1.08 var(--font-serif);
-  letter-spacing: -0.015em;
+  font: 600 22px / 1.25 var(--font-ui);
   text-wrap: balance;
 }
 #evidence-folio h1:focus-visible {
-  outline-offset: 6px;
+  outline-offset: 4px;
 }
 .folio-lead {
-  max-width: 38em;
-  margin-top: var(--space-4);
+  max-width: 70ch;
+  margin-top: var(--space-1);
   color: var(--muted);
-  font: 400 19px / 1.5 var(--font-serif);
+  font: var(--size-4) / 1.5 var(--font-ui);
   text-wrap: pretty;
 }
 .folio-code {
   color: var(--muted);
-  font: var(--size-1) / 1.6 var(--font-mono);
+  font: var(--size-2) / 1.5 var(--font-mono);
 }
 .folio-note {
-  max-width: 40em;
-  margin: var(--space-3) 0 var(--space-5);
+  max-width: 70ch;
+  margin: var(--space-3) 0 var(--space-4);
   color: var(--muted);
   font-size: var(--size-3);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
-/* Name/value pairs */
+/* Key–value table */
 .folio-facts {
   display: grid;
   grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
@@ -238,106 +269,136 @@ body.folio-enabled {
 .folio-facts dt,
 .folio-facts dd {
   margin: 0;
-  padding: 9px 0;
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--rule);
   overflow-wrap: anywhere;
 }
 .folio-facts dt {
-  padding-right: var(--space-6);
-  color: var(--muted);
-  font: 400 var(--size-3) / 1.4 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.05em;
+  padding-right: var(--space-5);
+  line-height: 20px;
 }
 .folio-facts dd {
-  font: var(--size-2) / 1.5 var(--font-mono);
+  font: var(--size-2) / 20px var(--font-mono);
 }
-/* Specimen label: a double-ruled card for where the evidence came from. */
 .folio-label {
-  max-width: 680px;
-  padding: var(--space-2) var(--space-5);
-  border: 1px solid var(--rule-strong);
-  outline: 1px solid var(--rule);
-  outline-offset: 3px;
-  background: var(--ink-deep);
-  margin: 0 3px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
+}
+.folio-label dt {
+  padding-left: var(--space-4);
+}
+.folio-label dd {
+  padding-right: var(--space-4);
 }
 .folio-label dt:nth-last-child(2),
 .folio-label dd:last-child {
   border-bottom: 0;
 }
 
-/* Collection gap */
+/* Gap alert */
 .folio-warning {
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  max-width: 680px;
-  margin: var(--space-5) 0;
-  padding: var(--space-3) var(--space-4);
+  margin: var(--space-4) 0;
+  padding: var(--space-2) var(--space-3);
   border-left: 3px solid var(--gap-rule);
+  border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--gap-dim);
+  color: var(--text);
   font-size: var(--size-3);
 }
 .folio-warning-mark {
   flex: none;
   color: var(--gap);
-  font: 600 var(--size-3) / 1 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.08em;
+  font: 700 var(--size-1) / 1.6 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.folio-warning.neutral {
+  border-left-color: var(--rule-strong);
+  background: var(--pane-raised);
+}
+.folio-warning.neutral .folio-warning-mark {
+  color: var(--subtle);
 }
 
-/* Question choice */
+/* Question choice: selectable table rows */
 .folio-choices,
 .folio-output {
   min-width: 0;
-  margin: var(--space-7) 0 0;
+  margin: var(--space-6) 0 0;
   padding: 0;
   border: 0;
 }
 .folio-choices legend,
 .folio-output legend {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   padding: 0;
-  font: 400 var(--size-5) / 1.25 var(--font-serif);
 }
-.folio-choices label {
+.folio-choices label,
+.folio-format {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-3);
-  border-top: 1px solid var(--rule);
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-top-width: 0;
+  background: var(--pane);
   color: var(--text);
-  font: 400 var(--size-4) / 1.4 var(--font-serif);
+  font: 400 var(--size-4) / 1.4 var(--font-ui);
   cursor: pointer;
   transition: background-color var(--duration) var(--ease);
 }
-.folio-choices label:last-of-type {
-  border-bottom: 1px solid var(--rule);
+.folio-choices legend + label,
+.folio-output legend + .folio-format {
+  border-top-width: 1px;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
-.folio-choices label:hover {
+.folio-choices label:last-of-type,
+.folio-format:last-of-type {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.folio-choices legend + label:last-of-type,
+.folio-output legend + .folio-format:last-of-type {
+  border-radius: var(--radius);
+}
+.folio-choices label:hover,
+.folio-format:hover {
   background: var(--hover);
 }
-.folio-choices label:has(input:checked) {
-  background: var(--signal-dim);
+.folio-choices label:has(input:checked),
+.folio-format:has(input:checked) {
+  background: var(--pane-selected);
+  box-shadow: inset 2px 0 0 var(--action);
+}
+.folio-qid {
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--subtle);
+  font: var(--size-1) / 1.4 var(--font-mono);
 }
 #evidence-folio input[type="radio"] {
   appearance: none;
-  position: relative;
-  top: 3px;
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   min-height: 0;
   margin: 0;
   padding: 0;
-  border: 1.5px solid var(--text);
+  border: 1px solid var(--rule-strong);
   border-radius: 50%;
-  background: transparent;
+  background: var(--ink-deep);
   cursor: pointer;
 }
 #evidence-folio input[type="radio"]:checked {
-  background: radial-gradient(circle, var(--text) 0 4px, transparent 4.5px);
+  border-color: var(--action);
+  background: var(--action);
+  box-shadow: inset 0 0 0 4px var(--ink-deep);
 }
 #evidence-folio input[type="radio"]:disabled {
   opacity: 0.5;
@@ -348,12 +409,12 @@ body.folio-enabled {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3) var(--space-5);
-  margin: var(--space-6) 0 var(--space-3);
+  gap: var(--space-3) var(--space-4);
+  margin: var(--space-5) 0 var(--space-3);
 }
 #evidence-folio .folio-primary {
-  min-height: 48px;
-  padding: 0 var(--space-5);
+  min-height: 36px;
+  padding: 0 var(--space-4);
   border: 1px solid var(--action);
   background: var(--action);
   color: var(--on-action);
@@ -364,54 +425,64 @@ body.folio-enabled {
   background: var(--action-strong);
 }
 #evidence-folio .folio-button {
-  min-height: 44px;
-  padding: 0 var(--space-4);
+  min-height: 32px;
+  padding: 0 var(--space-3);
   border-color: var(--rule-strong);
-  background: transparent;
+  background: var(--pane);
   color: var(--text);
+  font: 500 var(--size-3) / 1 var(--font-ui);
 }
 #evidence-folio .folio-button:hover:not(:disabled) {
-  border-color: var(--text);
+  border-color: var(--muted);
   background: var(--hover);
 }
 
-/* Marginalia */
+/* Context panel */
 .folio-aside {
   align-self: start;
   min-width: 0;
-  padding-top: var(--space-2);
-  font-size: var(--size-2);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
+  font-size: var(--size-3);
 }
-.folio-aside > h2 {
-  margin: var(--space-6) 0 var(--space-3);
+#evidence-folio .folio-aside > h2 {
+  margin: var(--space-5) 0 var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
 }
-.folio-aside > h2:first-child {
+#evidence-folio .folio-aside > h2:first-child {
   margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 .folio-aside .folio-note {
+  margin-block: var(--space-2);
   font-size: var(--size-2);
 }
 .folio-conventions {
-  margin: var(--space-4) 0 var(--space-5);
+  margin: var(--space-2) 0 var(--space-4);
 }
 .folio-conventions dd {
-  margin: var(--space-1) 0 var(--space-4);
+  margin: var(--space-1) 0 var(--space-3);
   color: var(--muted);
-  line-height: 1.55;
+  font-size: var(--size-2);
+  line-height: 1.5;
 }
 
-/* The two inks. Observed: solid ink rule. Inferred: dashed pencil blue, italic. */
+/* Evidence basis marks: observed solid, inferred dashed violet, not collected dotted. */
 .folio-mark {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font: 400 var(--size-3) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
+  gap: var(--space-2);
+  font: 600 var(--size-1) / 1.3 var(--font-ui);
   letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 .folio-conventions .folio-mark::before {
   content: "";
-  width: 28px;
+  width: 24px;
   border-top: 2px solid currentColor;
 }
 .folio-mark.observed {
@@ -419,7 +490,6 @@ body.folio-enabled {
 }
 .folio-mark.inferred {
   color: var(--annotation);
-  font-style: italic;
 }
 .folio-conventions .folio-mark.inferred::before {
   border-top-style: dashed;
@@ -427,29 +497,34 @@ body.folio-enabled {
 .folio-mark.unknown {
   color: var(--subtle);
 }
-.folio-conventions.compact dd {
-  margin-bottom: var(--space-3);
-  font-size: var(--size-2);
-}
 .folio-conventions .folio-mark.unknown::before {
   border-top-style: dotted;
 }
+.folio-conventions.compact dd {
+  margin-bottom: var(--space-2);
+}
 
-/* Modeled path: any number of specimens joined by labelled relationships. Auto columns
-   alternate specimen and joint widths, so the figure works for every path length. */
+/* Modeled path: bordered boxes joined by labelled connectors. Auto columns alternate node and
+   connector widths, so the figure works for every path length. */
 .folio-path {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr) minmax(96px, 0.7fr);
-  align-items: start;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-7);
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
   overflow-x: auto;
 }
 .folio-path-node {
   min-width: 0;
-  padding-top: var(--space-3);
-  border-top: 2px solid var(--text);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--ink-deep);
 }
 .folio-path-node strong {
   display: block;
@@ -457,17 +532,18 @@ body.folio-enabled {
   overflow-wrap: anywhere;
 }
 .folio-path-node p {
-  margin-top: var(--space-1);
+  margin-top: 2px;
   color: var(--muted);
-  font: 11.5px / 1.45 var(--font-mono);
+  font: var(--size-1) / 1.45 var(--font-mono);
 }
 .folio-path-node.modeled {
-  border-top-style: dashed;
-  border-top-color: var(--annotation);
+  border-style: dashed;
+  border-color: var(--annotation);
+  background: var(--annotation-dim);
 }
-.folio-path-node.modeled strong {
+.folio-path-node.modeled strong,
+.folio-path-node.modeled p {
   color: var(--annotation);
-  font-style: italic;
 }
 .folio-path-edge {
   position: relative;
@@ -475,9 +551,8 @@ body.folio-enabled {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  margin-top: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1.5px solid currentColor;
+  padding-bottom: var(--space-1);
+  border-bottom: 2px solid currentColor;
   color: var(--text);
   text-align: center;
 }
@@ -485,8 +560,8 @@ body.folio-enabled {
   content: "";
   position: absolute;
   right: -2px;
-  bottom: -5.5px;
-  border: 4.5px solid transparent;
+  bottom: -6px;
+  border: 5px solid transparent;
   border-left: 8px solid currentColor;
   border-right: 0;
 }
@@ -499,48 +574,51 @@ body.folio-enabled {
   border-bottom-style: dotted;
 }
 .folio-path-edge code {
-  font-size: 11px;
+  font-size: var(--size-1);
   overflow-wrap: anywhere;
 }
-.folio-path-edge .folio-mark {
-  font-size: var(--size-2);
-}
 
-/* Tables */
+/* Data table */
 .folio-table {
   width: 100%;
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-5);
+  border: 1px solid var(--rule);
   border-collapse: collapse;
+  background: var(--pane);
   text-align: left;
   font-size: var(--size-3);
+  font-variant-numeric: tabular-nums;
 }
 .folio-table caption {
-  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
   text-align: left;
-  font: 400 var(--size-5) / 1.25 var(--font-serif);
 }
 .folio-table th,
 .folio-table td {
-  padding: 11px var(--space-4) 11px 0;
+  height: 36px;
+  padding: var(--space-1) var(--space-3);
   border-bottom: 1px solid var(--rule);
-  vertical-align: baseline;
+  vertical-align: middle;
   overflow-wrap: anywhere;
 }
 .folio-table thead th {
+  height: 32px;
   overflow-wrap: normal;
   white-space: nowrap;
-  padding-block: var(--space-2);
-  border-bottom-color: var(--rule-strong);
-  color: var(--muted);
-  font: 400 var(--size-3) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
+  background: var(--pane-raised);
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.3 var(--font-ui);
   letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.folio-table tbody tr:hover {
+  background: var(--hover);
 }
 .folio-table tbody th {
-  font-weight: 400;
+  font-weight: 500;
 }
 .folio-table td {
-  color: var(--muted);
+  color: var(--text);
 }
 .folio-tag {
   color: var(--text);
@@ -550,15 +628,20 @@ body.folio-enabled {
   color: var(--critical);
   font-weight: 600;
 }
+.folio-basis {
+  font: var(--size-2) / 1.4 var(--font-mono);
+}
 .folio-basis.observed {
   color: var(--text);
 }
+.folio-basis.inferred {
+  color: var(--annotation);
+}
 .folio-basis.unknown {
   color: var(--subtle);
-  font-style: italic;
 }
-.folio-table td:last-child button {
-  min-height: 36px;
+#evidence-folio .folio-table td:last-child button {
+  min-height: 28px;
   white-space: nowrap;
 }
 .folio-table-scroll {
@@ -566,101 +649,111 @@ body.folio-enabled {
 }
 .folio-main-column > label[for="folio-result-search"] {
   display: block;
-  margin-top: var(--space-5);
-  font-size: var(--size-2);
+  margin-top: var(--space-4);
 }
 #folio-result-search {
   width: 100%;
   max-width: 560px;
-  min-height: 44px;
-  margin: var(--space-2) 0 var(--space-6);
+  min-height: 32px;
+  margin: var(--space-1) 0 var(--space-4);
 }
 
-/* Determination slip: inference pinned beside the evidence, never merged into it. */
+/* Analysis notes: inferred material, violet left edge */
 .folio-slip {
-  max-width: 40em;
-  margin: 0 0 var(--space-6) var(--space-5);
-  padding: var(--space-4) var(--space-5);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--rule);
-  border-top: 2px dashed var(--annotation);
-  background: var(--ink-deep);
-  box-shadow: var(--slip-shadow);
+  border-left: 3px solid var(--annotation);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--pane);
 }
 #evidence-folio .folio-slip h2 {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   color: var(--annotation);
-  font: italic 400 var(--size-3) / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
 }
 .folio-slip p {
+  max-width: 80ch;
   color: var(--muted);
-  font: 400 var(--size-4) / 1.55 var(--font-serif);
+  font-size: var(--size-3);
+  line-height: 1.55;
 }
 
 /* Application identity */
 .folio-identity {
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-2);
-  border-bottom: 1px solid var(--rule-strong);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
 }
 #evidence-folio .folio-identity h2 {
-  margin-bottom: var(--space-2);
-  font-size: var(--size-6);
-  line-height: 1.15;
+  margin-bottom: var(--space-1);
+  font-size: var(--size-5);
 }
 .folio-main-column > .folio-identity {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
+}
+#evidence-folio .folio-main-column > .folio-identity h2 {
+  font-size: var(--size-6);
 }
 
 /* Recommendations */
 .folio-recommendations li {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--rule);
 }
 .folio-number {
   color: var(--subtle);
-  font: 400 var(--size-5) / 1 var(--font-serif);
-  font-variant-numeric: oldstyle-nums;
+  font: 600 var(--size-2) / 20px var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 #evidence-folio .folio-recommendations h3 {
   display: inline;
   margin-right: var(--space-2);
+  font-size: var(--size-3);
+  line-height: 20px;
   overflow-wrap: anywhere;
 }
+/* Severity badge: solid fill, always with its word. */
 .folio-priority {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--info);
+  color: var(--on-severity);
+  font: 700 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
   white-space: nowrap;
-  color: var(--muted);
-  font: 400 var(--size-3) / 1 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
+}
+.folio-priority:empty {
+  display: none;
 }
 .folio-priority.critical {
-  color: var(--critical);
+  background: var(--critical);
 }
 .folio-priority.high {
-  color: var(--high);
+  background: var(--high);
 }
 .folio-priority.medium {
-  color: var(--medium);
+  background: var(--medium);
 }
 .folio-priority.low {
-  color: var(--low);
+  background: var(--low);
 }
 .folio-recommendations p {
-  margin-top: var(--space-1);
+  margin-top: 2px;
   color: var(--muted);
   font-size: var(--size-2);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 .folio-aside .folio-facts {
   grid-template-columns: max-content minmax(0, 1fr);
 }
 .folio-aside .folio-facts dt {
-  padding-right: var(--space-4);
+  padding-right: var(--space-3);
 }
 .folio-aside .folio-facts dd {
   font-size: var(--size-1);
@@ -672,24 +765,16 @@ body.folio-enabled {
   margin-bottom: 0;
 }
 .folio-report .folio-output {
-  margin-top: var(--space-2);
+  margin-top: 0;
 }
 .folio-format {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
-  padding: var(--space-3);
-  border-top: 1px solid var(--rule);
-  color: var(--text);
-  cursor: pointer;
+  align-items: flex-start;
 }
-.folio-format:hover {
-  background: var(--hover);
-}
-.folio-format:has(input:checked) {
-  background: var(--signal-dim);
+#evidence-folio .folio-format input[type="radio"] {
+  margin-top: 2px;
 }
 .folio-format strong {
+  font-size: var(--size-3);
   font-weight: 600;
 }
 .folio-format p {
@@ -701,47 +786,47 @@ body.folio-enabled {
 .folio-output-fields {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  align-items: baseline;
-  gap: var(--space-3) var(--space-6);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--rule-strong);
-}
-.folio-output-fields > label,
-.folio-output-fields > span {
-  color: var(--muted);
-  font: 400 var(--size-3) / 1.4 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.05em;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pane);
 }
 .folio-output-fields p {
   color: var(--muted);
-  font-size: var(--size-2);
+  font-size: var(--size-3);
 }
 .folio-output-fields input {
   width: 100%;
   max-width: 440px;
-  min-height: 40px;
+  min-height: 32px;
   font: var(--size-2) / 1.4 var(--font-mono);
 }
 .folio-context li {
-  padding: var(--space-3) 0;
+  padding: var(--space-2) 0;
   border-top: 1px solid var(--rule);
 }
 .folio-context li:last-child {
   border-bottom: 1px solid var(--rule);
 }
+#evidence-folio .folio-context h3 {
+  font-size: var(--size-3);
+}
 .folio-context p {
   margin-top: 2px;
   color: var(--muted);
+  font-size: var(--size-2);
 }
 
-/* Receipt */
+/* Completed report */
 .folio-complete {
   display: block;
   max-width: 900px;
 }
 .folio-complete > h2 {
-  margin: var(--space-7) 0 var(--space-2);
+  margin: var(--space-6) 0 var(--space-2);
 }
 .folio-complete .folio-recommendations li {
   grid-template-columns: 24px minmax(0, 1fr);
@@ -750,10 +835,11 @@ body.folio-enabled {
 /* States */
 .folio-empty,
 .folio-error {
-  max-width: 680px;
-  margin: var(--space-5) 0;
-  padding: var(--space-4) var(--space-5);
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
   border-left: 3px solid var(--rule-strong);
+  border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--pane);
 }
 .folio-error {
@@ -767,39 +853,43 @@ body.folio-enabled {
   display: block;
 }
 
-/* Footer: actions stay in reach while the sheet scrolls. */
+/* Action bar: actions stay in reach while the page scrolls. */
 .folio-footer {
   position: sticky;
   bottom: 0;
   z-index: var(--z-sticky);
   display: flex;
   align-items: center;
-  gap: var(--space-3) var(--space-5);
-  min-height: 72px;
-  padding: var(--space-3) var(--sheet-gutter);
-  border-top: 1px solid var(--rule-strong);
-  background: var(--ink);
+  gap: var(--space-2) var(--space-4);
+  min-height: 48px;
+  padding: var(--space-2) var(--sheet-gutter);
+  border-top: 1px solid var(--rule);
+  background: var(--pane);
 }
 .folio-footer .folio-code {
-  font-size: 11.5px;
+  color: var(--subtle);
+  font-size: var(--size-1);
 }
 .folio-footer p + p {
-  padding-left: var(--space-5);
+  padding-left: var(--space-4);
   border-left: 1px solid var(--rule);
 }
 .folio-footer button {
   white-space: nowrap;
 }
+#evidence-folio .folio-footer .folio-primary {
+  min-height: 32px;
+}
 .folio-footer button:first-of-type {
   margin-left: auto;
 }
 
-/* Session notices remain visible and announced without covering folio actions. */
+/* Session notices remain visible and announced without covering assessment actions. */
 .folio-enabled:not(.graph-tools-open) #live-status:not(:empty) {
   position: static;
   max-width: none;
   margin: 0;
-  padding: var(--space-3) var(--sheet-gutter);
+  padding: var(--space-2) var(--sheet-gutter);
   border: 0;
   border-bottom: 1px solid var(--rule);
   border-radius: 0;
@@ -813,7 +903,7 @@ body.folio-enabled {
     display: none;
   }
   .folio-content {
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.6fr);
+    grid-template-columns: minmax(0, 1fr) 280px;
   }
   .folio-path {
     grid-auto-columns: minmax(0, 1fr) minmax(88px, 0.7fr);
@@ -825,10 +915,6 @@ body.folio-enabled {
     grid-template-columns: minmax(0, 1fr);
     padding-bottom: var(--space-6);
   }
-  .folio-aside {
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--rule-strong);
-  }
   .folio-report > .folio-intro {
     grid-column: auto;
   }
@@ -837,16 +923,18 @@ body.folio-enabled {
   }
 }
 
-/* Phone: a sheet of its own. Vertical path, compact masthead, footer holds only actions. */
+/* Phone: compact app bar, vertical path, action bar holds only actions. */
 @media (max-width: 600px) {
   .folio-topbar {
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-3);
-    padding-block: var(--space-3);
+    gap: var(--space-2);
   }
-  .folio-source-label {
-    order: 3;
+  .folio-brand {
     flex: 1 0 auto;
+  }
+  .folio-source-label,
+  .folio-topbar .status-chip {
+    order: 3;
   }
   .folio-theme-field {
     order: 4;
@@ -858,24 +946,18 @@ body.folio-enabled {
     order: 5;
   }
   .folio-navigation {
-    gap: 0;
+    padding-inline: 0;
   }
-  #evidence-folio .folio-stage {
+  #evidence-folio .folio-stage,
+  #evidence-folio .folio-stage:first-child {
     flex: 1;
     justify-content: center;
     gap: 6px;
-    min-height: 48px;
-    font-size: var(--size-2);
+    min-height: 44px;
+    padding-inline: var(--space-1);
   }
   #evidence-folio h1 {
-    font-size: 32px;
-    line-height: 1.12;
-  }
-  .folio-lead {
-    font-size: var(--size-4);
-  }
-  .folio-label {
-    padding: var(--space-1) var(--space-4);
+    font-size: var(--size-6);
   }
   .folio-facts,
   .folio-aside .folio-facts {
@@ -888,12 +970,11 @@ body.folio-enabled {
   .folio-facts dd {
     padding-top: 2px;
   }
+  .folio-label dd {
+    padding-left: var(--space-4);
+  }
   .folio-label dt:nth-last-child(2) {
     border-bottom: 0;
-  }
-  .folio-choices label {
-    padding-inline: var(--space-1);
-    font-size: var(--size-4);
   }
   .folio-actions .folio-primary {
     width: 100%;
@@ -903,14 +984,15 @@ body.folio-enabled {
     grid-auto-columns: auto;
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+    padding: var(--space-3);
     overflow-x: visible;
   }
   .folio-path-edge {
     align-items: flex-start;
-    margin: var(--space-2) 0 var(--space-2) 11px;
+    margin: 0 0 var(--space-2) 15px;
     padding: var(--space-3) 0 var(--space-3) var(--space-4);
     border-bottom: 0;
-    border-left: 1.5px solid currentColor;
+    border-left: 2px solid currentColor;
     text-align: left;
   }
   .folio-path-edge.inferred {
@@ -922,14 +1004,10 @@ body.folio-enabled {
   .folio-path-edge::after {
     right: auto;
     left: -6px;
-    bottom: -4px;
+    bottom: -6px;
     border: 5px solid transparent;
     border-top: 8px solid currentColor;
     border-bottom: 0;
-  }
-  .folio-slip {
-    margin-left: 0;
-    padding: var(--space-4);
   }
   .folio-table {
     font-size: var(--size-2);
@@ -962,7 +1040,7 @@ body.folio-enabled {
   }
 }
 
-/* Graph tools masthead on phones: identity and exit, then workspaces, then session. */
+/* Graph tools app bar on phones: identity and exit, then workspaces, then session. */
 @media (max-width: 767px) {
   .graph-tools-open #status-bar {
     gap: var(--space-2);
@@ -981,13 +1059,14 @@ body.folio-enabled {
     flex: 1 0 100%;
     justify-content: space-between;
     margin: 0;
-    padding: var(--space-1) 0;
+    padding: 0;
   }
   .graph-tools-open .status-group {
     order: 4;
     flex: 1 0 100%;
     justify-content: space-between;
-    padding: var(--space-1) 0 var(--space-2);
+    margin-left: 0;
+    padding: var(--space-2) 0;
     border-top: 1px solid var(--rule);
   }
   .graph-tools-open #theme-select {
@@ -1011,18 +1090,19 @@ body.folio-enabled {
   }
 }
 
-/* The sticky footer must not cover a focused control (WCAG 2.4.11). */
+/* The sticky action bar must not cover a focused control (WCAG 2.4.11). */
 html:has(body.folio-enabled:not(.graph-tools-open)),
 #evidence-folio {
-  scroll-padding-bottom: 96px;
+  scroll-padding-bottom: 72px;
 }
 
-/* Forced colors drop background tints and gradients; keep the checked state visible. */
+/* Forced colors drop background tints; keep the checked state visible. */
 @media (forced-colors: active) {
   #evidence-folio input[type="radio"]:checked {
     forced-color-adjust: none;
     border-color: CanvasText;
-    background: radial-gradient(circle, CanvasText 0 4px, Canvas 4.5px);
+    background: CanvasText;
+    box-shadow: inset 0 0 0 4px Canvas;
     outline: 2px solid Highlight;
     outline-offset: 2px;
   }
@@ -1030,5 +1110,11 @@ html:has(body.folio-enabled:not(.graph-tools-open)),
   .folio-format:has(input:checked) {
     outline: 2px solid Highlight;
     outline-offset: -2px;
+  }
+  .folio-priority {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
   }
 }
