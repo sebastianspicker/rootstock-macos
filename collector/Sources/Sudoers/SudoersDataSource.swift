@@ -32,8 +32,10 @@ public struct SudoersDataSource: DataSource {
         let fm = FileManager.default
         if fm.fileExists(atPath: includeDirectoryPath) {
             do {
-                let files = try fm.contentsOfDirectory(atPath: includeDirectoryPath)
-                for file in files where !file.hasPrefix(".") {
+                // sudo skips include-directory entries containing '.' or ending in '~'
+                // and reads the rest in lexical order.
+                let files = try fm.contentsOfDirectory(atPath: includeDirectoryPath).sorted()
+                for file in files where !file.contains(".") && !file.hasSuffix("~") {
                     let path = (includeDirectoryPath as NSString).appendingPathComponent(file)
                     let (subRules, subErrors) = parseSudoersFile(at: path)
                     rules += subRules
@@ -90,35 +92,69 @@ public struct SudoersDataSource: DataSource {
             let rhs = trimmed[eqRange.upperBound...].trimmingCharacters(in: .whitespaces)
 
             // Extract user and host from LHS
-            let lhsParts = lhs.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+            let lhsParts = lhs.split(maxSplits: 1, omittingEmptySubsequences: true, whereSeparator: Self.isWhitespace)
             guard let user = lhsParts.first else { continue }
-            let host = lhsParts.count > 1 ? String(lhsParts[1]) : "ALL"
+            let host = lhsParts.count > 1
+                ? String(lhsParts[1]).trimmingCharacters(in: .whitespaces)
+                : "ALL"
 
-            // Check for NOPASSWD in RHS
-            let nopasswd = rhs.contains("NOPASSWD")
-
-            // Extract command (strip runas and NOPASSWD tags)
-            var command = rhs
-            // Remove (runas) spec
-            if command.firstIndex(of: "(") != nil,
-               let parenEnd = command.firstIndex(of: ")") {
-                command = String(command[command.index(after: parenEnd)...]).trimmingCharacters(in: .whitespaces)
+            for spec in Self.commandSpecs(from: rhs) {
+                rules.append(SudoersRule(
+                    user: String(user),
+                    host: host,
+                    command: spec.command,
+                    nopasswd: spec.nopasswd
+                ))
             }
-            // Remove NOPASSWD: or PASSWD: tags
-            command = command.replacingOccurrences(of: "NOPASSWD:", with: "")
-                .replacingOccurrences(of: "PASSWD:", with: "")
-                .trimmingCharacters(in: .whitespaces)
-
-            guard !command.isEmpty else { continue }
-
-            rules.append(SudoersRule(
-                user: String(user),
-                host: host,
-                command: command,
-                nopasswd: nopasswd
-            ))
         }
 
         return rules
+    }
+
+    private struct CommandSpec {
+        let command: String
+        let nopasswd: Bool
+    }
+
+    private static func isWhitespace(_ character: Character) -> Bool {
+        character == " " || character == "\t"
+    }
+
+    /// Split the right-hand side into comma-separated command specifications.
+    /// As in sudoers, a `NOPASSWD:`/`PASSWD:` tag applies to the commands that
+    /// follow it until another tag changes it.
+    private static func commandSpecs(from rhs: String) -> [CommandSpec] {
+        var specs: [CommandSpec] = []
+        var nopasswd = false
+
+        for item in rhs.split(separator: ",") {
+            var command = item.trimmingCharacters(in: .whitespaces)
+            // Remove (runas) spec
+            if command.hasPrefix("("), let parenEnd = command.firstIndex(of: ")") {
+                command = String(command[command.index(after: parenEnd)...]).trimmingCharacters(in: .whitespaces)
+            }
+            command = stripLeadingTags(command, nopasswd: &nopasswd)
+            guard !command.isEmpty else { continue }
+            specs.append(CommandSpec(command: command, nopasswd: nopasswd))
+        }
+
+        return specs
+    }
+
+    /// Remove leading `TAG:` tokens (NOPASSWD:, PASSWD:, SETENV:, ...), updating `nopasswd`.
+    private static func stripLeadingTags(_ spec: String, nopasswd: inout Bool) -> String {
+        var rest = spec
+        while let first = rest.split(maxSplits: 1, whereSeparator: isWhitespace).first {
+            let tag = String(first)
+            guard tag.count > 1, tag.hasSuffix(":"),
+                  tag.dropLast().allSatisfy({ $0.isUppercase || $0 == "_" }) else { break }
+            if tag == "NOPASSWD:" {
+                nopasswd = true
+            } else if tag == "PASSWD:" {
+                nopasswd = false
+            }
+            rest = String(rest.dropFirst(tag.count)).trimmingCharacters(in: .whitespaces)
+        }
+        return rest
     }
 }

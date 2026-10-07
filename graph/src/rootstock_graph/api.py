@@ -22,7 +22,6 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from neo4j import GraphDatabase
 from neo4j.exceptions import AuthError, ClientError, Neo4jError, ServiceUnavailable
@@ -32,6 +31,7 @@ from neo4j.exceptions import AuthError, ClientError, Neo4jError, ServiceUnavaila
 
 from .api_support.routes import router
 from .server_validation import (
+    host_header_is_loopback,
     matches_api_token as _matches_api_token,
     validate_api_token as _validate_api_token,
     validate_bind_host as _validate_bind_host,
@@ -40,6 +40,9 @@ from .server_validation import (
 
 
 # ── App lifecycle ───────────────────────────────────────────────────────────
+
+
+REQUIRE_READONLY_PRINCIPAL = "ROOTSTOCK_REQUIRE_READONLY_PRINCIPAL"
 
 
 def _read_principal_probe(driver) -> str | None:
@@ -78,9 +81,22 @@ async def lifespan(app: FastAPI):
         read_driver = GraphDatabase.driver(uri, auth=(read_user, read_password))
         read_driver.verify_connectivity()
         probe_failure = _read_principal_probe(read_driver)
-        if probe_failure:
-            print(f"ERROR: read principal check failed: {probe_failure}.", file=sys.stderr)
+        if probe_failure and os.environ.get(REQUIRE_READONLY_PRINCIPAL) == "1":
+            print(
+                f"ERROR: read principal check failed: {probe_failure}, and "
+                f"{REQUIRE_READONLY_PRINCIPAL}=1 requires a denied write.",
+                file=sys.stderr,
+            )
             sys.exit(1)
+        if probe_failure:
+            # Neo4j Community has no role-based access control, so every account can
+            # write; the statement validator is then the only guard on ad-hoc Cypher.
+            print(
+                f"WARNING: {probe_failure}. Ad-hoc Cypher is protected only by the API's "
+                f"statement validator; set {REQUIRE_READONLY_PRINCIPAL}=1 on Enterprise to "
+                "refuse startup instead.",
+                file=sys.stderr,
+            )
         connected = True
     except ServiceUnavailable:
         print("ERROR: Cannot connect to Neo4j.", file=sys.stderr)
@@ -116,14 +132,6 @@ app = FastAPI(
     openapi_url=None,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[],
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
-)
-
 app.include_router(router)
 
 
@@ -143,6 +151,10 @@ async def require_api_token(request: Request, call_next):
             response = await call_next(request)
     else:
         response = await call_next(request)
+    return _with_security_headers(response)
+
+
+def _with_security_headers(response):
     response.headers["Cache-Control"] = "no-store"
     response.headers["Content-Security-Policy"] = (
         "default-src 'none'; script-src 'unsafe-inline'; "
@@ -156,6 +168,19 @@ async def require_api_token(request: Request, call_next):
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
+
+
+# The viewer is served by this app (same-origin), so no CORS middleware is installed.
+# Pinning the Host header to loopback names blocks DNS-rebinding requests.
+# Registered last so it runs first, before the bearer-token check.
+@app.middleware("http")
+async def require_loopback_host(request: Request, call_next):
+    """Reject requests whose Host header does not name the loopback machine."""
+    if not host_header_is_loopback(request.headers.get("host", "")):
+        return _with_security_headers(
+            JSONResponse({"detail": "Invalid host header"}, status_code=400)
+        )
+    return await call_next(request)
 
 
 def _build_parser() -> argparse.ArgumentParser:

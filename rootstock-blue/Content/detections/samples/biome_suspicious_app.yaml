@@ -5,7 +5,7 @@ description: Pattern-of-life Biome stream shows launch of known-suspicious bundl
 attack_techniques:
   - T1204
 match:
-  event_type: pol.biome_app_launch
+  event_type: pol.biome.app_launch
   field_contains:
     pol.value: "com.evil"
 fixture: biome_suspicious_app.jsonl

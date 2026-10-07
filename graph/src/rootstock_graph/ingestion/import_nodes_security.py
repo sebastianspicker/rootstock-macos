@@ -357,9 +357,16 @@ def import_system_extensions(session: Session, extensions: list[SystemExtensionD
     return len(records)
 
 
-def import_sudoers_rules(session: Session, rules: list[SudoersRuleData]) -> tuple[int, int]:
+def import_sudoers_rules(
+    session: Session, rules: list[SudoersRuleData], scan_id: str | None = None
+) -> tuple[int, int]:
     """
     MERGE SudoersRule nodes and SUDO_NOPASSWD edges from User → SudoersRule.
+
+    Principals are resolved without creating ghost users: a ``%group`` principal links
+    the existing members of that LocalGroup (import local groups first; membership
+    is matched on this scan's ``MEMBER_OF`` edges when ``scan_id`` is given), ``ALL``
+    is skipped, and any other name is a user.
     Returns (rule_nodes, sudo_nopasswd_edges).
     """
     if not rules:
@@ -372,6 +379,8 @@ def import_sudoers_rules(session: Session, rules: list[SudoersRuleData]) -> tupl
             "command": r.command,
             "nopasswd": r.nopasswd,
             "key": f"{r.user}:{r.host}:{r.command}",
+            "group": r.user[1:] if r.user.startswith("%") else None,
+            "is_all": r.user == "ALL",
         }
         for r in rules
     ]
@@ -389,17 +398,31 @@ def import_sudoers_rules(session: Session, rules: list[SudoersRuleData]) -> tupl
     )
 
     # SUDO_NOPASSWD: User → SudoersRule (only for NOPASSWD rules)
-    result = session.run(
+    user_edges = session.run(
         """
         UNWIND $records AS r
-        WITH r WHERE r.nopasswd = true
+        WITH r WHERE r.nopasswd = true AND r.group IS NULL AND NOT r.is_all
         MATCH (sr:SudoersRule {key: r.key})
         MERGE (u:User {name: r.user})
         MERGE (u)-[rel:SUDO_NOPASSWD]->(sr)
         RETURN count(rel) AS n
         """,
         records=records,
-    )
-    edges = result.single()["n"]
+    ).single()["n"]
 
-    return len(rules), edges
+    # %group principals: existing members of the LocalGroup, no User node is created
+    group_edges = session.run(
+        """
+        UNWIND $records AS r
+        WITH r WHERE r.nopasswd = true AND r.group IS NOT NULL
+        MATCH (sr:SudoersRule {key: r.key})
+        MATCH (u:User)-[m:MEMBER_OF]->(g:LocalGroup {name: r.group})
+        WHERE $scan_id IS NULL OR m.scan_id = $scan_id
+        MERGE (u)-[rel:SUDO_NOPASSWD]->(sr)
+        RETURN count(rel) AS n
+        """,
+        records=records,
+        scan_id=scan_id,
+    ).single()["n"]
+
+    return len(rules), user_edges + group_edges

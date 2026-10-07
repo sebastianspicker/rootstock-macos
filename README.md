@@ -89,7 +89,8 @@ See [Architecture](docs/ARCHITECTURE.md) for dependency and runtime flows and
 | Blue | macOS 14+, Swift 6.2+ |
 | Viewer | Node.js from `graph/viewer/.node-version`, npm 11.17.0 |
 
-Use Python 3.11 to match the repository development and CI environment. Install only the
+Python 3.11 is the tested version (repository development and CI). The graph
+package declares Python 3.10 support, but 3.10 is untested. Install only the
 environment needed for the component you are working on.
 
 ## Core quick start

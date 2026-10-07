@@ -36,9 +36,11 @@ Run these commands from `rootstock-red/`:
 
 ```bash
 swift build
-swift test --parallel
 swift run rootstock-red version
 ```
+
+`sh scripts/verify swift-family` verifies the public build and also runs private
+tests when installed locally. Test suites and their fixtures are not published.
 
 ## Assessment usage
 

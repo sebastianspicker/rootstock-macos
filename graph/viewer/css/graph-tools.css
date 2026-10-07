@@ -136,7 +136,7 @@
 }
 .key-kind {
   display: grid;
-  grid-template-columns: 7px minmax(0, 1fr) auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2);
   width: 100%;
@@ -148,6 +148,9 @@
   color: var(--muted);
   font: inherit;
   text-align: left;
+}
+.key-kind .color-dot {
+  justify-self: center;
 }
 .key-kind:hover {
   background: var(--hover);
@@ -278,9 +281,26 @@
 
 /* Windows High Contrast: pressed state cannot rely on a background tint */
 @media (forced-colors: active) {
-  #controls button[aria-pressed="true"],
+  #controls button[aria-pressed="true"] {
+    border: 2px solid ButtonText;
+  }
   .key-kind[aria-pressed="true"] {
     outline: 2px solid ButtonText;
     outline-offset: -2px;
+  }
+  /* Node colour is data, so the key's swatches keep their own colours */
+  .key-kind .color-dot {
+    forced-color-adjust: none;
+  }
+  /* Severity stays readable by shape; the fill must follow the system text colour */
+  .node-symbol,
+  .key-owned {
+    forced-color-adjust: none;
+    color: CanvasText;
+    background: CanvasText;
+  }
+  .node-severity-low,
+  .node-severity-informational {
+    background: transparent;
   }
 }

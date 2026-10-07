@@ -24,7 +24,7 @@ public struct ChromiumParser: ArtifactParser {
                     || url.path.contains("Google"))
         })
         for db in histories {
-            events.append(contentsOf: try parseHistory(db))
+            events.append(contentsOf: ArtifactIO.attempt(db) { try parseHistory(db) })
         }
         return events
     }

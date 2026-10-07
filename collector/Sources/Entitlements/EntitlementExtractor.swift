@@ -68,7 +68,9 @@ public struct EntitlementExtractor: Sendable {
             return nil
         }
 
-        return info[kSecCodeInfoEntitlementsDict as String] as? [String: Any]
+        // A signed binary without an entitlements dictionary has an empty
+        // entitlement set; only Security.framework errors are failures.
+        return info[kSecCodeInfoEntitlementsDict as String] as? [String: Any] ?? [:]
     }
 
     // MARK: - codesign CLI (fallback)

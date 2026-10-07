@@ -10,6 +10,13 @@ Tier definitions:
 Sets `tier: 0|1|2` property on Application nodes. Higher-priority tier wins
 (an app matching both Tier 0 and Tier 1 criteria gets Tier 0).
 
+Evaluation order (first match wins; each step only sees apps without a tier):
+  tier 0 structural > tier 0 CVE (KEV + TCC) > tier 1 CVE (CVSS >= 8 + TCC)
+  > tier 1 structural > tier 2 structural > tier 2 CVE.
+Tier 1 CVE must run before tier 1 structural: every app it matches holds an allowed
+TCC grant, which tier 1 structural would already have tagged, so the reverse order
+would make the CVE promotion unreachable.
+
 Usage:
     rootstock-graph-tier-classification [--neo4j bolt://localhost:7687]
 
@@ -186,7 +193,8 @@ def classify(session) -> tuple[int, int, int]:
     Run all tier classifications in priority order (Tier 0 first).
 
     Interleaves structural and CVE-aware classification at each tier level:
-    tier0_structural → tier0_cve → tier1_structural → tier1_cve → tier2_structural → tier2_cve
+    tier0_structural → tier0_cve → tier1_cve → tier1_structural → tier2_structural → tier2_cve
+    (tier1_cve precedes tier1_structural, which would otherwise claim every app it matches).
 
     Returns (tier0_count, tier1_count, tier2_count) - combined structural + CVE.
     """
@@ -200,7 +208,7 @@ def classify(session) -> tuple[int, int, int]:
     )
 
     t0 = classify_tier0(session) + classify_tier0_cve(session)
-    t1 = classify_tier1(session) + classify_tier1_cve(session)
+    t1 = classify_tier1_cve(session) + classify_tier1(session)
     t2 = classify_tier2(session) + classify_tier2_cve(session)
     return t0, t1, t2
 

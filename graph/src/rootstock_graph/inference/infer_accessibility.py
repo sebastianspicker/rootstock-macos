@@ -15,10 +15,7 @@ from __future__ import annotations
 
 from neo4j import Session
 
-from ..constants import ATTACKER_BUNDLE_ID
-
-
-_A11Y_SERVICE = "kTCCServiceAccessibility"
+from ..constants import ACCESSIBILITY_SERVICE, ATTACKER_BUNDLE_ID
 
 
 def infer(session: Session) -> int:
@@ -44,7 +41,7 @@ def infer(session: Session) -> int:
         SET r.inferred = true
         RETURN count(r) AS n
         """,
-        service=_A11Y_SERVICE,
+        service=ACCESSIBILITY_SERVICE,
         attacker_id=ATTACKER_BUNDLE_ID,
     )
     return result.single()["n"]

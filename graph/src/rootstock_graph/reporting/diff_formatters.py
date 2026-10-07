@@ -50,6 +50,8 @@ def summarize(diff: PostureDiff, before: ScanResult, after: ScanResult) -> dict:
         "changed_tcc_grants": len(diff.tcc.changed),
         "new_injectable_apps": len(diff.injection.new_injectable),
         "fixed_injectable_apps": len(diff.injection.no_longer_injectable),
+        "new_fda_exposure": len(diff.fda_exposure.new_exposure),
+        "closed_fda_exposure": len(diff.fda_exposure.closed_exposure),
         "physical_posture_changes": len(diff.physical_posture.changes),
         "remote_access_changes": _count_remote_access_changes(diff),
         "icloud_posture_changes": len(diff.icloud_posture.changes),
@@ -73,6 +75,7 @@ def format_text(diff: PostureDiff, summary: dict) -> str:
     lines.extend(_remote_access_lines(diff))
     lines.extend(_icloud_posture_lines(diff))
     lines.extend(_vulnerability_lines(diff))
+    lines.extend(_fda_exposure_lines(diff))
     if _has_no_changes(diff):
         lines.append("No security-relevant changes detected.")
     return "\n".join(lines)
@@ -266,6 +269,21 @@ def _vulnerability_lines(diff: PostureDiff) -> list[str]:
     return lines + [""]
 
 
+def _fda_exposure_lines(diff: PostureDiff) -> list[str]:
+    exposure = diff.fda_exposure
+    return _added_removed_section_lines(
+        "=== Modeled FDA Exposure (injectable + FDA-granted) ===",
+        [
+            f"  [+] {item['name']} ({item['bundle_id']}): {', '.join(item['methods'])}"
+            for item in exposure.new_exposure
+        ],
+        [
+            f"  [-] {item['name']} ({item['bundle_id']}): closed"
+            for item in exposure.closed_exposure
+        ],
+    )
+
+
 def _has_no_changes(diff: PostureDiff) -> bool:
     vuln = diff.vulnerability
     section_changes = (
@@ -289,5 +307,7 @@ def _has_no_changes(diff: PostureDiff) -> bool:
         diff.icloud_posture.changes,
         vuln.new_cve_associations,
         vuln.resolved_cve_associations,
+        diff.fda_exposure.new_exposure,
+        diff.fda_exposure.closed_exposure,
     )
     return not any(section_changes)

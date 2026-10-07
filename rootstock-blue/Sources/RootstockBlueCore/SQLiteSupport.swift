@@ -72,8 +72,12 @@ public enum SQLiteSupport {
         let stmt = try prepare(db, sql: sql)
         defer { sqlite3_finalize(stmt) }
         try bind(stmt, bindings)
-        if sqlite3_step(stmt) == SQLITE_ROW {
+        let rc = sqlite3_step(stmt)
+        if rc == SQLITE_ROW {
             return columnText(stmt, 0)
+        }
+        guard rc == SQLITE_DONE else {
+            throw RootstockBlueError.io("sqlite step failed: \(errmsg(db))")
         }
         return nil
     }
@@ -88,13 +92,18 @@ public enum SQLiteSupport {
         try bind(stmt, bindings)
         var rows: [[String: String]] = []
         let cols = sqlite3_column_count(stmt)
-        while sqlite3_step(stmt) == SQLITE_ROW {
+        var rc = sqlite3_step(stmt)
+        while rc == SQLITE_ROW {
             var row: [String: String] = [:]
             for i in 0..<cols {
                 let name = String(cString: sqlite3_column_name(stmt, i))
                 row[name] = columnText(stmt, i) ?? ""
             }
             rows.append(row)
+            rc = sqlite3_step(stmt)
+        }
+        guard rc == SQLITE_DONE else {
+            throw RootstockBlueError.io("sqlite step failed: \(errmsg(db))")
         }
         return rows
     }

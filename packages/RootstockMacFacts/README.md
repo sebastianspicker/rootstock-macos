@@ -43,8 +43,10 @@ Path dependency from sibling packages:
 ```bash
 cd packages/RootstockMacFacts
 swift build
-swift test --parallel
 ```
+
+`sh scripts/verify swift-family` verifies the public build and also runs private
+tests when installed locally. Test suites and their fixtures are not published.
 
 The package builds the `RootstockMacFacts` library product. It has no
 executable, network client, or standalone artifact format.

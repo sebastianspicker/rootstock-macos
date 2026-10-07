@@ -1,5 +1,6 @@
 // swift-tools-version: 6.3
 import PackageDescription
+import Foundation
 
 let package = Package(
     name: "rootstock-collector",
@@ -198,6 +199,22 @@ let package = Package(
             name: "Quarantine",
             dependencies: ["Models"]
         ),
-    ],
+        .testTarget(
+            name: "ExportTests",
+            dependencies: ["Export", "Models"]
+        ),
+        .testTarget(
+            name: "RootstockCLITests",
+            dependencies: ["RootstockCLI", "Models", "Export", "HostCommand"]
+        ),
+        .testTarget(
+            name: "SandboxTests",
+            dependencies: ["Sandbox"]
+        ),
+    ].filter { target in
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let path = root.appendingPathComponent(target.path ?? "Tests/\(target.name)").path
+        return target.type != .test || FileManager.default.fileExists(atPath: path)
+    },
     swiftLanguageModes: [.v6]
 )

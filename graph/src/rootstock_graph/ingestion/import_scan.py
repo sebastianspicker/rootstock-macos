@@ -7,6 +7,7 @@ Usage:
         [--neo4j bolt://localhost:7687]
         [--neo4j-user neo4j]
         [--neo4j-password <password>]  # or NEO4J_PASSWORD
+        [--replace-host]  # delete earlier scans of the same hostname first
 
 Exit code 0 on success, 1 on failure.
 """
@@ -22,43 +23,25 @@ from pathlib import Path
 
 from .import_nodes_certificates import import_certificate_authorities
 from .import_nodes_core import (
-    computer_import_context,
     import_applications,
-    import_computer,
-    import_installed_on,
     import_local_to,
     import_signed_by_team,
 )
 from .import_nodes_permissions import import_entitlements, import_tcc_grants
-from .import_nodes_sandbox import import_sandbox_profiles
-from .import_nodes_enrichment import (
-    import_bluetooth_devices,
-    import_file_acls,
-    import_running_processes,
-    import_user_details,
-)
-from .import_nodes_security import (
-    import_authorization_plugins,
-    import_authorization_rights,
-    import_firewall_status,
-    import_local_groups,
-    import_login_sessions,
-    import_remote_access_services,
-    import_sudoers_rules,
-    import_system_extensions,
-)
-from .import_nodes_security_enterprise import (
-    import_ad_binding,
-    import_kerberos_artifacts,
-)
 from .import_nodes_services import (
     import_keychain_items,
-    import_launch_items,
     import_mdm_profiles,
     import_xpc_services,
 )
-from ..models import ComputerData
+from .import_scan_stages import (
+    import_computer_inventory,
+    import_device_identity_inventory,
+    import_enrichment_inventory,
+    import_security_inventory,
+)
+from ..constants import FDA_SERVICE
 from ..neo4j import add_neo4j_args, connect_from_args
+from .replace_host import add_replace_host_arg, replace_host_scans
 from .scan_loader import load_scan
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
@@ -213,9 +196,10 @@ def query_security_summary(session) -> dict:
     """Query security-relevant aggregate stats as smoke-test output."""
     fda = session.run(
         """
-        MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
+        MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission {service: $fda_service})
         RETURN count(a) AS n
-        """
+        """,
+        fda_service=FDA_SERVICE,
     ).single()["n"]
 
     injectable = session.run(
@@ -241,6 +225,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Import a Rootstock scan JSON into Neo4j")
     parser.add_argument("--input", required=True, help="Path to scan JSON file")
     add_neo4j_args(parser)
+    add_replace_host_arg(parser)
     parser.add_argument("--verbose", "-v", action="store_true")
     return parser
 
@@ -322,108 +307,22 @@ def _import_core_inventory(session, scan) -> tuple[int, int, str]:
     return grants_linked, grants_skipped, import_status
 
 
-def _import_security_inventory(session, scan) -> None:
-    """Import security and persistence records that depend on the core identities."""
-    n_groups, n_member = import_local_groups(session, scan.local_groups, scan.scan_id)
-    print(f"  Local groups:  {n_groups} nodes, {n_member} MEMBER_OF edges")
-
-    n_items, n_persists, n_runs, n_hijack = import_launch_items(
-        session, scan.launch_items, scan.scan_id
-    )
-    print(
-        f"  Launch items:  {n_items} nodes, {n_persists} PERSISTS_VIA, {n_runs} RUNS_AS, {n_hijack} CAN_HIJACK edges"
-    )
-
-    n_remote, n_access = import_remote_access_services(session, scan.remote_access_services)
-    print(f"  Remote access: {n_remote} nodes, {n_access} ACCESSIBLE_BY edges")
-
-    n_fw, n_fw_rules = import_firewall_status(session, scan.firewall_status, scan.scan_id)
-    print(f"  Firewall:      {n_fw} nodes, {n_fw_rules} HAS_FIREWALL_RULE edges")
-
-    n_sessions, n_has_session = import_login_sessions(session, scan.login_sessions, scan.hostname)
-    print(f"  Sessions:      {n_sessions} nodes, {n_has_session} HAS_SESSION edges")
-
-    print(f"  Auth rights:   {import_authorization_rights(session, scan.authorization_rights)}")
-    print(f"  Auth plugins:  {import_authorization_plugins(session, scan.authorization_plugins)}")
-    print(f"  Sys extensions:{import_system_extensions(session, scan.system_extensions)}")
-
-    n_sudoers, n_sudo_edges = import_sudoers_rules(session, scan.sudoers_rules)
-    print(f"  Sudoers:       {n_sudoers} nodes, {n_sudo_edges} SUDO_NOPASSWD edges")
-
-
-def _import_enrichment_inventory(session, scan) -> None:
-    n_running = import_running_processes(session, scan.running_processes, scan.scan_id)
-    print(f"  Running procs: {n_running} apps flagged")
-
-    n_user_details = import_user_details(session, scan.user_details)
-    print(f"  User details:  {n_user_details}")
-
-    n_file_acls = import_file_acls(session, scan.file_acls)
-    print(f"  File ACLs:     {n_file_acls}")
-
-
-def _computer_context(scan, grants_linked: int, grants_skipped: int, import_status: str):
-    return computer_import_context(
-        scan,
-        grants_linked=grants_linked,
-        grants_skipped=grants_skipped,
-        import_status=import_status,
-    )
-
-
-def _import_computer_inventory(
-    session, scan, grants_linked: int, grants_skipped: int, import_status: str
-) -> None:
-    computer = ComputerData(
-        hostname=scan.hostname,
-        macos_version=scan.macos_version,
-        scan_id=scan.scan_id,
-        scanned_at=scan.timestamp,
-        collector_version=scan.collector_version,
-        elevation_is_root=scan.elevation.is_root,
-        elevation_has_fda=scan.elevation.has_fda,
-    )
-    import_computer(
-        session,
-        computer,
-        _computer_context(scan, grants_linked, grants_skipped, import_status),
-    )
-    n_installed = import_installed_on(session, scan.hostname, scan.scan_id)
-    n_local_to = import_local_to(session, scan.hostname, scan.scan_id)
-    print(f"  Computer:      1 node, {n_installed} INSTALLED_ON, {n_local_to} LOCAL_TO edges")
-
-
-def _import_device_identity_inventory(session, scan) -> None:
-    n_bt, n_paired = import_bluetooth_devices(
-        session, scan.bluetooth_devices, scan.hostname, scan.scan_id
-    )
-    print(f"  BT devices:    {n_bt} nodes, {n_paired} PAIRED_WITH edges")
-
-    n_adgroups, n_mapped = import_ad_binding(session, scan.ad_binding, scan.hostname, scan.scan_id)
-    print(f"  AD binding:    {n_adgroups} ADGroup nodes, {n_mapped} MAPPED_TO edges")
-
-    n_ka, n_found, n_cache, n_kt = import_kerberos_artifacts(
-        session, scan.kerberos_artifacts, scan.hostname, scan.scan_id
-    )
-    print(
-        f"  Kerberos:      {n_ka} artifacts, {n_found} FOUND_ON, {n_cache} HAS_KERBEROS_CACHE, {n_kt} HAS_KEYTAB edges"
-    )
-
-    n_sandbox, n_sandbox_edges = import_sandbox_profiles(
-        session, scan.sandbox_profiles, scan.scan_id
-    )
-    print(f"  Sandbox:       {n_sandbox} profiles, {n_sandbox_edges} HAS_SANDBOX_PROFILE edges")
-
-
-def _run_import(driver, scan) -> ImportSummary:
+def _run_import(driver, scan, replace_host: bool = False) -> ImportSummary:
     """Run import phases in dependency order and summarize the committed graph."""
     print(f"--- Importing to Neo4j {'─' * 38}")
     with driver.session() as session:
+        if replace_host:
+            n_removed = replace_host_scans(session, scan.hostname, scan.scan_id)
+            print(f"  Replaced host: {n_removed} nodes removed from earlier scans")
         grants_linked, grants_skipped, import_status = _import_core_inventory(session, scan)
-        _import_security_inventory(session, scan)
-        _import_enrichment_inventory(session, scan)
-        _import_computer_inventory(session, scan, grants_linked, grants_skipped, import_status)
-        _import_device_identity_inventory(session, scan)
+        import_security_inventory(session, scan)
+        import_enrichment_inventory(session, scan)
+        import_computer_inventory(session, scan, grants_linked, grants_skipped, import_status)
+        import_device_identity_inventory(session, scan)
+        # Last: users are created by Kerberos/AD import and later inference, so LOCAL_TO
+        # must see every user attached to this scan.
+        n_local_to = import_local_to(session, scan.hostname, scan.scan_id)
+        print(f"  Local users:   {n_local_to} LOCAL_TO edges")
         node_counts, rel_counts = query_stats(session)
         security = query_security_summary(session)
 
@@ -486,7 +385,7 @@ def main() -> int:
 
     _print_scan_contents(scan)
     driver = connect_from_args(args)
-    summary = _run_import(driver, scan)
+    summary = _run_import(driver, scan, replace_host=args.replace_host)
     driver.close()
     _print_import_summary(scan, summary)
     return 0

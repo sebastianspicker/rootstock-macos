@@ -20,24 +20,25 @@ from __future__ import annotations
 
 from neo4j import Session
 
-from ..constants import ATTACKER_BUNDLE_ID
+from ..constants import ATTACKER_BUNDLE_ID, FDA_SERVICE
 
 
 def _infer_fda_reads(session: Session) -> int:
-    """Rule 1: Injectable app with FDA → can read any KerberosArtifact."""
+    """Rule 1: Injectable app with FDA → can read any KerberosArtifact on its own host."""
     result = session.run(
         """
-        MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
+        MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission {service: $fda_service})
         WHERE size(a.injection_methods) > 0
           AND NOT coalesce(a.is_sip_protected, false)
           AND a.bundle_id <> $attacker_id
         WITH DISTINCT a
-        MATCH (ka:KerberosArtifact)
+        MATCH (a)-[:INSTALLED_ON]->(:Computer)<-[:FOUND_ON]-(ka:KerberosArtifact)
         MERGE (a)-[r:CAN_READ_KERBEROS]->(ka)
         SET r.inferred = true, r.method = 'fda'
         RETURN count(r) AS n
         """,
         attacker_id=ATTACKER_BUNDLE_ID,
+        fda_service=FDA_SERVICE,
     )
     return result.single()["n"]
 

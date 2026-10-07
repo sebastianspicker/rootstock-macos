@@ -49,8 +49,15 @@ public enum RuleLoader {
 
     public static func loadDirectory(_ dir: URL) throws -> [DetectionRule] {
         let fm = FileManager.default
-        guard let items = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else {
-            return []
+        var isDirectory: ObjCBool = false
+        guard fm.fileExists(atPath: dir.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            throw RootstockBlueError.detectionRuleInvalid("rules directory not found: \(dir.path)")
+        }
+        let items: [URL]
+        do {
+            items = try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        } catch {
+            throw RootstockBlueError.detectionRuleInvalid("cannot read rules directory \(dir.path): \(error.localizedDescription)")
         }
         return try items
             .filter { $0.pathExtension == "yaml" || $0.pathExtension == "yml" }
@@ -60,8 +67,8 @@ public enum RuleLoader {
 
     private static func parseSimpleYAML(_ text: String, fileName: String) throws -> DetectionRule {
         var parser = SimpleRuleParser()
-        for line in text.components(separatedBy: .newlines) {
-            parser.consume(line)
+        for (offset, line) in text.components(separatedBy: .newlines).enumerated() {
+            try parser.consume(line, lineNumber: offset + 1, fileName: fileName)
         }
         return try parser.rule(fileName: fileName)
     }
@@ -79,19 +86,34 @@ public enum RuleLoader {
         private var fieldContains: [String: String] = [:]
         private var section: RuleSection = .root
 
-        mutating func consume(_ rawLine: String) {
-            let source = rawLine.split(separator: "#", maxSplits: 1).first.map(String.init) ?? rawLine
+        mutating func consume(_ rawLine: String, lineNumber: Int, fileName: String) throws {
+            let source = YAMLComments.strip(rawLine)
             guard !source.trimmingCharacters(in: .whitespaces).isEmpty else { return }
             let indent = source.prefix(while: { $0 == " " }).count
             let trimmed = source.trimmingCharacters(in: .whitespaces)
+            try Self.validate(source: source, trimmed: trimmed, indent: indent, location: "\(fileName):\(lineNumber)")
             if consumeListItem(trimmed) { return }
             guard let colon = trimmed.firstIndex(of: ":") else { return }
             let key = String(trimmed[..<colon]).trimmingCharacters(in: .whitespaces)
-            let value = RuleLoader.unquote(String(trimmed[trimmed.index(after: colon)...]).trimmingCharacters(in: .whitespaces))
+            let rawValue = String(trimmed[trimmed.index(after: colon)...]).trimmingCharacters(in: .whitespaces)
+            if rawValue.hasPrefix("{") {
+                throw RootstockBlueError.detectionRuleInvalid("flow-style map is not supported at \(fileName):\(lineNumber)")
+            }
+            let value = RuleLoader.unquote(rawValue)
             if indent == 0 {
                 consumeRoot(key: key, value: value)
             } else {
                 consumeNested(key: key, value: value, indent: indent)
+            }
+        }
+
+        private static func validate(source: String, trimmed: String, indent: Int, location: String) throws {
+            let leading = source.prefix(while: { $0 == " " || $0 == "\t" })
+            guard !leading.contains("\t"), [0, 2, 4].contains(indent) else {
+                throw RootstockBlueError.detectionRuleInvalid("unexpected indentation at \(location)")
+            }
+            if trimmed.hasPrefix("{") || trimmed.hasPrefix("- {") {
+                throw RootstockBlueError.detectionRuleInvalid("flow-style map is not supported at \(location)")
             }
         }
 

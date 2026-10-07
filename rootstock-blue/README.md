@@ -49,11 +49,13 @@ Run these commands from `rootstock-blue/`:
 
 ```bash
 make bootstrap
-make test
 make content-validate
 make check-non-goals
 swift build --product rootstock-blue
 ```
+
+`sh scripts/verify swift-family` verifies the public build and also runs private
+tests when installed locally. Test suites and their fixtures are not published.
 
 The debug CLI is `.build/debug/rootstock-blue`.
 

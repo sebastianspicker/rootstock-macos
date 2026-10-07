@@ -86,8 +86,10 @@ public struct CasePackage: Sendable {
 
     public func appendCustody(_ event: CustodyEvent) throws {
         try beginWriteJournal(operation: "custody", target: relativePath(for: custodyURL), eventID: nil)
+        var mutationStarted = false
         do {
             try verifyIntegrity(allowWriteJournal: true)
+            mutationStarted = true
             try CustodyLog.append(url: custodyURL, event: event)
             let db = try CaseDatabase(url: databaseURL)
             try db.transaction {
@@ -96,6 +98,9 @@ public struct CasePackage: Sendable {
             try writeHashManifest(allowWriteJournal: true)
             try clearWriteJournal()
         } catch {
+            if !mutationStarted {
+                try? clearWriteJournal()
+            }
             throw error
         }
     }
@@ -232,6 +237,7 @@ public struct CasePackage: Sendable {
         try CaseFilesystem.requireRegularFile(descriptor: descriptor, label: "artifact source")
         try beginWriteJournal(operation: "artifact", target: "artifacts/\(relativeName)", eventID: nil)
         let staging = rootURL.appendingPathComponent(".rsbcase-artifact-stage-\(UUID().uuidString)")
+        var mutationStarted = false
         do {
             try verifyIntegrity(allowWriteJournal: true)
             try prepareArtifactParent(for: relativeName)
@@ -240,6 +246,8 @@ public struct CasePackage: Sendable {
             }
             try CaseFilesystem.requireRegularFile(descriptor: descriptor, label: "artifact source")
             try streamArtifact(fromFileDescriptor: descriptor, to: staging)
+            // From here on the case may be half-written; keep the journal so verification fails closed.
+            mutationStarted = true
             try afterStagedCopy?()
             try fm.moveItem(at: staging, to: destination)
             let hash = try Hashing.sha256File(at: destination)
@@ -255,6 +263,10 @@ public struct CasePackage: Sendable {
             try clearWriteJournal()
             return destination
         } catch {
+            if !mutationStarted {
+                try? fm.removeItem(at: staging)
+                try? clearWriteJournal()
+            }
             throw error
         }
     }

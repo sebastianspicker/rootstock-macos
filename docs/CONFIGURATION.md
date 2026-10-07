@@ -11,7 +11,8 @@ component README for command examples.
 | `NEO4J_URI` | Graph commands and pipeline | `bolt://localhost:7687` | The API and verification lane require loopback. General graph CLIs can accept an explicit URI and therefore need a separate deployment review before remote use. |
 | `NEO4J_USER` | Graph commands, pipeline, and API mutations | `neo4j` | Writer account used for graph imports, inference, and API mutation routes. |
 | `NEO4J_PASSWORD` | Graph commands, pipeline, API mutations, and verification | Required unless a general CLI is explicitly run with `NEO4J_AUTH=none` | Writer password. Supply it through a private shell environment or service manager; keep it out of command history. |
-| `NEO4J_READ_USER` | `rootstock-graph-api` and `scripts/verify neo4j` | Required | Separate database account for API reads. Grant only `MATCH` and `SHOW`; do not grant `WRITE` or `DBMS`. |
+| `NEO4J_READ_USER` | `rootstock-graph-api` and `scripts/verify neo4j` | Required | Separate database account for API reads. On Neo4j Community (the bundled Docker Compose file) every account can write, so this separation is organisational and ad-hoc Cypher is protected by the statement validator. On Enterprise grant it the built-in `reader` role. At startup the API runs a rolled-back `CREATE` as this account and warns when it is not denied. |
+| `ROOTSTOCK_REQUIRE_READONLY_PRINCIPAL` | `rootstock-graph-api` and `scripts/verify neo4j` | Unset | Set to `1` on Neo4j Enterprise to refuse startup (and fail the Neo4j check) unless the read account is denied writes. Leave unset on Community, which has no role-based access control. |
 | `NEO4J_READ_PASSWORD` | `rootstock-graph-api` and `scripts/verify neo4j` | Required | Reader password. Keep it separate from `NEO4J_PASSWORD`; the API and Neo4j check refuse to start without it. |
 | `NEO4J_AUTH` | Docker Compose and general graph CLI auth toggle | Compose expects `neo4j/<password>` | `none` disables Neo4j authentication and is unsuitable for real data. |
 | `ROOTSTOCK_API_TOKEN` | `rootstock-graph-api` | Required; at least 32 bytes | One bearer token authorizes all `/api/*` reads and graph-state actions. Store it only in the live viewer session and rotate it if exposed. |
@@ -80,6 +81,11 @@ rules are not an access-control mechanism.
   substitute for code review.
 - Blue is offline by default. Optional sidecars are separate executables; the
   package includes no Endpoint Security client.
+
+The graph API serves the viewer itself, so it is same-origin and installs no CORS
+middleware; cross-origin browser pages cannot call it. It also accepts only
+`localhost`, `127.0.0.1` and `[::1]` Host headers, which blocks DNS-rebinding
+requests, and rejects any other Host with HTTP 400.
 
 Do not expose Neo4j or the graph API through a proxy, tunnel, or non-loopback
 interface for real evidence without a reviewed deployment design covering authentication, authorization,

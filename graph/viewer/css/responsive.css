@@ -24,8 +24,7 @@
 }
 
 @media (max-width: 1040px) {
-  .breadcrumb,
-  .provenance-chip {
+  .breadcrumb {
     display: none;
   }
   #status-bar {
@@ -240,9 +239,6 @@
   .connection-gate {
     inset: 0;
   }
-  .inspector-layout {
-    grid-template-columns: minmax(0, 1fr) 72px;
-  }
   .inspector-summary {
     padding: 24px 48px 14px 20px;
   }
@@ -262,20 +258,8 @@
     max-width: 92px;
     font-size: 11px;
   }
-  .inspector-layout {
-    display: block;
-  }
-  .inspector-evidence-column {
-    border-right: 0;
-  }
-  .inspector-provenance-rail {
-    display: none;
-  }
   .field-row {
     flex-direction: column;
-  }
-  .inspector-identity h3 {
-    font-size: 18px;
   }
 }
 

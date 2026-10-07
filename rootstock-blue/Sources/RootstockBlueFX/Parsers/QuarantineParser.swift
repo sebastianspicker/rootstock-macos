@@ -30,7 +30,7 @@ public struct QuarantineParser: ArtifactParser {
 
         var events: [EventEnvelope] = []
         for db in dbs {
-            events.append(contentsOf: try parseDB(db))
+            events.append(contentsOf: ArtifactIO.attempt(db) { try parseDB(db) })
         }
         return events
     }

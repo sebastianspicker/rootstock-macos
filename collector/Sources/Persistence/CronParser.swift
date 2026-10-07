@@ -7,7 +7,12 @@ import HostCommand
 ///   - System crontab: /etc/crontab  (has username field after schedule)
 ///   - User crontabs:  /var/at/tabs/<username>  (no username field, runs as file owner)
 ///   - @reboot shortcut (runAtLoad = true)
+///   - @hourly/@daily/@weekly/@monthly/@yearly/@annually (and @midnight) shortcuts
 struct CronParser {
+
+    private static let scheduleMacros: Set<String> = [
+        "@hourly", "@daily", "@midnight", "@weekly", "@monthly", "@yearly", "@annually",
+    ]
 
     struct CronEntry {
         let label: String
@@ -65,7 +70,7 @@ struct CronParser {
         let fm = FileManager.default
 
         guard fm.fileExists(atPath: tabsDir) else { return ([], []) }
-        guard let files = try? fm.contentsOfDirectory(atPath: tabsDir) else {
+        guard let files = (try? fm.contentsOfDirectory(atPath: tabsDir))?.sorted() else {
             return ([], ["Cannot read /var/at/tabs (requires root)"])
         }
 
@@ -101,7 +106,7 @@ struct CronParser {
             results.append(CronEntry(
                 label: "cron.\(parsed.labelUser).\(index)",
                 path: filePath,
-                program: nil,
+                program: Self.firstToken(of: parsed.command),
                 runAtLoad: parsed.runAtLoad,
                 user: parsed.user
             ))
@@ -118,25 +123,30 @@ struct CronParser {
         let line = rawLine.trimmingCharacters(in: .whitespaces)
         guard !line.isEmpty, !line.hasPrefix("#") else { return nil }
 
-        if line.hasPrefix("@reboot") {
-            return parseRebootLine(line, hasUserField: hasUserField, defaultUser: defaultUser)
+        if line.hasPrefix("@") {
+            return parseMacroLine(line, hasUserField: hasUserField, defaultUser: defaultUser)
         }
         return parseScheduledLine(line, hasUserField: hasUserField, defaultUser: defaultUser)
     }
 
-    private func parseRebootLine(
+    private func parseMacroLine(
         _ line: String,
         hasUserField: Bool,
         defaultUser: String?
     ) -> ParsedCronLine? {
-        let rest = String(line.dropFirst("@reboot".count)).trimmingCharacters(in: .whitespaces)
+        guard let macro = line.split(whereSeparator: Self.isWhitespace).first.map(String.init) else {
+            return nil
+        }
+        let isReboot = macro == "@reboot"
+        guard isReboot || Self.scheduleMacros.contains(macro) else { return nil }
+        let rest = String(line.dropFirst(macro.count)).trimmingCharacters(in: .whitespaces)
         let (user, command) = splitUserAndCommand(rest, hasUserField: hasUserField, defaultUser: defaultUser)
         guard !command.isEmpty else { return nil }
         return ParsedCronLine(
             user: user,
             labelUser: defaultUser ?? "unknown",
             command: command,
-            runAtLoad: true
+            runAtLoad: isReboot
         )
     }
 
@@ -145,7 +155,11 @@ struct CronParser {
         hasUserField: Bool,
         defaultUser: String?
     ) -> ParsedCronLine? {
-        let parts = line.split(separator: " ", maxSplits: hasUserField ? 6 : 5, omittingEmptySubsequences: true)
+        let parts = line.split(
+            maxSplits: hasUserField ? 6 : 5,
+            omittingEmptySubsequences: true,
+            whereSeparator: Self.isWhitespace
+        )
         let minFields = hasUserField ? 7 : 6
         guard parts.count >= minFields else { return nil }
 
@@ -170,8 +184,16 @@ struct CronParser {
         defaultUser: String?
     ) -> (user: String?, command: String) {
         guard hasUserField else { return (defaultUser, rest) }
-        let parts = rest.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+        let parts = rest.split(maxSplits: 1, omittingEmptySubsequences: true, whereSeparator: Self.isWhitespace)
         guard parts.count == 2 else { return (defaultUser, rest) }
-        return (String(parts[0]), String(parts[1]))
+        return (String(parts[0]), String(parts[1]).trimmingCharacters(in: .whitespaces))
+    }
+
+    private static func isWhitespace(_ character: Character) -> Bool {
+        character == " " || character == "\t"
+    }
+
+    private static func firstToken(of command: String) -> String? {
+        command.split(whereSeparator: isWhitespace).first.map(String.init)
     }
 }

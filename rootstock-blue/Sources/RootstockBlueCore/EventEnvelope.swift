@@ -88,7 +88,7 @@ public enum EventJSONL {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         var events: [EventEnvelope] = []
-        for line in text.split(whereSeparator: \.isNewline) {
+        for line in text.split(whereSeparator: { $0 == "\n" || $0 == "\r\n" || $0 == "\r" }) {
             let s = String(line).trimmingCharacters(in: .whitespaces)
             guard !s.isEmpty, let data = s.data(using: .utf8) else { continue }
             if skipInvalid {
@@ -189,8 +189,8 @@ public enum EventJSONL {
     }
 }
 
-/// Byte-oriented JSONL framing shared by strict case readers. A record may end
-/// with any Unicode newline accepted by Swift's `Character.isNewline` behavior.
+/// Byte-oriented JSONL framing shared by strict case readers. A record ends at
+/// `\n`; a trailing `\r` (CRLF) is tolerated and stripped.
 public enum JSONLRecordReader {
     public static let chunkSize = 64 * 1024
 
@@ -228,11 +228,11 @@ public enum JSONLRecordReader {
         var index = scanOffset
         while index < buffer.count {
             guard let width = newlineWidth(in: buffer, at: index) else {
-                if isPossibleSplitNewline(in: buffer, at: index) { break }
                 index += 1
                 continue
             }
-            let record = buffer.subdata(in: recordStart..<index)
+            var record = buffer.subdata(in: recordStart..<index)
+            if record.last == 0x0D { record.removeLast() }
             _ = try strictUTF8(record)
             try body(record)
             index += width
@@ -245,25 +245,10 @@ public enum JSONLRecordReader {
         scanOffset = index
     }
 
+    /// JSONL records are separated by `\n` only; U+0085, U+2028 and U+2029 are valid unescaped
+    /// characters inside JSON strings and must not split a record.
     private static func newlineWidth(in data: Data, at index: Int) -> Int? {
-        switch data[index] {
-        case 0x0A, 0x0B, 0x0C, 0x0D:
-            return 1
-        case 0xC2 where index + 1 < data.count && data[index + 1] == 0x85:
-            return 2
-        case 0xE2 where index + 2 < data.count && data[index + 1] == 0x80
-            && (data[index + 2] == 0xA8 || data[index + 2] == 0xA9):
-            return 3
-        default:
-            return nil
-        }
-    }
-
-    private static func isPossibleSplitNewline(in data: Data, at index: Int) -> Bool {
-        if data[index] == 0xC2 { return index + 1 == data.count }
-        guard data[index] == 0xE2 else { return false }
-        if index + 1 == data.count { return true }
-        return data[index + 1] == 0x80 && index + 2 == data.count
+        data[index] == 0x0A ? 1 : nil
     }
 }
 

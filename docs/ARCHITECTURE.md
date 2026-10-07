@@ -79,7 +79,7 @@ Python graph code lives in `graph/src/rootstock_graph/`. Foundation modules
 (`category_predicates`, `constants`, `cypher`, `models`, `neo4j`, `paths`,
 `server_validation`) sit below `vulnerability`, `ingestion`, `reporting`,
 `api_support` (routes, schemas, dependencies), and `api`; `inference` sits on
-the foundation and feeds `api_support`. `graph/tests/test_architecture.py`
+the foundation and feeds `api_support`. the private `graph/tests/test_architecture.py`
 enforces the layering. Root-level graph files are orchestration or frontend
 inputs, not Python command adapters. CLI commands are declared in
 `graph/pyproject.toml`.
@@ -170,7 +170,7 @@ notarization workflow.
   (`Scripts/check-no-lab-link.sh`), and must document writes and rollback.
 - Add Blue parsers, collection packs, and detections with synthetic fixtures.
   A surface-marker parser is a spec for the single `SurfaceMarkerEngine`, with a
-  characterization golden in `Tests/RootstockBlueTests/Fixtures/surface-markers`;
+  private characterization golden in `Tests/RootstockBlueTests/Fixtures/surface-markers`;
   keep case mutations behind custody-aware APIs. Contract import and export
   live in `RootstockBlueInterchange`.
 - Put only product-neutral Swift facts in `RootstockMacFacts`.
@@ -178,7 +178,8 @@ notarization workflow.
   fixtures, `scripts/check-contracts.py`, and the version rule. For the
   collector scan this includes the encoder fixture
   `contracts/collector-scan/fixtures/valid-collector-encoder-complete.json`,
-  regenerated with `ROOTSTOCK_REGENERATE_FIXTURES=1 swift test --filter
+  regenerated with the locally installed private suite using
+  `ROOTSTOCK_REGENERATE_FIXTURES=1 swift test --filter
   CompleteScanFixtureTests` from `collector/`, and the packaged mirrors under
   `graph/src/rootstock_graph/resources/contracts/`.
 

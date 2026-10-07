@@ -124,27 +124,46 @@ struct MDMProfileScanner {
         return entries.compactMap { policy(service: service, entry: $0) }
     }
 
+    /// Builds a policy from a PPPC entry. `IdentifierType` may be `bundleID` or
+    /// `path`; the identifier is kept as given. Entries whose decision cannot be
+    /// determined are skipped, because `TCCPolicy.allowed` has no unknown state
+    /// and defaulting to "denied" would misreport the profile.
     private func policy(service: String, entry: [String: Any]) -> TCCPolicy? {
         guard let identifier = entry["Identifier"] as? String,
               let identifierType = entry["IdentifierType"] as? String,
-              identifierType == "bundleID" else {
+              identifierType == "bundleID" || identifierType == "path",
+              let allowed = allowedDecision(from: entry) else {
             return nil
         }
 
         return TCCPolicy(
             service: service,
             clientBundleId: identifier,
-            allowed: allowedValue(from: entry["Allowed"])
+            allowed: allowed
         )
     }
 
-    private func allowedValue(from value: Any?) -> Bool {
+    /// Reads the legacy `Allowed` key, then the `Authorization` key
+    /// (`Allow` / `Deny`). Returns nil when neither gives a definite decision
+    /// (including `AllowStandardUserToSetSystemService`, which grants nothing itself).
+    private func allowedDecision(from entry: [String: Any]) -> Bool? {
+        if let allowed = boolValue(from: entry["Allowed"]) {
+            return allowed
+        }
+        switch entry["Authorization"] as? String {
+        case "Allow": return true
+        case "Deny": return false
+        default: return nil
+        }
+    }
+
+    private func boolValue(from value: Any?) -> Bool? {
         if let boolValue = value as? Bool {
             return boolValue
         }
         if let numberValue = value as? Int {
             return numberValue != 0
         }
-        return false
+        return nil
     }
 }

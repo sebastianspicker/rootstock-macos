@@ -42,7 +42,7 @@ The implementation lives in `src/rootstock_graph/`:
 
 Layers depend downward only: foundation, `vulnerability`, `ingestion`,
 `reporting`, `api_support`, `api`; `inference` sits on foundation and feeds
-`api_support`. `tests/test_architecture.py` enforces this, forbids cross-module
+`api_support`. The private `tests/test_architecture.py` enforces this, forbids cross-module
 private imports, and rejects dynamic imports.
 
 Use the `rootstock-graph-*` console commands declared in `pyproject.toml`.
@@ -89,6 +89,13 @@ NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
   --scan-json examples/demo-scan.json
 ```
 
+Application, Computer and TCC identity is scan-scoped, so importing a host again
+adds a second copy of its graph. Pass `--replace-host` to
+`rootstock-graph-import-scan`, `rootstock-graph-merge-scans` or `pipeline.sh` to
+first detach-delete every node carrying the `scan_id` of an earlier scan of the
+same hostname (the number of removed nodes is printed). It is opt-in; without
+it earlier scans are kept.
+
 Use `rootstock-graph-query --list` for the packaged query catalog. The packaged
 [query guide](src/rootstock_graph/resources/queries/README.md) explains result
 interpretation without duplicating the CLI-generated list.
@@ -105,6 +112,13 @@ export NEO4J_READ_PASSWORD=CHANGE_ME_READ
 NEO4J_PASSWORD=CHANGE_ME_WRITE uv run --project graph --locked \
   rootstock-graph-api --port 8000
 ```
+
+The API checks at startup whether the read account can write (a rolled-back
+`CREATE`). Neo4j Community, which the bundled Docker Compose file and CI use,
+has no role-based access control, so the check only warns there and ad-hoc
+Cypher relies on the statement validator. On Enterprise, grant the read
+account the `reader` role and set `ROOTSTOCK_REQUIRE_READONLY_PRINCIPAL=1` to
+refuse startup unless the write is denied.
 
 The API and its Neo4j URI are loopback-only. One bearer token protects every
 `/api/*` route. Read routes use the separate `NEO4J_READ_*` principal; ad-hoc
@@ -160,12 +174,14 @@ sh scripts/verify graph
 sh scripts/verify web
 ```
 
-The graph lane runs Ruff, the graph test suite, contract and scan-model checks,
+The graph lane runs Ruff, contract and scan-model checks,
 synthetic scan validation with `rootstock-graph-validate-scan`, and an isolated
 wheel smoke test. The web lane needs `npm ci --ignore-scripts` in
-`graph/viewer`; it type-checks, lints, and tests the viewer, then compares a temporary build with the
+`graph/viewer`; it type-checks and lints the viewer, then compares a temporary build with the
 packaged assets in the working tree. Run `npm run bundle` in `graph/viewer` to
-refresh those assets. Test a live Neo4j connection and API separately:
+refresh those assets. Both lanes also run private test suites when installed
+locally; those suites and their fixtures are not published. Test a live Neo4j
+connection and API separately:
 
 ```sh
 NEO4J_PASSWORD=CHANGE_ME_WRITE \

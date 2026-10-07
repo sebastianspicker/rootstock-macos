@@ -16,6 +16,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Kept private test suites and their fixtures out of the public repository;
+  verification lanes run them only when installed locally.
 - Scan validation is the installed `rootstock-graph-validate-scan` command;
   `scripts/validate-scan.py` is removed. Arguments, output, and exit codes are
   unchanged.

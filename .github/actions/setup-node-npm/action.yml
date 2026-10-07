@@ -1,0 +1,24 @@
+name: Set up Node and locked npm
+description: >-
+  Install the Node version from graph/viewer/.node-version, npm 11.17.0, and an
+  npm cache keyed on the given lockfiles. Used by test.yml and pages.yml.
+inputs:
+  cache-dependency-path:
+    description: Lockfile path or newline-separated paths for the npm cache key
+    required: false
+    default: graph/viewer/package-lock.json
+runs:
+  using: composite
+  steps:
+    - name: Set up Node and npm
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version-file: graph/viewer/.node-version
+        cache: npm
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+    - name: Set up locked npm
+      shell: sh
+      run: npm install --global npm@11.17.0 --ignore-scripts
+    - name: Verify npm version
+      shell: sh
+      run: test "$(npm --version)" = "11.17.0"

@@ -12,13 +12,13 @@ extension ScanOrchestrator {
             config: config,
             applications: entitlementCollection.applications
         )
-        let applications = await collectApplicationEnrichments(
+        let enrichment = await collectApplicationEnrichments(
             config: config,
             applications: codeSigningCollection.applications
         )
         return ApplicationCollection(
-            applications: applications,
-            errors: entitlementCollection.errors + codeSigningCollection.errors
+            applications: enrichment.applications,
+            errors: entitlementCollection.errors + codeSigningCollection.errors + enrichment.errors
         )
     }
 
@@ -53,10 +53,10 @@ extension ScanOrchestrator {
     private func collectApplicationEnrichments(
         config: ModuleConfig,
         applications: [Application]
-    ) async -> [Application] {
+    ) async -> ApplicationCollection {
         guard config.includes(.entitlements),
               config.includes(.sandbox) || config.includes(.quarantine) else {
-            return applications
+            return ApplicationCollection(applications: applications, errors: [])
         }
         if config.includes(.sandbox) && config.includes(.quarantine) {
             return await collectSandboxAndQuarantine(applications)
@@ -66,27 +66,30 @@ extension ScanOrchestrator {
             let (sandboxApps, sandboxCount) = SandboxDataSource().enriched(applications: applications)
             let elapsed = Date().timeIntervalSince(enrichStart)
             if verbose { err("  [Sandbox]      completed in \(format(elapsed))  (\(sandboxCount) profiles)") }
-            return sandboxApps
+            return ApplicationCollection(applications: sandboxApps, errors: [])
         }
-        let (quarantineApps, quarantineCount) = QuarantineDataSource().enriched(applications: applications)
+        let (quarantineApps, quarantineCount, quarantineErrors) =
+            QuarantineDataSource().enrichedReportingErrors(applications: applications)
         let elapsed = Date().timeIntervalSince(enrichStart)
         if verbose { err("  [Quarantine]   completed in \(format(elapsed))  (\(quarantineCount) quarantined)") }
-        return quarantineApps
+        return ApplicationCollection(applications: quarantineApps, errors: quarantineErrors)
     }
 
-    private func collectSandboxAndQuarantine(_ applications: [Application]) async -> [Application] {
+    private func collectSandboxAndQuarantine(_ applications: [Application]) async -> ApplicationCollection {
         let enrichStart = Date()
         async let sandboxResult = { SandboxDataSource().enriched(applications: applications) }()
-        async let quarantineResult = { QuarantineDataSource().enriched(applications: applications) }()
-        let ((sandboxApps, sandboxCount), (quarantineApps, quarantineCount)) = await (sandboxResult, quarantineResult)
+        async let quarantineResult = { QuarantineDataSource().enrichedReportingErrors(applications: applications) }()
+        let ((sandboxApps, sandboxCount), (quarantineApps, quarantineCount, quarantineErrors)) =
+            await (sandboxResult, quarantineResult)
         if verbose {
             let elapsed = Date().timeIntervalSince(enrichStart)
             err("  [Sandbox]      completed in \(format(elapsed))  (\(sandboxCount) profiles)")
             err("  [Quarantine]   completed in \(format(elapsed))  (\(quarantineCount) quarantined)")
         }
-        return Self.mergeApplicationEnrichments(
+        let merged = Self.mergeApplicationEnrichments(
             sandboxApplications: sandboxApps,
             quarantineApplications: quarantineApps
         )
+        return ApplicationCollection(applications: merged, errors: quarantineErrors)
     }
 }

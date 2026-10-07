@@ -2,7 +2,7 @@ import { showConnectionGate, hideConnectionGate } from "./connection";
 export { showConnectionGate, hideConnectionGate } from "./connection";
 /** Coordinates viewer lifecycle, state transitions, and UI-facing graph actions. */
 import { mountFolio, refreshFolio } from "./folio";
-import { canvasLabelColor, invalidateCanvasColors } from "./canvas-cache";
+import { invalidateCanvasColors } from "./canvas-cache";
 
 import {
   computeVisibility,
@@ -11,7 +11,6 @@ import {
   nodeRadius,
   replaceGraphModel,
   safeNodeColor,
-  shortestPath,
 } from "./model";
 import { drawFrame, resizeCanvas, wireCanvas } from "./canvas";
 import { wireControls } from "./controls";
@@ -28,11 +27,14 @@ import {
 } from "./view";
 import { readHistory, renderHistory, startLiveSession } from "./live";
 import { getApiToken, readLocal } from "./storage";
-import { element, setPressed } from "./runtime";
+import { element, returnFocus, setPressed } from "./runtime";
+import { handlePathSelection, resetPath, startPathTo, togglePathMode } from "./path-actions";
+export { handlePathSelection, resetPath, startPathTo, togglePathMode } from "./path-actions";
 import type { Controller, ViewerActions } from "./runtime";
 import { inspectNode } from "./inspector";
 import { renderTriageQueue } from "./triage";
 import { renderPathWorkspace } from "./paths";
+import { exportPng } from "./png-export";
 import { syncWorkspaceDom } from "./workspace";
 export { inspectNode } from "./inspector";
 import { SpatialGrid } from "./spatial";
@@ -170,16 +172,6 @@ export function closeInspector(controller: Controller): void {
   if (hadFocus) returnFocus(controller, previous);
 }
 
-/** Returns focus to the node's list entry when it is rendered, otherwise to search. */
-export function returnFocus(controller: Controller, nodeId: NodeId | null = null): void {
-  const entry = nodeId
-    ? controller.dom.nodeList.querySelector<HTMLButtonElement>(
-        `button[data-node-id="${CSS.escape(nodeId)}"]`,
-      )
-    : null;
-  (entry ?? controller.dom.search).focus();
-}
-
 export function closeResults(controller: Controller): void {
   const hadFocus = controller.dom.resultsPanel.contains(document.activeElement);
   controller.dom.resultsPanel.classList.remove("open");
@@ -209,52 +201,6 @@ export function exitFocusMode(controller: Controller): void {
   controller.dom.focusBanner.classList.remove("visible");
   updateVisibility(controller);
   if (hadFocus) returnFocus(controller, previous);
-}
-
-export function resetPath(controller: Controller): void {
-  const hadFocus = controller.dom.pathBanner.contains(document.activeElement);
-  controller.state.selection.path = { active: false, sourceId: null, targetId: null, result: null };
-  controller.dom.pathBanner.classList.remove("visible");
-  controller.dom.pathText.textContent = "Choose an explicit source and destination in Paths.";
-  setPressed(controller.dom.path, false);
-  renderPathWorkspace(controller);
-  if (hadFocus) returnFocus(controller);
-}
-
-export function togglePathMode(controller: Controller, sourceId: NodeId | null = null): void {
-  if (controller.state.selection.path.active && sourceId === null) {
-    resetPath(controller);
-    updateVisibility(controller);
-    return;
-  }
-  controller.state.selection.path = { active: true, sourceId, targetId: null, result: null };
-  setPressed(controller.dom.path, true);
-  transitionWorkspace(controller, "paths", true);
-  renderPathWorkspace(controller);
-  updateVisibility(controller);
-}
-
-export function startPathTo(controller: Controller, targetId: NodeId): void {
-  controller.state.selection.path = { active: true, sourceId: null, targetId, result: null };
-  setPressed(controller.dom.path, true);
-  transitionWorkspace(controller, "paths", true);
-  renderPathWorkspace(controller);
-  updateVisibility(controller);
-}
-
-export function handlePathSelection(controller: Controller, nodeId: NodeId): void {
-  const path = controller.state.selection.path;
-  if (!path.sourceId) path.sourceId = nodeId;
-  else path.targetId = nodeId;
-  path.result =
-    path.sourceId && path.targetId
-      ? shortestPath(controller.state.graph, path.sourceId, path.targetId)
-      : null;
-  renderPathWorkspace(controller);
-  syncWorkspaceDom(controller, controller.state.workspace);
-  updateVisibility(controller);
-  // Open the destination dossier while keeping the modeled path active.
-  if (path.result && path.targetId === nodeId) inspectNode(controller, nodeId);
 }
 
 /** Pans a node into view at the current zoom when it lies outside the viewport. */
@@ -364,6 +310,7 @@ export function resetInteractionUi(controller: Controller): void {
   setPressed(controller.dom.vulnerable, false);
   setPressed(controller.dom.attack, false);
   controller.dom.search.value = "";
+  controller.dom.searchStatus.textContent = "";
 }
 
 /** Replaces every graph-derived UI state so a refresh cannot retain stale selections or filters. */
@@ -420,35 +367,6 @@ export function zoomViewport(controller: Controller, factor: number): void {
   transform.x = centerX - worldX * nextK;
   transform.y = centerY - worldY * nextK;
   markDirty(controller);
-}
-
-/** Exports on the ground color so dark-theme labels are not left on a transparent sheet. */
-export function exportPng(controller: Controller): void {
-  const source = controller.dom.canvas;
-  const sheet = document.createElement("canvas");
-  sheet.width = source.width;
-  sheet.height = source.height;
-  const context = sheet.getContext("2d");
-  if (!context) return;
-  context.fillStyle = canvasLabelColor("--ink-deep", "#f8f5ef");
-  context.fillRect(0, 0, sheet.width, sheet.height);
-  context.drawImage(source, 0, 0);
-  const link = document.createElement("a");
-  link.download = `rootstock-graph-${exportName(controller)}.png`;
-  link.href = sheet.toDataURL("image/png");
-  link.click();
-}
-
-export function exportName(controller: Controller): string {
-  const hostname = controller.state.graph.payload.metadata?.hostname;
-  const name =
-    typeof hostname === "string"
-      ? hostname
-          .toLowerCase()
-          .replace(/[^a-z0-9-]+/g, "-")
-          .replace(/^-+|-+$/g, "")
-      : "";
-  return name || "snapshot";
 }
 
 export function configureMode(controller: Controller): void {

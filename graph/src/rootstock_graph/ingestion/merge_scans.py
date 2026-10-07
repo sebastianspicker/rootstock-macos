@@ -8,6 +8,7 @@ Application/User nodes get linked via INSTALLED_ON/LOCAL_TO edges.
 
 Usage:
     rootstock-graph-merge-scans --input scan1.json scan2.json [--neo4j bolt://localhost:7687]
+        [--replace-host]  # delete earlier scans of each hostname first
 
 Exit code 0 on success, 1 on failure.
 """
@@ -31,6 +32,7 @@ from ..neo4j import add_neo4j_args, connect_from_args
 from ..models import ScanResult, ComputerData
 
 from .import_scan import classify_import_status
+from .replace_host import add_replace_host_arg, replace_host_scans
 from .scan_loader import load_scan
 
 
@@ -74,7 +76,7 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int, int]:
     import_nodes_security.import_authorization_rights(session, scan.authorization_rights)
     import_nodes_security.import_authorization_plugins(session, scan.authorization_plugins)
     import_nodes_security.import_system_extensions(session, scan.system_extensions)
-    import_nodes_security.import_sudoers_rules(session, scan.sudoers_rules)
+    import_nodes_security.import_sudoers_rules(session, scan.sudoers_rules, scan.scan_id)
     import_nodes_enrichment.import_running_processes(session, scan.running_processes, scan.scan_id)
     import_nodes_enrichment.import_user_details(session, scan.user_details)
     import_nodes_enrichment.import_file_acls(session, scan.file_acls)
@@ -95,9 +97,13 @@ def _import_device_identity(session, scan: ScanResult) -> None:
     )
 
 
-def import_scan(session, scan: ScanResult) -> None:
+def import_scan(session, scan: ScanResult, replace_host: bool = False) -> None:
     """Import a single scan with all its data."""
     hostname = scan.hostname
+
+    if replace_host:
+        n_removed = replace_host_scans(session, hostname, scan.scan_id)
+        print(f"  [{hostname}] replaced earlier scans: {n_removed} nodes removed")
 
     if scan.errors:
         _report_scan_errors(scan)
@@ -139,7 +145,7 @@ def main() -> int:
         return 1
 
     driver = connect_from_args(args)
-    _import_scans(driver, scans)
+    _import_scans(driver, scans, replace_host=args.replace_host)
     print(f"\nMerged {len(scans)} scans from hosts: {', '.join(hostnames)}")
     return 0
 
@@ -151,6 +157,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--input", nargs="+", required=False, default=[], help="Scan JSON file(s)")
     parser.add_argument("--input-dir", help="Directory of scan JSON files to import")
     add_neo4j_args(parser)
+    add_replace_host_arg(parser)
     return parser.parse_args()
 
 
@@ -196,12 +203,12 @@ def _validate_unique_hostnames(hostnames: list[str]) -> bool:
     return True
 
 
-def _import_scans(driver, scans: list[ScanResult]) -> None:
+def _import_scans(driver, scans: list[ScanResult], replace_host: bool = False) -> None:
     print(f"Importing {len(scans)} scan(s)...")
 
     with driver.session() as session:
         for scan in scans:
-            import_scan(session, scan)
+            import_scan(session, scan, replace_host=replace_host)
 
     driver.close()
 

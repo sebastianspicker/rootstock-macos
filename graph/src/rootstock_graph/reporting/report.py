@@ -26,7 +26,7 @@ from pathlib import Path
 
 from neo4j.exceptions import DriverError, Neo4jError
 
-from ..constants import DEFAULT_PARAMS  # noqa: F401  (re-exported)
+from ..constants import DEFAULT_PARAMS
 from ..neo4j import add_neo4j_args, connect_from_args
 from .query_runner import discover_queries
 from ..cypher import first_cypher_statement, run_query

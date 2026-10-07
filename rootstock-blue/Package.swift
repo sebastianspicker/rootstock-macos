@@ -1,6 +1,7 @@
 // swift-tools-version: 6.2
 // Target language mode 6. Host may run the best available Swift 6.x toolchain.
 import PackageDescription
+import Foundation
 
 let package = Package(
     name: "RootstockBlue",
@@ -77,6 +78,22 @@ let package = Package(
             ],
             swiftSettings: strictConcurrencySettings
         ),
+        .testTarget(
+            name: "RootstockBlueTests",
+            dependencies: [
+                "RootstockBlueInterchange",
+                "RootstockBlueCase",
+                "RootstockBlueFX",
+                "RootstockBlueCore",
+                "RootstockBlueDetect",
+                "RootstockBlueCollect",
+                "RootstockBlueAcquire",
+                "RootstockBlueIntegrations",
+                "RootstockBlueSyntheticEvents",
+            ],
+            exclude: ["Fixtures"],
+            swiftSettings: strictConcurrencySettings
+        ),
 
         // MARK: - Acquire
         .target(
@@ -107,7 +124,11 @@ let package = Package(
             ],
             swiftSettings: strictConcurrencySettings
         ),
-    ],
+    ].filter { target in
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let path = root.appendingPathComponent(target.path ?? "Tests/\(target.name)").path
+        return target.type != .test || FileManager.default.fileExists(atPath: path)
+    },
     swiftLanguageModes: [.v6]
 )
 

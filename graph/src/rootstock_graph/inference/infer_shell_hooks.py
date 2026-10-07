@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from neo4j import Session
 
+from .infer_common_local import LINK_USER_TO_SOLE_COMPUTER
+
 
 def infer(session: Session) -> int:
     """
@@ -26,6 +28,11 @@ def infer(session: Session) -> int:
         WHERE cf.category = 'shell_hook'
           AND cf.is_writable_by_non_root = true
         MERGE (u:User {name: cf.owner})
+        WITH cf, u
+        """
+        + LINK_USER_TO_SOLE_COMPUTER
+        + """
+        WITH cf, u
         MERGE (u)-[r:CAN_INJECT_SHELL]->(cf)
         SET r.inferred = true,
             r.reason = 'writable_shell_hook'

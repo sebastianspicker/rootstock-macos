@@ -60,8 +60,10 @@ From the repository's `collector/` directory:
 
 ```bash
 swift build -c release
-swift test --parallel
 ```
+
+`sh scripts/verify swift-core` verifies the public build and also runs private
+tests when installed locally. Test suites and their fixtures are not published.
 
 The source build executable is `.build/release/RootstockCLI`.
 

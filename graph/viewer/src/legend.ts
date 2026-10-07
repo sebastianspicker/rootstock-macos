@@ -118,13 +118,33 @@ function severityRows(): HTMLLIElement[] {
   return rows;
 }
 
+/** One dot per kind; a kind whose nodes carry several colours shows them as a segmented dot. */
+export function kindSwatch(colors: readonly string[], hideFromAssistiveTech: boolean): HTMLElement {
+  const dot = element("span", { class: "color-dot" });
+  const [first] = colors;
+  if (colors.length < 2) {
+    if (first) dot.style.background = first;
+    if (hideFromAssistiveTech) dot.setAttribute("aria-hidden", "true");
+    return dot;
+  }
+  const size = 100 / colors.length;
+  const stops = colors.map((color, index) => `${color} ${index * size}% ${(index + 1) * size}%`);
+  dot.classList.add("mixed");
+  dot.style.background = `conic-gradient(${stops.join(", ")})`;
+  dot.setAttribute("aria-hidden", "true");
+  const note = `${colors.length} colours in this kind`;
+  return element("span", { class: "kind-swatch", title: note }, [
+    dot,
+    element("span", { class: "sr-only", text: note }),
+  ]);
+}
+
 function kindRows(controller: Controller, rebuild: () => void): HTMLLIElement[] {
   const active = controller.state.filters.activeNodeKinds;
   return [...controller.state.graph.kindMeta.entries()]
     .sort((left, right) => right[1].count - left[1].count)
     .map(([kind, info]) => {
-      const dot = element("span", { class: "color-dot", "aria-hidden": "true" });
-      dot.style.background = info.color;
+      const dot = kindSwatch(info.colors, true);
       const toggle = element(
         "button",
         {

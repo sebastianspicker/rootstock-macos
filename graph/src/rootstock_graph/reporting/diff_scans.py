@@ -6,7 +6,8 @@ Takes two scan JSON files (same host, different dates) and reports:
   - New / removed applications
   - New / removed TCC grants
   - Changed injection surface (new injectable apps, fixed apps)
-  - New / closed attack paths (shortest-path-to-FDA comparison)
+  - New / closed modeled FDA exposure (apps that are injectable AND hold an allowed
+    Full Disk Access grant; a set comparison, not a graph path search)
   - Entitlement changes
   - Persistence changes
   - Physical security posture changes
@@ -52,6 +53,7 @@ from .diff_formatters import (
     summarize,
     format_text,
 )
+from .diff_fda_exposure import diff_fda_exposure
 from .diff_vulnerabilities import diff_vulnerabilities
 
 
@@ -388,6 +390,7 @@ def diff_scans(before: ScanResult, after: ScanResult) -> PostureDiff:
         remote_access=diff_remote_access(before, after),
         icloud_posture=diff_icloud_posture(before, after),
         vulnerability=diff_vulnerabilities(before, after),
+        fda_exposure=diff_fda_exposure(before, after),
     )
 
 

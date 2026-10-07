@@ -1,4 +1,5 @@
 import Foundation
+import RootstockBlueCore
 
 // MARK: - Scalar coercion (shared by FX parsers / IR posture)
 
@@ -77,10 +78,57 @@ func stringArray(_ value: Any?) -> [String] {
 
 // MARK: - JSON / plist I/O
 
+/// Thread-safe collector for artifact read/parse failures; surfaced by `ForensicsEngine`.
+public final class ArtifactFailureLog: @unchecked Sendable {
+    private let lock = NSLock()
+    private var entries: [String] = []
+
+    public init() {}
+
+    public func record(_ note: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        entries.append(note)
+    }
+
+    public func reset() {
+        lock.lock()
+        defer { lock.unlock() }
+        entries.removeAll()
+    }
+
+    public func snapshot() -> [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return entries
+    }
+}
+
 /// Shared loaders for forensic fixture JSON and property lists.
 public enum ArtifactIO {
+    /// Failures from artifacts that exist but cannot be read or parsed (missing files are not failures).
+    public static let failures = ArtifactFailureLog()
+
     public static func data(contentsOf url: URL) -> Data? {
-        try? Data(contentsOf: url)
+        do {
+            return try Data(contentsOf: url)
+        } catch {
+            if (error as NSError).code != NSFileReadNoSuchFileError {
+                failures.record("\(url.path): read failed: \(error.localizedDescription)")
+            }
+            return nil
+        }
+    }
+
+    /// Runs a per-artifact parse; a thrown error is recorded in `failures` and yields no events
+    /// instead of aborting the whole run.
+    public static func attempt(_ url: URL, _ body: () throws -> [EventEnvelope]) -> [EventEnvelope] {
+        do {
+            return try body()
+        } catch {
+            failures.record("\(url.path): parse failed: \(error.localizedDescription)")
+            return []
+        }
     }
 
     public static func jsonObject(from data: Data) -> Any? {

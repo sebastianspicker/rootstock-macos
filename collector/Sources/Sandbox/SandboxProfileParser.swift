@@ -75,17 +75,8 @@ public struct SandboxProfileParser {
             return position
         }
 
-        var position = openIndex + 1
-        var action = ""
-        for candidate in ["allow", "deny"] {
-            let end = position + candidate.unicodeScalars.count
-            if end <= scalars.count, String(String.UnicodeScalarView(scalars[position..<end])) == candidate {
-                action = candidate
-                position = end
-                break
-            }
-        }
-        guard !action.isEmpty else { return nil }
+        guard let (action, actionEnd) = ruleAction(in: scalars, at: openIndex + 1) else { return nil }
+        var position = actionEnd
 
         let afterAction = skipSpaces(position)
         guard afterAction > position else { return nil }
@@ -101,24 +92,41 @@ public struct SandboxProfileParser {
         if afterOperation > position {
             position = afterOperation
             let filterStart = position
-            var depth = 0
-            while position < scalars.count {
-                let scalar = scalars[position]
-                if scalar == "(" {
-                    depth += 1
-                    if depth > 2 { return nil }
-                } else if scalar == ")" {
-                    if depth == 0 { break }
-                    depth -= 1
-                }
-                position += 1
-            }
-            guard depth == 0 else { return nil }
+            guard let filterEnd = filterEndIndex(in: scalars, from: filterStart) else { return nil }
+            position = filterEnd
             filter = String(String.UnicodeScalarView(scalars[filterStart..<position]))
         }
 
         guard position < scalars.count, scalars[position] == ")" else { return nil }
         return (Rule(action: action, operation: operation, filter: filter), position + 1)
+    }
+
+    private func ruleAction(in scalars: [Unicode.Scalar], at start: Int) -> (String, Int)? {
+        for candidate in ["allow", "deny"] {
+            let end = start + candidate.unicodeScalars.count
+            if end <= scalars.count, String(String.UnicodeScalarView(scalars[start..<end])) == candidate {
+                return (candidate, end)
+            }
+        }
+        return nil
+    }
+
+    /// Locate the closing directive parenthesis without consuming it.
+    private func filterEndIndex(in scalars: [Unicode.Scalar], from start: Int) -> Int? {
+        var position = start
+        var depth = 0
+        while position < scalars.count {
+            let scalar = scalars[position]
+            if scalar == "(" {
+                depth += 1
+                if depth > 2 { return nil }
+            } else if scalar == ")" {
+                if depth == 0 { return position }
+                depth -= 1
+            }
+            position += 1
+        }
+        return nil
     }
 
     /// Categorize parsed rules by operation prefix.

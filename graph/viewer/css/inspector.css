@@ -177,48 +177,6 @@
   font-size: 13px;
   overflow-wrap: anywhere;
 }
-.inspector-node-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  color: var(--muted);
-  font: 400 15px var(--font-serif);
-}
-.inspector-node-icon.critical {
-  color: var(--critical);
-}
-.inspector-node-icon.high {
-  color: var(--high);
-}
-.inspector-node-icon.medium {
-  color: var(--medium);
-}
-.inspector-node-icon.low {
-  color: var(--low);
-}
-.inspector-identity {
-  min-width: 0;
-}
-.inspector-identity h3 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 20px;
-  font-weight: 550;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin-bottom: 6px;
-}
-.inspector-identity p {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted);
-  font-size: 13px;
-}
 .severity-badge {
   margin-top: 4px;
   padding: 0;
@@ -265,15 +223,6 @@
 }
 .secondary-action:first-child {
   color: var(--action);
-}
-.inspector-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px;
-  min-height: 320px;
-}
-.inspector-evidence-column {
-  min-width: 0;
-  border-right: 1px solid var(--rule);
 }
 .inspector-tabs {
   position: sticky;
@@ -469,63 +418,6 @@
   border-radius: 50%;
   background: var(--verified);
 }
-.inspector-provenance-rail {
-  padding: 14px 0;
-  overflow: hidden;
-}
-.inspector-provenance-rail h4 {
-  padding: 0 8px 12px;
-  color: var(--subtle);
-  font: 400 11px / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
-}
-.rail-stage {
-  position: relative;
-  min-height: 64px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px 4px 4px 22px;
-  color: var(--subtle);
-}
-.rail-stage::before {
-  content: "";
-  position: absolute;
-  left: 11px;
-  top: 16px;
-  bottom: -8px;
-  width: 1px;
-  background: var(--rule);
-}
-.rail-stage:last-child::before {
-  display: none;
-}
-.rail-marker {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 50%;
-  background: var(--pane);
-}
-.rail-stage strong {
-  font-size: 9px;
-  font-weight: 500;
-}
-.rail-stage small {
-  font-size: 8px;
-  overflow-wrap: anywhere;
-}
-.rail-stage.active {
-  color: var(--action);
-}
-.rail-stage.active .rail-marker {
-  border-color: var(--action);
-  background: var(--action);
-}
 
 /* Model note — not a loud card */
 .inspector-footer {
@@ -559,27 +451,4 @@
 }
 .raw-evidence:hover {
   color: var(--muted);
-}
-.risk-indicator {
-  display: flex;
-  gap: 4px;
-  margin: 8px 0;
-}
-.risk-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--rule-strong);
-}
-.risk-dot.active-critical {
-  background: var(--critical);
-}
-.risk-dot.active-high {
-  background: var(--high);
-}
-.risk-dot.active-medium {
-  background: var(--medium);
-}
-.risk-dot.active-low {
-  background: var(--verified);
 }

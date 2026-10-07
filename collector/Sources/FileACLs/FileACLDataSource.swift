@@ -89,7 +89,7 @@ public struct FileACLDataSource: DataSource {
         results: inout [FileACL],
         errors: inout [CollectionError]
     ) {
-        guard let entries = try? fm.contentsOfDirectory(atPath: directory) else {
+        guard let entries = (try? fm.contentsOfDirectory(atPath: directory))?.sorted() else {
             return
         }
 
@@ -106,7 +106,7 @@ public struct FileACLDataSource: DataSource {
     ) {
         let sudoersD = MacSecurityPaths.sudoersD
         guard fm.fileExists(atPath: sudoersD),
-              let files = try? fm.contentsOfDirectory(atPath: sudoersD) else {
+              let files = (try? fm.contentsOfDirectory(atPath: sudoersD))?.sorted() else {
             return
         }
 

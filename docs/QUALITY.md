@@ -1,8 +1,12 @@
 # Quality gates
 
 Run `sh scripts/verify <lane>` from the repository root to check a component
-or workflow. CI runs the same lanes after installing the required tools and
-locked dependencies.
+or workflow. CI runs the `release`, `quality`, `web`, `swift-core`,
+`swift-family` (on Swift 6.2 and 6.3), `graph`, `cve`, `shell`, and `neo4j`
+lanes after installing the required tools and locked dependencies; the
+`neo4j` lane runs against a Neo4j 5.26 Community service container with a
+separate read login, and the Swift lanes run only when Swift products, contracts,
+or the lanes themselves changed. The `full` lane runs locally only.
 
 | Lane | Runs | Requirements |
 | --- | --- | --- |
@@ -10,12 +14,14 @@ locked dependencies.
 | `release` | 600-line source ceiling, `scripts/check-release.py`, then the Pages demo build and check (`graph/viewer/scripts/`) | Python 3 and Node.js; no npm install |
 | `swift-core` | Collector `swift build` and `swift test --parallel`, both with complete strict concurrency and warnings as errors | Swift 6.3 |
 | `swift-family` | Blue field-taxonomy check; Red build, CLI smoke, and repeatable family export; Blue build, CLI case workflow, and repeatable family export; `rootstock-graph-import-family-export --validate-only` on both exports; Red tests, `Scripts/check-no-lab-link.sh`, and lab fail-closed check; Blue tests, `make content-validate`, `make check-non-goals`, and a sample detection run; `RootstockMacFacts` build and tests; technique-catalog check | Swift, `make`, `python3`, `uv` |
-| `graph` | Ruff, every graph test, `check-contracts.py`, `check-scan-contract-fields.py`, `rootstock-graph-validate-scan` on the demo scan, and the wheel smoke test | `uv` graph environment |
-| `cve` | cve-scan Ruff and test suite | `uv` cve-scan environment |
-| `web` | `npm run typecheck`, `npm run lint`, viewer Node tests, and the packaged-asset freshness check | `npm ci --ignore-scripts` in `graph/viewer`, `git` |
+| `graph` | Ruff, the graph pytest suite (`graph/tests`), `check-contracts.py`, `check-scan-contract-fields.py`, `rootstock-graph-validate-scan` on the demo scan, and the wheel smoke test | `uv` graph environment |
+| `cve` | cve-scan Ruff lint and format checks and its pytest suite (`modules/cve-scan/tests`) | `uv` cve-scan environment |
+| `web` | `npm run typecheck`, `npm run lint`, viewer Node tests (`graph/viewer/tests`), and the packaged-asset freshness check | `npm ci --ignore-scripts` in `graph/viewer`, `git` |
 | `shell` | ShellCheck for tracked `*.sh` files and `scripts/verify` | ShellCheck |
 | `neo4j` | Synthetic pipeline import, `graph/scripts/check-neo4j-connection.py`, and an authenticated loopback API graph read | Neo4j 5.x, `NEO4J_PASSWORD`, `NEO4J_READ_USER`, `NEO4J_READ_PASSWORD`, `uv`, `curl` |
 | `full` | Every lane above, including `quality` and `neo4j` | All preceding requirements |
+
+Test entries in the table run only when the private suites are installed.
 
 Swift test runs use Swift Testing, not XCTest, and do not need Xcode. When the
 selected developer directory is the Command Line Tools, the toolchain needs
@@ -23,6 +29,14 @@ selected developer directory is the Command Line Tools, the toolchain needs
 adds it and is what `scripts/verify` and `make test` in `rootstock-blue/` use;
 run `sh <repo>/scripts/swift-test [args]` from a package directory for direct
 test runs.
+
+The private test directories (`graph/tests`, `graph/viewer/tests`, `modules/cve-scan/tests`,
+`collector/Tests`, `packages/RootstockMacFacts/Tests`, `rootstock-red/Tests`,
+`rootstock-blue/Tests`) and the viewer test runner are gitignored and must never
+be committed or published. Verification lanes run these suites only when installed
+locally. Public CI runs builds, lint, contract checks, and smoke checks without the
+private suites. `sh scripts/verify release` rejects tracked private tests even if
+someone removes their ignore rules.
 
 Run a focused lane for ordinary work and the broader affected lanes for shared
 or contract changes:
@@ -49,7 +63,11 @@ The `quality` lane reports problems without editing source. It checks:
 - SwiftLint 0.65.0 correctness checks, a complexity limit of 8, and a 60-line
   function-body limit. CI verifies the official
   `SwiftLintBinary.artifactbundle.zip` SHA-256 before extraction. Local runs
-  may set `SWIFTLINT_BIN` to that verified executable.
+  may set `SWIFTLINT_BIN` to that verified executable;
+  `export SWIFTLINT_BIN=$(sh scripts/install-swiftlint.sh)` downloads it,
+  checks the same SHA-256, and prints its path. An optional argument selects
+  the destination directory (default `${TMPDIR:-/tmp}/rootstock-swiftlint`),
+  and an existing 0.65.0 binary there is reused.
 - jscpd 5.4.0 with 10-line and 75-token clone minima. `.jscpd.json` isolates
   product runtimes and excludes only generated, dependency, cache, archive,
   and synthetic-fixture paths. `.jscpd-baseline.json` records accepted exact

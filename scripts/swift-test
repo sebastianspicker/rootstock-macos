@@ -7,6 +7,11 @@
 
 set -eu
 
+if [ ! -d Tests ]; then
+    printf '%s\n' "Private Swift tests are not installed; no tests run."
+    exit 0
+fi
+
 developer_dir=${DEVELOPER_DIR:-$(xcode-select -p 2>/dev/null || true)}
 testing_plugins="$developer_dir/usr/lib/swift/host/plugins/testing"
 if [ "${developer_dir%/CommandLineTools}" != "$developer_dir" ] &&

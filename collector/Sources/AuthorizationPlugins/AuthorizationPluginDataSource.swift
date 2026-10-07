@@ -15,7 +15,7 @@ public struct AuthorizationPluginDataSource: DataSource {
     public func collect() async -> DataSourceResult {
         let fm = FileManager.default
 
-        guard let contents = try? fm.contentsOfDirectory(atPath: Self.pluginDir) else {
+        guard let contents = (try? fm.contentsOfDirectory(atPath: Self.pluginDir))?.sorted() else {
             return DataSourceResult(
                 nodes: [],
                 errors: [CollectionError(source: name, message: "Cannot read \(Self.pluginDir)", recoverable: true)]
@@ -51,8 +51,17 @@ public struct AuthorizationPluginDataSource: DataSource {
         switch outcome {
         case .success(let successfulResult):
             result = successfulResult
-        case .nonZeroExit:
-            return (nil, nil)
+        case .nonZeroExit(let failedResult):
+            // A genuinely unsigned bundle has no team identifier; any other
+            // failure leaves it unknown.
+            if failedResult.stderr.contains("not signed at all") {
+                return (nil, nil)
+            }
+            return (nil, CollectionError(
+                source: name,
+                message: "Team identifier unknown for \(path): \(outcome.failureDescription ?? "command failure")",
+                recoverable: true
+            ))
         case .admissionTimedOut, .launchFailed, .executionTimedOut:
             return (nil, CollectionError(
                 source: name,

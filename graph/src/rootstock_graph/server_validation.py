@@ -53,6 +53,33 @@ def validate_api_cypher(cypher: str) -> str | None:
     return validate_read_only_cypher(cypher)
 
 
+LOOPBACK_HOST_NAMES = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def host_header_is_loopback(host_header: str) -> bool:
+    """Return True when a Host header names the loopback machine, ignoring any port.
+
+    Bracketed IPv6 forms (``[::1]:8000``) are handled, unlike a naive split on
+    the first colon.
+    """
+    value = host_header.strip().lower()
+    if not value:
+        return False
+    if value.startswith("["):
+        closing = value.find("]")
+        if closing < 0:
+            return False
+        name = value[1:closing]
+        rest = value[closing + 1 :]
+        if rest and not re.fullmatch(r":\d{1,5}", rest):
+            return False
+        return name in LOOPBACK_HOST_NAMES
+    name, _, port = value.partition(":")
+    if port and not port.isdigit():
+        return False
+    return name in LOOPBACK_HOST_NAMES
+
+
 def is_loopback_host(host: str) -> bool:
     if host == "localhost":
         return True

@@ -50,9 +50,7 @@ public struct FirefoxParser: ArtifactParser {
             url.lastPathComponent == "places.sqlite"
                 && (url.path.contains("Firefox") || url.path.contains("firefox"))
         }) where seen.insert(url) {
-                if let rows = try? parsePlacesSQLite(url) {
-                    events.append(contentsOf: rows)
-                }
+                events.append(contentsOf: ArtifactIO.attempt(url) { try parsePlacesSQLite(url) })
         }
 
         return events

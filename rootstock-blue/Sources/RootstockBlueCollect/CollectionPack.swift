@@ -53,7 +53,7 @@ public enum CollectionPackLoader {
         }
 
         mutating func consume(_ rawLine: String) {
-            let line = rawLine.split(separator: "#", maxSplits: 1).first.map(String.init) ?? rawLine
+            let line = YAMLComments.strip(rawLine)
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { return }
             if consumeArtifact(trimmed) { return }

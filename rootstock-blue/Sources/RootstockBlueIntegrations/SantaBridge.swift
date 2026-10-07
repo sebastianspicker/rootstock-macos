@@ -88,12 +88,9 @@ public enum SantaBridge {
         let reason = stringField(obj, keys: ["reason", "Reason", "rule_type"]) ?? ""
         let tsRaw = stringField(obj, keys: ["timestamp", "time", "ts", "decision_time"])
 
-        var eventTime = Date()
-        if let tsRaw {
-            if let d = iso.date(from: tsRaw) ?? isoBasic.date(from: tsRaw) {
-                eventTime = d
-            }
-        }
+        // Never substitute ingest time: an unknown timestamp is the epoch sentinel plus an explicit marker.
+        let parsedTime = tsRaw.flatMap { iso.date(from: $0) ?? isoBasic.date(from: $0) }
+        let eventTime = parsedTime ?? Date(timeIntervalSince1970: 0)
 
         var entityRefs: [EntityID] = []
         if !path.isEmpty {
@@ -108,6 +105,9 @@ public enum SantaBridge {
             "santa.reason": reason,
             FieldTaxonomy.eventType: "santa.decision",
         ]
+        if parsedTime == nil {
+            fields["timestamp_missing"] = "true"
+        }
         if !path.isEmpty {
             fields[FieldTaxonomy.processPath] = path
             fields[FieldTaxonomy.filePath] = path

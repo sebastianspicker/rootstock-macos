@@ -3,18 +3,43 @@
 
 from __future__ import annotations
 
+import sys
+
+if sys.version_info < (3, 11):
+    raise SystemExit(
+        "scripts/check-release.py requires Python 3.11 or newer (its version checks use tomllib); "
+        f"found {sys.version.split()[0]}"
+    )
+
 import argparse
 import asyncio
-import json
 import os
 import posixpath
 import re
-import sys
-import tomllib
+import shutil
 from pathlib import Path
 from urllib.parse import unquote
 
-ROOT = Path(__file__).resolve().parent.parent
+from check_release_versions import (
+    ROOT,
+    ReleaseCheck,
+    check_citation_release_date,
+    check_lockfiles_and_links,
+    check_versions,
+    read_text,
+)
+
+GIT = shutil.which("git") or "git"
+PRIVATE_TEST_PATHS = (
+    "collector/Tests/",
+    "graph/tests/",
+    "graph/viewer/tests/",
+    "graph/viewer/scripts/test-viewer.mjs",
+    "modules/cve-scan/tests/",
+    "packages/RootstockMacFacts/Tests/",
+    "rootstock-blue/Tests/",
+    "rootstock-red/Tests/",
+)
 FORBIDDEN_TRACKED_PREFIXES = (
     "docs/archive/",
     "docs/deprecated/",
@@ -41,27 +66,9 @@ FORBIDDEN_ROOT_ARTIFACT = re.compile(
 MARKDOWN_IMAGE = re.compile(r"!\[[^]]*\]\((?:<([^>]+)>|([^\s)]+))(?:\s+[^)]*)?\)")
 
 
-class ReleaseCheck:
-    """Aggregate all policy failures so one run reports the complete release delta."""
-
-    def __init__(self) -> None:
-        self.failures: list[str] = []
-
-    def require(self, condition: bool, message: str) -> None:
-        if condition:
-            print(f"PASS: {message}")
-        else:
-            print(f"FAIL: {message}")
-            self.failures.append(message)
-
-
-def read_text(path: str) -> str:
-    return (ROOT / path).read_text(encoding="utf-8")
-
-
 async def _run_git_async(args: tuple[str, ...], input_text: str | None) -> tuple[int, str, str]:
     process = await asyncio.create_subprocess_exec(
-        "/usr/bin/git",
+        GIT,
         "-C",
         str(ROOT),
         *args,
@@ -84,66 +91,6 @@ def git_output(*args: str) -> str:
     if status != 0:
         raise RuntimeError(stderr.strip() or f"git exited with status {status}")
     return stdout
-
-
-def pep440_alpha(version: str) -> str:
-    match = re.fullmatch(r"(\d+\.\d+\.\d+)-alpha\.(\d+)", version)
-    if match is None:
-        raise ValueError(f"Unsupported public version format: {version}")
-    return f"{match.group(1)}a{match.group(2)}"
-
-
-def check_versions(check: ReleaseCheck, version: str) -> None:
-    """Require every Core runtime and package surface to use one alpha identity."""
-    python_version = pep440_alpha(version)
-    graph = tomllib.loads(read_text("graph/pyproject.toml"))
-    cve_scan = tomllib.loads(read_text("modules/cve-scan/pyproject.toml"))
-    viewer = json.loads(read_text("graph/viewer/package.json"))
-    repo_tools = json.loads(read_text("package.json"))
-    demo_scan = json.loads(read_text("examples/demo-scan.json"))
-
-    check.require(
-        f'static let collectorVersion = "{version}"'
-        in read_text("collector/Sources/RootstockCLI/RootstockCommand.swift"),
-        "Swift collector version matches VERSION",
-    )
-    check.require(
-        f'version="{version}"' in read_text("graph/src/rootstock_graph/api.py"),
-        "FastAPI version matches VERSION",
-    )
-    check.require(
-        graph["project"]["version"] == python_version,
-        "graph package uses the PEP 440 alpha version",
-    )
-    check.require(
-        cve_scan["project"]["version"] == python_version,
-        "cve-scan package uses the PEP 440 alpha version",
-    )
-    check.require(
-        f'__version__ = "{python_version}"'
-        in read_text("modules/cve-scan/src/cve_scan/__init__.py"),
-        "cve-scan runtime version matches package metadata",
-    )
-    check.require(
-        viewer["version"] == version,
-        "viewer package version matches VERSION",
-    )
-    check.require(
-        repo_tools["version"] == version,
-        "repository tools package version matches VERSION",
-    )
-    check.require(
-        demo_scan["collector_version"] == version,
-        "synthetic demo collector version matches VERSION",
-    )
-    check.require(
-        f"## [{version}]" in read_text("CHANGELOG.md"),
-        "changelog contains the candidate version",
-    )
-    check.require(
-        f"version: {version}" in read_text("CITATION.cff"),
-        "citation metadata matches VERSION",
-    )
 
 
 def _required_public_files() -> tuple[str, ...]:
@@ -323,7 +270,7 @@ def _forbidden_tracked_paths() -> list[str]:
 
 
 def _is_forbidden_tracked_path(path: str) -> bool:
-    if path.startswith(FORBIDDEN_TRACKED_PREFIXES):
+    if path.startswith(FORBIDDEN_TRACKED_PREFIXES + PRIVATE_TEST_PATHS):
         return True
     if "/" in path:
         return False
@@ -430,6 +377,11 @@ def main() -> int:
         action="store_true",
         help="accept staged candidate changes only when GIT_INDEX_FILE matches the tree",
     )
+    parser.add_argument(
+        "--for-tag",
+        action="store_true",
+        help="also require release-only metadata such as the CITATION.cff release date",
+    )
     args = parser.parse_args()
     if args.candidate_index and not args.require_clean:
         parser.error("--candidate-index requires --require-clean")
@@ -441,6 +393,9 @@ def main() -> int:
         "VERSION is a supported semantic alpha version",
     )
     check_versions(check, version)
+    check_lockfiles_and_links(check, version)
+    if args.for_tag:
+        check_citation_release_date(check)
     check_public_files(check)
     check_git_hygiene(check, args.require_clean, args.candidate_index)
 

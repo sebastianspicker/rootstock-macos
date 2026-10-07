@@ -62,6 +62,45 @@ struct LabConsentOptions: ParsableArguments {
     }
 }
 
+extension LabConsentOptions {
+    /// Persists operator and scope to the audit log before any `--no-dry-run` mutation.
+    /// Fails closed: if the audit record cannot be written, the action does not run.
+    func auditNoDryRun(argvSummary: String, actionId: String, context: EvaluationContext) async throws {
+        guard noDryRun else { return }
+        let audit = AuditLog(fileURL: try AuditLog.defaultURL())
+        try await audit.append(
+            AuditRecord(
+                run: .init(mode: .lab, profile: context.profile, allowNetwork: context.allowNetwork),
+                subject: .init(
+                    operatorName: operatorName,
+                    scope: scope,
+                    hostUUID: context.hostUUID,
+                    argvSummary: argvSummary
+                ),
+                outcome: .init(findingCount: 0, collectorIds: [], checkIds: [actionId])
+            )
+        )
+    }
+}
+
+extension LabConsentOptions {
+    /// Audits a `--no-dry-run` invocation, runs the action, prints its result, and
+    /// exits non-zero when the action reports failure.
+    func execute(_ request: LabActionRequest) async throws {
+        let context = makeContext()
+        try await auditNoDryRun(
+            argvSummary: "rootstock-red-lab \(request.actionId) \(request.operation.rawValue)",
+            actionId: request.actionId,
+            context: context
+        )
+        let result = try await LabPipeline().run(request: request, context: context)
+        try printJSON(result)
+        if !result.success {
+            throw ExitCode(1)
+        }
+    }
+}
+
 func printJSON<T: Encodable>(_ value: T) throws {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -142,12 +181,7 @@ struct RunCommand: AsyncParsableCommand {
             operation: op,
             parameters: parameters
         )
-        let pipeline = LabPipeline()
-        let result = try await pipeline.run(request: request, context: consent.makeContext())
-        try printJSON(result)
-        if !result.success {
-            throw ExitCode(1)
-        }
+        try await consent.execute(request)
     }
 }
 
@@ -192,12 +226,7 @@ struct PersistCommand: AsyncParsableCommand {
             operation: op,
             parameters: parameters
         )
-        let pipeline = LabPipeline()
-        let result = try await pipeline.run(request: request, context: consent.makeContext())
-        try printJSON(result)
-        if !result.success {
-            throw ExitCode(1)
-        }
+        try await consent.execute(request)
     }
 }
 
@@ -249,12 +278,7 @@ struct SurfaceCommand: AsyncParsableCommand {
             operation: op,
             parameters: parameters
         )
-        let pipeline = LabPipeline()
-        let result = try await pipeline.run(request: request, context: consent.makeContext())
-        try printJSON(result)
-        if !result.success {
-            throw ExitCode(1)
-        }
+        try await consent.execute(request)
     }
 }
 

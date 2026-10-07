@@ -18,7 +18,7 @@ public struct SafariParser: ArtifactParser {
         for db in root.enumerate(matching: {
             $0.lastPathComponent == "History.db" && $0.path.contains("Safari")
         }) {
-            events.append(contentsOf: try parseHistoryDB(db))
+            events.append(contentsOf: ArtifactIO.attempt(db) { try parseHistoryDB(db) })
         }
 
         for plist in root.enumerate(matching: {

@@ -256,7 +256,10 @@ struct AppDiscovery {
 
         let isElectron = detectElectron(contentsURL: contentsURL)
         // Use the original (pre-symlink) path for reporting; resolved path for file I/O.
-        let isSystem = resolvedURL.path.hasPrefix("/System/") || resolvedURL.path.hasPrefix("/usr/")
+        // /usr/local/ is user-writable and not SIP-protected, so it is not a system path.
+        let resolvedPath = resolvedURL.path
+        let isSystem = resolvedPath.hasPrefix("/System/")
+            || (resolvedPath.hasPrefix("/usr/") && !resolvedPath.hasPrefix("/usr/local/"))
 
         return (DiscoveredApp(
             name: name,

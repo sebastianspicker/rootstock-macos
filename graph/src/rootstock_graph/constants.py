@@ -8,26 +8,11 @@ ATTACKER_BUNDLE_ID = "attacker.payload"
 ATTACKER_NAME = "Attacker Payload"
 
 ALLOW_DYLD_ENTITLEMENT = "com.apple.security.cs.allow-dyld-environment-variables"
-REQUIRE_LIB_VALIDATION_ENTITLEMENT = "com.apple.security.cs.require-library-validation"
-DISABLE_LIB_VALIDATION_ENTITLEMENT = "com.apple.security.cs.disable-library-validation"
-PRIVATE_TCC_ALLOW_ENTITLEMENT = "com.apple.private.tcc.allow"
 
 # TCC service identifiers - canonical names matching Apple's internal strings
 FDA_SERVICE = "kTCCServiceSystemPolicyAllFiles"
 APPLE_EVENTS_SERVICE = "kTCCServiceAppleEvents"
 ACCESSIBILITY_SERVICE = "kTCCServiceAccessibility"
-SCREEN_CAPTURE_SERVICE = "kTCCServiceScreenCapture"
-CAMERA_SERVICE = "kTCCServiceCamera"
-MICROPHONE_SERVICE = "kTCCServiceMicrophone"
-CONTACTS_SERVICE = "kTCCServiceAddressBook"
-CALENDAR_SERVICE = "kTCCServiceCalendar"
-PHOTOS_SERVICE = "kTCCServicePhotos"
-
-# Injection method labels (match InjectionMethod Literal in models.py)
-INJECTION_DYLD_INSERT = "dyld_insert"
-INJECTION_DYLD_ENTITLEMENT = "dyld_insert_via_entitlement"
-INJECTION_MISSING_LIB_VAL = "missing_library_validation"
-INJECTION_ELECTRON_ENV = "electron_env_var"
 
 # Owned-node workflow properties
 OWNED_PROPERTY = "owned"
@@ -98,7 +83,7 @@ NODE_KEY_PROPERTY: dict[str, str] = {
 
 # Default values for parameterised saved queries
 DEFAULT_PARAMS = {
-    "target_service": "kTCCServiceSystemPolicyAllFiles",
+    "target_service": FDA_SERVICE,
     "min_permissions": 3,
     "team_id": "",
     "bundle_id": "",

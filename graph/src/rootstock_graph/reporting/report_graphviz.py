@@ -2,6 +2,7 @@
 rootstock-graph-report-graphviz - Graphviz DOT format export for Rootstock graphs.
 
 CLI: rootstock-graph-report-graphviz --neo4j bolt://localhost:7687 --output graph.dot
+     [--neo4j-user neo4j] [--neo4j-password ...]  (or NEO4J_PASSWORD; NEO4J_AUTH=none skips auth)
 
 Color coding (security dashboard palette for dark backgrounds):
   Application    = #4a90d9  (steel blue - primary entities)
@@ -30,7 +31,9 @@ from pathlib import Path
 from neo4j import GraphDatabase
 from neo4j.exceptions import DriverError, Neo4jError
 
-from .report_diagram_common import sanitize_id, truncate
+from ..neo4j import add_neo4j_args, auth_disabled
+from .opengraph_mapping import NODE_TYPE_MAP
+from .report_diagram_common import truncate
 
 
 # ── Color / Style Tables ──────────────────────────────────────────────────────
@@ -57,7 +60,14 @@ NODE_COLORS: dict[str, str] = {
     "SandboxProfile": "#2e8b4a",
     "CWE": "#c98f13",
     "Recommendation": "#3aad50",
+    "LoginSession": "#7ee787",
+    "KerberosArtifact": "#c297eb",
 }
+
+# Labels the OpenGraph mapping knows but this table does not get the mapping's colour,
+# so they are fetched and drawn instead of silently dropped or left grey.
+for _label, _info in NODE_TYPE_MAP.items():
+    NODE_COLORS.setdefault(_label, _info["color"])
 
 # Shape mapping: node type -> Graphviz shape
 # Distinct shapes aid rapid identification by security professionals.
@@ -229,7 +239,7 @@ def _append_dot_node(
     display = node.get("display") or "?"
     node_type = node.get("label") or "Unknown"
     bundle = node.get("bundle_id") or ""
-    dot_id = _unique_dot_id(bundle if bundle else display, seen_dot_ids)
+    dot_id = _quote_dot_id(_unique_dot_id(bundle if bundle else display, seen_dot_ids))
     id_map[raw_id] = dot_id
 
     color = NODE_COLORS.get(node_type, "#444c56")
@@ -238,8 +248,13 @@ def _append_dot_node(
     lines.append(f'  {dot_id} [label="{label}" fillcolor="{color}" shape={shape}]')
 
 
+def _quote_dot_id(value: str) -> str:
+    """Wrap an identifier in double quotes so any character is valid in DOT."""
+    return f'"{escape_dot_string(value)}"'
+
+
 def _unique_dot_id(value: object, seen_dot_ids: set[str]) -> str:
-    base_id = sanitize_id(value)
+    base_id = str(value) or "node"
     dot_id = base_id
     counter = 0
     while dot_id in seen_dot_ids:
@@ -280,9 +295,14 @@ def _edge_color(rel: str, *, is_inferred: bool) -> str:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Export Rootstock graph to Graphviz DOT format")
-    parser.add_argument("--neo4j", default="bolt://localhost:7687", help="Neo4j bolt URI")
-    parser.add_argument("--username", default="neo4j", help="Neo4j username")
-    parser.add_argument("--password", default=None, help="Neo4j password (or set NEO4J_PASSWORD)")
+    add_neo4j_args(parser)
+    # Hidden aliases for the flags used before the CLI matched the other commands.
+    parser.add_argument(
+        "--username", dest="neo4j_user", default=argparse.SUPPRESS, help=argparse.SUPPRESS
+    )
+    parser.add_argument(
+        "--password", dest="neo4j_password", default=argparse.SUPPRESS, help=argparse.SUPPRESS
+    )
     parser.add_argument("--output", required=True, help="Output .dot file path")
     parser.add_argument(
         "--node-limit",
@@ -300,19 +320,21 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def _connect_driver(args: argparse.Namespace):
-    password = args.password or os.environ.get("NEO4J_PASSWORD")
-    if not password:
+    password = args.neo4j_password or os.environ.get("NEO4J_PASSWORD")
+    if not password and not auth_disabled():
         print(
-            "ERROR: Neo4j password required via --password or NEO4J_PASSWORD env var",
+            "ERROR: Neo4j password required via --neo4j-password or NEO4J_PASSWORD env var",
             file=sys.stderr,
         )
         return None
 
-    driver = GraphDatabase.driver(args.neo4j, auth=(args.username, password))
+    auth = None if auth_disabled() else (args.neo4j_user, password)
+    driver = GraphDatabase.driver(args.uri, auth=auth)
     try:
         driver.verify_connectivity()
     except (DriverError, Neo4jError) as e:
-        print(f"Cannot connect to Neo4j at {args.neo4j}: {e}", file=sys.stderr)
+        print(f"Cannot connect to Neo4j at {args.uri}: {e}", file=sys.stderr)
+        driver.close()
         return None
     return driver
 
@@ -330,7 +352,7 @@ def main() -> int:
     driver = _connect_driver(args)
     if driver is None:
         return 1
-    print(f"Fetching graph data from {args.neo4j}…", file=sys.stderr)
+    print(f"Fetching graph data from {args.uri}…", file=sys.stderr)
     nodes, edges = fetch_graph_data(driver, args.node_limit, args.edge_limit)
     driver.close()
     _write_graphviz_output(args, nodes, edges)

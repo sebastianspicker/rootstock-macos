@@ -12,7 +12,7 @@
     "format:check": "biome format eslint.config.mjs css src scripts",
     "typecheck": "tsc --noEmit",
     "bundle:css": "node scripts/bundle-viewer-css.mjs",
-    "bundle:js": "esbuild src/main.ts --bundle --format=iife --platform=browser --target=es2022 --minify --outfile=../src/rootstock_graph/resources/viewer/viewer.bundle.js",
+    "bundle:js": "node scripts/bundle-viewer-js.mjs",
     "bundle": "npm run bundle:css && npm run bundle:js",
     "demo:build": "node scripts/build-pages-demo.mjs",
     "demo:verify": "node scripts/check-pages-demo.mjs",

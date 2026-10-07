@@ -4,7 +4,7 @@ export { renderNodeList, resetNodeList } from "./node-list";
 
 import { element } from "./runtime";
 import { displayKind, safeNodeColor } from "./model";
-import { renderGraphKey } from "./legend";
+import { kindSwatch, renderGraphKey } from "./legend";
 import type { Controller } from "./runtime";
 
 function renderMetadataSummary(
@@ -40,6 +40,9 @@ function renderProvenanceStatus(controller: Controller, metadata: Record<string,
   const status = recordedStages === 4 ? "Recorded" : recordedStages > 0 ? "Partial" : "Unavailable";
   controller.dom.provenanceStatus.textContent = status;
   controller.dom.provenanceStatus.dataset.state = status.toLowerCase();
+  // The chip itself carries the state: CSS shows it only when evidence has gaps.
+  const chip = controller.dom.provenanceStatus.closest<HTMLElement>(".provenance-chip");
+  if (chip) chip.dataset.state = status.toLowerCase();
 }
 
 export function renderMetadata(controller: Controller): void {
@@ -169,6 +172,15 @@ export function nodeListItem(
     controller.actions.selectNode(controller, node.id);
     controller.actions.revealNode(controller, node.id);
   });
+  // Hover emphasis on the canvas follows keyboard focus as well as the pointer.
+  const emphasize = (id: string | null): void => {
+    if (controller.state.selection.hoveredId === id) return;
+    controller.state.selection.hoveredId = id;
+    controller.actions.markDirty(controller);
+  };
+  for (const enter of ["mouseenter", "focus"])
+    button.addEventListener(enter, () => emphasize(node.id));
+  for (const leave of ["mouseleave", "blur"]) button.addEventListener(leave, () => emphasize(null));
   return element("li", {}, [button]);
 }
 
@@ -195,7 +207,7 @@ export function nodeFilterItems(controller: Controller): HTMLLabelElement[] {
         kind,
         info.label,
         info.count,
-        info.color,
+        info.colors,
         controller.state.filters.activeNodeKinds,
       ),
     );
@@ -221,7 +233,7 @@ export function filterItem(
   kind: string,
   label: string,
   count: number,
-  color: string | null,
+  colors: readonly string[] | null,
   activeKinds: Set<string>,
 ): HTMLLabelElement {
   const checkbox = element("input", { type: "checkbox" }) as HTMLInputElement;
@@ -233,11 +245,7 @@ export function filterItem(
     controller.actions.updateVisibility(controller);
   });
   const children: Node[] = [checkbox];
-  if (color) {
-    const dot = element("span", { class: "color-dot" });
-    dot.style.background = color;
-    children.push(dot);
-  }
+  if (colors) children.push(kindSwatch(colors, false));
   children.push(
     element("span", { text: label }),
     element("span", { class: "filter-count", text: String(count) }),

@@ -24,17 +24,28 @@ Python 3.11 with the checked-in `uv.lock` files, and the Node version in
 `graph/viewer/.node-version` with npm 11.17.0 and the `package-lock.json` files
 in `graph/viewer/` and the repository root.
 
-From the repository root, run:
+From the repository root, three commands apply at different stages:
 
 ```sh
-sh scripts/verify release
-sh scripts/verify full
+sh scripts/verify release                              # tracked public surface
+ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 sh scripts/verify release  # same, plus clean tree
+sh scripts/verify full                                 # every lane, local only
 ```
 
-The release lane checks public files, version agreement, source size, and the
-static demo. It requires the public inputs to be Git-tracked and rejects
-private working material. Files that exist locally but have not been added to
-Git will fail this check.
+The first command is the everyday release-surface check and tolerates a dirty
+tree. The second additionally requires a clean working tree; CI runs it on
+every push and pull request. Setting `ROOTSTOCK_VERIFY_FOR_TAG=1` as well
+requires the release-only metadata, today a `date-released` value in
+`CITATION.cff`, and is what the [Release check workflow](#release-check-workflow)
+runs on `v*` tags. The third runs every lane and needs Neo4j; CI never runs it.
+
+The release lane checks public files, version agreement (including the
+lockfiles and the changelog link), source size, and the static demo. It
+requires the public inputs to be Git-tracked and rejects private working
+material. Files that exist locally but have not been added to Git will fail
+this check. Private test suites and their fixtures must remain gitignored and
+untracked. The lanes listed in [Quality gates](QUALITY.md) run them only when
+installed locally; release checks reject tracked private suites.
 
 The full lane includes all [verification checks](QUALITY.md), including Swift
 packages and live Neo4j integration. Configure the database and both writer
@@ -42,10 +53,10 @@ and reader credentials as described in [Configuration](CONFIGURATION.md).
 Record failed or unrun checks and their causes. A passing web build says
 nothing about the live database connection.
 
-Before tagging, require a clean checkout:
+Before tagging, require a clean checkout and the release metadata:
 
 ```sh
-ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 sh scripts/verify release
+ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 ROOTSTOCK_VERIFY_FOR_TAG=1 sh scripts/verify release
 ```
 
 For an uncommitted candidate, the temporary-index option documented in
@@ -91,6 +102,16 @@ and shared Swift package are available in the source repository.
 
 The build script does not sign or notarize the binary. State that limitation
 on any uploaded alpha release.
+
+## Release check workflow
+
+`.github/workflows/release-check.yml` runs on `v*` tags and on manual
+dispatch. On a `macos-26` runner with Xcode 26.6 it runs
+`ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 ROOTSTOCK_VERIFY_FOR_TAG=1 sh scripts/verify release`, then
+`collector/scripts/build-release.sh`, and uploads `release/*` as the
+`rootstock-collector-release` workflow artifact. It has read-only permissions
+and does not create a release or publish anything; download and inspect the
+artifact before uploading it to the GitHub prerelease.
 
 ## Prepare release notes
 

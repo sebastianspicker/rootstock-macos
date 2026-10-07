@@ -33,11 +33,12 @@ GRAPH_RUN=(uv run --project "$SCRIPT_DIR" --locked)
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
 usage() {
-    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--report FILE] [--skip-report] [--refresh-cve] [--cve-scan-export FILE] [--serve [PORT]]"
+    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--report FILE] [--skip-report] [--refresh-cve] [--replace-host] [--cve-scan-export FILE] [--serve [PORT]]"
     echo ""
     echo "Runs the full Rootstock pipeline: schema → import → infer edges → vulnerabilities → infer score → report"
     echo ""
     echo "  --refresh-cve   Fetch public CVE enrichment before import (default: cached/static only)"
+    echo "  --replace-host  Delete earlier scans of the same hostname before importing"
     echo "  --cve-scan-export FILE"
     echo "                  Import a prebuilt cve-scan rootstock-export.json artifact"
     echo "  --serve [PORT]  Start API server after pipeline (default port: 8000)"
@@ -65,6 +66,7 @@ NEO4J_PASS="${NEO4J_PASSWORD:-}"
 REPORT_FILE=""
 SKIP_REPORT=false
 REFRESH_CVE=false
+REPLACE_HOST=false
 CVE_SCAN_EXPORT=""
 SERVE=false
 SERVE_PORT=8000
@@ -76,6 +78,7 @@ while [[ $# -gt 0 ]]; do
         --report)    REPORT_FILE="$2"; shift 2 ;;
         --skip-report) SKIP_REPORT=true; shift ;;
         --refresh-cve) REFRESH_CVE=true; shift ;;
+        --replace-host) REPLACE_HOST=true; shift ;;
         --cve-scan-export) CVE_SCAN_EXPORT="$2"; shift 2 ;;
         --serve)     SERVE=true;
                      if [[ $# -gt 1 && "$2" =~ ^[0-9]+$ ]]; then SERVE_PORT="$2"; shift; fi
@@ -99,6 +102,10 @@ if [[ -n "$NEO4J_PASS" ]]; then
     export NEO4J_PASSWORD="$NEO4J_PASS"
 fi
 NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")
+IMPORT_ARGS=()
+if [[ "$REPLACE_HOST" = true ]]; then
+    IMPORT_ARGS+=(--replace-host)
+fi
 
 echo "╔══════════════════════════════════════════════════╗"
 echo "║         Rootstock Analysis Pipeline              ║"
@@ -131,7 +138,7 @@ echo ""
 # ── Step 3/7: Import ─────────────────────────────────────────────────────────
 
 echo "── Step 3/7: Importing scan data ──"
-"${GRAPH_RUN[@]}" rootstock-graph-import-scan --input "$SCAN_FILE" "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-import-scan --input "$SCAN_FILE" "${NEO4J_ARGS[@]}" ${IMPORT_ARGS[@]+"${IMPORT_ARGS[@]}"}
 echo ""
 
 # ── Optional: cve-scan artifact import ───────────────────────────────────────

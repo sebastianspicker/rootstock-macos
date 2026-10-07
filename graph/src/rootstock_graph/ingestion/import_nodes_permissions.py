@@ -24,8 +24,10 @@ def import_tcc_grants(
         return 0, 0
     records = _tcc_grant_records(grants, scan_id)
     _merge_tcc_permission_nodes(session, records)
-    linked = _link_tcc_grants(session, records)
-    skipped = len(records) - linked
+    linked, resolved = _link_tcc_grants(session, records)
+    # Relationship rows can outnumber grants (apps sharing scan_id + bundle_id), so
+    # unresolved grants are counted from distinct input records, never from edges.
+    skipped = max(0, len({str(record["grant_key"]) for record in records}) - resolved)
     if skipped > 0:
         _record_unresolved_tcc_grants(session, records)
         logger.debug("%d TCC grants had no matching Application node (path-only clients)", skipped)
@@ -62,7 +64,8 @@ def _merge_tcc_permission_nodes(session: Session, records: list[dict[str, object
     )
 
 
-def _link_tcc_grants(session: Session, records: list[dict[str, object]]) -> int:
+def _link_tcc_grants(session: Session, records: list[dict[str, object]]) -> tuple[int, int]:
+    """Return (HAS_TCC_GRANT rows, distinct grant records that matched an app)."""
     result = session.run(
         """
         UNWIND $records AS r
@@ -75,11 +78,12 @@ def _link_tcc_grants(session: Session, records: list[dict[str, object]]) -> int:
             rel.client_type   = r.client_type,
             rel.last_modified = r.last_modified,
             rel.scan_id       = r.scan_id
-        RETURN count(rel) AS linked
+        RETURN count(rel) AS linked, count(DISTINCT r.grant_key) AS resolved
         """,
         records=records,
     )
-    return result.single()["linked"]
+    row = result.single()
+    return row["linked"], row["resolved"]
 
 
 def _record_unresolved_tcc_grants(session: Session, records: list[dict[str, object]]) -> None:

@@ -69,7 +69,7 @@ public struct CronParser: ArtifactParser {
         guard !isIgnoredCronLine(line) else { return nil }
         let entry = kind == "at"
             ? CronEntry(schedule: "at", user: defaultUser, command: line, kind: "at")
-            : parseCronLine(line, defaultUser: defaultUser)
+            : parseCronLine(line, defaultUser: defaultUser, hasUserColumn: Self.hasUserColumn(sourceURL))
         return entry.flatMap { makePersistenceEvent($0, sourceURL: sourceURL, lineNo: number) }
     }
 
@@ -79,6 +79,15 @@ public struct CronParser: ArtifactParser {
         return line.isEmpty || line.hasPrefix("#") || assignment || environmentPrefix.contains(where: line.hasPrefix)
     }
 
+    /// Only `/etc/crontab` and `/etc/cron.d/*` carry a user column; user crontabs never do.
+    private static func hasUserColumn(_ url: URL) -> Bool {
+        let path = url.path
+        return path.hasSuffix("/etc/crontab") || path.contains("/etc/cron.d/")
+    }
+
+    /// Common command names that must never be mistaken for a user column.
+    private static let commandNames: Set<String> = ["curl", "bash", "sh", "zsh", "python", "python3", "osascript", "nc", "perl", "ruby", "wget"]
+
     /// Vixie cron special schedule strings (must be handled before 5-field path).
     private static let vixieSpecials: Set<String> = [
         "@reboot", "@yearly", "@annually", "@monthly",
@@ -87,39 +96,39 @@ public struct CronParser: ArtifactParser {
 
     /// Parse classic crontab line: Vixie specials (`@reboot`…), user crontab (5 fields + cmd),
     /// or system/cron.d (6: schedule + user + cmd).
-    private func parseCronLine(_ line: String, defaultUser: String) -> CronEntry? {
+    private func parseCronLine(_ line: String, defaultUser: String, hasUserColumn: Bool) -> CronEntry? {
         let tokens = tokenizeCron(line)
         guard !tokens.isEmpty else { return nil }
         return tokens[0].hasPrefix("@")
-            ? parseVixieEntry(tokens, defaultUser: defaultUser)
-            : parseClassicEntry(tokens, defaultUser: defaultUser)
+            ? parseVixieEntry(tokens, defaultUser: defaultUser, hasUserColumn: hasUserColumn)
+            : parseClassicEntry(tokens, defaultUser: defaultUser, hasUserColumn: hasUserColumn)
     }
 
-    private func parseVixieEntry(_ tokens: [String], defaultUser: String) -> CronEntry? {
+    private func parseVixieEntry(_ tokens: [String], defaultUser: String, hasUserColumn: Bool) -> CronEntry? {
         let head = tokens[0].lowercased()
         guard Self.vixieSpecials.contains(head) else { return nil }
         let rest = Array(tokens.dropFirst())
         guard !rest.isEmpty else { return nil }
-        let hasExplicitUser = isUserToken(rest[0]) && rest.count >= 2
+        let hasExplicitUser = hasUserColumn && isUserToken(rest[0]) && rest.count >= 2
         let user = hasExplicitUser ? rest[0] : defaultUser
         let command = hasExplicitUser ? rest.dropFirst().joined(separator: " ") : rest.joined(separator: " ")
         return CronEntry(schedule: head, user: user, command: command)
     }
 
-    private func parseClassicEntry(_ tokens: [String], defaultUser: String) -> CronEntry? {
+    private func parseClassicEntry(_ tokens: [String], defaultUser: String, hasUserColumn: Bool) -> CronEntry? {
         guard tokens.count >= 6 else { return nil }
         let scheduleFields = Array(tokens.prefix(5))
         let rest = Array(tokens.dropFirst(5))
         guard !rest.isEmpty else { return nil }
         let schedule = scheduleFields.joined(separator: " ")
-        let hasExplicitUser = isUserToken(rest[0]) && rest.count >= 2
+        let hasExplicitUser = hasUserColumn && isUserToken(rest[0]) && rest.count >= 2
         let user = hasExplicitUser ? rest[0] : defaultUser
         let command = hasExplicitUser ? rest.dropFirst().joined(separator: " ") : rest.joined(separator: " ")
         return CronEntry(schedule: schedule, user: user, command: command)
     }
 
     private func isUserToken(_ token: String) -> Bool {
-        !token.contains("/") && !token.contains("$") && !token.contains("=")
+        !Self.commandNames.contains(token) && !token.contains("/") && !token.contains("$") && !token.contains("=")
             && token.rangeOfCharacter(from: .letters) != nil && token.count < 32
     }
 

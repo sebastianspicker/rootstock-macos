@@ -48,14 +48,20 @@ announced range. Filtering or refreshing starts at the first page; selecting
 a visible node opens its page. Selection updates preserve unchanged rows.
 Dragging updates only the moved node in the hit-test index. Canvas drawing
 skips primitives outside the viewport while retaining intersecting labels and
-edges. PNG export captures the current viewport on the sheet's ground color.
+edges. PNG export captures the current viewport on the sheet's ground color
+and adds a footer with the host, snapshot time, the modeled-exposure caveat, and
+the observed and inferred line samples.
 
 Observed relationships are drawn as solid ink lines and inferred ones as
 dashed pencil-blue lines; a modeled path is drawn thicker in pencil blue with
 numbered steps on its nodes. Traversable relationships end in an arrowhead and
 non-traversable ones in a small open circle. The Key at the top left of the
 Graph workspace explains these marks, the node shapes and severity marks, and
-lists node kinds as buttons that hide or show each kind. Relationship labels
+lists node kinds as buttons that hide or show each kind. A kind whose nodes carry
+different colors shows a segmented swatch (up to four colors) in the Key and in
+the node-kind filters, with a "n colours in this kind" note.
+The header's provenance chip appears only when the status is Partial or
+Unavailable, in the ochre gap color, because collection gaps are evidence. Relationship labels
 appear from 75% zoom when there are at most 150 visible relationships; from
 that zoom they also appear for the modeled path and for the selected or hovered
 node when the graph is denser. Below 45% zoom
@@ -134,7 +140,8 @@ Build and verify the frontend through the shared lane:
 sh scripts/verify web
 ```
 
-The lane typechecks and lints the viewer, runs Node logic tests, and compares a
+The lane typechecks and lints the viewer, runs private Node logic tests only when
+installed locally, and compares a
 temporary asset rebuild with the working-tree packaged assets. Run `npm run
 bundle` in `graph/viewer` after changing viewer source. Browser interaction and visual checks
 are separate from this lane.

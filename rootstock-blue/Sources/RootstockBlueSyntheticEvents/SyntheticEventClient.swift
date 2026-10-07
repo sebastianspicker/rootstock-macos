@@ -49,9 +49,18 @@ public final class SyntheticEventClient: SyntheticEventClienting, Sendable {
         }
     }
 
+    /// Injected envelopes are always labelled `.synthetic`, and the profile's `MutePolicy` is applied
+    /// (muted events are counted in `droppedMute`).
     public func inject(_ events: [EventEnvelope]) {
         state.withLock { state in
-            for event in events {
+            let mute = state.profile.map { MutePolicy.merging($0) }
+            for var event in events {
+                event.source = .synthetic
+                if let mute, Self.isMuted(event, by: mute) {
+                    state.counters.recordReceived()
+                    state.counters.recordDroppedMute()
+                    continue
+                }
                 if buffer.enqueue(event) {
                     state.counters.recordReceived()
                     state.counters.recordEnqueued()
@@ -84,6 +93,13 @@ public final class SyntheticEventClient: SyntheticEventClienting, Sendable {
                 }
             }
         }
+    }
+
+    private static func isMuted(_ event: EventEnvelope, by policy: MutePolicy) -> Bool {
+        guard let path = event.fields[FieldTaxonomy.processPath] ?? event.fields[FieldTaxonomy.filePath] else {
+            return false
+        }
+        return policy.shouldMute(path: path)
     }
 
     public func pollEvents() -> [EventEnvelope] {

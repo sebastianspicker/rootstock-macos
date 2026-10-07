@@ -29,7 +29,7 @@ public struct TCCParser: ArtifactParser {
 
         var events: [EventEnvelope] = []
         for dbURL in dbURLs {
-            events.append(contentsOf: try parseDatabase(at: dbURL))
+            events.append(contentsOf: ArtifactIO.attempt(dbURL) { try parseDatabase(at: dbURL) })
         }
         return events
     }

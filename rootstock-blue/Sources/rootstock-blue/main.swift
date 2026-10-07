@@ -114,7 +114,11 @@ struct RootstockBlueCLI {
             }
             var profileName = SyntheticProfileName.triage
             if let idx = args.firstIndex(of: "--profile"), args.count > idx + 1 {
-                profileName = SyntheticProfileName(rawValue: args[idx + 1]) ?? .triage
+                guard let parsed = SyntheticProfileName(rawValue: args[idx + 1]) else {
+                    let known = SyntheticProfileName.allCases.map(\.rawValue).joined(separator: "|")
+                    throw RootstockBlueError.io("unknown --profile \(args[idx + 1]) (expected \(known))")
+                }
+                profileName = parsed
             }
             let profile = SyntheticEventProfile.builtin(profileName)
             let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[caseIdx + 1]))
@@ -125,7 +129,7 @@ struct RootstockBlueCLI {
             let sink = CaseEventSink(package: pkg)
             let result = try recorder.recordEnvelopes(envelopes, client: client, into: sink)
             print("record_inject written=\(result.written) profile=\(profileName.rawValue)")
-            print("counters received=\(result.counters.received) mapped=\(result.counters.mapped) dropped=\(result.counters.totalDropped)")
+            print("counters received=\(result.counters.received) mapped=\(result.counters.mapped) dropped_mute=\(result.counters.droppedMute) dropped=\(result.counters.totalDropped)")
         case "status":
             print("record status: synthetic fixture injection only; no live signed Endpoint Security implementation is included")
             print("auth_block_default=\(NonGoals.authBlockDefaultOn)")
@@ -191,18 +195,23 @@ struct RootstockBlueCLI {
 
     static func handleReport(_ args: [String]) throws {
         guard args.count >= 3, args[0] == "markdown" else {
-            throw RootstockBlueError.io("usage: report markdown <path.rsbcase> <out.md>")
+            throw RootstockBlueError.io("usage: report markdown <path.rsbcase> <out.md> [--content-root PATH]")
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[1]))
         let out = URL(fileURLWithPath: args[2])
         try pkg.verifyIntegrity()
         // Optionally attach detections from samples against case timeline
-        var findings: [Finding] = []
-        let rulesDir = repoContentRoot().appendingPathComponent("detections/samples")
-        if FileManager.default.fileExists(atPath: rulesDir.path) {
-            let events = try CaseTimeline.merged(from: pkg)
-            findings = try DetectionEngine().evaluate(rulesDirectory: rulesDir, events: events)
+        var contentRoot = repoContentRoot()
+        if let idx = args.firstIndex(of: "--content-root"), args.count > idx + 1 {
+            contentRoot = URL(fileURLWithPath: args[idx + 1])
         }
+        let rulesDir = contentRoot.appendingPathComponent("detections/samples")
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: rulesDir.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            throw RootstockBlueError.io("detections directory not found: \(rulesDir.path) (use --content-root)")
+        }
+        let events = try CaseTimeline.merged(from: pkg)
+        let findings = try DetectionEngine().evaluate(rulesDirectory: rulesDir, events: events)
         let stats = try CaseReport.exportMarkdown(package: pkg, to: out, findings: findings)
         print("report \(out.path) events=\(stats.eventCount) findings=\(stats.findings.count) custody=\(stats.custodyLines)")
     }
@@ -242,8 +251,9 @@ struct RootstockBlueCLI {
         let source = ImageSource.infer(from: URL(fileURLWithPath: path))
         let engine = ForensicsEngine()
         guard let idx = args.firstIndex(of: "--case"), args.count > idx + 1 else {
-            let events = try engine.parse(source: source)
+            let (events, failures) = try engine.parseCollectingFailures(source: source)
             print("parsed_events=\(events.count) plugins=\(engine.runtime.parserIDs().joined(separator: ","))")
+            printParseFailures(failures)
             for e in events.prefix(10) {
                 print("  \(e.sourcePlugin) \(e.eventType) entities=\(e.entityRefs.count)")
             }
@@ -253,6 +263,13 @@ struct RootstockBlueCLI {
         let n = try engine.parse(source: source, into: CaseEventSink(package: pkg))
         print("parsed_events=\(n) plugins=\(engine.runtime.parserIDs().joined(separator: ","))")
         print("wrote \(n) events into case \(pkg.rootURL.path)")
+        printParseFailures(ArtifactIO.failures.snapshot())
+    }
+
+    private static func printParseFailures(_ failures: [String]) {
+        guard !failures.isEmpty else { return }
+        print("failed_artifacts=\(failures.count)")
+        for note in failures.prefix(10) { print("  warning: \(note)") }
     }
 
     static func handleTimeline(_ args: [String]) throws {

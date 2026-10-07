@@ -1,5 +1,6 @@
 import { renderScope } from "./folio-scope";
 import { renderResults } from "./folio-results";
+import { renderEvidenceAside } from "./folio-aside";
 import { renderReport, prepareReport, validFilename } from "./folio-report";
 /** Primary scope → evidence → report flow; graph tools remain a separate complete workspace. */
 import type { Controller } from "./runtime";
@@ -25,11 +26,9 @@ import {
   facts,
   warning,
   intro,
-  appIdentity,
   evidenceTable,
   modeledPath,
   pathFigure,
-  conventionList,
   recommendationList,
   themeControl,
 } from "./folio-ui";
@@ -270,56 +269,14 @@ class EvidenceFolio {
     );
   }
   private evidenceAside(): HTMLElement {
-    const selected = this.selected;
-    const aside = el("aside", { class: "folio-aside" });
-    if (selected) {
-      aside.append(
-        appIdentity(selected),
-        heading("Recommendations"),
-        para(
-          "Advice to reduce potential exposure. Review priority and applicability before taking action.",
-          "folio-note",
-        ),
-      );
-      if (this.live)
-        aside.append(
-          para(
-            "Live remediation query is scoped by bundle ID and may include multiple installations.",
-            "folio-code",
-          ),
-        );
-      if (this.adviceError)
-        aside.append(
-          el("div", { role: "alert" }, [
-            para(this.adviceError),
-            button("Retry recommendations", () => void this.loadAdvice()),
-          ]),
-        );
-      else if (this.live && !this.advice)
-        aside.append(para("Loading recommendations…", "folio-note"));
-      else
-        aside.append(recommendationList(this.advice ?? recommendations(this.graph, selected.id)));
-      aside.append(
-        heading("Application details"),
-        facts([
-          ["Name", nodeName(selected)],
-          ["Bundle ID", value(selected.properties.bundle_id)],
-          ["File path", value(selected.properties.path)],
-        ]),
-      );
-    } else {
-      aside.append(
-        heading("Reading the evidence"),
-        para(
-          this.live
-            ? "Results come from the selected packaged read-only query. Graph tools provides saved queries, custom Cypher, and the full graph workspace."
-            : "These results inspect relationships already present in this exported snapshot. They do not execute saved Cypher or refresh the evidence.",
-          "folio-note",
-        ),
-      );
-    }
-    aside.append(heading("Reading key"), conventionList(true));
-    return aside;
+    return renderEvidenceAside({
+      graph: this.graph,
+      live: this.live,
+      selected: this.selected,
+      advice: this.advice,
+      adviceError: this.adviceError,
+      retryAdvice: () => void this.loadAdvice(),
+    });
   }
   /** Question 02 shows the path itself above its one-row result. */
   private shortestPathFigure(parent: HTMLElement): void {

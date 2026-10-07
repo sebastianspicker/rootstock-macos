@@ -49,7 +49,7 @@ public struct GroupDataSource: DataSource {
 
         // Collect extended details for all discovered users
         var userDetails: [UserDetail] = []
-        for username in allMembers {
+        for username in allMembers.sorted() {
             if let detail = readUserDetail(username) {
                 userDetails.append(detail)
             }

@@ -1,4 +1,4 @@
-name: Tests
+name: Verification
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
 
 permissions:
   contents: read
+
+# Shared path filters: the macOS jobs are the expensive ones, so they only run
+# when a Swift product, the shared package, a contract, or the lanes change.
+# Job names are preserved because branch protection references them.
 
 jobs:
   release-surface:
@@ -32,29 +36,18 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
-      - name: Set up Node and npm
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: ./.github/actions/setup-node-npm
         with:
-          node-version-file: graph/viewer/.node-version
-          cache: npm
           cache-dependency-path: |
             package-lock.json
             graph/viewer/package-lock.json
-      - name: Set up locked npm
-        run: npm install --global npm@11.17.0 --ignore-scripts
-      - name: Verify npm version
-        run: test "$(npm --version)" = "11.17.0"
       - name: Install locked repository quality tools
         run: npm ci --no-audit --no-fund --ignore-scripts
       - name: Install locked viewer quality tools
         working-directory: graph/viewer
         run: npm ci --no-audit --no-fund --ignore-scripts
-      - name: Set up uv and Python
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - uses: ./.github/actions/setup-uv
         with:
-          version: "0.11.12"
-          python-version: "3.11"
-          enable-cache: true
           cache-dependency-glob: "**/uv.lock"
       - name: Install locked Python quality tools
         run: |
@@ -62,17 +55,8 @@ jobs:
           uv sync --project modules/cve-scan --locked --all-extras
       - name: Install verified SwiftLint 0.65.0
         run: |
-          swiftlint_tmp=$(mktemp -d "$RUNNER_TEMP/rootstock-swiftlint.XXXXXX")
-          archive="$swiftlint_tmp/SwiftLintBinary.artifactbundle.zip"
-          curl --fail --location --proto '=https' --tlsv1.2 \
-            --output "$archive" \
-            https://github.com/realm/SwiftLint/releases/download/0.65.0/SwiftLintBinary.artifactbundle.zip
-          printf '%s  %s\n' \
-            eb333bd76dfb5f46d21fdf3615fe39bb938956ca0b8e94c241c4b2db6e696b90 \
-            "$archive" | shasum -a 256 -c -
-          ditto -x -k "$archive" "$swiftlint_tmp/unpacked"
-          swiftlint_bin="$swiftlint_tmp/unpacked/SwiftLintBinary.artifactbundle/macos/swiftlint"
-          test "$("$swiftlint_bin" version)" = "0.65.0"
+          swiftlint_bin=$(sh scripts/install-swiftlint.sh "$RUNNER_TEMP/rootstock-swiftlint") || exit 1
+          test -x "$swiftlint_bin"
           echo "SWIFTLINT_BIN=$swiftlint_bin" >> "$GITHUB_ENV"
       - name: Verify quality ratchet
         run: sh scripts/verify quality
@@ -85,24 +69,44 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
-      - name: Set up Node and npm
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: graph/viewer/.node-version
-          cache: npm
-          cache-dependency-path: graph/viewer/package-lock.json
-      - name: Set up locked npm
-        run: npm install --global npm@11.17.0 --ignore-scripts
-      - name: Verify npm version
-        run: test "$(npm --version)" = "11.17.0"
+      - uses: ./.github/actions/setup-node-npm
       - name: Install locked viewer dependencies
         working-directory: graph/viewer
         run: npm ci --no-audit --no-fund --ignore-scripts
       - name: Verify viewer workspaces
         run: sh scripts/verify web
 
+  swift-paths:
+    # Decides whether the macOS Swift jobs need to run for this change.
+    name: Swift change detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Detect Swift-relevant changes
+        id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE_SHA" ] || ! git cat-file -e "$BASE_SHA" 2>/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA" HEAD | grep -qE '^(collector/|packages/|rootstock-red/|rootstock-blue/|contracts/|scripts/|examples/|\.swiftlint\.yml|\.github/)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   swift-tests:
     name: Swift Tests
+    needs: swift-paths
+    if: needs.swift-paths.outputs.changed == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     env:
@@ -116,12 +120,14 @@ jobs:
           xcodebuild -version
           swift --version
           swift --version | grep -F "Apple Swift version 6.3"
-      - name: Verify collector
+      - name: Build the collector
         timeout-minutes: 55
         run: sh scripts/verify swift-core
 
   product-family-swift-tests:
     name: Product Family Swift ${{ matrix.swift }}
+    needs: swift-paths
+    if: needs.swift-paths.outputs.changed == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     strategy:
@@ -138,12 +144,8 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
-      - name: Set up uv and Python
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - uses: ./.github/actions/setup-uv
         with:
-          version: "0.11.12"
-          python-version: "3.11"
-          enable-cache: true
           working-directory: graph
       - name: Install graph importer
         working-directory: graph
@@ -153,7 +155,7 @@ jobs:
           xcodebuild -version
           swift --version
           swift --version | grep -F "Apple Swift version ${{ matrix.swift }}"
-      - name: Verify product family
+      - name: Verify the product family
         run: sh scripts/verify swift-family
 
   graph:
@@ -165,18 +167,64 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
-      - name: Set up uv and Python
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - uses: ./.github/actions/setup-uv
         with:
-          version: "0.11.12"
-          python-version: "3.11"
-          enable-cache: true
           working-directory: graph
       - name: Install dependencies
         working-directory: graph
         run: uv sync --locked --all-extras
-      - name: Verify graph package and contracts
+      - name: Lint and smoke the graph package
         run: sh scripts/verify graph
+
+  neo4j-pipeline:
+    name: Neo4j pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      neo4j:
+        # Community edition, as in graph/docker-compose.yml. It has no role-based
+        # access control, so the read account is a separate login without a reader role.
+        image: neo4j:5.26
+        env:
+          NEO4J_AUTH: neo4j/rootstock-ci-password
+          NEO4J_dbms_security_allow__csv__import__from__file__urls: "false"
+        ports:
+          - 7687:7687
+          - 7474:7474
+        options: >-
+          --health-cmd "wget -q -O /dev/null http://localhost:7474 || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NEO4J_URI: bolt://127.0.0.1:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: rootstock-ci-password
+      NEO4J_READ_USER: rootstock_reader
+      NEO4J_READ_PASSWORD: rootstock-ci-reader
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-uv
+        with:
+          working-directory: graph
+      - name: Install dependencies
+        working-directory: graph
+        run: uv sync --locked --all-extras
+      - name: Create the separate read account
+        run: |
+          uv run --project graph --locked python - <<'PY'
+          import os
+          from neo4j import GraphDatabase
+          driver = GraphDatabase.driver(os.environ["NEO4J_URI"], auth=(os.environ["NEO4J_USER"], os.environ["NEO4J_PASSWORD"]))
+          with driver.session(database="system") as session:
+              session.run("CREATE USER $user IF NOT EXISTS SET PASSWORD $password CHANGE NOT REQUIRED",
+                          user=os.environ["NEO4J_READ_USER"], password=os.environ["NEO4J_READ_PASSWORD"])
+          driver.close()
+          PY
+      - name: Run the pipeline and API against the service container
+        run: sh scripts/verify neo4j
 
   cve-scan-tests:
     name: cve-scan Module
@@ -186,17 +234,13 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
-      - name: Set up uv and Python
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - uses: ./.github/actions/setup-uv
         with:
-          version: "0.11.12"
-          python-version: "3.11"
-          enable-cache: true
           working-directory: modules/cve-scan
       - name: Install cve-scan dependencies
         working-directory: modules/cve-scan
         run: uv sync --locked --all-extras
-      - name: Verify cve-scan
+      - name: Lint cve-scan
         run: sh scripts/verify cve
 
   shell-lint:

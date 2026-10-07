@@ -23,6 +23,8 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, ValidationError
 
+from .bounded_json import read_bounded_json
+
 SUPPORTED_SCHEMA_VERSION = 1
 FAMILY_EXPORT_SCHEMA_ID = "https://rootstock.dev/contracts/family-open-export/v1/schema.json"
 
@@ -80,9 +82,9 @@ class FamilyExport:
 
 def load_export(path: Path) -> FamilyExport:
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise FamilyExportError(f"{path}: invalid JSON: {exc}") from exc
+        raw = read_bounded_json(path)
+    except ValueError as exc:
+        raise FamilyExportError(str(exc)) from exc
     return validate_export(raw)
 
 

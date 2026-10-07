@@ -59,7 +59,7 @@ public struct KerberosArtifactDataSource: DataSource {
 
         var results: [KerberosArtifact] = []
 
-        guard let contents = try? fm.contentsOfDirectory(atPath: directory) else {
+        guard let contents = (try? fm.contentsOfDirectory(atPath: directory))?.sorted() else {
             errors.append(CollectionError(
                 source: name,
                 message: "Cannot read ccache directory: \(directory)",

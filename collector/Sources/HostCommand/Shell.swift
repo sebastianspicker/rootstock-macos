@@ -221,8 +221,8 @@ public enum Shell {
             deadline: executionDeadline
         )
         let result = ShellResult(
-            stdout: String(data: stdoutCapture.finish(), encoding: .utf8) ?? "",
-            stderr: String(data: stderrCapture.finish(), encoding: .utf8) ?? "",
+            stdout: String(decoding: stdoutCapture.finish(), as: UTF8.self),
+            stderr: String(decoding: stderrCapture.finish(), as: UTF8.self),
             terminationStatus: process.terminationStatus,
             timedOut: timedOut
         )

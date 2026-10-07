@@ -1,5 +1,5 @@
 // Name: Stale TCC Grants (Orphaned Permissions)
-// Purpose: TCC grants for apps that are no longer installed on the system
+// Purpose: TCC grants whose client has no matching Application node in the scan
 // Category: Blue Team
 // Severity: High
 // Parameters: none
@@ -9,27 +9,21 @@
 // bundle_id is later re-used by a malicious app (bundle_id squatting), it would
 // inherit the original app's TCC grants. These orphaned grants should be cleaned up.
 //
-// Detection logic: a TCC grant exists for a bundle_id, but no Application node
-// with that bundle_id exists in the graph (app not discovered during collection).
+// Detection logic: the importer records every grant whose client could not be
+// resolved to an Application node of the same scan as an UnresolvedTCCGrant node
+// (path-only clients and uninstalled apps both land here). Review each entry
+// before revoking: a path client is not necessarily an orphan.
 
-MATCH (app:Application)-[r:HAS_TCC_GRANT]->(perm:TCC_Permission)
-WHERE app.path IS NOT NULL
-  AND NOT app.bundle_id STARTS WITH 'com.apple.'
-
-// The app node exists but check if path was actually found
-// (is_system=false and no injection_methods set may indicate a removed app)
-WITH app, r, perm
-WHERE app.is_system = false
-  AND (app.version IS NULL OR app.signed = false)
-
-RETURN app.name                AS app_name,
-       app.bundle_id           AS bundle_id,
-       app.path                AS last_known_path,
-       app.signed              AS signed,
-       perm.display_name       AS permission,
-       perm.service            AS service,
-       r.scope                 AS scope,
-       r.allowed               AS allowed,
-       r.last_modified         AS last_modified_epoch
-ORDER BY app.bundle_id, perm.display_name
+MATCH (u:UnresolvedTCCGrant)
+OPTIONAL MATCH (u)-[:REFERENCES_TCC_PERMISSION]->(perm:TCC_Permission)
+RETURN u.client                                   AS client,
+       u.client_type                              AS client_type,
+       u.service                                  AS service,
+       coalesce(perm.display_name, u.display_name) AS permission,
+       u.scope                                    AS scope,
+       u.allowed                                  AS allowed,
+       u.auth_reason                              AS reason,
+       u.last_modified                            AS last_modified_epoch,
+       u.scan_id                                  AS scan_id
+ORDER BY u.client, u.service
 LIMIT 100

@@ -65,6 +65,10 @@ public struct EntitlementDataSource: DataSource {
             }
         }
 
+        // Task-group completion order is nondeterministic; sort for stable output.
+        applications.sort { ($0.path, $0.bundleId) < ($1.path, $1.bundleId) }
+        errors.sort { $0.message < $1.message }
+
         let appsWithKnownEntitlements = applications.filter(\.entitlementsAvailable)
         if !appsWithKnownEntitlements.isEmpty && appsWithKnownEntitlements.allSatisfy({ $0.entitlements.isEmpty }) {
             errors.append(CollectionError(

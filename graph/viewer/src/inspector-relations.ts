@@ -95,6 +95,7 @@ export function relationshipDetail(
     controller.actions.revealNode(controller, nodeId);
     controller.actions.inspectNode(controller, nodeId);
     controller.dom.inspector.querySelector<HTMLElement>('[role="tab"]')?.focus();
+    controller.dom.inspector.parentElement?.scrollTo({ top: 0 });
   });
   const basis = edgeIsInferred(edge) ? "inferred" : "observed";
   const children: Node[] = [

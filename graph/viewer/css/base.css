@@ -202,6 +202,10 @@ kbd {
 .status-group .graph-counts {
   display: none;
 }
+.status-group .provenance-chip[data-state="partial"],
+.status-group .provenance-chip[data-state="unavailable"] {
+  display: inline-flex;
+}
 .chrome-secondary {
   color: var(--muted);
 }

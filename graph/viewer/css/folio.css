@@ -16,9 +16,6 @@ body.folio-enabled {
 .graph-tools-open #evidence-folio {
   display: none;
 }
-.graph-tools-open {
-  overflow: hidden;
-}
 .graph-tools-open #app {
   grid-template-rows: auto minmax(0, 1fr);
 }
@@ -1026,6 +1023,8 @@ html:has(body.folio-enabled:not(.graph-tools-open)),
     forced-color-adjust: none;
     border-color: CanvasText;
     background: radial-gradient(circle, CanvasText 0 4px, Canvas 4.5px);
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
   .folio-choices label:has(input:checked),
   .folio-format:has(input:checked) {

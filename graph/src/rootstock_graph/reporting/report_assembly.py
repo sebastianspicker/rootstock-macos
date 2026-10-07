@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import socket
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -10,6 +9,7 @@ from datetime import datetime, timezone
 from tabulate import tabulate
 
 from .query_runner import discover_queries
+from .report_vulnerability_intelligence import append_vulnerability_intelligence
 from .report_recommendations import append_recommendations_section
 from .report_sections import (
     append_extended_query_sections,
@@ -37,8 +37,6 @@ from .report_formatters import (
     format_private_entitlement_table,
     format_executive_summary,
 )
-
-logger = logging.getLogger(__name__)
 
 __all__ = ["assemble_report"]
 
@@ -191,71 +189,6 @@ def _append_executive_summary(
         )
     )
     sections.append("")
-
-
-def _append_vulnerability_intelligence(sections: list[str]) -> None:
-    try:
-        from ..vulnerability.cve_enrichment import enrich_registry
-
-        enriched = enrich_registry()
-    except Exception:
-        logger.exception("CVE enrichment unavailable")
-        sections.append("### Vulnerability Intelligence")
-        sections.append(
-            "> Warning: CVE enrichment unavailable; vulnerability "
-            "intelligence summary omitted. See the server log for details."
-        )
-        sections.append("")
-        return
-
-    if not enriched:
-        return
-
-    summary = _vulnerability_intelligence_summary(enriched.values())
-    if not _has_vulnerability_intelligence(summary):
-        return
-
-    sections.append("### Vulnerability Intelligence")
-    sections.extend(_vulnerability_intelligence_lines(summary))
-    sections.append("")
-
-
-def _vulnerability_intelligence_summary(enriched_entries) -> dict:
-    entries = list(enriched_entries)
-    epss_entries = [entry for entry in entries if entry.epss_score is not None]
-    return {
-        "kev_count": sum(1 for entry in entries if entry.in_kev),
-        "high_epss_count": sum(1 for entry in epss_entries if entry.epss_score > 0.3),
-        "highest_epss": max(
-            epss_entries,
-            key=lambda entry: entry.epss_score,
-            default=None,
-        ),
-    }
-
-
-def _has_vulnerability_intelligence(summary: dict) -> bool:
-    return bool(summary["kev_count"] or summary["high_epss_count"])
-
-
-def _vulnerability_intelligence_lines(summary: dict) -> list[str]:
-    lines: list[str] = []
-    if summary["kev_count"]:
-        lines.append(
-            f"- **CISA KEV CVEs:** {summary['kev_count']} actively exploited vulnerabilities"
-        )
-    if summary["high_epss_count"]:
-        lines.append(
-            "- **High exploitation probability:** "
-            f"{summary['high_epss_count']} CVE(s) with EPSS > 0.3"
-        )
-    highest_epss = summary["highest_epss"]
-    if highest_epss and highest_epss.epss_score is not None:
-        lines.append(
-            f"- **Highest exploitation probability:** {highest_epss.base.cve_id} "
-            f"(EPSS {highest_epss.epss_score:.2f})"
-        )
-    return lines
 
 
 def _append_core_finding_sections(
@@ -413,7 +346,7 @@ def _append_report_body(
     rows: ReportRows,
 ) -> None:
     """Append sections in the stable public report order from normalized rows."""
-    _append_vulnerability_intelligence(sections)
+    append_vulnerability_intelligence(sections)
     _append_core_finding_sections(sections, rows)
     append_extended_query_sections(
         sections,

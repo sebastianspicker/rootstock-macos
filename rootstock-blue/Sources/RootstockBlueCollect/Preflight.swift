@@ -32,12 +32,7 @@ public enum Preflight {
     public static func check(for pack: CollectionPack, offlineFixtureMode: Bool = false) -> PreflightReport {
         PreflightReport(items: [
             fullDiskAccessItem(pack: pack, offlineFixtureMode: offlineFixtureMode),
-            PreflightItem(
-                name: "Data volume unlocked",
-                ok: true,
-                detail: "FileVault unlock requires user/org secrets - no crack path",
-                required: true
-            ),
+            dataVolumeItem(),
             PreflightItem(
                 name: "SIP intact",
                 ok: true,
@@ -60,10 +55,13 @@ public enum Preflight {
             )
         }
         if pack.requiresFDA {
+            let granted = hasFullDiskAccess()
             return PreflightItem(
                 name: "Full Disk Access",
-                ok: false,
-                detail: "Grant FDA to RootstockBlue in System Settings → Privacy (cannot auto-grant)",
+                ok: granted,
+                detail: granted
+                    ? "FDA probe succeeded (TCC-protected file is readable)"
+                    : "Grant FDA to RootstockBlue in System Settings → Privacy (cannot auto-grant)",
                 required: true
             )
         }
@@ -72,6 +70,40 @@ public enum Preflight {
             ok: true,
             detail: "Not required for this pack",
             required: false
+        )
+    }
+
+    /// Probes TCC-protected files with a real open; no probe file readable means FDA is not granted.
+    static func hasFullDiskAccess() -> Bool {
+        let candidates = [
+            NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db",
+            "/Library/Application Support/com.apple.TCC/TCC.db",
+        ]
+        for path in candidates where FileManager.default.isReadableFile(atPath: path) {
+            let descriptor = Darwin.open(path, O_RDONLY)
+            if descriptor >= 0 {
+                _ = Darwin.close(descriptor)
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func dataVolumeItem() -> PreflightItem {
+        let home = NSHomeDirectory()
+        if (try? FileManager.default.contentsOfDirectory(atPath: home)) != nil {
+            return PreflightItem(
+                name: "Data volume unlocked",
+                ok: true,
+                detail: "Home directory is listable; FileVault unlock requires user/org secrets - no crack path",
+                required: true
+            )
+        }
+        return PreflightItem(
+            name: "Data volume unlocked",
+            ok: false,
+            detail: "Cannot list \(home); volume may be locked or inaccessible - no crack path",
+            required: true
         )
     }
 

@@ -31,15 +31,15 @@ The package boundaries enforce these constraints:
 
 ## Source layout
 
-Each SwiftPM target lives at `Sources/<Target>/` and its tests in
-`Tests/RootstockBlueTests/`. `RootstockBlueCore` holds the event envelope, field
+Each SwiftPM target lives at `Sources/<Target>/`. Private tests and their fixtures
+are kept locally in the gitignored `Tests/RootstockBlueTests/` directory. `RootstockBlueCore` holds the event envelope, field
 taxonomy, and `CaseTimestamp`, the single case-timestamp formatter.
 `RootstockBlueInterchange` imports and exports contract formats (collector scan
 JSON, findings JSONL, family export) and case outputs (JSONL, reports).
 
 Surface-marker parsers in `RootstockBlueFX/Parsers/` are specs run by one
 `SurfaceMarkerEngine`; add a parser as a `SurfaceMarkerSpec`, not as new
-parsing code. Characterization goldens live in
+parsing code. Private characterization goldens live locally in
 `Tests/RootstockBlueTests/Fixtures/surface-markers/`; regenerate them with
 `ROOTSTOCK_BLUE_RECORD_SURFACE_MARKERS=1 swift test` after an intended change.
 Integration guides are in [`integrate/`](integrate/README.md). Blue-owned

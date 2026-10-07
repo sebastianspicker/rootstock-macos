@@ -1,0 +1,38 @@
+name: Release check
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Release surface and collector archive
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      ROOTSTOCK_VERIFY_REQUIRE_CLEAN: "1"
+      ROOTSTOCK_VERIFY_FOR_TAG: "1"
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-uv
+      - name: Verify Swift 6.3 toolchain
+        run: |
+          xcodebuild -version
+          swift --version | grep -F "Apple Swift version 6.3"
+      - name: Verify release surface
+        run: sh scripts/verify release
+      - name: Build collector archive
+        run: bash collector/scripts/build-release.sh
+      - name: Upload collector archive
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rootstock-collector-release
+          path: release/*
+          if-no-files-found: error

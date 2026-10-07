@@ -20,7 +20,7 @@ extension ScanOrchestrator {
     /// Returns unknown with a diagnostic if spctl is unavailable or unparseable.
     /// Parsing is shared via `HostPostureProbes` (RootstockMacFacts).
     static func detectGatekeeper(
-        runCommand: (String, [String]) -> String? = Shell.run
+        runCommand: (String, [String]) -> String? = ScanOrchestrator.runSpctlStatus
     ) -> HostProbeResult {
         guard let output = runCommand(HostPostureProbes.spctlPath, ["--status"]), !output.isEmpty else {
             return HostProbeResult(
@@ -35,6 +35,20 @@ extension ScanOrchestrator {
             value: nil,
             error: postureError("Gatekeeper probe returned unrecognized output: \(output)")
         )
+    }
+
+    /// `spctl --status` exits non-zero when assessments are disabled, so keep the
+    /// output of a non-zero exit when it reports that state.
+    static func runSpctlStatus(_ path: String, _ arguments: [String]) -> String? {
+        switch Shell.execute(path, arguments) {
+        case .success(let result):
+            return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .nonZeroExit(let result):
+            let output = (result.stdout + result.stderr).trimmingCharacters(in: .whitespacesAndNewlines)
+            return output.lowercased().contains("assessments disabled") ? output : nil
+        case .admissionTimedOut, .launchFailed, .executionTimedOut:
+            return nil
+        }
     }
 
     /// Returns unknown with a diagnostic if csrutil is unavailable or unparseable.

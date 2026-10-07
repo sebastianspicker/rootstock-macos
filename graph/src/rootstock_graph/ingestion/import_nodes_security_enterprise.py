@@ -64,10 +64,21 @@ def _enrich_computer_ad_binding(
 
 
 def _link_ad_users_to_computer(session: Session, computer_key: str | None) -> None:
+    """Link AD users to this host only; User nodes are global, so scope by host evidence.
+
+    Uses the same evidence as import_local_to (session on this hostname, this scan's
+    group membership or launch-item RUNS_AS) plus an existing LOCAL_TO edge.
+    """
     session.run(
         """
-        MATCH (u:User {is_ad_user: true})
         MATCH (c:Computer {computer_key: $computer_key, ad_bound: true})
+        MATCH (u:User {is_ad_user: true})
+        WHERE (u)-[:LOCAL_TO]->(c)
+           OR EXISTS { MATCH (u)-[:HAS_SESSION]->(:LoginSession {hostname: c.hostname}) }
+           OR EXISTS { MATCH (u)-[m:MEMBER_OF]->(:LocalGroup) WHERE m.scan_id = c.scan_id }
+           OR EXISTS {
+               MATCH (:Application {scan_id: c.scan_id})-[:PERSISTS_VIA]->(:LaunchItem)-[:RUNS_AS]->(u)
+           }
         MERGE (u)-[:AD_USER_OF]->(c)
         """,
         computer_key=computer_key,

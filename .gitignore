@@ -166,10 +166,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Internal test suites (not part of the published surface)
+# Private test suites and fixtures (never publish)
 /collector/Tests/
 /graph/tests/
 /graph/viewer/tests/
+/graph/viewer/scripts/test-viewer.mjs
 /modules/cve-scan/tests/
 /packages/RootstockMacFacts/Tests/
 /rootstock-blue/Tests/

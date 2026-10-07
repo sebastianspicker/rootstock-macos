@@ -170,6 +170,15 @@
   height: 7px;
   border-radius: 50%;
 }
+.color-dot.mixed {
+  width: 10px;
+  height: 10px;
+}
+.kind-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+}
 .filter-count {
   color: var(--subtle);
   font: 10px var(--font-mono);

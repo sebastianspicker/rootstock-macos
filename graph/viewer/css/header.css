@@ -137,11 +137,9 @@
   color: var(--verified);
   font-weight: 500;
 }
-.provenance-chip strong[data-state="partial"] {
-  color: var(--high);
-}
-.provenance-chip strong[data-state="unavailable"] {
-  color: var(--subtle);
+.provenance-chip[data-state="partial"] strong,
+.provenance-chip[data-state="unavailable"] strong {
+  color: var(--gap);
 }
 .snapshot-status {
   display: inline-flex;

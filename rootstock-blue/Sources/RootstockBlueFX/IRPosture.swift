@@ -32,6 +32,7 @@ public enum HostIRPosture {
 
     /// Enumerate posture from an offline artifact tree (fixture / image root).
     public static func enumerateOffline(source: ImageSource) throws -> [EventEnvelope] {
+        try source.validate()
         let root = ArtifactRoot(source: source)
         var events = offlineHostIdentityEvents(root: root)
         events.append(contentsOf: offlineSecurityProductEvents(root: root))
@@ -51,11 +52,12 @@ public enum HostIRPosture {
         let product = (dictionary["ProductName"] as? String) ?? "macOS"
         return [EventEnvelope(
             identity: EventEnvelope.Identity(kind: "ir.posture.host", label: "IRPOSTURE"),
-            capture: EventEnvelope.Capture(source: .collect, eventTime: Date(), collectedAt: Date()),
+            capture: EventEnvelope.Capture(source: .collect, eventTime: Date(timeIntervalSince1970: 0), collectedAt: Date()),
             payload: EventEnvelope.Payload(
                 entityRefs: [EntityID(kind: .host, value: "os=\(product)|\(version)|\(build)")],
                 properties: [
                     "ir.mode": "offline",
+                    "timestamp_missing": "true",
                     "host.product_name": product,
                     "host.os_version": version,
                     "host.os_build": build,
@@ -99,11 +101,12 @@ public enum HostIRPosture {
         guard root.exists("Library/Preferences/com.apple.security.plist") || root.exists("Library/Preferences/com.apple.systempolicy.plist") else { return [] }
         return [EventEnvelope(
             identity: EventEnvelope.Identity(kind: "ir.posture.protection", label: "IRPOSTURE"),
-            capture: EventEnvelope.Capture(source: .collect, eventTime: Date(), collectedAt: Date()),
+            capture: EventEnvelope.Capture(source: .collect, eventTime: Date(timeIntervalSince1970: 0), collectedAt: Date()),
             payload: EventEnvelope.Payload(
                 entityRefs: [EntityID(kind: .host, value: "protections=prefs_present")],
                 properties: [
                     "ir.mode": "offline",
+                    "timestamp_missing": "true",
                     "protection.name": "Gatekeeper",
                     "protection.enabled": "unknown",
                     "protection.gatekeeper_prefs": "present",
@@ -118,11 +121,12 @@ public enum HostIRPosture {
     private static func offlineEmptyScanEvent() -> EventEnvelope {
         EventEnvelope(
             identity: EventEnvelope.Identity(kind: "ir.posture.scan", label: "IRPOSTURE"),
-            capture: EventEnvelope.Capture(source: .collect, eventTime: Date(), collectedAt: Date()),
+            capture: EventEnvelope.Capture(source: .collect, eventTime: Date(timeIntervalSince1970: 0), collectedAt: Date()),
             payload: EventEnvelope.Payload(
                 entityRefs: [EntityID(kind: .host, value: "scan=offline")],
                 properties: [
                     "ir.mode": "offline",
+                    "timestamp_missing": "true",
                     "ir.products_found": "0",
                     "ir.note": "No SystemVersion or known security products under artifact root",
                     FieldTaxonomy.eventType: "ir.posture.scan",

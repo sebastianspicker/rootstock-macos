@@ -89,8 +89,8 @@ public struct XPCDataSource: DataSource {
     }
 
     /// Extract entitlement keys from a signed binary via `codesign -d --entitlements`.
-    /// A nonzero codesign exit means unsigned/no entitlements; infrastructure
-    /// failures preserve unknown evidence with a recoverable diagnostic.
+    /// A codesign "not signed at all" exit means no entitlements; any other
+    /// failure preserves unknown evidence with a recoverable diagnostic.
     func extractEntitlementKeys(
         from path: String
     ) -> (keys: [String], error: CollectionError?) {
@@ -103,8 +103,17 @@ public struct XPCDataSource: DataSource {
         switch outcome {
         case .success(let successfulResult):
             result = successfulResult
-        case .nonZeroExit:
-            return ([], nil)
+        case .nonZeroExit(let failedResult):
+            // A genuinely unsigned binary has no entitlements; any other
+            // failure leaves them unknown.
+            if failedResult.stderr.contains("not signed at all") {
+                return ([], nil)
+            }
+            return ([], CollectionError(
+                source: name,
+                message: "Entitlements unknown for \(path): \(outcome.failureDescription ?? "command failure")",
+                recoverable: true
+            ))
         case .admissionTimedOut, .launchFailed, .executionTimedOut:
             return ([], CollectionError(
                 source: name,

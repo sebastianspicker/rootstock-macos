@@ -53,9 +53,18 @@ public enum HostPostureProbes: Sendable {
     }
 
     /// Parse `csrutil status` output.
+    ///
+    /// Only the first non-empty line is classified, so the per-protection
+    /// breakdown of a custom configuration ("Apple Internal: disabled", ...)
+    /// cannot make the result ambiguous. "enabled (Custom Configuration)" is
+    /// reported as enabled.
     public static func parseSIPOutput(_ output: String) -> Bool? {
-        parseEnabledState(
-            output.lowercased(),
+        let statusLine = output
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .first { !$0.isEmpty } ?? ""
+        return parseEnabledState(
+            statusLine.lowercased(),
             enabledMarkers: ["enabled"],
             disabledMarkers: ["disabled"]
         )

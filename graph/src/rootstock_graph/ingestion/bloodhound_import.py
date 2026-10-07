@@ -19,13 +19,13 @@ Exit code 0 on success, 1 on failure.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
 import zipfile
 from pathlib import Path
 
 from ..neo4j import add_neo4j_args, connect_from_args
+from .bounded_json import parse_json_bytes
 
 EXPECTED_SHARPHOUND_FILES = ("users.json", "groups.json")
 MAX_SHARPHOUND_JSON_SIZE = 100 * 1024 * 1024  # 100 MB per JSON file
@@ -114,8 +114,17 @@ def _validate_zip_entry(info: zipfile.ZipInfo) -> None:
 
 
 def _read_sharphound_data(zf: zipfile.ZipFile, name: str) -> list[dict]:
-    raw = json.loads(zf.read(name))
-    return raw.get("data", [])
+    with zf.open(name) as entry:
+        content = entry.read(MAX_SHARPHOUND_JSON_SIZE + 1)
+    if len(content) > MAX_SHARPHOUND_JSON_SIZE:
+        raise ValueError(f"Entry {name} decompressed size exceeds limit")
+    raw = parse_json_bytes(content, name)
+    if not isinstance(raw, dict):
+        raise ValueError(f"{name}: expected a JSON object with a 'data' list at the root")
+    data = raw.get("data", [])
+    if not isinstance(data, list):
+        raise ValueError(f"{name}: 'data' must be a list")
+    return data
 
 
 # ── ADUser node import ───────────────────────────────────────────────────────
@@ -431,10 +440,14 @@ def main() -> int:
     driver = connect_from_args(args)
 
     print(f"Importing SharpHound data from {args.zip}...")
-    with driver.session() as session:
-        counts = import_all(session, args.zip)
-
-    driver.close()
+    try:
+        with driver.session() as session:
+            counts = import_all(session, args.zip)
+    except (OSError, ValueError, zipfile.BadZipFile) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        driver.close()
 
     print(f"  ADUser nodes: {counts['ad_users']}")
     print(f"  ADGroup nodes: {counts['ad_groups']}")

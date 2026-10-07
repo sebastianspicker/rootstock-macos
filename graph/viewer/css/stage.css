@@ -437,32 +437,6 @@
   padding-top: 5px;
   border-top: 1px solid var(--rule);
 }
-.tt-risk,
-.tt-score,
-.kind-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border: 1px solid currentColor;
-  border-radius: var(--radius);
-  font-size: 10px;
-}
-.critical-badge,
-.tt-risk.critical,
-.bool-false {
-  color: var(--critical);
-}
-.tt-risk.high {
-  color: var(--high);
-}
-.tt-risk.medium {
-  color: var(--medium);
-}
-.tt-risk.low {
-  color: var(--low);
-}
-.bool-true {
-  color: var(--verified);
-}
 
 /* Path narrative banner — thin, path-accented */
 #focus-banner,
@@ -534,8 +508,7 @@
   background: var(--pane);
   box-shadow: var(--slip-shadow);
 }
-.ctx-item,
-.ctx-sub {
+.ctx-item {
   width: 100%;
   min-height: 34px;
   display: flex;
@@ -547,12 +520,6 @@
   text-align: left;
   background: transparent;
 }
-.ctx-item:hover,
-.ctx-sub:hover {
+.ctx-item:hover {
   background: var(--hover);
-}
-.ctx-separator {
-  height: 1px;
-  margin: 4px 6px;
-  background: var(--rule);
 }

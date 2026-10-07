@@ -14,7 +14,7 @@ defaults to ignored private storage, and release binaries use the ignored
 ## Setup
 
 - macOS 14+ and Swift 6.3 for the collector; Red, Blue, and the shared
-  package use Swift 6.2+. Swift tests use Swift Testing, so Xcode is not
+  package use Swift 6.2+. Swift tests (`swift test`) use Swift Testing, so Xcode is not
   required (`scripts/swift-test`, used by `sh scripts/verify`, adds the plugin
   path for the Command Line Tools toolchain)
 - Python 3.11+, `uv`, and Neo4j 5.x for full graph development
@@ -29,9 +29,28 @@ uv sync --project graph --locked --all-extras
 uv sync --project modules/cve-scan --locked --all-extras
 npm ci --ignore-scripts --prefix graph/viewer  # viewer, web lane
 npm ci --ignore-scripts                        # repository root, jscpd gate
+export SWIFTLINT_BIN=$(sh scripts/install-swiftlint.sh)  # quality lane
 ```
 
+What each lane needs:
+
+| Lane | Local setup |
+| --- | --- |
+| `release` | Python 3.11+ and Node.js; no installs |
+| `quality` | Both `npm ci` commands, both `uv sync` commands, and `SWIFTLINT_BIN` |
+| `web` | `npm ci` in `graph/viewer` |
+| `graph` | `uv sync --project graph` |
+| `cve` | `uv sync --project modules/cve-scan` |
+| `swift-core`, `swift-family` | Swift toolchain; `swift-family` also needs `uv sync --project graph` |
+| `shell` | ShellCheck |
+| `neo4j`, `full` | A Neo4j database and credentials (see `docs/QUALITY.md`) |
+
 ## Verification
+
+Private test suites and their fixtures stay local and gitignored. Never stage,
+force-add, restore into a commit, or publish them. The verification lanes run them
+when installed locally; public checkouts run builds, lint, contracts, and smoke
+checks. See [Quality gates](docs/QUALITY.md) for the publication boundary.
 
 Run the verification lane for the component you changed:
 
@@ -57,7 +76,7 @@ The graph package is implemented in `graph/src/rootstock_graph/` and exposed
 through `rootstock-graph-*` console commands declared in `graph/pyproject.toml`.
 Do not recreate root-level Python command adapters. Keep the graph API
 loopback-only, bearer-token protected, and read-only for ad-hoc Cypher. Graph
-modules follow the layering enforced by `graph/tests/test_architecture.py`; see
+modules follow the layering checked by the private architecture test suite; see
 [Architecture](docs/ARCHITECTURE.md#extension-rules).
 
 ## Product-specific rules
@@ -79,7 +98,9 @@ modules follow the layering enforced by `graph/tests/test_architecture.py`; see
 Keep maintained authored source, test, and script files at or below 600
 physical lines. Use focused behavior tests, preserve public command and
 artifact contracts, and update operator documentation with any real behavior
-change.
+change. Run the lane that covers the component you changed (`sh scripts/verify
+graph`, `cve`, `web`, `swift-core`, or `swift-family`), which also runs its private test
+suite when installed locally.
 
 Follow the [Code of Conduct](CODE_OF_CONDUCT.md) in project discussions.
 

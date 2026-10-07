@@ -36,7 +36,8 @@ def infer(session: Session) -> int:
     )
     n1 = r1.single()["n"]
 
-    # Rule 2: SUDO_NOPASSWD ALL → any other user
+    # Rule 2: SUDO_NOPASSWD ALL → any other user. Holders are real users: %group
+    # rules are expanded to members at import and the ALL principal gets no edge.
     r2 = session.run(
         """
         MATCH (u:User)-[:SUDO_NOPASSWD]->(sr:SudoersRule)

@@ -14,6 +14,8 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
+from .bounded_json import read_bounded_json
+
 
 def load_schema_validator(schema_id: str) -> Draft202012Validator:
     """Load the packaged v7 schema and reject a mismatched resource identity."""
@@ -111,9 +113,9 @@ class _ExportMetadata:
 def load_export(path: Path) -> CveScanExport:
     """Load and validate a cve-scan Rootstock export from disk."""
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise CveScanImportError(f"{path}: invalid JSON: {exc}") from exc
+        raw = read_bounded_json(path)
+    except ValueError as exc:
+        raise CveScanImportError(str(exc)) from exc
     return validate_export(raw)
 
 

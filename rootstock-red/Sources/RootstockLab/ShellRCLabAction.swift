@@ -220,9 +220,19 @@ public struct ShellRCLabAction: LabAction {
         if path.contains("\0") {
             throw RootstockError.invalidArgument("rcFile path must not contain NUL")
         }
-        // Still allow absolute user paths (tests pass temp dirs); reject empty.
         guard !path.isEmpty else {
             throw RootstockError.invalidArgument("rcFile must not be empty")
+        }
+        // Real shell startup files are never lab-managed: only touch them when a lab marker is already present.
+        let protectedNames: Set<String> = [
+            ".zshrc", ".zprofile", ".zshenv", ".zlogin", ".bashrc", ".bash_profile", ".profile",
+        ]
+        guard protectedNames.contains(url.lastPathComponent) else { return }
+        let existing = try? String(contentsOf: url.standardizedFileURL, encoding: .utf8)
+        guard existing?.contains(markerPrefix) == true else {
+            throw RootstockError.invalidArgument(
+                "rcFile \(path) is a real shell startup file without a lab marker; use a dedicated lab file under ~/Library/RootstockLab"
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 // swift-tools-version: 6.2
 import PackageDescription
+import Foundation
 
 /// Neutral macOS security vocabulary and read-only helpers shared by
 /// collector, rootstock-red, and rootstock-blue.
@@ -21,5 +22,14 @@ let package = Package(
             name: "RootstockMacFacts",
             path: "Sources/RootstockMacFacts"
         ),
-    ]
+        .testTarget(
+            name: "RootstockMacFactsTests",
+            dependencies: ["RootstockMacFacts"],
+            path: "Tests/RootstockMacFactsTests"
+        ),
+    ].filter { target in
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let path = root.appendingPathComponent(target.path ?? "Tests/\(target.name)").path
+        return target.type != .test || FileManager.default.fileExists(atPath: path)
+    }
 )

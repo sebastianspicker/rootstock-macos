@@ -34,7 +34,9 @@ struct EntitlementClassifier: Sendable {
 
     /// Convert a raw entitlements dictionary into classified `EntitlementInfo` values.
     func classify(_ entitlements: [String: Any]) -> [EntitlementInfo] {
-        return entitlements.keys.map { key in
+        // An explicit `false` value means the entitlement is not granted.
+        let granted = entitlements.keys.filter { (entitlements[$0] as? Bool) != false }
+        return granted.map { key in
             let category = categorize(key)
             let isPrivate = key.contains("com.apple.private.")
             return EntitlementInfo(

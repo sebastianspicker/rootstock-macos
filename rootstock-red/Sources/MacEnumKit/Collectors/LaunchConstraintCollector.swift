@@ -116,7 +116,7 @@ public struct LaunchConstraintCollector: Collector {
     private static func runCodesign(path: String, capturingTo captureURL: URL) -> CodesignRunOutcome {
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
-        proc.arguments = ["-d", "--entitlements", ":-", path]
+        proc.arguments = ["-dvv", "--entitlements", ":-", path]
         guard let capture = try? FileHandle(forWritingTo: captureURL) else {
             return .failed("codesign capture open failed")
         }
@@ -172,14 +172,10 @@ public struct LaunchConstraintCollector: Collector {
         if captured.count > outputLimit {
             sample.notes.append("codesign output truncated")
         }
-        sample.signed = status == 0 || text.contains("Authority=")
-        if text.localizedCaseInsensitiveContains("flags=0x")
-            || text.localizedCaseInsensitiveContains("runtime")
-        {
-            sample.hardenedRuntime =
-                text.localizedCaseInsensitiveContains("runtime")
-                || text.contains("flags=0x10000")
-                || text.contains("flags=0x30000")
+        sample.signed = status == 0 || text.contains("\nAuthority=") || text.hasPrefix("Authority=")
+        // `-dvv` prints `flags=0x10000(runtime)` on the CodeDirectory line (stderr, captured with stdout).
+        if let flagsLine = text.split(whereSeparator: \.isNewline).first(where: { $0.contains("flags=0x") }) {
+            sample.hardenedRuntime = flagsLine.contains("runtime")
         }
         // Key-adjacent bool only - never use a global `<true` scan (other entitlements pollute).
         sample.getTaskAllow = entitlementBool(

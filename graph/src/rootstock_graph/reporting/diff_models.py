@@ -70,6 +70,14 @@ class VulnerabilityDiff:
 
 
 @dataclass
+class FDAExposureDiff:
+    """Apps newly (or no longer) modeled as injectable while holding Full Disk Access."""
+
+    new_exposure: list[dict] = field(default_factory=list)
+    closed_exposure: list[dict] = field(default_factory=list)
+
+
+@dataclass
 class PostureDiff:
     hostname: str = ""
     before_scan_id: str = ""
@@ -86,3 +94,4 @@ class PostureDiff:
     remote_access: RemoteAccessDiff = field(default_factory=RemoteAccessDiff)
     icloud_posture: ICloudPostureDiff = field(default_factory=ICloudPostureDiff)
     vulnerability: VulnerabilityDiff = field(default_factory=VulnerabilityDiff)
+    fda_exposure: FDAExposureDiff = field(default_factory=FDAExposureDiff)

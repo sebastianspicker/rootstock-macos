@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from neo4j import Session
 
+from .infer_common_local import LINK_USER_TO_SOLE_COMPUTER
+
 
 _CAN_WRITE_RULES = (
     (
@@ -22,6 +24,11 @@ _CAN_WRITE_RULES = (
         WHERE cf.is_writable_by_non_root = true
           AND cf.owner IS NOT NULL
         MERGE (u:User {name: cf.owner})
+        WITH cf, u
+        """
+        + LINK_USER_TO_SOLE_COMPUTER
+        + """
+        WITH cf, u
         """,
     ),
     (

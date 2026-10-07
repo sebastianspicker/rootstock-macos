@@ -22,6 +22,7 @@ import jsonschema
 
 from ..models import ScanResult
 from ..paths import package_resource_dir
+from .bounded_json import read_bounded_json
 
 SCHEMA_PATH = package_resource_dir("contracts").joinpath(
     "collector-scan", "legacy-unversioned.schema.json"
@@ -178,9 +179,8 @@ def _load_scan(path: Path) -> tuple[bool, object]:
         print(f"ERROR: File not found: {path}", file=sys.stderr)
         return False, None
     try:
-        with open(path) as f:
-            return True, json.load(f)
-    except json.JSONDecodeError as e:
+        return True, read_bounded_json(path)
+    except ValueError as e:
         print(f"✗ Invalid JSON: {e}")
         return False, None
 

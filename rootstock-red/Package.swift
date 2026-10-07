@@ -1,6 +1,7 @@
 // swift-tools-version: 6.2
 // Target language mode 6. Host may run best-available 6.x (6.2.4+).
 import PackageDescription
+import Foundation
 
 let package = Package(
     name: "RootstockRed",
@@ -29,6 +30,11 @@ let package = Package(
             dependencies: [],
             path: "Sources/RootstockCore"
         ),
+        .testTarget(
+            name: "RootstockCoreTests",
+            dependencies: ["RootstockCore"],
+            path: "Tests/RootstockCoreTests"
+        ),
 
         // MARK: - Enumeration (default executable graph)
         .target(
@@ -42,6 +48,11 @@ let package = Package(
                 .process("LOLBins/Resources"),
             ]
         ),
+        .testTarget(
+            name: "MacEnumKitTests",
+            dependencies: ["MacEnumKit"],
+            path: "Tests/MacEnumKitTests"
+        ),
         .target(
             name: "MacVulnKit",
             dependencies: ["RootstockCore", "MacEnumKit"],
@@ -52,12 +63,22 @@ let package = Package(
             dependencies: ["RootstockCore"],
             path: "Sources/MacReportKit"
         ),
+        .testTarget(
+            name: "MacReportKitTests",
+            dependencies: ["MacReportKit", "RootstockCore"],
+            path: "Tests/MacReportKitTests"
+        ),
 
         // MARK: - Optional (compile-only; not linked into rootstock-red)
         .target(
             name: "RootstockLab",
             dependencies: ["RootstockCore"],
             path: "Sources/RootstockLab"
+        ),
+        .testTarget(
+            name: "RootstockLabTests",
+            dependencies: ["RootstockCore", "RootstockLab"],
+            path: "Tests/RootstockLabTests"
         ),
         .executableTarget(
             name: "RootstockLabCLI",
@@ -80,6 +101,10 @@ let package = Package(
             ],
             path: "Sources/RootstockRedCLI"
         ),
-    ],
+    ].filter { target in
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let path = root.appendingPathComponent(target.path ?? "Tests/\(target.name)").path
+        return target.type != .test || FileManager.default.fileExists(atPath: path)
+    },
     swiftLanguageModes: [.v6]
 )

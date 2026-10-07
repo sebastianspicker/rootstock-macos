@@ -22,23 +22,21 @@ import argparse
 import logging
 import sys
 
-from ..category_predicates import VULNERABILITY_CATEGORY_PREDICATES
 from ..neo4j import add_neo4j_args, connect_from_args
 from ..vulnerability.cve_reference import CWE_REGISTRY, REGISTRY_VERSION
 from ..vulnerability.cve_reference_catalog import GROUP_REGISTRY, GROUP_TECHNIQUE_MAP, REGISTRY
 from ..vulnerability.cve_reference_models import CveEntry
 from ..vulnerability.cve_enrichment import enrich_registry, EnrichedCveEntry, temporal_score
-from ..vulnerability.version_matcher import (
-    extract_macos_max_version,
-    is_affected,
-    parse_version_tuple,
-    version_lte,
+from ..vulnerability.version_matcher import extract_macos_max_version
+from .import_vulnerabilities_matching import (
+    category_fallback_cves,
+    create_precise_affected_by_edge,
+    import_category_affected_by_edges,
+    precise_match_records,
+    precise_record_is_affected,
 )
 
 logger = logging.getLogger(__name__)
-
-
-_CATEGORY_MATCH = VULNERABILITY_CATEGORY_PREDICATES
 
 
 # ── Import functions ─────────────────────────────────────────────────────
@@ -239,7 +237,7 @@ def import_precise_affected_by_edges(session) -> tuple[int, int]:
 def _import_precise_cve_affected_by_edges(session, cve: CveEntry) -> tuple[int, int]:
     """Create precise AFFECTED_BY edges for one CVE and count its warnings."""
     try:
-        records = _precise_match_records(session, cve)
+        records = precise_match_records(session, cve)
     except Exception as e:
         print(f"  Warning: Precise match for {cve.cve_id} failed: {e}")
         return 0, 1
@@ -248,10 +246,10 @@ def _import_precise_cve_affected_by_edges(session, cve: CveEntry) -> tuple[int, 
     warning_count = 0
     is_macos = _has_macos_version_constraint(cve.affected_versions)
     for record in records:
-        if not _precise_record_is_affected(cve, record, is_macos=is_macos):
+        if not precise_record_is_affected(cve, record, is_macos=is_macos):
             continue
         try:
-            count += _create_precise_affected_by_edge(
+            count += create_precise_affected_by_edge(
                 session,
                 app_id=record["app_id"],
                 cve_id=cve.cve_id,
@@ -261,69 +259,6 @@ def _import_precise_cve_affected_by_edges(session, cve: CveEntry) -> tuple[int, 
             print(f"  Warning: Edge creation for {cve.cve_id} failed: {e}")
 
     return count, warning_count
-
-
-def _precise_match_records(session, cve: CveEntry) -> list[dict]:
-    result = session.run(
-        """
-        MATCH (app:Application)
-        WHERE app.bundle_id IN $bundle_ids
-        OPTIONAL MATCH (app)-[:INSTALLED_ON]->(c:Computer)
-        RETURN app.bundle_id AS bundle_id,
-               app.version AS app_version,
-               c.macos_version AS macos_version,
-               elementId(app) AS app_id
-        """,
-        bundle_ids=list(cve.affected_bundle_ids),
-    )
-    return list(result)
-
-
-def _precise_record_is_affected(
-    cve: CveEntry,
-    record: dict,
-    *,
-    is_macos: bool,
-) -> bool:
-    app_version = record["app_version"]
-    if cve.max_affected_version and app_version and not is_macos:
-        try:
-            app_v = parse_version_tuple(app_version)
-            max_v = parse_version_tuple(cve.max_affected_version)
-        except ValueError as exc:
-            # Unparseable version: treat as unknown (conservatively affected)
-            logger.warning(
-                "Unparseable version for %s (%s): %s; treating version as unknown",
-                record["bundle_id"],
-                cve.cve_id,
-                exc,
-            )
-            app_version = None
-        else:
-            return version_lte(app_v, max_v)
-
-    return is_affected(
-        app_version=app_version,
-        affected_versions=cve.affected_versions,
-        patched_version=cve.patched_version,
-        is_macos_cve=is_macos,
-        macos_version=record["macos_version"],
-    )
-
-
-def _create_precise_affected_by_edge(session, *, app_id: str, cve_id: str) -> int:
-    result = session.run(
-        """
-        MATCH (app:Application) WHERE elementId(app) = $app_id
-        MATCH (v:Vulnerability {cve_id: $cve_id})
-        MERGE (app)-[r:AFFECTED_BY]->(v)
-        SET r.match_tier = 'precise'
-        RETURN count(*) AS n
-        """,
-        app_id=app_id,
-        cve_id=cve_id,
-    )
-    return result.single()["n"]
 
 
 def import_affected_by_edges(session) -> tuple[int, int]:
@@ -339,54 +274,17 @@ def import_affected_by_edges(session) -> tuple[int, int]:
     warning_count = 0
 
     for category, ctx in REGISTRY.items():
-        fallback_cves = _category_fallback_cves(ctx.cves, precise_cve_ids)
+        fallback_cves = category_fallback_cves(ctx.cves, precise_cve_ids)
         if not fallback_cves:
             continue
 
         try:
-            count += _import_category_affected_by_edges(session, category, fallback_cves)
+            count += import_category_affected_by_edges(session, category, fallback_cves)
         except Exception as e:
             warning_count += 1
             print(f"  Warning: AFFECTED_BY for category '{category}' failed: {e}")
 
     return count, warning_count
-
-
-def _category_fallback_cves(
-    cves: list[CveEntry],
-    precise_cve_ids: set[str],
-) -> list[CveEntry]:
-    return [cve for cve in cves if cve.cve_id not in precise_cve_ids]
-
-
-def _import_category_affected_by_edges(
-    session,
-    category: str,
-    cves: list[CveEntry],
-) -> int:
-    match_clause = _CATEGORY_MATCH.get(category)
-    if not match_clause:
-        return 0
-
-    cypher = f"""
-        MATCH (app:Application)
-        WHERE {match_clause}
-        WITH app
-        UNWIND $cve_ids AS cve_id
-        MATCH (v:Vulnerability {{cve_id: cve_id}})
-        MERGE (app)-[r:AFFECTED_BY]->(v)
-        SET r.match_tier = 'category',
-            r.match_source = 'category_fallback',
-            r.match_confidence = 'heuristic',
-            r.match_category = $category
-        RETURN count(*) AS n
-    """
-    result = session.run(
-        cypher,
-        cve_ids=[cve.cve_id for cve in cves],
-        category=category,
-    )
-    return result.single()["n"]
 
 
 def import_threat_group_nodes(session) -> int:

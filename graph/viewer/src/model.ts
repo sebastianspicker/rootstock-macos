@@ -184,13 +184,19 @@ function buildNodeIndexes(
   return { nodeById, searchTextById, kindMeta };
 }
 
+const KIND_COLOR_LIMIT = 4;
+
 function updateKindMeta(kindMeta: Map<string, KindMeta>, node: ViewerNode): void {
   const existing = kindMeta.get(node.kind);
+  const color = safeNodeColor(node.properties._color);
   if (existing) {
     existing.count += 1;
+    if (existing.colors.length < KIND_COLOR_LIMIT && !existing.colors.includes(color))
+      existing.colors.push(color);
   } else {
     kindMeta.set(node.kind, {
-      color: safeNodeColor(node.properties._color),
+      color,
+      colors: [color],
       count: 1,
       label: displayKind(node.kind),
     });

@@ -45,6 +45,7 @@ struct RootstockCommand: AsyncParsableCommand {
         } catch let error as RootstockModuleConfigError {
             throw ValidationError(error.description)
         }
+        try Self.validateOutputPath(output, force: force)
         let orchestrator = ScanOrchestrator(verbose: verbose)
         let result = await orchestrator.run(config: config)
 
@@ -54,6 +55,46 @@ struct RootstockCommand: AsyncParsableCommand {
         for line in Self.completionLines(for: result, output: output) {
             print(line)
         }
+
+        // A narrow --modules run can legitimately collect little; only a full run is judged.
+        if modules == "all", Self.collectedNothing(result) {
+            FileHandle.standardError.write(Data(
+                "Error: every data source failed and no data was collected; partial scan written to \(output)\n".utf8
+            ))
+            throw ExitCode.failure
+        }
+    }
+
+    /// Fails fast, before the scan starts, when the output location is unusable.
+    /// The exporter repeats the authoritative checks when it writes.
+    static func validateOutputPath(_ path: String, force: Bool) throws {
+        let fileManager = FileManager.default
+        let directory = URL(fileURLWithPath: path).deletingLastPathComponent().path
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: directory, isDirectory: &isDirectory), isDirectory.boolValue else {
+            throw ValidationError("Output directory does not exist: \(directory)")
+        }
+        guard fileManager.isWritableFile(atPath: directory) else {
+            throw ValidationError("Output directory is not writable: \(directory)")
+        }
+        if fileManager.fileExists(atPath: path), !force {
+            throw ValidationError("Output file already exists: \(path). Re-run with --force to replace it.")
+        }
+    }
+
+    /// True when collection reported errors and produced no records at all.
+    static func collectedNothing(_ result: ScanResult) -> Bool {
+        guard !result.errors.isEmpty, result.adBinding == nil else { return false }
+        let counts: [Int] = [
+            result.applications.count, result.localGroups.count, result.runningProcesses.count,
+            result.tccGrants.count, result.remoteAccessServices.count, result.userDetails.count,
+            result.xpcServices.count, result.firewallStatus.count, result.fileAcls.count,
+            result.keychainAcls.count, result.loginSessions.count, result.bluetoothDevices.count,
+            result.mdmProfiles.count, result.authorizationRights.count, result.launchItems.count,
+            result.authorizationPlugins.count, result.kerberosArtifacts.count,
+            result.systemExtensions.count, result.sandboxProfiles.count, result.sudoersRules.count,
+        ]
+        return counts.allSatisfy { $0 == 0 }
     }
 
     /// Classifies recoverable collection errors as partial output and any

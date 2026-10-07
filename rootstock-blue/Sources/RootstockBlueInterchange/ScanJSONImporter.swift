@@ -12,6 +12,7 @@ public enum ScanJSONImporter: Sendable {
         let id: String
         let host: String
         let capturedAt: Date
+        let timestampMissing: Bool
     }
 
     public struct Summary: Sendable, Equatable {
@@ -47,7 +48,21 @@ public enum ScanJSONImporter: Sendable {
     private static func scanContext(_ root: [String: Any]) -> ScanContext {
         let id = root["scan_id"] as? String ?? ""
         let host = root["hostname"] as? String ?? ""
-        return ScanContext(id: id, host: host, capturedAt: parseISO8601(root["timestamp"] as? String) ?? Date())
+        // Never substitute ingest time: a missing or unparseable timestamp becomes the epoch sentinel plus a marker.
+        let parsed = parseISO8601(root["timestamp"] as? String)
+        return ScanContext(
+            id: id,
+            host: host,
+            capturedAt: parsed ?? Date(timeIntervalSince1970: 0),
+            timestampMissing: parsed == nil
+        )
+    }
+
+    private static func marked(_ properties: [String: String], context: ScanContext) -> [String: String] {
+        guard context.timestampMissing else { return properties }
+        var result = properties
+        result["timestamp_missing"] = "true"
+        return result
     }
 
     private static func metadataEvent(root: [String: Any], context: ScanContext) -> EventEnvelope {
@@ -56,14 +71,14 @@ public enum ScanJSONImporter: Sendable {
             capture: .init(source: .parser, eventTime: context.capturedAt),
             payload: .init(
                 entityRefs: [.init(kind: .host, value: context.host.isEmpty ? context.id : context.host)],
-                properties: [
+                properties: marked([
                     "collector.scan_id": context.id,
                     "collector.hostname": context.host,
                     "collector.macos_version": root["macos_version"] as? String ?? "",
                     "collector.version": root["collector_version"] as? String ?? "",
                     "family.source": "collector",
                     FieldTaxonomy.eventType: EventVocabulary.collectorScanMeta,
-                ],
+                ], context: context),
                 provenance: "scan_id:\(context.id)"
             )
         )
@@ -79,7 +94,7 @@ public enum ScanJSONImporter: Sendable {
                 capture: .init(source: .parser, eventTime: context.capturedAt),
                 payload: .init(
                     entityRefs: [.init(kind: .tcc, value: "\(service)|\(client)")],
-                    properties: tccProperties(grant, scanID: context.id, service: service, client: client),
+                    properties: marked(tccProperties(grant, scanID: context.id, service: service, client: client), context: context),
                     provenance: "scan_id:\(context.id)",
                     confidence: 0.9
                 )
@@ -110,7 +125,7 @@ public enum ScanJSONImporter: Sendable {
                 capture: .init(source: .parser, eventTime: context.capturedAt),
                 payload: .init(
                     entityRefs: [.init(kind: .process, value: label.isEmpty ? path : label)],
-                    properties: launchProperties(item, scanID: context.id, label: label, path: path),
+                    properties: marked(launchProperties(item, scanID: context.id, label: label, path: path), context: context),
                     provenance: path.isEmpty ? "scan_id:\(context.id)" : path,
                     confidence: 0.9
                 )
@@ -135,13 +150,16 @@ public enum ScanJSONImporter: Sendable {
     public static func importIntoCase(scanURL: URL, casePackage: CasePackage) throws -> Summary {
         let data = try Data(contentsOf: scanURL)
         let (events, summary) = try events(from: data)
+        let timestampNote = events.first?.fields["timestamp_missing"] == "true"
+            ? "; scan timestamp missing or unparseable, events use epoch sentinel (timestamp_missing=true)"
+            : ""
         try casePackage.appendEventBatch(
             events,
             stream: "es",
             custody: CustodyEvent(
                 actor: "rootstock-blue",
                 action: "import.scan_json",
-                detail: "Imported \(summary.totalEvents) events from \(scanURL.lastPathComponent)"
+                detail: "Imported \(summary.totalEvents) events from \(scanURL.lastPathComponent)\(timestampNote)"
             )
         )
         return summary

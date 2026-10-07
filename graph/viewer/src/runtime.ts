@@ -98,3 +98,13 @@ function truncationSuffix(length: number): string {
 export function limitPropertyText(value: string): string {
   return value.length > MAX_PROPERTY_LENGTH ? `${value.slice(0, MAX_PROPERTY_LENGTH - 1)}…` : value;
 }
+
+/** Returns focus to the node's list entry when it is rendered, otherwise to search. */
+export function returnFocus(controller: Controller, nodeId: NodeId | null = null): void {
+  const entry = nodeId
+    ? controller.dom.nodeList.querySelector<HTMLButtonElement>(
+        `button[data-node-id="${CSS.escape(nodeId)}"]`,
+      )
+    : null;
+  (entry ?? controller.dom.search).focus();
+}

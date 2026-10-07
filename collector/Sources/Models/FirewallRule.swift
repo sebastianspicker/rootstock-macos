@@ -31,6 +31,29 @@ public struct FirewallStatus: Codable, Sendable, GraphNode {
         case allowBuiltIn = "allow_built_in"
         case appRules = "app_rules"
     }
+
+    /// Encodes unknown (nil) tri-state fields as explicit nulls, as the
+    /// collector-scan schema requires the keys to be present.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try Self.encodeTriState(enabled, forKey: .enabled, in: &container)
+        try Self.encodeTriState(stealthMode, forKey: .stealthMode, in: &container)
+        try Self.encodeTriState(allowSigned, forKey: .allowSigned, in: &container)
+        try Self.encodeTriState(allowBuiltIn, forKey: .allowBuiltIn, in: &container)
+        try container.encode(appRules, forKey: .appRules)
+    }
+
+    private static func encodeTriState(
+        _ value: Bool?,
+        forKey key: CodingKeys,
+        in container: inout KeyedEncodingContainer<CodingKeys>
+    ) throws {
+        if let value {
+            try container.encode(value, forKey: key)
+        } else {
+            try container.encodeNil(forKey: key)
+        }
+    }
 }
 
 /// A per-application firewall rule.
@@ -46,5 +69,17 @@ public struct FirewallAppRule: Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case bundleId = "bundle_id"
         case allowIncoming = "allow_incoming"
+    }
+
+    /// Encodes an unknown (nil) `allow_incoming` as an explicit null, as the
+    /// collector-scan schema requires the key to be present.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(bundleId, forKey: .bundleId)
+        if let allowIncoming {
+            try container.encode(allowIncoming, forKey: .allowIncoming)
+        } else {
+            try container.encodeNil(forKey: .allowIncoming)
+        }
     }
 }

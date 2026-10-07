@@ -47,6 +47,8 @@ export interface ViewerOptions {
 
 export interface KindMeta {
   color: string;
+  /** Distinct node colours seen in this kind, capped at KIND_COLOR_LIMIT. */
+  colors: string[];
   count: number;
   label: string;
 }

@@ -24,6 +24,7 @@ public struct LaunchAgentLabAction: LabAction {
     public static let riskClass = RiskClass.labOnly
 
     public static let defaultLabelPrefix = "com.rootstock.red.lab"
+    static let markerArgument = "rootstock-red-lab-marker"
     public static let btmCleanupNote = """
     BTM residual risk: deleting the plist does not guarantee removal from Background \
     Task Management / Login Items UI. Check System Settings → General → Login Items \
@@ -46,10 +47,11 @@ public struct LaunchAgentLabAction: LabAction {
         let plistURL = try Self.resolvePlistURL(directory: directory, label: label)
         // Hard allowlist: only /usr/bin/true as program (no path injection via params).
         let program = "/usr/bin/true"
-        let markerArg = "rootstock-red-lab-marker"
+        let markerArg = Self.markerArgument
 
         switch request.operation {
         case .plan, .install:
+            try Self.assertLabOwnedIfPresent(plistURL: plistURL)
             return try installOrPlan(
                 request: LaunchAgentInstallRequest(
                     plistURL: plistURL,
@@ -63,6 +65,7 @@ public struct LaunchAgentLabAction: LabAction {
         case .status:
             return status(plistURL: plistURL, label: label)
         case .remove:
+            try Self.assertLabOwnedIfPresent(plistURL: plistURL)
             return try remove(
                 plistURL: plistURL,
                 label: label,
@@ -222,10 +225,31 @@ public struct LaunchAgentLabAction: LabAction {
     /// Reverse-DNS LaunchAgent label only - rejects path separators and `..`.
     public static func resolveLabel(params: [String: String]) throws -> String {
         if let label = params["label"], !label.isEmpty {
-            return try sanitizeLabel(label)
+            let sanitized = try sanitizeLabel(label)
+            guard sanitized.hasPrefix(defaultLabelPrefix + ".") else {
+                throw RootstockError.invalidArgument("label must start with \(defaultLabelPrefix). (lab-owned labels only)")
+            }
+            return sanitized
         }
         let suffix = try sanitizeLabelComponent(params["suffix"] ?? "marker")
         return "\(defaultLabelPrefix).\(suffix)"
+    }
+
+    /// Refuses to overwrite or remove an existing plist that is not a lab marker
+    /// (Label under the lab prefix and the lab marker argument in ProgramArguments).
+    static func assertLabOwnedIfPresent(plistURL: URL) throws {
+        guard LabMarkerLifecycle.markerExists(at: plistURL) else { return }
+        guard let data = FileManager.default.contents(atPath: plistURL.path),
+              let dict = (try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)) as? [String: Any],
+              let label = dict["Label"] as? String,
+              label.hasPrefix(defaultLabelPrefix + "."),
+              let arguments = dict["ProgramArguments"] as? [String],
+              arguments.contains(markerArgument)
+        else {
+            throw RootstockError.invalidArgument(
+                "refusing to modify \(plistURL.path): existing plist is not a Rootstock lab marker"
+            )
+        }
     }
 
     /// Build plist URL and assert it remains strictly under `directory`.

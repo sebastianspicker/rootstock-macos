@@ -44,6 +44,10 @@ expect_refusal() {
 }
 
 run_swift_test() {
+    if [ ! -d Tests ]; then
+        printf '%s\n' "Private Swift tests are not installed; build and smoke checks still run."
+        return
+    fi
     run sh "$ROOT/scripts/swift-test" "$@"
 }
 
@@ -105,15 +109,11 @@ lane_release() {
     need python3
     need node
     run python3 "$ROOT/scripts/check-source-size.py" --max-lines 600
-    if [ "${ROOTSTOCK_VERIFY_REQUIRE_CLEAN:-0}" = "1" ]; then
-        if [ "${ROOTSTOCK_VERIFY_CANDIDATE_INDEX:-0}" = "1" ]; then
-            run python3 "$ROOT/scripts/check-release.py" --require-clean --candidate-index
-        else
-            run python3 "$ROOT/scripts/check-release.py" --require-clean
-        fi
-    else
-        run python3 "$ROOT/scripts/check-release.py"
-    fi
+    set --
+    [ "${ROOTSTOCK_VERIFY_REQUIRE_CLEAN:-0}" = "1" ] && set -- "$@" --require-clean
+    [ "${ROOTSTOCK_VERIFY_CANDIDATE_INDEX:-0}" = "1" ] && set -- "$@" --candidate-index
+    [ "${ROOTSTOCK_VERIFY_FOR_TAG:-0}" = "1" ] && set -- "$@" --for-tag
+    run python3 "$ROOT/scripts/check-release.py" "$@"
     run node "$ROOT/graph/viewer/scripts/build-pages-demo.mjs"
     run node "$ROOT/graph/viewer/scripts/check-pages-demo.mjs"
 }
@@ -123,6 +123,7 @@ lane_swift_core() {
     (
         cd "$ROOT/collector"
         run swift build -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
+        run_swift_test --parallel -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
     )
 }
 
@@ -223,12 +224,14 @@ PY
 
         (
             cd "$ROOT/rootstock-red"
+            run_swift_test -Xswiftc -warnings-as-errors
             run bash Scripts/check-no-lab-link.sh
             expect_refusal "rootstock-red lab mutation without authorization" \
                 .build/debug/rootstock-red lab persist install
         )
         (
             cd "$ROOT/rootstock-blue"
+            run_swift_test -Xswiftc -warnings-as-errors
             run make content-validate
             run make check-non-goals
             run .build/debug/rootstock-blue detect run --ruleset samples --content-root Content
@@ -237,6 +240,7 @@ PY
     (
         cd "$ROOT/packages/RootstockMacFacts"
         run swift build -Xswiftc -warnings-as-errors
+        run_swift_test -Xswiftc -warnings-as-errors
     )
     run python3 "$ROOT/scripts/check-technique-catalog.py"
 }
@@ -245,6 +249,9 @@ lane_graph() {
     graph_uv ruff check "$ROOT/graph/src" "$ROOT/scripts" "$ROOT/graph/scripts" \
         "$ROOT/rootstock-blue/Tools/scripts" "$ROOT/examples" "$ROOT/docs" \
         --exclude docs/archive --exclude docs/private
+    if [ -d "$ROOT/graph/tests" ]; then
+        graph_uv pytest "$ROOT/graph/tests"
+    fi
     graph_uv python "$ROOT/scripts/check-contracts.py"
     graph_uv python "$ROOT/scripts/check-scan-contract-fields.py"
     graph_uv rootstock-graph-validate-scan "$ROOT/examples/demo-scan.json"
@@ -256,18 +263,24 @@ lane_cve() {
     (
         cd "$ROOT/modules/cve-scan"
         run uv run --locked ruff check .
+        run uv run --locked ruff format --check .
+        if [ -d tests ]; then
+            run uv run --locked pytest tests
+        fi
     )
 }
 
 lane_web() {
     need npm
-    need git
     [ -x "$ROOT/graph/viewer/node_modules/.bin/tsc" ] ||
         fail "run npm ci in graph/viewer before the web lane"
     (
         cd "$ROOT/graph/viewer"
         run npm run typecheck
         run npm run lint
+        if [ -d tests ] && [ -f scripts/test-viewer.mjs ]; then
+            run node scripts/test-viewer.mjs
+        fi
         run node "$ROOT/graph/viewer/scripts/check-viewer-assets.mjs"
     )
 }
@@ -312,6 +325,7 @@ lane_neo4j() {
         api_pid=''
         trap '
             if [ -n "$api_pid" ]; then
+                pkill -TERM -P "$api_pid" 2>/dev/null || true
                 kill "$api_pid" 2>/dev/null || true
                 wait "$api_pid" 2>/dev/null || true
             fi

@@ -375,6 +375,10 @@ kbd {
 .status-group .graph-counts {
   display: none;
 }
+.status-group .provenance-chip[data-state="partial"],
+.status-group .provenance-chip[data-state="unavailable"] {
+  display: inline-flex;
+}
 .chrome-secondary {
   color: var(--muted);
 }
@@ -561,11 +565,9 @@ kbd {
   color: var(--verified);
   font-weight: 500;
 }
-.provenance-chip strong[data-state="partial"] {
-  color: var(--high);
-}
-.provenance-chip strong[data-state="unavailable"] {
-  color: var(--subtle);
+.provenance-chip[data-state="partial"] strong,
+.provenance-chip[data-state="unavailable"] strong {
+  color: var(--gap);
 }
 .snapshot-status {
   display: inline-flex;
@@ -829,6 +831,15 @@ kbd {
   width: 7px;
   height: 7px;
   border-radius: 50%;
+}
+.color-dot.mixed {
+  width: 10px;
+  height: 10px;
+}
+.kind-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
 }
 .filter-count {
   color: var(--subtle);
@@ -1518,32 +1529,6 @@ kbd {
   padding-top: 5px;
   border-top: 1px solid var(--rule);
 }
-.tt-risk,
-.tt-score,
-.kind-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border: 1px solid currentColor;
-  border-radius: var(--radius);
-  font-size: 10px;
-}
-.critical-badge,
-.tt-risk.critical,
-.bool-false {
-  color: var(--critical);
-}
-.tt-risk.high {
-  color: var(--high);
-}
-.tt-risk.medium {
-  color: var(--medium);
-}
-.tt-risk.low {
-  color: var(--low);
-}
-.bool-true {
-  color: var(--verified);
-}
 
 /* Path narrative banner — thin, path-accented */
 #focus-banner,
@@ -1615,8 +1600,7 @@ kbd {
   background: var(--pane);
   box-shadow: var(--slip-shadow);
 }
-.ctx-item,
-.ctx-sub {
+.ctx-item {
   width: 100%;
   min-height: 34px;
   display: flex;
@@ -1628,14 +1612,8 @@ kbd {
   text-align: left;
   background: transparent;
 }
-.ctx-item:hover,
-.ctx-sub:hover {
+.ctx-item:hover {
   background: var(--hover);
-}
-.ctx-separator {
-  height: 1px;
-  margin: 4px 6px;
-  background: var(--rule);
 }
 
 /* ===== graph-tools.css ===== */
@@ -1777,7 +1755,7 @@ kbd {
 }
 .key-kind {
   display: grid;
-  grid-template-columns: 7px minmax(0, 1fr) auto;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2);
   width: 100%;
@@ -1789,6 +1767,9 @@ kbd {
   color: var(--muted);
   font: inherit;
   text-align: left;
+}
+.key-kind .color-dot {
+  justify-self: center;
 }
 .key-kind:hover {
   background: var(--hover);
@@ -1919,10 +1900,27 @@ kbd {
 
 /* Windows High Contrast: pressed state cannot rely on a background tint */
 @media (forced-colors: active) {
-  #controls button[aria-pressed="true"],
+  #controls button[aria-pressed="true"] {
+    border: 2px solid ButtonText;
+  }
   .key-kind[aria-pressed="true"] {
     outline: 2px solid ButtonText;
     outline-offset: -2px;
+  }
+  /* Node colour is data, so the key's swatches keep their own colours */
+  .key-kind .color-dot {
+    forced-color-adjust: none;
+  }
+  /* Severity stays readable by shape; the fill must follow the system text colour */
+  .node-symbol,
+  .key-owned {
+    forced-color-adjust: none;
+    color: CanvasText;
+    background: CanvasText;
+  }
+  .node-severity-low,
+  .node-severity-informational {
+    background: transparent;
   }
 }
 
@@ -2106,48 +2104,6 @@ kbd {
   font-size: 13px;
   overflow-wrap: anywhere;
 }
-.inspector-node-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  color: var(--muted);
-  font: 400 15px var(--font-serif);
-}
-.inspector-node-icon.critical {
-  color: var(--critical);
-}
-.inspector-node-icon.high {
-  color: var(--high);
-}
-.inspector-node-icon.medium {
-  color: var(--medium);
-}
-.inspector-node-icon.low {
-  color: var(--low);
-}
-.inspector-identity {
-  min-width: 0;
-}
-.inspector-identity h3 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 20px;
-  font-weight: 550;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin-bottom: 6px;
-}
-.inspector-identity p {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted);
-  font-size: 13px;
-}
 .severity-badge {
   margin-top: 4px;
   padding: 0;
@@ -2194,15 +2150,6 @@ kbd {
 }
 .secondary-action:first-child {
   color: var(--action);
-}
-.inspector-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px;
-  min-height: 320px;
-}
-.inspector-evidence-column {
-  min-width: 0;
-  border-right: 1px solid var(--rule);
 }
 .inspector-tabs {
   position: sticky;
@@ -2398,63 +2345,6 @@ kbd {
   border-radius: 50%;
   background: var(--verified);
 }
-.inspector-provenance-rail {
-  padding: 14px 0;
-  overflow: hidden;
-}
-.inspector-provenance-rail h4 {
-  padding: 0 8px 12px;
-  color: var(--subtle);
-  font: 400 11px / 1.2 var(--font-serif);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.06em;
-}
-.rail-stage {
-  position: relative;
-  min-height: 64px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px 4px 4px 22px;
-  color: var(--subtle);
-}
-.rail-stage::before {
-  content: "";
-  position: absolute;
-  left: 11px;
-  top: 16px;
-  bottom: -8px;
-  width: 1px;
-  background: var(--rule);
-}
-.rail-stage:last-child::before {
-  display: none;
-}
-.rail-marker {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 50%;
-  background: var(--pane);
-}
-.rail-stage strong {
-  font-size: 9px;
-  font-weight: 500;
-}
-.rail-stage small {
-  font-size: 8px;
-  overflow-wrap: anywhere;
-}
-.rail-stage.active {
-  color: var(--action);
-}
-.rail-stage.active .rail-marker {
-  border-color: var(--action);
-  background: var(--action);
-}
 
 /* Model note — not a loud card */
 .inspector-footer {
@@ -2488,29 +2378,6 @@ kbd {
 }
 .raw-evidence:hover {
   color: var(--muted);
-}
-.risk-indicator {
-  display: flex;
-  gap: 4px;
-  margin: 8px 0;
-}
-.risk-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--rule-strong);
-}
-.risk-dot.active-critical {
-  background: var(--critical);
-}
-.risk-dot.active-high {
-  background: var(--high);
-}
-.risk-dot.active-medium {
-  background: var(--medium);
-}
-.risk-dot.active-low {
-  background: var(--verified);
 }
 
 /* ===== footer.css ===== */
@@ -2682,8 +2549,7 @@ kbd {
 }
 
 @media (max-width: 1040px) {
-  .breadcrumb,
-  .provenance-chip {
+  .breadcrumb {
     display: none;
   }
   #status-bar {
@@ -2898,9 +2764,6 @@ kbd {
   .connection-gate {
     inset: 0;
   }
-  .inspector-layout {
-    grid-template-columns: minmax(0, 1fr) 72px;
-  }
   .inspector-summary {
     padding: 24px 48px 14px 20px;
   }
@@ -2920,20 +2783,8 @@ kbd {
     max-width: 92px;
     font-size: 11px;
   }
-  .inspector-layout {
-    display: block;
-  }
-  .inspector-evidence-column {
-    border-right: 0;
-  }
-  .inspector-provenance-rail {
-    display: none;
-  }
   .field-row {
     flex-direction: column;
-  }
-  .inspector-identity h3 {
-    font-size: 18px;
   }
 }
 
@@ -2992,9 +2843,6 @@ body.folio-enabled {
 }
 .graph-tools-open #evidence-folio {
   display: none;
-}
-.graph-tools-open {
-  overflow: hidden;
 }
 .graph-tools-open #app {
   grid-template-rows: auto minmax(0, 1fr);
@@ -4003,6 +3851,8 @@ html:has(body.folio-enabled:not(.graph-tools-open)),
     forced-color-adjust: none;
     border-color: CanvasText;
     background: radial-gradient(circle, CanvasText 0 4px, Canvas 4.5px);
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
   .folio-choices label:has(input:checked),
   .folio-format:has(input:checked) {
