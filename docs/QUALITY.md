@@ -50,7 +50,7 @@ The `quality` lane reports problems without editing source. It checks:
   function-body limit. CI verifies the official
   `SwiftLintBinary.artifactbundle.zip` SHA-256 before extraction. Local runs
   may set `SWIFTLINT_BIN` to that verified executable.
-- jscpd 5.1.2 with 10-line and 75-token clone minima. `.jscpd.json` isolates
+- jscpd 5.4.0 with 10-line and 75-token clone minima. `.jscpd.json` isolates
   product runtimes and excludes only generated, dependency, cache, archive,
   and synthetic-fixture paths. `.jscpd-baseline.json` records accepted exact
   fingerprints; removed clones are allowed, while new clone fingerprints fail.

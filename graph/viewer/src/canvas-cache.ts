@@ -32,16 +32,39 @@ export function invalidateCanvasColors(): void {
   colors.clear();
 }
 
-export function canvasLabelColor(
-  variable: "--muted" | "--subtle" | "--text" | "--ink" | "--path" | "--edge" | "--edge-faint",
-  fallback: string,
-): string {
-  let color = colors.get(variable);
-  if (!color) {
-    color = getComputedStyle(document.documentElement).getPropertyValue(variable) || fallback;
-    colors.set(variable, color);
+export type CanvasColorToken =
+  | "--muted"
+  | "--subtle"
+  | "--text"
+  | "--ink"
+  | "--ink-deep"
+  | "--pane"
+  | "--path"
+  | "--annotation"
+  | "--edge"
+  | "--edge-faint"
+  | "--critical"
+  | "--high"
+  | "--medium"
+  | "--low";
+
+export function canvasLabelColor(variable: CanvasColorToken, fallback: string): string {
+  return cssToken(variable, fallback);
+}
+
+/** Canvas fonts cannot use CSS variables, so the UI family is resolved once like the colors. */
+export function canvasFont(weight: string, size: number): string {
+  return `${weight} ${size}px ${cssToken("--font-ui", "-apple-system, sans-serif")}`;
+}
+
+function cssToken(variable: string, fallback: string): string {
+  let token = colors.get(variable);
+  if (!token) {
+    token =
+      getComputedStyle(document.documentElement).getPropertyValue(variable).trim() || fallback;
+    colors.set(variable, token);
   }
-  return color;
+  return token;
 }
 
 export function textWidth(context: CanvasRenderingContext2D, font: string, text: string): number {

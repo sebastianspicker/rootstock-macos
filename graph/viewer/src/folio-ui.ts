@@ -1,8 +1,17 @@
 /** Small semantic building blocks for the evidence document. Untrusted data is always text. */
 import { element } from "./runtime";
-import { value, nodeName, injectionEdges, fdaEdges, coverageText } from "./folio-data";
+import {
+  value,
+  nodeName,
+  injectionEdges,
+  fdaEdges,
+  deniedFdaEdges,
+  coverageText,
+  edgeKindLabel,
+  edgeBasis,
+} from "./folio-data";
 import type { Controller } from "./runtime";
-import type { GraphModel, Theme, ViewerNode } from "./types";
+import type { GraphEdge, GraphModel, Theme, ViewerNode } from "./types";
 export const el = element;
 export const para = (text: string, className = ""): HTMLParagraphElement =>
   el("p", { text, class: className });
@@ -55,6 +64,17 @@ export function intro(title: string, text: string, sheet: string): HTMLElement {
 }
 /** Marginal key to the folio's two inks: what was recorded versus what was modeled. */
 export function conventions(): HTMLElement {
+  return el("aside", { class: "folio-aside" }, [
+    heading("Reading this folio"),
+    conventionList(),
+    para(
+      "A modeled path is a chain of preconditions. It does not show that anything was exploited, and this viewer never changes host settings.",
+      "folio-note",
+    ),
+  ]);
+}
+/** The three bases as a definition list; `compact` drops the descriptions for the margin. */
+export function conventionList(compact = false): HTMLDListElement {
   const items = [
     ["observed", "Observed", "Recorded by the collector on this host. Set in ink on a solid rule."],
     [
@@ -64,21 +84,14 @@ export function conventions(): HTMLElement {
     ],
     ["unknown", "Unknown", "Not collected. Unknown is never read as false, or as safe."],
   ];
-  return el("aside", { class: "folio-aside" }, [
-    heading("Reading this folio"),
-    el(
-      "dl",
-      { class: "folio-conventions" },
-      items.flatMap(([kind, term, description]) => [
-        el("dt", { class: `folio-mark ${kind ?? ""}`, text: term ?? "" }),
-        el("dd", { text: description ?? "" }),
-      ]),
-    ),
-    para(
-      "A modeled path is a chain of preconditions. It does not show that anything was exploited, and this viewer never changes host settings.",
-      "folio-note",
-    ),
-  ]);
+  return el(
+    "dl",
+    { class: compact ? "folio-conventions compact" : "folio-conventions" },
+    items.flatMap(([kind, term, description]) => [
+      el("dt", { class: `folio-mark ${kind ?? ""}`, text: term ?? "" }),
+      el("dd", { text: compact ? (description?.split(". ")[0] ?? "") : (description ?? "") }),
+    ]),
+  );
 }
 export function appIdentity(node: ViewerNode): HTMLElement {
   return el("div", { class: "folio-identity" }, [
@@ -96,11 +109,13 @@ export function evidenceTable(graph: GraphModel, node: ViewerNode): HTMLElement 
       : node.properties[key] === false
         ? "disabled"
         : "Unknown";
+  const allowed = fdaEdges(graph, node.id).length > 0;
+  const denied = !allowed && deniedFdaEdges(graph, node.id).length > 0;
   const rows = [
     [
       "Full Disk Access grant",
-      fdaEdges(graph, node.id).length ? "allowed" : "Unknown",
-      fdaEdges(graph, node.id).length ? "observed" : "unknown",
+      allowed ? "allowed" : denied ? "denied" : "Unknown",
+      allowed || denied ? "observed" : "unknown",
     ],
     ["Hardened Runtime", bool("hardened_runtime"), observed("hardened_runtime")],
     ["Library Validation", bool("library_validation"), observed("library_validation")],
@@ -124,7 +139,7 @@ export function evidenceTable(graph: GraphModel, node: ViewerNode): HTMLElement 
           el("td", {}, [
             el("span", {
               text: content ?? "",
-              class: `folio-tag ${content === "disabled" || content === "false" ? "negative" : ""}`,
+              class: `folio-tag ${["disabled", "false", "denied"].includes(content ?? "") ? "negative" : ""}`,
             }),
           ]),
           el("td", { text: basis ?? "", class: `folio-basis ${basis ?? ""}` }),
@@ -133,6 +148,7 @@ export function evidenceTable(graph: GraphModel, node: ViewerNode): HTMLElement 
     ),
   ]);
 }
+/** Q01 figure: the modeled injection, the application, and its Full Disk Access grant. */
 export function modeledPath(graph: GraphModel, node: ViewerNode): HTMLElement {
   const injection = injectionEdges(graph, node.id)[0];
   const grant = fdaEdges(graph, node.id)[0];
@@ -141,21 +157,74 @@ export function modeledPath(graph: GraphModel, node: ViewerNode): HTMLElement {
       "No complete injection-to-Full-Disk-Access path is recorded for this installation in the loaded snapshot.",
       "folio-note",
     );
-  const source = graph.nodeById.get(injection.source);
-  const point = (name: string, detail: string): HTMLElement =>
-    el("div", { class: "folio-path-node" }, [el("strong", { text: name }), para(detail)]);
-  const edge = (kind: string, basis: "inferred" | "observed"): HTMLElement =>
-    el("div", { class: `folio-path-edge ${basis}` }, [
-      el("code", { text: kind }),
-      el("span", { class: `folio-mark ${basis}`, text: basis }),
-    ]);
-  return el("div", { class: "folio-path", role: "group", "aria-label": "Modeled exposure path" }, [
-    point(source ? nodeName(source) : "attacker.payload", "Modeled starting point"),
-    edge("CAN_INJECT_INTO", "inferred"),
-    point(nodeName(node), value(node.properties.bundle_id)),
-    edge("HAS_TCC_GRANT", "observed"),
-    point("Full Disk Access", "kTCCServiceSystemPolicyAllFiles"),
+  return pathFigure(graph, [injection.source, node.id, grant.target], undefined, [
+    injection,
+    grant,
   ]);
+}
+function pathPointDetail(node: ViewerNode): string {
+  for (const key of ["bundle_id", "service"])
+    if (typeof node.properties[key] === "string") return node.properties[key];
+  return node.kind.replace(/^rs_/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
+}
+/** Prefer a preferred key, then a traversable allowed relationship, then whatever is recorded. */
+function jointEdge(
+  graph: GraphModel,
+  from: string,
+  to: string,
+  preferred: ReadonlySet<string>,
+): GraphEdge | undefined {
+  const candidates = (graph.outgoing.get(from) ?? [])
+    .filter((entry) => entry.target === to)
+    .map((entry) => entry.edge);
+  return (
+    candidates.find((edge) => preferred.has(`${edge.source}>${edge.kind}>${edge.target}`)) ??
+    candidates.find(
+      (edge) => edge.properties?._traversable !== false && edge.properties?.allowed !== false,
+    ) ??
+    candidates[0]
+  );
+}
+function pathJoint(
+  graph: GraphModel,
+  from: string,
+  to: string,
+  preferred: ReadonlySet<string>,
+): HTMLElement {
+  const edge = jointEdge(graph, from, to, preferred);
+  const basis = edge ? edgeBasis(edge) : "unknown";
+  return el("div", { class: `folio-path-edge ${basis}` }, [
+    el("code", { text: edge ? edgeKindLabel(edge.kind) : "Not recorded" }),
+    el("span", { class: `folio-mark ${basis}`, text: basis }),
+  ]);
+}
+function pathPoint(graph: GraphModel, id: string, first: boolean): HTMLElement {
+  const node = graph.nodeById.get(id);
+  if (!node)
+    return el("div", { class: "folio-path-node" }, [
+      el("strong", { text: id }),
+      para("Not in snapshot"),
+    ]);
+  const modeled = first && node.properties.bundle_id === "attacker.payload";
+  return el("div", { class: modeled ? "folio-path-node modeled" : "folio-path-node" }, [
+    el("strong", { text: nodeName(node) }),
+    para(modeled ? "Modeled starting point" : pathPointDetail(node)),
+  ]);
+}
+/** Any ordered node list as specimens joined by the recorded relationship between neighbours. */
+export function pathFigure(
+  graph: GraphModel,
+  nodeIds: string[],
+  label = "Modeled exposure path",
+  preferredEdges: readonly GraphEdge[] = [],
+): HTMLElement {
+  const preferred = new Set(preferredEdges.map((e) => `${e.source}>${e.kind}>${e.target}`));
+  const children: HTMLElement[] = [];
+  nodeIds.forEach((id, index) => {
+    if (index > 0) children.push(pathJoint(graph, nodeIds[index - 1] ?? "", id, preferred));
+    children.push(pathPoint(graph, id, index === 0));
+  });
+  return el("div", { class: "folio-path", role: "group", "aria-label": label }, children);
 }
 function recommendationTitle(node: ViewerNode): string {
   const titles: Record<string, string> = {

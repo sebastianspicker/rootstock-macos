@@ -12,9 +12,11 @@ export function syncWorkspaceDom(controller: Controller, workspace: ViewerWorksp
   syncExploreTabs(controller, workspace);
   controller.dom.workspaceTitle.textContent = workspaceTitle(workspace);
   controller.dom.graphContainer.dataset.workspace = workspace;
+  const path = controller.state.selection.path;
+  // A retained path stays announced in Graph as well, so its Cancel is always in reach.
   controller.dom.pathBanner.classList.toggle(
     "visible",
-    workspace === "paths" && controller.state.selection.path.active,
+    (workspace === "paths" && path.active) || (workspace === "graph" && path.result !== null),
   );
 }
 

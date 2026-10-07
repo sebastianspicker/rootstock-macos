@@ -1,7 +1,10 @@
 """
 infer_risk_score.py - Compute graph-native risk scores on Application nodes.
 
-Runs after all other inference + tier classification to set per-node:
+Runs last in the inference engine: after all other inference modules and tier
+classification, and after vulnerability import (pipeline.sh imports
+vulnerabilities before running inference, so the tier and CVE terms are
+populated). Sets per-node:
   - risk_score (float 0.0-10.0)
   - risk_level ("critical" / "high" / "medium" / "low")
   - attack_categories (list[str])

@@ -2,7 +2,7 @@
 #
 # pipeline.sh - One-command Rootstock analysis pipeline.
 #
-# Runs all steps in order: setup_schema → cve_enrichment → import → infer → vulnerabilities → classify → report
+# Runs all steps in order: setup_schema → cve_enrichment → import → infer edges → vulnerabilities → infer score → report
 #
 # Usage:
 #     ./graph/pipeline.sh scan.json
@@ -19,8 +19,9 @@
 #     uv run --project graph --locked rootstock-graph-opengraph-export -o graph.json
 #     uv run --project graph --locked rootstock-graph-viewer -i graph.json -o viewer.html
 #
-# Note: rootstock-graph-infer internally runs risk scoring (infer_risk_score) and recommendation
-# generation (infer_recommendations) as part of its inference engine pipeline.
+# Note: inference runs in two stages. The edge stage creates the inferred relationships
+# that the vulnerability importer's category heuristics read; the score stage (tier
+# classification, risk scoring, recommendations) reads the imported CVE links.
 #
 # Exit code 0 on success, non-zero on first failure.
 
@@ -34,7 +35,7 @@ GRAPH_RUN=(uv run --project "$SCRIPT_DIR" --locked)
 usage() {
     echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--report FILE] [--skip-report] [--refresh-cve] [--cve-scan-export FILE] [--serve [PORT]]"
     echo ""
-    echo "Runs the full Rootstock pipeline: schema → import → infer → classify → report"
+    echo "Runs the full Rootstock pipeline: schema → import → infer edges → vulnerabilities → infer score → report"
     echo ""
     echo "  --refresh-cve   Fetch public CVE enrichment before import (default: cached/static only)"
     echo "  --cve-scan-export FILE"
@@ -141,23 +142,24 @@ if [[ -n "$CVE_SCAN_EXPORT" ]]; then
     echo ""
 fi
 
-# ── Step 4/7: Inference ──────────────────────────────────────────────────────
-# Note: rootstock-graph-infer runs all inference modules including risk scoring and recommendations
+# ── Step 4/7: Inference (edges) ──────────────────────────────────────────────
 
-echo "── Step 4/7: Running inference engine ──"
-"${GRAPH_RUN[@]}" rootstock-graph-infer "${NEO4J_ARGS[@]}"
+echo "── Step 4/7: Inferring relationships ──"
+"${GRAPH_RUN[@]}" rootstock-graph-infer --stage edges "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 5/7: Vulnerability import ───────────────────────────────────────────
+# Reads inferred relationships for its category heuristics, so it runs after the edge stage.
 
 echo "── Step 5/7: Importing vulnerability data ──"
 "${GRAPH_RUN[@]}" rootstock-graph-import-vulnerabilities "${NEO4J_ARGS[@]}"
 echo ""
 
-# ── Step 6/7: Tier classification ────────────────────────────────────────────
+# ── Step 6/7: Inference (score) ──────────────────────────────────────────────
+# Tier classification, risk scoring and recommendations read the CVE links above.
 
-echo "── Step 6/7: Classifying tiers ──"
-"${GRAPH_RUN[@]}" rootstock-graph-tier-classification "${NEO4J_ARGS[@]}"
+echo "── Step 6/7: Classifying tiers and scoring risk ──"
+"${GRAPH_RUN[@]}" rootstock-graph-infer --stage score --allow-empty "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 7/7: Report (optional) ──────────────────────────────────────────────

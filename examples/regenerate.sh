@@ -37,8 +37,8 @@ while [[ $# -gt 0 ]]; do
 		shift 2
 		;;
 	--password)
-		NEO4J_PASS="$2"
-		shift 2
+		echo "ERROR: --password was removed; set NEO4J_PASSWORD in the environment instead" >&2
+		exit 1
 		;;
 	--cve-scan-export)
 		CVE_SCAN_EXPORT="$2"
@@ -57,7 +57,7 @@ esac
 done
 
 if [[ -z "$NEO4J_PASS" ]]; then
-	echo "ERROR: Set NEO4J_PASSWORD or pass --password" >&2
+	echo "ERROR: Set NEO4J_PASSWORD" >&2
 	exit 1
 fi
 
@@ -101,7 +101,7 @@ echo "==> Running pipeline ..."
 bash graph/pipeline.sh examples/demo-scan.json \
 	--neo4j "$NEO4J_URI" --username "$NEO4J_USER" \
 	--report "$OUTPUT_DIR/demo-report.md" \
-	"${CVE_SCAN_ARGS[@]}"
+	${CVE_SCAN_ARGS[@]+"${CVE_SCAN_ARGS[@]}"}
 
 # 3. Export OpenGraph JSON
 echo "==> Exporting graph JSON ..."

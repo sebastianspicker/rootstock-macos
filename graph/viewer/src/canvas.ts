@@ -59,23 +59,35 @@ export function drawFrame(
   context.clearRect(0, 0, state.viewport.width, state.viewport.height);
   context.translate(state.viewport.transform.x, state.viewport.transform.y);
   context.scale(state.viewport.transform.k, state.viewport.transform.k);
-  drawEdges({ controller, worldPosition });
+  drawEdges(controller, worldPosition);
   drawNodes(controller, worldPosition);
   context.restore();
 }
 
+const laidOut = new WeakSet<Controller>();
+
+/** Fits once on the first real layout; later resizes keep the user's view centred. */
 export function resizeCanvas(controller: Controller, fitViewport: () => void): void {
   const rect = controller.dom.graphContainer.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect.width));
   const height = Math.max(1, Math.round(rect.height));
   const dpr = Math.max(1, window.devicePixelRatio || 1);
-  controller.state.viewport.width = width;
-  controller.state.viewport.height = height;
-  controller.state.viewport.devicePixelRatio = dpr;
+  const viewport = controller.state.viewport;
+  const previous = { width: viewport.width, height: viewport.height };
+  viewport.width = width;
+  viewport.height = height;
+  viewport.devicePixelRatio = dpr;
   controller.dom.canvas.width = Math.round(width * dpr);
   controller.dom.canvas.height = Math.round(height * dpr);
   controller.dom.context.setTransform(dpr, 0, 0, dpr, 0, 0);
-  fitViewport();
+  if (!laidOut.has(controller) && width > 1 && height > 1) {
+    laidOut.add(controller);
+    fitViewport();
+    return;
+  }
+  viewport.transform.x += (width - previous.width) / 2;
+  viewport.transform.y += (height - previous.height) / 2;
+  controller.actions.markDirty(controller);
 }
 
 /** Wires mutually exclusive node-drag and empty-space pan gestures, including click suppression after a drag. */
@@ -113,7 +125,7 @@ export function bindWheel(controller: Controller, handlers: CanvasHandlers): voi
       const transform = controller.state.viewport.transform;
       const nextK = Math.max(
         0.08,
-        Math.min(4, transform.k * Math.exp((-event.deltaY * 15) / 10_000)),
+        Math.min(4, transform.k * Math.exp((-wheelPixels(event) * 15) / 10_000)),
       );
       transform.x = screen.x - before.x * nextK;
       transform.y = screen.y - before.y * nextK;
@@ -122,6 +134,13 @@ export function bindWheel(controller: Controller, handlers: CanvasHandlers): voi
     },
     { passive: false },
   );
+}
+
+/** Normalizes line- and page-mode wheel deltas to pixels before computing zoom. */
+export function wheelPixels(event: WheelEvent): number {
+  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return event.deltaY * 16;
+  if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) return event.deltaY * 400;
+  return event.deltaY;
 }
 
 export function bindPointerDown(controller: Controller, handlers: CanvasHandlers): void {
@@ -207,7 +226,11 @@ export function moveViewport(
 
 export function updateHover(controller: Controller, event: PointerEvent): void {
   const hit = nearestNode(controller, event);
-  controller.state.selection.hoveredId = hit?.id ?? null;
+  const hoveredId = hit?.id ?? null;
+  if (controller.state.selection.hoveredId !== hoveredId) {
+    controller.state.selection.hoveredId = hoveredId;
+    controller.actions.markDirty(controller);
+  }
   const { tooltip } = controller.dom;
   tooltip.replaceChildren();
   if (!hit) {
@@ -258,6 +281,7 @@ export function bindPointerLeave(controller: Controller): void {
   controller.dom.canvas.addEventListener("pointerleave", () => {
     if (controller.state.pointer.draggedId || controller.state.pointer.panning) return;
     controller.state.selection.hoveredId = null;
+    controller.actions.markDirty(controller);
     controller.dom.tooltip.classList.remove("visible");
     controller.dom.tooltip.hidden = true;
     controller.dom.canvas.style.cursor = "default";

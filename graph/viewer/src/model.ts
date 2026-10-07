@@ -10,6 +10,7 @@ import type {
   NodeId,
   PathResult,
   OutgoingEdge,
+  ParallelSlot,
   ViewerNode,
   ViewerState,
 } from "./types";
@@ -198,7 +199,7 @@ function updateKindMeta(kindMeta: Map<string, KindMeta>, node: ViewerNode): void
 
 function buildEdgeIndexes(
   links: GraphEdge[],
-): Pick<GraphModel, "degreeById" | "edgeMeta" | "outgoing" | "incoming"> {
+): Pick<GraphModel, "degreeById" | "edgeMeta" | "outgoing" | "incoming" | "parallel"> {
   const degreeById = new Map<NodeId, number>();
   const edgeMeta = new Map<string, EdgeMeta>();
   const outgoing = new Map<NodeId, OutgoingEdge[]>();
@@ -209,7 +210,24 @@ function buildEdgeIndexes(
     appendDirectedEdge(outgoing, edge.source, { target: edge.target, edge, linkIndex });
     appendDirectedEdge(incoming, edge.target, { source: edge.source, edge, linkIndex });
   });
-  return { degreeById, edgeMeta, outgoing, incoming };
+  return { degreeById, edgeMeta, outgoing, incoming, parallel: parallelSlots(links) };
+}
+
+/** Groups links by unordered endpoint pair so reverse and repeated relationships get distinct slots. */
+export function parallelSlots(links: GraphEdge[]): ParallelSlot[] {
+  const groups = new Map<string, number[]>();
+  links.forEach((edge, linkIndex) => {
+    const key = [edge.source, edge.target].sort().join("\u0000");
+    const members = groups.get(key) ?? [];
+    members.push(linkIndex);
+    groups.set(key, members);
+  });
+  const slots: ParallelSlot[] = links.map(() => ({ index: 0, count: 1 }));
+  for (const members of groups.values())
+    members.forEach((linkIndex, index) => {
+      slots[linkIndex] = { index, count: members.length };
+    });
+  return slots;
 }
 
 function updateDegree(degreeById: Map<NodeId, number>, edge: GraphEdge): void {
@@ -218,7 +236,7 @@ function updateDegree(degreeById: Map<NodeId, number>, edge: GraphEdge): void {
 }
 
 function updateEdgeMeta(edgeMeta: Map<string, EdgeMeta>, edge: GraphEdge): void {
-  const traversable = edge.properties?._traversable === true;
+  const traversable = edge.properties?._traversable !== false;
   const existing = edgeMeta.get(edge.kind);
   if (existing) {
     existing.count += 1;
@@ -334,7 +352,7 @@ export function resetSelection(state: ViewerState): void {
 }
 
 export function nodeRadius(model: GraphModel, nodeId: NodeId): number {
-  return Math.min(22 + Math.sqrt(model.degreeById.get(nodeId) ?? 0) * 4, 34);
+  return Math.min(12 + Math.sqrt(model.degreeById.get(nodeId) ?? 0) * 2.5, 20);
 }
 
 /** Finds the shortest directed path using edges unless they explicitly opt out of traversal. */

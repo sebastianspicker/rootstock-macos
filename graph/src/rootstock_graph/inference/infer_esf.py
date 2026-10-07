@@ -9,6 +9,12 @@ disable or manipulate security monitoring.
 Edge: InjectableApp -[:CAN_BLIND_MONITORING {inferred: true}]-> SystemExtension
       (where the SystemExtension is of type endpoint_security)
 
+A SystemExtension is linked to its host app by identifier: the extension
+identifier equals the app bundle id or is namespaced under it
+(`<bundle_id>.<suffix>`). Ingestion only
+stores `identifier`, `team_id`, `extension_type`, `enabled` and
+`subscribed_events` on SystemExtension nodes.
+
 Also enriches monitoring gap detection: sets `has_monitoring_gap` on
 SystemExtension nodes when critical ESF events have no active listener.
 """
@@ -59,8 +65,8 @@ def infer(session: Session) -> int:
           AND a.bundle_id <> $attacker_id
         WITH DISTINCT a
         MATCH (se:SystemExtension {extension_type: 'endpoint_security', enabled: true})
-        WHERE se.bundle_id = a.bundle_id
-           OR se.containing_app_bundle_id = a.bundle_id
+        WHERE se.identifier = a.bundle_id
+           OR se.identifier STARTS WITH a.bundle_id + '.'
         MERGE (a)-[r:CAN_BLIND_MONITORING]->(se)
         SET r.inferred = true,
             r.reason = 'injectable_esf_client'

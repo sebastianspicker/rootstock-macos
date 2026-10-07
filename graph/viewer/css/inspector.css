@@ -197,7 +197,7 @@
   color: var(--medium);
 }
 .inspector-node-icon.low {
-  color: var(--verified);
+  color: var(--low);
 }
 .inspector-identity {
   min-width: 0;
@@ -240,7 +240,7 @@
   color: var(--medium);
 }
 .severity-badge.low {
-  color: var(--verified);
+  color: var(--low);
 }
 .severity-badge.informational::before {
   border: 1px solid currentColor;
@@ -248,7 +248,6 @@
   background: transparent;
 }
 .inspector-actions {
-  order: 5;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -258,7 +257,6 @@
 }
 .inspector-actions .primary-action {
   flex: 1 0 100%;
-  order: -1;
   min-height: 38px;
   border-radius: var(--radius);
 }
@@ -278,7 +276,6 @@
   border-right: 1px solid var(--rule);
 }
 .inspector-tabs {
-  order: 2;
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
@@ -314,7 +311,6 @@
   border-radius: 1px;
 }
 .inspector-panel {
-  order: 3;
   margin: 0;
   padding: 8px 24px 16px;
 }
@@ -386,20 +382,78 @@
 }
 .relationship-detail {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  gap: 4px 8px;
-  padding: 10px 0;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding: 8px 0 8px 8px;
   border-bottom: 1px solid var(--rule);
+  border-left: 1.5px solid var(--text);
 }
-.relationship-detail > span {
+.relationship-detail.inferred {
+  border-left: 1.5px dashed var(--annotation);
+}
+.relationship-direction {
   color: var(--muted);
 }
-.relationship-detail code {
+.relationship-detail > strong {
   grid-column: 2;
-  overflow: hidden;
+  font: 11px var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.relationship-basis {
+  grid-column: 3;
+  grid-row: 1;
+  font: 400 var(--size-2) / 1 var(--font-serif);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+.relationship-basis.inferred {
+  color: var(--annotation);
+  font-style: italic;
+}
+.relationship-link {
+  grid-column: 2 / 4;
+  display: grid;
+  justify-items: start;
+  gap: 1px;
+  min-height: 32px;
+  padding: 3px 6px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+.relationship-link:hover {
+  background: var(--hover);
+}
+.relationship-link-label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.relationship-link-kind {
   color: var(--subtle);
-  font-size: 9px;
-  text-overflow: ellipsis;
+  font-size: 11px;
+}
+.relationship-note {
+  grid-column: 2 / 4;
+  color: var(--subtle);
+  font-size: 11px;
+}
+.relationship-more {
+  padding: 8px 0;
+  color: var(--subtle);
+  font-size: 12px;
+}
+.owned-chip {
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  background: var(--text);
+  color: var(--ink-deep);
+  font-size: 11px;
+  font-weight: 600;
 }
 .recommendation-card {
   display: grid;
@@ -475,14 +529,12 @@
 
 /* Model note — not a loud card */
 .inspector-footer {
-  order: 7;
   display: grid;
   gap: 10px;
   padding: 18px 24px 24px;
   border-top: 0;
 }
 .evidence-caveat {
-  order: 6;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0;

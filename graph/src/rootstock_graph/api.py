@@ -25,7 +25,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from neo4j import GraphDatabase
-from neo4j.exceptions import AuthError, ServiceUnavailable
+from neo4j.exceptions import AuthError, ClientError, Neo4jError, ServiceUnavailable
 
 # ── Imports from existing Rootstock modules ─────────────────────────────────
 
@@ -40,6 +40,24 @@ from .server_validation import (
 
 
 # ── App lifecycle ───────────────────────────────────────────────────────────
+
+
+def _read_principal_probe(driver) -> str | None:
+    """Return None when a rolled-back CREATE is denied to the read principal, else the reason."""
+    with driver.session() as session:
+        transaction = session.begin_transaction(timeout=10)
+        try:
+            transaction.run("CREATE (:RootstockReadProbe)").consume()
+        except ClientError as error:
+            code = getattr(error, "code", "")
+            if code == "Neo.ClientError.Security.Forbidden":
+                return None
+            return f"write probe failed with {code or 'an unexpected client error'}"
+        except Neo4jError as error:
+            return f"write probe failed with {getattr(error, 'code', '') or 'a Neo4j error'}"
+        finally:
+            transaction.rollback()
+    return "NEO4J_READ_USER must not have write privileges"
 
 
 @asynccontextmanager
@@ -59,6 +77,10 @@ async def lifespan(app: FastAPI):
         writer_driver.verify_connectivity()
         read_driver = GraphDatabase.driver(uri, auth=(read_user, read_password))
         read_driver.verify_connectivity()
+        probe_failure = _read_principal_probe(read_driver)
+        if probe_failure:
+            print(f"ERROR: read principal check failed: {probe_failure}.", file=sys.stderr)
+            sys.exit(1)
         connected = True
     except ServiceUnavailable:
         print("ERROR: Cannot connect to Neo4j.", file=sys.stderr)

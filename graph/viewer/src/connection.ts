@@ -18,9 +18,33 @@ export function showConnectionGate(controller: Controller, message = ""): void {
   controller.dom.connectionStatus.className = `status-chip${message ? " error" : ""}`;
 }
 
+/** The chip only claims a connection once the first graph response has arrived. */
 export function hideConnectionGate(controller: Controller): void {
+  const hadFocus = controller.dom.connectionGate.contains(document.activeElement);
   controller.dom.connectionGate.hidden = true;
   connectionBackgroundInert(false);
+  controller.dom.connectionStatus.textContent = "Connecting…";
+  controller.dom.connectionStatus.className = "status-chip";
+  if (hadFocus) returnFocusAfterGate(controller);
+}
+
+export function markConnectionFailed(controller: Controller): void {
+  if (controller.dom.connectionGate.hidden === false) return;
+  controller.dom.connectionStatus.textContent = "Live · request failed";
+  controller.dom.connectionStatus.className = "status-chip error";
+}
+
+export function markConnected(controller: Controller): void {
   controller.dom.connectionStatus.textContent = "Live · connected";
   controller.dom.connectionStatus.className = "status-chip connected";
+}
+
+function returnFocusAfterGate(controller: Controller): void {
+  const folioOpen =
+    document.body.classList.contains("folio-enabled") &&
+    !document.body.classList.contains("graph-tools-open");
+  const target = folioOpen
+    ? document.querySelector<HTMLElement>("#evidence-folio button, #evidence-folio h1")
+    : controller.dom.search;
+  target?.focus();
 }

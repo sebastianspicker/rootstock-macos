@@ -26,6 +26,7 @@ from pathlib import Path
 
 from neo4j.exceptions import DriverError, Neo4jError
 
+from ..constants import DEFAULT_PARAMS  # noqa: F401  (re-exported)
 from ..neo4j import add_neo4j_args, connect_from_args
 from .query_runner import discover_queries
 from ..cypher import first_cypher_statement, run_query
@@ -35,21 +36,6 @@ from .report_html import markdown_to_html
 
 class ScanMetadataError(RuntimeError):
     """Raised when report metadata cannot be read from scan JSON."""
-
-
-# ── Default Parameters for Parameterized Queries ────────────────────────────
-
-DEFAULT_PARAMS = {
-    "target_service": "kTCCServiceSystemPolicyAllFiles",
-    "min_permissions": 3,
-    "team_id": "",
-    "bundle_id": "",
-    "days_old": 365,
-    "min_methods": 1,
-    "username": "",
-    "scope": None,
-    "app_name": None,
-}
 
 
 # ── Query Execution ───────────────────────────────────────────────────────────

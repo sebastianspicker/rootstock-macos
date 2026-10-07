@@ -8,13 +8,17 @@ import {
   parseQueryList,
   parseQueryResult,
   parseTierResponse,
+  queryParameterNames,
   queryResultMeta,
   resolveSameOriginApiTarget,
   responseErrorDetail,
 } from "./protocol";
-import { HISTORY_STORAGE_NAME, clearApiToken, getApiToken } from "./storage";
+import { HISTORY_STORAGE_NAME, clearApiToken, getApiToken, readLocal, writeLocal } from "./storage";
+import { markConnected, markConnectionFailed } from "./connection";
 import type { Controller } from "./runtime";
 import type { NodeId, QueryDescriptor, QueryResult, ViewerNode } from "./types";
+
+const queryGenerations = new WeakMap<Controller, number>();
 
 /** Sends authenticated live requests only through the state-owned same-origin API target. */
 export async function apiFetch(
@@ -96,10 +100,12 @@ export async function liveRefresh(controller: Controller): Promise<void> {
     const response = await apiFetch(controller, "/api/graph");
     const payload = parseGraphPayload(await response.json());
     if (generation !== controller.state.live.refreshGeneration) return;
+    markConnected(controller);
     controller.actions.replaceGraph(controller, payload);
     controller.actions.setLiveStatus(controller, "Graph refreshed.", "ok");
   } catch (error) {
     if (generation !== controller.state.live.refreshGeneration) return;
+    markConnectionFailed(controller);
     controller.actions.setLiveStatus(
       controller,
       `Graph refresh failed: ${errorMessage(error)}`,
@@ -211,6 +217,9 @@ export async function runQueryRequest(
   path: string,
   init: RequestInit,
 ): Promise<void> {
+  // A slower earlier response must not replace the result of a later request.
+  const generation = (queryGenerations.get(controller) ?? 0) + 1;
+  queryGenerations.set(controller, generation);
   controller.dom.resultsTitle.textContent = title;
   controller.dom.resultsMeta.textContent = "Running…";
   controller.dom.resultsBody.replaceChildren();
@@ -218,13 +227,20 @@ export async function runQueryRequest(
   controller.dom.detailEmpty.hidden = true;
   try {
     const response = await apiFetch(controller, path, init);
-    renderQueryResult(controller, title, parseQueryResult(await response.json()));
+    const result = parseQueryResult(await response.json());
+    if (queryGenerations.get(controller) !== generation) return;
+    renderQueryResult(controller, title, result);
   } catch (error) {
+    if (queryGenerations.get(controller) !== generation) return;
     renderQueryFailure(controller, title, error);
   }
 }
 
-export async function runSavedQuery(controller: Controller, query: QueryDescriptor): Promise<void> {
+export async function runSavedQuery(
+  controller: Controller,
+  query: QueryDescriptor,
+  params: Record<string, unknown> = {},
+): Promise<void> {
   await runQueryRequest(
     controller,
     `[${query.id}] ${query.name}`,
@@ -232,7 +248,7 @@ export async function runSavedQuery(controller: Controller, query: QueryDescript
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ params: {} }),
+      body: JSON.stringify({ params }),
     },
   );
 }
@@ -260,7 +276,7 @@ export function renderSavedQueries(controller: Controller, queries: QueryDescrip
     );
 }
 
-export function queryButton(controller: Controller, query: QueryDescriptor): HTMLButtonElement {
+export function queryButton(controller: Controller, query: QueryDescriptor): HTMLElement {
   const item = element("button", { type: "button", class: "query-item", title: query.purpose }, [
     element("span", {
       class: `severity-dot ${query.severity.toLowerCase()}`,
@@ -269,13 +285,64 @@ export function queryButton(controller: Controller, query: QueryDescriptor): HTM
     element("span", { class: "query-name", text: `[${query.id}] ${query.name}` }),
     element("span", { class: "cat-badge", text: query.category.split(" ")[0] ?? "Other" }),
   ]);
-  item.addEventListener("click", () => void runSavedQuery(controller, query));
-  return item;
+  const names = queryParameterNames(query.parameters);
+  if (names.length === 0) {
+    item.addEventListener("click", () => void runSavedQuery(controller, query));
+    return item;
+  }
+  const form = queryParameterForm(controller, query, names);
+  item.setAttribute("aria-expanded", "false");
+  item.addEventListener("click", () => {
+    form.hidden = !form.hidden;
+    item.setAttribute("aria-expanded", String(!form.hidden));
+    if (!form.hidden) form.querySelector("input")?.focus();
+  });
+  return element("div", { class: "query-entry" }, [item, form]);
+}
+
+/** One labelled input per `$name` token; empty inputs are omitted so the server can apply defaults. */
+export function queryParameterForm(
+  controller: Controller,
+  query: QueryDescriptor,
+  names: string[],
+): HTMLFormElement {
+  const form = element("form", { class: "query-params" });
+  form.hidden = true;
+  for (const name of names) {
+    const id = `query-${query.id}-${name}`.replace(/[^A-Za-z0-9_-]/g, "-");
+    form.append(
+      element("label", { for: id, text: name.replaceAll("_", " ") }),
+      element("input", { id, name, type: "text", autocomplete: "off" }),
+    );
+  }
+  form.append(element("button", { type: "submit", class: "secondary-action", text: "Run" }));
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void runSavedQuery(controller, query, queryParameterValues(form, names));
+  });
+  return form;
+}
+
+/** Packaged queries compare these parameters numerically; every other value stays a string. */
+const NUMERIC_PARAMETERS = new Set(["min_permissions", "days_old", "min_methods", "limit"]);
+
+export function queryParameterValues(
+  form: HTMLFormElement,
+  names: string[],
+): Record<string, unknown> {
+  const params: Record<string, unknown> = {};
+  for (const name of names) {
+    const input = form.elements.namedItem(name);
+    const text = input instanceof HTMLInputElement ? input.value.trim() : "";
+    if (!text) continue;
+    params[name] = NUMERIC_PARAMETERS.has(name) && /^-?\d+$/.test(text) ? Number(text) : text;
+  }
+  return params;
 }
 
 export function readHistory(): string[] {
   try {
-    const value: unknown = JSON.parse(localStorage.getItem(HISTORY_STORAGE_NAME) ?? "[]");
+    const value: unknown = JSON.parse(readLocal(HISTORY_STORAGE_NAME) ?? "[]");
     return Array.isArray(value)
       ? value.filter((item): item is string => typeof item === "string").slice(0, 10)
       : [];
@@ -307,7 +374,7 @@ export async function runCustomCypher(controller: Controller): Promise<void> {
     return;
   }
   const history = [cypher, ...readHistory().filter((entry) => entry !== cypher)].slice(0, 10);
-  localStorage.setItem(HISTORY_STORAGE_NAME, JSON.stringify(history));
+  writeLocal(HISTORY_STORAGE_NAME, JSON.stringify(history));
   renderHistory(controller, history);
   controller.dom.runCypher.disabled = true;
   controller.dom.runCypher.textContent = "Running…";
@@ -349,7 +416,10 @@ export async function liveShowOwned(controller: Controller): Promise<void> {
     const response = await apiFetch(controller, "/api/owned");
     const result = parseOwnedList(await response.json());
     const matched = markOwnedNodes(controller, result.owned);
-    if (matched > 0) controller.actions.markDirty(controller);
+    if (matched > 0) {
+      controller.actions.markDirty(controller);
+      controller.actions.updateVisibility(controller);
+    }
     const message =
       matched === result.count
         ? `${matched} owned node(s) highlighted.`
@@ -368,18 +438,29 @@ export async function liveShowOwned(controller: Controller): Promise<void> {
   }
 }
 
+/** Counts owned entries that matched; every node carrying the name or bundle ID is marked. */
 export function markOwnedNodes(controller: Controller, owned: { name: string }[]): number {
   let matched = 0;
   for (const item of owned) {
-    const node = controller.state.graph.nodes.find(
+    const nodes = controller.state.graph.nodes.filter(
       (candidate) =>
         candidate.properties.name === item.name || candidate.properties.bundle_id === item.name,
     );
-    if (!node) continue;
-    node.properties.owned = true;
-    matched += 1;
+    for (const node of nodes) node.properties.owned = true;
+    if (nodes.length > 0) matched += 1;
   }
   return matched;
+}
+
+/** The server marks by identifier, so every installation sharing it changes together. */
+function setOwned(controller: Controller, node: ViewerNode, owned: boolean): void {
+  const bundleId = node.properties.bundle_id;
+  for (const candidate of controller.state.graph.nodes)
+    if (
+      candidate === node ||
+      (typeof bundleId === "string" && candidate.properties.bundle_id === bundleId)
+    )
+      candidate.properties.owned = owned;
 }
 
 export async function toggleOwned(controller: Controller, nodeId: NodeId): Promise<void> {
@@ -404,7 +485,7 @@ export async function toggleOwned(controller: Controller, nodeId: NodeId): Promi
     });
     const changed = parseOwnedUpdate(await response.json(), wasOwned ? "cleared" : "marked");
     if (changed <= 0) throw new Error("No matching nodes changed");
-    node.properties.owned = !wasOwned;
+    setOwned(controller, node, !wasOwned);
     controller.actions.inspectNode(controller, nodeId);
     controller.actions.setLiveStatus(controller, `${action} complete.`, "ok");
   } catch (error) {

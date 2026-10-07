@@ -13,6 +13,7 @@ import type {
 
 export interface ViewerActions {
   applyTheme(controller: Controller, value: Theme): void;
+  centerNode(controller: Controller, nodeId: NodeId): void;
   closeInspector(controller: Controller): void;
   closeResults(controller: Controller): void;
   enterFocusMode(controller: Controller, nodeId: NodeId): void;
@@ -25,6 +26,7 @@ export interface ViewerActions {
   replaceGraph(controller: Controller, payload: GraphPayload): void;
   resetPath(controller: Controller): void;
   resetViewport(controller: Controller): void;
+  revealNode(controller: Controller, nodeId: NodeId): void;
   transitionWorkspace(controller: Controller, workspace: ViewerWorkspace, focus?: boolean): void;
   selectNode(controller: Controller, nodeId: NodeId): void;
   selectTab(controller: Controller, tab: "explore" | "queries"): void;

@@ -26,6 +26,15 @@ def escape_report_value(value: object) -> str:
     return html_mod.escape(list_or_str(value), quote=True)
 
 
+def escape_table_cell(value: object) -> str:
+    """Escape an untrusted value so it stays inside one Markdown table cell."""
+    text = escape_report_value(value)
+    # Escape the escape character first so a literal backslash cannot neutralise
+    # the pipe escape, then keep the cell on one line.
+    text = text.replace("\\", "\\\\").replace("|", "\\|")
+    return text.replace("\r", " ").replace("\n", " ")
+
+
 def _format_table(rows: list[dict], columns: ColumnSpec) -> str:
     """Generic table builder: maps row dicts to a Markdown table via a column spec.
 
@@ -36,7 +45,7 @@ def _format_table(rows: list[dict], columns: ColumnSpec) -> str:
     if not rows:
         return format_no_findings()
     table_rows = [
-        [escape_report_value(row.get(key, default)) for _, key, default in columns] for row in rows
+        [escape_table_cell(row.get(key, default)) for _, key, default in columns] for row in rows
     ]
     headers = [h for h, _, _ in columns]
     return tabulate(table_rows, headers=headers, tablefmt="github")
@@ -54,7 +63,7 @@ def format_generic_table(rows: list[dict]) -> str:
             if k not in seen_keys:
                 all_keys.append(k)
                 seen_keys.add(k)
-    table_rows = [[escape_report_value(row.get(h)) for h in all_keys] for row in rows]
+    table_rows = [[escape_table_cell(row.get(h)) for h in all_keys] for row in rows]
     return tabulate(table_rows, headers=all_keys, tablefmt="github")
 
 
@@ -261,7 +270,7 @@ def _load_cve_enrichment() -> tuple[dict, bool]:
 
     logger.warning(
         "CVE enrichment data unavailable; EPSS/KEV report columns omitted. "
-        "Run with --refresh-cve to populate."
+        "Run `rootstock-graph-cve-enrichment --fetch` to populate."
     )
     return {}, True
 
@@ -339,7 +348,7 @@ def _append_cve_summary(
     if enrichment_unavailable:
         parts.append(
             "> CVE enrichment data unavailable -- EPSS/KEV columns omitted. "
-            "Run with --refresh-cve to populate."
+            "Run `rootstock-graph-cve-enrichment --fetch` to populate."
         )
     parts.append(
         tabulate(

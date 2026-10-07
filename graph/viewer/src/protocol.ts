@@ -84,8 +84,18 @@ export function parseQueryList(value: unknown): QueryDescriptor[] {
       purpose: typeof item.purpose === "string" ? item.purpose : item.name,
       category: typeof item.category === "string" ? item.category : "Other",
       severity: typeof item.severity === "string" ? item.severity : "Informational",
+      parameters: typeof item.parameters === "string" ? item.parameters : "none",
     };
   });
+}
+
+/** Extracts `$name` tokens from an API parameter list such as "$bundle_id, $days_old". */
+export function queryParameterNames(parameters: string): string[] {
+  return [
+    ...new Set(
+      [...parameters.matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)].map((match) => match[1] ?? ""),
+    ),
+  ].filter(Boolean);
 }
 
 /** Validates query rows and requires any declared result count to match the received rows. */

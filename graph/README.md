@@ -64,12 +64,26 @@ NEO4J_PASSWORD=CHANGE_ME bash graph/pipeline.sh examples/demo-scan.json \
   --cve-scan-export examples/cve-scan-export.json
 ```
 
+The pipeline runs inference in two stages around the vulnerability import.
+`rootstock-graph-infer --stage edges` creates the inferred relationships that
+the vulnerability importer's category heuristics read, then
+`rootstock-graph-import-vulnerabilities` links CVEs, and finally
+`rootstock-graph-infer --stage score` classifies tiers and computes risk scores
+and recommendations from both. Running `rootstock-graph-infer` without
+`--stage` does both stages in order; use the staged form, or the pipeline,
+when CVE data should influence tiers and scores.
+
 Individual installed commands are also available:
 
 ```sh
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
   rootstock-graph-import-scan --input examples/demo-scan.json
-NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked rootstock-graph-infer
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  rootstock-graph-infer --stage edges
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  rootstock-graph-import-vulnerabilities
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  rootstock-graph-infer --stage score
 NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
   rootstock-graph-report --output /tmp/rootstock-report.md \
   --scan-json examples/demo-scan.json

@@ -30,6 +30,7 @@ from . import import_nodes_services
 from ..neo4j import add_neo4j_args, connect_from_args
 from ..models import ScanResult, ComputerData
 
+from .import_scan import classify_import_status
 from .scan_loader import load_scan
 
 
@@ -50,13 +51,10 @@ def _scan_computer(scan: ScanResult) -> ComputerData:
     )
 
 
-def _scan_computer_context(scan: ScanResult) -> import_nodes_core.ComputerImportContext:
-    return import_nodes_core.computer_import_context(scan)
-
-
-def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
+def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int, int]:
+    """Import core, security and enrichment records (everything before the Computer node)."""
     n_apps = import_nodes_core.import_applications(session, scan.applications, scan.scan_id)
-    grants_linked, _ = import_nodes_permissions.import_tcc_grants(
+    grants_linked, grants_skipped = import_nodes_permissions.import_tcc_grants(
         session, scan.tcc_grants, scan.scan_id
     )
     import_nodes_permissions.import_entitlements(session, scan.applications, scan.scan_id)
@@ -67,8 +65,9 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
     import_nodes_services.import_xpc_services(session, scan.xpc_services)
     import_nodes_services.import_keychain_items(session, scan.keychain_acls, scan.scan_id)
     import_nodes_services.import_mdm_profiles(session, scan.mdm_profiles)
-    import_nodes_services.import_launch_items(session, scan.launch_items, scan.scan_id)
+    # Local groups first: launch-item hijack edges depend on admin membership.
     import_nodes_security.import_local_groups(session, scan.local_groups, scan.scan_id)
+    import_nodes_services.import_launch_items(session, scan.launch_items, scan.scan_id)
     import_nodes_security.import_remote_access_services(session, scan.remote_access_services)
     import_nodes_security.import_firewall_status(session, scan.firewall_status, scan.scan_id)
     import_nodes_security.import_login_sessions(session, scan.login_sessions, scan.hostname)
@@ -79,6 +78,11 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
     import_nodes_enrichment.import_running_processes(session, scan.running_processes, scan.scan_id)
     import_nodes_enrichment.import_user_details(session, scan.user_details)
     import_nodes_enrichment.import_file_acls(session, scan.file_acls)
+    return n_apps, grants_linked, grants_skipped
+
+
+def _import_device_identity(session, scan: ScanResult) -> None:
+    """Import records attached to the Computer node (must run after import_computer)."""
     import_nodes_security_enterprise.import_ad_binding(
         session, scan.ad_binding, scan.hostname, scan.scan_id
     )
@@ -89,7 +93,6 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int]:
     import_nodes_enrichment.import_bluetooth_devices(
         session, scan.bluetooth_devices, scan.hostname, scan.scan_id
     )
-    return n_apps, grants_linked
 
 
 def import_scan(session, scan: ScanResult) -> None:
@@ -99,8 +102,19 @@ def import_scan(session, scan: ScanResult) -> None:
     if scan.errors:
         _report_scan_errors(scan)
 
-    import_nodes_core.import_computer(session, _scan_computer(scan), _scan_computer_context(scan))
-    n_apps, grants_linked = _import_scan_entities(session, scan)
+    n_apps, grants_linked, grants_skipped = _import_scan_entities(session, scan)
+    import_status = classify_import_status(len(scan.errors), grants_skipped)
+    import_nodes_core.import_computer(
+        session,
+        _scan_computer(scan),
+        import_nodes_core.computer_import_context(
+            scan,
+            grants_linked=grants_linked,
+            grants_skipped=grants_skipped,
+            import_status=import_status,
+        ),
+    )
+    _import_device_identity(session, scan)
     n_installed = import_nodes_core.import_installed_on(session, hostname, scan.scan_id)
     n_local_to = import_nodes_core.import_local_to(session, hostname, scan.scan_id)
 
@@ -146,7 +160,7 @@ def _input_paths_from_args(args: argparse.Namespace) -> list[str] | None:
         dir_path = Path(args.input_dir)
         if not dir_path.is_dir():
             print(f"ERROR: Not a directory: {dir_path}", file=sys.stderr)
-            return 1
+            return None
         input_paths.extend(str(p) for p in sorted(dir_path.glob("*.json")))
 
     if not input_paths:

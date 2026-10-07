@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
+
+from ..constants import NODE_KEY_PROPERTY
 
 
 class MarkOwnedRequest(BaseModel):
@@ -12,6 +14,13 @@ class MarkOwnedRequest(BaseModel):
     usernames: list[str] | None = None
     label: str | None = None
     keys: list[str] | None = None
+
+    @field_validator("label")
+    @classmethod
+    def label_is_allowed(cls, label: str | None) -> str | None:
+        if label is not None and label not in NODE_KEY_PROPERTY:
+            raise ValueError(f"Unknown label. Valid labels: {', '.join(sorted(NODE_KEY_PROPERTY))}")
+        return label
 
     @model_validator(mode="after")
     def has_one_selector(self) -> "MarkOwnedRequest":

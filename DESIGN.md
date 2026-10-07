@@ -31,8 +31,10 @@ step's actions.
 
 Graph tools uses a searchable node list, a central workspace, and an evidence
 inspector. Triage, Graph, Paths, and Queries share the same selected data.
-The node list provides an alternative to choosing nodes on the canvas. On
-phones, the Triage, Paths, and Queries workspaces come before the node list.
+The node list provides an alternative to choosing nodes on the canvas. A
+collapsible Key on the graph explains relationship inks, shapes, and severity
+marks, and toggles node kinds. On phones, the Triage, Paths, and Queries
+workspaces come before the node list.
 
 ## Color and typography
 

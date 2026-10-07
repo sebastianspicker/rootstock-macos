@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from neo4j import Query
 from neo4j.exceptions import DriverError, Neo4jError
 
-from ..constants import INTERACTIVE_GRAPH_MAX_EDGES, INTERACTIVE_GRAPH_MAX_NODES
+from ..constants import DEFAULT_PARAMS, INTERACTIVE_GRAPH_MAX_EDGES, INTERACTIVE_GRAPH_MAX_NODES
 from ..inference.clear_owned import clear_all, clear_by_bundle_id, clear_by_username
 from ..inference.mark_owned import (
     list_owned,
@@ -34,6 +34,7 @@ from .dependencies import (
     SESSION_DEPENDENCY,
     logger,
 )
+from .encoding import jsonable
 from .reports import ReportRequest, generate_report
 from .schemas import ClearOwnedRequest, CypherRequest, MarkOwnedRequest, QueryRunRequest
 
@@ -86,12 +87,12 @@ def run_query_endpoint(
     if _validate_api_cypher(cypher):
         logger.error("Configured query %s is not read-only", query["id"])
         raise HTTPException(status_code=500, detail="Configured query is not read-only")
-    params = body.params if body else {}
+    params = {**DEFAULT_PARAMS, **((body.params if body else None) or {})}
     try:
         rows = run_query(
             session,
             Query(cypher, timeout=ADHOC_CYPHER_TIMEOUT_SECONDS),
-            params or {},
+            params,
             maximum_rows=MAX_ADHOC_CYPHER_ROWS + 1,
         )
     except HTTPException:
@@ -109,7 +110,7 @@ def run_query_endpoint(
             "category": query["category"],
             "severity": query["severity"],
         },
-        "rows": rows,
+        "rows": jsonable(rows),
         "count": len(rows),
         "truncated": truncated,
     }
@@ -203,7 +204,7 @@ def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
         )
         records, truncated = _limited_records(result)
         columns = list(records[0].keys()) if records else []
-        rows = [dict(record) for record in records]
+        rows = jsonable([dict(record) for record in records])
     except HTTPException:
         raise
     except (DriverError, Neo4jError) as error:

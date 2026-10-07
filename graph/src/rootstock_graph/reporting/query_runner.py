@@ -29,6 +29,7 @@ from typing import Any
 
 from tabulate import tabulate
 
+from ..constants import DEFAULT_PARAMS
 from ..paths import package_resource_dir
 from ..cypher import first_cypher_statement, run_query
 from .value_format import list_or_str
@@ -456,7 +457,7 @@ def _run_cli_command(args: argparse.Namespace, parser: argparse.ArgumentParser) 
 
         driver = connect_from_args(args)
 
-        params = _parse_params(args.param)
+        params = {**DEFAULT_PARAMS, **_parse_params(args.param)}
         exit_code = cmd_run(driver, queries, args.run, params, args.format)
         driver.close()
         return exit_code

@@ -287,9 +287,20 @@ def _precise_record_is_affected(
 ) -> bool:
     app_version = record["app_version"]
     if cve.max_affected_version and app_version and not is_macos:
-        app_v = parse_version_tuple(app_version)
-        max_v = parse_version_tuple(cve.max_affected_version)
-        return app_v is not None and max_v is not None and version_lte(app_v, max_v)
+        try:
+            app_v = parse_version_tuple(app_version)
+            max_v = parse_version_tuple(cve.max_affected_version)
+        except ValueError as exc:
+            # Unparseable version: treat as unknown (conservatively affected)
+            logger.warning(
+                "Unparseable version for %s (%s): %s; treating version as unknown",
+                record["bundle_id"],
+                cve.cve_id,
+                exc,
+            )
+            app_version = None
+        else:
+            return version_lte(app_v, max_v)
 
     return is_affected(
         app_version=app_version,

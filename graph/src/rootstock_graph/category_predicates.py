@@ -53,7 +53,8 @@ SHARED_CATEGORY_PREDICATES: dict[str, str] = {
             MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(u:User)-[:HAS_KERBEROS_CACHE]->()
         }
         OR EXISTS {
-            MATCH (app)-[:INSTALLED_ON]->(:Computer)<-[:LOCAL_TO]-(u:User)-[:HAS_KEYTAB]->()
+            MATCH (app)-[:INSTALLED_ON]->(c:Computer)<-[:LOCAL_TO]-(:User)
+            MATCH (c)-[:HAS_KEYTAB]->(:KerberosArtifact)
         }
     """,
     "keychain_access": """
@@ -168,6 +169,11 @@ VULNERABILITY_CATEGORY_PREDICATES: dict[str, str] = _category_predicates(
             WHERE app.name CONTAINS 'Security' OR app.name CONTAINS 'Endpoint'
         }
         AND size(app.injection_methods) > 0
+    """,
+        "gatekeeper_bypass": """
+        EXISTS {
+            MATCH ()-[:BYPASSED_GATEKEEPER]->(app)
+        }
     """,
         "sandbox_escape": SHARED_CATEGORY_PREDICATES["sandbox_escape"],
         "mdm_risk": """

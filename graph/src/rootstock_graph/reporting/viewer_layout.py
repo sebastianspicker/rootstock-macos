@@ -33,6 +33,19 @@ def _initialize_positions(
         node["y"] = height / 2 + (jitter.fraction() - 0.5) * height * 0.8
 
 
+def graph_identifier_error(nodes: list, edges: list) -> str | None:
+    """Describe the first node or edge lacking the string identifiers layout requires."""
+    for index, node in enumerate(nodes):
+        if not isinstance(node, dict) or not isinstance(node.get("id"), str):
+            return f"Graph node {index} must have a string 'id'"
+    for index, edge in enumerate(edges):
+        if not isinstance(edge, dict):
+            return f"Graph edge {index} must be an object"
+        if not isinstance(edge.get("source"), str) or not isinstance(edge.get("target"), str):
+            return f"Graph edge {index} must have string 'source' and 'target'"
+    return None
+
+
 def _edge_pairs(nodes: list[dict], edges: list[dict]) -> list[tuple[int, int]]:
     id_to_idx = {node["id"]: i for i, node in enumerate(nodes)}
     pairs = []
@@ -240,6 +253,9 @@ def compute_layout(
     n = len(nodes)
     if n == 0:
         return
+    identifier_error = graph_identifier_error(nodes, edges)
+    if identifier_error:
+        raise ValueError(identifier_error)
 
     jitter = _LayoutJitter()
     _initialize_positions(nodes, width, height, jitter)

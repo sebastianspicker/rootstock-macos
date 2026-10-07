@@ -2,7 +2,7 @@ import { showConnectionGate, hideConnectionGate } from "./connection";
 export { showConnectionGate, hideConnectionGate } from "./connection";
 /** Coordinates viewer lifecycle, state transitions, and UI-facing graph actions. */
 import { mountFolio, refreshFolio } from "./folio";
-import { invalidateCanvasColors } from "./canvas-cache";
+import { canvasLabelColor, invalidateCanvasColors } from "./canvas-cache";
 
 import {
   computeVisibility,
@@ -27,7 +27,7 @@ import {
   renderStats,
 } from "./view";
 import { readHistory, renderHistory, startLiveSession } from "./live";
-import { getApiToken } from "./storage";
+import { getApiToken, readLocal } from "./storage";
 import { element, setPressed } from "./runtime";
 import type { Controller, ViewerActions } from "./runtime";
 import { inspectNode } from "./inspector";
@@ -97,7 +97,7 @@ export function fitViewport(controller: Controller): void {
     const position = worldPosition(controller, node);
     const radius = nodeRadius(controller.state.graph, node.id);
     const labelWidth = controller.state.selection.showLabels
-      ? Math.min(240, (node.label ?? node.id).length * 7)
+      ? Math.min(28, (node.label ?? node.id).length) * 9
       : 0;
     minX = Math.min(minX, position.x - Math.max(radius, labelWidth / 2));
     minY = Math.min(minY, position.y - radius);
@@ -158,6 +158,8 @@ export function setClusteredLayout(controller: Controller, enabled: boolean): vo
 }
 
 export function closeInspector(controller: Controller): void {
+  const previous = controller.state.selection.selectedId;
+  const hadFocus = controller.dom.inspector.contains(document.activeElement);
   controller.state.selection.selectedId = null;
   controller.state.selection.pinnedId = null;
   controller.dom.inspector.classList.remove("open");
@@ -165,13 +167,26 @@ export function closeInspector(controller: Controller): void {
   controller.dom.detailEmpty.hidden = controller.dom.resultsPanel.classList.contains("open");
   renderNodeList(controller);
   markDirty(controller);
+  if (hadFocus) returnFocus(controller, previous);
+}
+
+/** Returns focus to the node's list entry when it is rendered, otherwise to search. */
+export function returnFocus(controller: Controller, nodeId: NodeId | null = null): void {
+  const entry = nodeId
+    ? controller.dom.nodeList.querySelector<HTMLButtonElement>(
+        `button[data-node-id="${CSS.escape(nodeId)}"]`,
+      )
+    : null;
+  (entry ?? controller.dom.search).focus();
 }
 
 export function closeResults(controller: Controller): void {
+  const hadFocus = controller.dom.resultsPanel.contains(document.activeElement);
   controller.dom.resultsPanel.classList.remove("open");
   controller.dom.resultsBody.textContent = "";
   controller.dom.resultsMeta.textContent = "";
   controller.dom.detailEmpty.hidden = controller.dom.inspector.classList.contains("open");
+  if (hadFocus) returnFocus(controller);
 }
 
 export function viewerNode(controller: Controller, nodeId: NodeId): ViewerNode | null {
@@ -188,17 +203,22 @@ export function enterFocusMode(controller: Controller, nodeId: NodeId): void {
 }
 
 export function exitFocusMode(controller: Controller): void {
+  const hadFocus = controller.dom.focusBanner.contains(document.activeElement);
+  const previous = controller.state.selection.focusedId;
   controller.state.selection.focusedId = null;
   controller.dom.focusBanner.classList.remove("visible");
   updateVisibility(controller);
+  if (hadFocus) returnFocus(controller, previous);
 }
 
 export function resetPath(controller: Controller): void {
+  const hadFocus = controller.dom.pathBanner.contains(document.activeElement);
   controller.state.selection.path = { active: false, sourceId: null, targetId: null, result: null };
   controller.dom.pathBanner.classList.remove("visible");
   controller.dom.pathText.textContent = "Choose an explicit source and destination in Paths.";
   setPressed(controller.dom.path, false);
   renderPathWorkspace(controller);
+  if (hadFocus) returnFocus(controller);
 }
 
 export function togglePathMode(controller: Controller, sourceId: NodeId | null = null): void {
@@ -208,9 +228,6 @@ export function togglePathMode(controller: Controller, sourceId: NodeId | null =
     return;
   }
   controller.state.selection.path = { active: true, sourceId, targetId: null, result: null };
-  controller.dom.pathText.textContent = sourceId
-    ? "Choose a destination in Paths."
-    : "Choose explicit endpoints in Paths.";
   setPressed(controller.dom.path, true);
   transitionWorkspace(controller, "paths", true);
   renderPathWorkspace(controller);
@@ -219,7 +236,6 @@ export function togglePathMode(controller: Controller, sourceId: NodeId | null =
 
 export function startPathTo(controller: Controller, targetId: NodeId): void {
   controller.state.selection.path = { active: true, sourceId: null, targetId, result: null };
-  controller.dom.pathText.textContent = "Choose an explicit source in Paths.";
   setPressed(controller.dom.path, true);
   transitionWorkspace(controller, "paths", true);
   renderPathWorkspace(controller);
@@ -228,32 +244,45 @@ export function startPathTo(controller: Controller, targetId: NodeId): void {
 
 export function handlePathSelection(controller: Controller, nodeId: NodeId): void {
   const path = controller.state.selection.path;
-  if (!path.sourceId) {
-    path.sourceId = nodeId;
-    if (path.targetId) {
-      path.result = shortestPath(controller.state.graph, nodeId, path.targetId);
-      controller.dom.pathText.textContent = path.result
-        ? `${Math.max(0, path.result.orderedNodeIds.length - 1)} hop(s)`
-        : "No traversable path found. Choose another source or cancel.";
-      updateVisibility(controller);
-      return;
-    }
-    const node = controller.state.graph.nodeById.get(nodeId);
-    controller.dom.pathText.textContent = `Source: ${node?.label ?? nodeId}. Choose a destination node.`;
-    return;
-  }
-  path.targetId = nodeId;
-  path.result = shortestPath(controller.state.graph, path.sourceId, nodeId);
-  if (!path.result) {
-    controller.dom.pathText.textContent =
-      "No traversable path found. Choose another destination or cancel.";
-    return;
-  }
-  const hops = Math.max(0, path.result.orderedNodeIds.length - 1);
-  controller.dom.pathText.textContent = `${hops} ${hops === 1 ? "hop" : "hops"}`;
+  if (!path.sourceId) path.sourceId = nodeId;
+  else path.targetId = nodeId;
+  path.result =
+    path.sourceId && path.targetId
+      ? shortestPath(controller.state.graph, path.sourceId, path.targetId)
+      : null;
+  renderPathWorkspace(controller);
+  syncWorkspaceDom(controller, controller.state.workspace);
   updateVisibility(controller);
   // Open the destination dossier while keeping the modeled path active.
-  inspectNode(controller, nodeId);
+  if (path.result && path.targetId === nodeId) inspectNode(controller, nodeId);
+}
+
+/** Pans a node into view at the current zoom when it lies outside the viewport. */
+export function revealNode(controller: Controller, nodeId: NodeId): void {
+  const node = viewerNode(controller, nodeId);
+  if (!node) return;
+  const { transform, width, height } = controller.state.viewport;
+  const position = worldPosition(controller, node);
+  const screenX = position.x * transform.k + transform.x;
+  const screenY = position.y * transform.k + transform.y;
+  const margin = 48;
+  if (
+    screenX >= margin &&
+    screenX <= width - margin &&
+    screenY >= margin &&
+    screenY <= height - margin
+  )
+    return;
+  transform.x = width / 2 - position.x * transform.k;
+  transform.y = height / 2 - position.y * transform.k;
+  markDirty(controller);
+}
+
+export function centerNode(controller: Controller, nodeId: NodeId): void {
+  const node = viewerNode(controller, nodeId);
+  if (!node) return;
+  transitionWorkspace(controller, "graph");
+  centerOnNode(controller, node);
 }
 
 export function centerOnNode(controller: Controller, node: ViewerNode): void {
@@ -277,7 +306,12 @@ export function showContextMenu(controller: Controller, event: MouseEvent, node:
   const { contextMenu, graphContainer } = controller.dom;
   contextMenu.replaceChildren();
   const action = (label: string, handler: () => void): HTMLButtonElement => {
-    const button = element("button", { class: "ctx-item", type: "button", text: label });
+    const button = element("button", {
+      class: "ctx-item",
+      type: "button",
+      role: "menuitem",
+      text: label,
+    });
     button.addEventListener("click", () => {
       hideContextMenu(controller);
       handler();
@@ -308,6 +342,7 @@ export function showContextMenu(controller: Controller, event: MouseEvent, node:
   contextMenu.style.left = `${event.clientX - rect.left}px`;
   contextMenu.style.top = `${event.clientY - rect.top}px`;
   contextMenu.style.display = "block";
+  contextMenu.querySelector<HTMLButtonElement>("button")?.focus();
 }
 
 export function selectNode(controller: Controller, nodeId: NodeId): void {
@@ -343,6 +378,8 @@ export function replaceGraph(controller: Controller, payload: GraphPayload): voi
   updateVisibility(controller);
   fitViewport(controller);
   refreshFolio(controller);
+  // Re-render the current workspace so triage and path endpoints follow the new graph.
+  transitionWorkspace(controller, controller.state.workspace);
 }
 
 export function transitionWorkspace(
@@ -355,7 +392,8 @@ export function transitionWorkspace(
   if (workspace === "triage") renderTriageQueue(controller);
   if (workspace === "paths") renderPathWorkspace(controller);
   if (focus) requestAnimationFrame(() => controller.dom.workspaceTitle.focus());
-  markDirty(controller);
+  // Path isolation depends on the workspace, so visibility is recomputed on every transition.
+  updateVisibility(controller);
 }
 
 export function selectTab(controller: Controller, tab: "explore" | "queries"): void {
@@ -384,11 +422,33 @@ export function zoomViewport(controller: Controller, factor: number): void {
   markDirty(controller);
 }
 
+/** Exports on the ground color so dark-theme labels are not left on a transparent sheet. */
 export function exportPng(controller: Controller): void {
+  const source = controller.dom.canvas;
+  const sheet = document.createElement("canvas");
+  sheet.width = source.width;
+  sheet.height = source.height;
+  const context = sheet.getContext("2d");
+  if (!context) return;
+  context.fillStyle = canvasLabelColor("--ink-deep", "#f8f5ef");
+  context.fillRect(0, 0, sheet.width, sheet.height);
+  context.drawImage(source, 0, 0);
   const link = document.createElement("a");
-  link.download = "rootstock-graph.png";
-  link.href = controller.dom.canvas.toDataURL("image/png");
+  link.download = `rootstock-graph-${exportName(controller)}.png`;
+  link.href = sheet.toDataURL("image/png");
   link.click();
+}
+
+export function exportName(controller: Controller): string {
+  const hostname = controller.state.graph.payload.metadata?.hostname;
+  const name =
+    typeof hostname === "string"
+      ? hostname
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+      : "";
+  return name || "snapshot";
 }
 
 export function configureMode(controller: Controller): void {
@@ -409,6 +469,7 @@ export function configureMode(controller: Controller): void {
 export function viewerActions(): ViewerActions {
   return {
     applyTheme,
+    centerNode,
     closeInspector,
     closeResults,
     enterFocusMode,
@@ -421,6 +482,7 @@ export function viewerActions(): ViewerActions {
     replaceGraph,
     resetPath,
     resetViewport,
+    revealNode,
     selectNode,
     selectTab,
     setClusteredLayout,
@@ -472,7 +534,7 @@ export function initializeController(controller: Controller): void {
     showContextMenu,
     worldPosition,
   });
-  const savedTheme = localStorage.getItem(THEME_STORAGE_NAME);
+  const savedTheme = readLocal(THEME_STORAGE_NAME);
   const theme: Theme = savedTheme === "light" || savedTheme === "dark" ? savedTheme : "system";
   controller.dom.themeSelect.value = theme;
   applyTheme(controller, theme);

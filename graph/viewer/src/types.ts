@@ -63,6 +63,12 @@ export interface OutgoingEdge {
   linkIndex: number;
 }
 
+/** Position of a link among all links joining the same unordered node pair. */
+export interface ParallelSlot {
+  index: number;
+  count: number;
+}
+
 export interface IncomingEdge {
   source: NodeId;
   edge: GraphEdge;
@@ -82,6 +88,8 @@ export interface GraphModel {
   edgeMeta: Map<string, EdgeMeta>;
   outgoing: Map<NodeId, OutgoingEdge[]>;
   incoming: Map<NodeId, IncomingEdge[]>;
+  /** Indexed by link index so parallel and reverse links can be drawn apart. */
+  parallel: ParallelSlot[];
 }
 
 /** Represents one directed traversal result in both set and ordered forms for rendering. */
@@ -156,6 +164,8 @@ export interface QueryDescriptor {
   purpose: string;
   category: string;
   severity: string;
+  /** Parameter list as reported by the API, for example "$bundle_id, $days_old" or "none". */
+  parameters: string;
 }
 
 export interface QueryResult {

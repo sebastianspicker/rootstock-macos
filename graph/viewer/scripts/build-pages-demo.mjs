@@ -42,9 +42,9 @@ const demoCss = `
 
 function bootstrapScript() {
   const serializedGraph = JSON.stringify(demoGraph)
-    .replace(/</g, "\\u003c")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+    .replace(/</g, () => "\\u003c")
+    .replace(/\u2028/g, () => "\\u2028")
+    .replace(/\u2029/g, () => "\\u2029");
   return `
 RootstockViewer.mount(${serializedGraph}, {mode: "static"});
 document.getElementById("connection-status").textContent = "Static demo · synthetic data";
@@ -71,10 +71,15 @@ for (const id of ["nav-exports", "btn-export"]) {
 `;
 }
 
+/** Inserts the request shim after the bundle's directive prologue so strict mode is kept. */
 function staticOnlyBundle(bundle) {
-  return `const staticRequest = () => Promise.reject(new Error("Network access is disabled in this static demo."));\n${bundle
-    .replaceAll("fetch(", "staticRequest(")
-    .replaceAll("/api/", "/static-disabled/")}`;
+  const shim =
+    'const staticRequest = () => Promise.reject(new Error("Network access is disabled in this static demo."));';
+  const rewritten = bundle
+    .replaceAll("fetch(", () => "staticRequest(")
+    .replaceAll("/api/", () => "/static-disabled/");
+  const prologue = rewritten.match(/^\s*(["'])use strict\1;?/)?.[0] ?? "";
+  return `${prologue}\n${shim}\n${rewritten.slice(prologue.length)}`;
 }
 
 function disclosureMarkup() {
@@ -101,17 +106,20 @@ async function renderDemo() {
     readFile(path.join(viewerResources, "viewer.bundle.js"), "utf8"),
   ]);
 
-  return template
-    .replace("<head>", '<head>\n<link rel="icon" href="data:,">')
-    .replace(
-      '<html lang="en">',
-      '<html lang="en" data-rootstock-pages-demo="synthetic-graphite-laboratory-bench">',
-    )
-    .replace("{{VIEWER_TITLE}}", "Synthetic static demo")
-    .replace("{{VIEWER_CSS}}", `${css}\n${demoCss}`)
-    .replace('<div id="app">', `<div id="app">${disclosureMarkup()}`)
-    .replace("{{VIEWER_JS}}", staticOnlyBundle(bundle))
-    .replace("{{VIEWER_BOOTSTRAP}}", bootstrapScript());
+  return (
+    template
+      // Function replacers keep `$&`, `$'` and similar sequences in the inserted text literal.
+      .replace("<head>", () => '<head>\n<link rel="icon" href="data:,">')
+      .replace(
+        '<html lang="en">',
+        () => '<html lang="en" data-rootstock-pages-demo="synthetic-graphite-laboratory-bench">',
+      )
+      .replace("{{VIEWER_TITLE}}", () => "Synthetic static demo")
+      .replace("{{VIEWER_CSS}}", () => `${css}\n${demoCss}`)
+      .replace('<div id="app">', () => `<div id="app">${disclosureMarkup()}`)
+      .replace("{{VIEWER_JS}}", () => staticOnlyBundle(bundle))
+      .replace("{{VIEWER_BOOTSTRAP}}", () => bootstrapScript())
+  );
 }
 
 async function main() {

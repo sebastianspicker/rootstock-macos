@@ -59,7 +59,7 @@ sequenceDiagram
     Validator-->>Operator: schema, model, and semantic result
     Operator->>Graph: pipeline.sh scan.json
     Graph->>Neo4j: schema and idempotent imports
-    Graph->>Neo4j: inference, vulnerabilities, and tier classification
+    Graph->>Neo4j: inferred edges, then vulnerabilities, then tiers and risk scores
     Graph-->>Operator: report or OpenGraph/viewer artifact
     APIViewer->>Neo4j: authenticated loopback reads and bounded state actions
 ```
@@ -70,7 +70,10 @@ failures in the result, and serializes one `ScanResult`. Before import,
 checks the packaged collector-scan schema mirror, the Pydantic model, and
 semantic constraints. `graph/pipeline.sh` then sequences
 schema setup, optional CVE refresh, collector import, optional cve-scan import,
-inference, vulnerability import, tier classification, and reporting.
+the inference edge stage, vulnerability import, the inference score stage, and
+reporting. The vulnerability importer's category heuristics read inferred
+relationships, and tier classification, risk scoring, and recommendations read
+the CVE links, which is why inference is split around the import.
 
 Python graph code lives in `graph/src/rootstock_graph/`. Foundation modules
 (`category_predicates`, `constants`, `cypher`, `models`, `neo4j`, `paths`,

@@ -37,6 +37,7 @@ from . import infer_sandbox
 from . import infer_quarantine
 from . import infer_risk_score
 from . import infer_recommendations
+from .tier_classification import classify
 
 
 def _run_attack_path_inference(session) -> dict[str, int]:
@@ -90,6 +91,15 @@ def _run_sandbox_inference(session) -> dict[str, int]:
     return counts
 
 
+def _run_tier_classification(session) -> dict[str, int]:
+    print("\n--- Tier Classification " + "─" * 37)
+    t0, t1, t2 = classify(session)
+    print(f"  Tier 0 (Crown Jewels): {t0:>4} apps")
+    print(f"  Tier 1 (Privileged):   {t1:>4} apps")
+    print(f"  Tier 2 (Interesting):  {t2:>4} apps")
+    return {"tier0": t0, "tier1": t1, "tier2": t2}
+
+
 def _run_risk_inference(session) -> dict[str, int]:
     print("\n--- Risk Scoring & Recommendations " + "─" * 24)
     counts = {
@@ -101,17 +111,30 @@ def _run_risk_inference(session) -> dict[str, int]:
     return counts
 
 
-def _run_all_inference(session) -> dict[str, int]:
+STAGES = ("edges", "score", "all")
+
+
+def _run_all_inference(session, stage: str = "all") -> dict[str, int]:
+    """Run the edge stage, the scoring stage, or both.
+
+    The scoring stage (tier classification, risk scores, recommendations) reads
+    AFFECTED_BY edges, while the vulnerability importer's category heuristics read
+    inferred edges. pipeline.sh therefore runs ``--stage edges``, imports
+    vulnerabilities, then runs ``--stage score``.
+    """
     counts: dict[str, int] = {}
-    counts.update(_run_attack_path_inference(session))
-    counts.update(_run_escalation_inference(session))
-    counts.update(_run_sandbox_inference(session))
-    counts.update(_run_risk_inference(session))
+    if stage in ("edges", "all"):
+        counts.update(_run_attack_path_inference(session))
+        counts.update(_run_escalation_inference(session))
+        counts.update(_run_sandbox_inference(session))
+    if stage in ("score", "all"):
+        counts.update(_run_tier_classification(session))
+        counts.update(_run_risk_inference(session))
     return counts
 
 
 def _inferred_edge_total(counts: dict[str, int]) -> int:
-    excluded = {"risk"}
+    excluded = {"risk", "tier0", "tier1", "tier2"}
     return sum(value for key, value in counts.items() if key not in excluded)
 
 
@@ -120,8 +143,9 @@ def _print_completion_summary(counts: dict[str, int], total: int) -> None:
     print("  INFERENCE COMPLETE")
     print("=" * 60)
     print(f"  Total inferred edges:  {total:>5}")
-    print(f"  Apps risk-scored:      {counts['risk']:>5}")
-    print(f"  Recommendations:       {counts['recs']:>5}")
+    if "risk" in counts:
+        print(f"  Apps risk-scored:      {counts['risk']:>5}")
+        print(f"  Recommendations:       {counts['recs']:>5}")
     print("=" * 60)
 
 
@@ -133,6 +157,15 @@ def main() -> int:
         action="store_true",
         help="Exit successfully when no inferred edges are created.",
     )
+    parser.add_argument(
+        "--stage",
+        choices=STAGES,
+        default="all",
+        help=(
+            "edges: relationship inference only; score: tier classification, risk "
+            "scores and recommendations only; all (default): both in order."
+        ),
+    )
     args = parser.parse_args()
 
     driver = connect_from_args(args)
@@ -142,13 +175,13 @@ def main() -> int:
     print("=" * 60)
 
     with driver.session() as session:
-        counts = _run_all_inference(session)
+        counts = _run_all_inference(session, args.stage)
 
     driver.close()
 
     total = _inferred_edge_total(counts)
     _print_completion_summary(counts, total)
-    if total == 0:
+    if total == 0 and args.stage != "score":
         print("  Note: No inferred edges created.")
         print("  Import scan data first: rootstock-graph-import-scan")
         if not args.allow_empty:

@@ -15,6 +15,13 @@ from .cypher import (
 
 MIN_API_TOKEN_BYTES = 32
 _CALL_RE = re.compile(r"\bCALL\b", re.IGNORECASE)
+# Write-capable or administrative function namespaces reachable without CALL.
+_FORBIDDEN_FUNCTION_RE = re.compile(
+    r"\b(apoc\.cypher|apoc\.periodic|apoc\.refactor|dbms)\.", re.IGNORECASE
+)
+_ALLOWED_FIRST_KEYWORD_RE = re.compile(
+    r"\s*(MATCH|OPTIONAL|WITH|UNWIND|RETURN|EXPLAIN|PROFILE)\b", re.IGNORECASE
+)
 
 
 def matches_api_token(auth_header: str, token: str | None) -> bool:
@@ -39,6 +46,10 @@ def validate_api_cypher(cypher: str) -> str | None:
     cleaned = cypher_code_only(cypher)
     if _CALL_RE.search(cleaned):
         return "Procedures are not allowed through the viewer API"
+    if _FORBIDDEN_FUNCTION_RE.search(cleaned):
+        return "Administrative or write-capable functions are not allowed through the viewer API"
+    if not _ALLOWED_FIRST_KEYWORD_RE.match(cleaned):
+        return "Only MATCH/OPTIONAL MATCH/WITH/UNWIND/RETURN/EXPLAIN/PROFILE statements are allowed"
     return validate_read_only_cypher(cypher)
 
 

@@ -4,8 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GRAPH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-WHEEL_DIR="$(mktemp -d /tmp/rootstock-graph-wheel.XXXXXX)"
-VENV_DIR="$(mktemp -d /tmp/rootstock-graph-venv.XXXXXX)"
+WHEEL_DIR="$(mktemp -d "${TMPDIR:-/tmp}/rootstock-graph-wheel.XXXXXX")"
+VENV_DIR="$(mktemp -d "${TMPDIR:-/tmp}/rootstock-graph-venv.XXXXXX")"
 
 cleanup() {
     rm -rf "$WHEEL_DIR" "$VENV_DIR"

@@ -20,7 +20,7 @@ path, and query workspace.
 ## Investigate and export
 
 - Connect to the local API with its bearer token. The viewer keeps the token
-  in `sessionStorage` for the current tab.
+  in memory for the current page only; a reload asks for it again.
 - Review available scan metadata and collection gaps, then select an FDA,
   modeled-path, or recommendation question. Live mode executes the corresponding
   packaged query; offline mode inspects only relationships in the loaded snapshot.
@@ -48,7 +48,20 @@ announced range. Filtering or refreshing starts at the first page; selecting
 a visible node opens its page. Selection updates preserve unchanged rows.
 Dragging updates only the moved node in the hit-test index. Canvas drawing
 skips primitives outside the viewport while retaining intersecting labels and
-edges. PNG export captures the current viewport.
+edges. PNG export captures the current viewport on the sheet's ground color.
+
+Observed relationships are drawn as solid ink lines and inferred ones as
+dashed pencil-blue lines; a modeled path is drawn thicker in pencil blue with
+numbered steps on its nodes. Traversable relationships end in an arrowhead and
+non-traversable ones in a small open circle. The Key at the top left of the
+Graph workspace explains these marks, the node shapes and severity marks, and
+lists node kinds as buttons that hide or show each kind. Relationship labels
+appear from 75% zoom when there are at most 150 visible relationships; from
+that zoom they also appear for the modeled path and for the selected or hovered
+node when the graph is denser. Below 45% zoom
+only selected, hovered, and on-path nodes keep their labels. After a path is
+found, Paths lists its steps in order, with each relationship's kind, whether
+it is observed or inferred, and whether it is traversable.
 
 Static layout uses exact repulsion through 256 nodes and deterministic
 Barnes-Hut repulsion above that threshold (opening ratio 0.7, seed 42).

@@ -290,7 +290,10 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Validate artifact only (no Neo4j connection)",
     )
-    args = parser.parse_args(argv)
+    # Neo4j arguments are added in a second pass; tolerate them here.
+    args, extra = parser.parse_known_args(argv)
+    if args.validate_only and extra:
+        parser.error(f"unrecognized arguments: {' '.join(extra)}")
 
     try:
         export = load_export(args.export)

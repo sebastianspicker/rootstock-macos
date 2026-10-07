@@ -270,6 +270,9 @@
 #graph-container[data-workspace="triage"] #controls,
 #graph-container[data-workspace="triage"] #zoom-controls,
 #graph-container[data-workspace="triage"] #stats,
+#graph-container[data-workspace="triage"] #graph-key,
+#graph-container[data-workspace="paths"] #graph-key,
+#graph-container[data-workspace="queries"] #graph-key,
 #graph-container[data-workspace="paths"] #graph-canvas,
 #graph-container[data-workspace="paths"] #controls,
 #graph-container[data-workspace="paths"] #zoom-controls,
@@ -283,6 +286,7 @@
 #graph-canvas {
   position: relative;
   z-index: 1;
+  touch-action: none;
   display: block;
   width: 100%;
   height: 100%;
@@ -346,7 +350,7 @@
 }
 #controls button.active,
 #controls button[aria-pressed="true"] {
-  border-color: transparent;
+  border-color: var(--rule-strong);
   background: var(--signal-dim);
   color: var(--action);
 }
@@ -398,8 +402,7 @@
   border-radius: var(--radius);
   background: transparent;
   color: var(--subtle);
-  font: 10px var(--font-mono);
-  opacity: 0.7;
+  font: 11px var(--font-mono);
 }
 .stat-item {
   display: flex;
@@ -454,7 +457,9 @@
 .tt-risk.medium {
   color: var(--medium);
 }
-.tt-risk.low,
+.tt-risk.low {
+  color: var(--low);
+}
 .bool-true {
   color: var(--verified);
 }

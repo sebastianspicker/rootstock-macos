@@ -70,6 +70,9 @@ def validate_timestamp(data):
     errors = []
     # timestamp must be parseable ISO 8601
     ts = data.get("timestamp", "")
+    if not isinstance(ts, str):
+        errors.append(f"  Semantic: timestamp must be a string, got {ts!r}")
+        return errors
     try:
         datetime.fromisoformat(ts.replace("Z", "+00:00"))
     except ValueError:
@@ -82,7 +85,10 @@ def validate_required_strings(data):
     errors = []
     # No empty strings in required string fields
     for field in ("hostname", "macos_version", "collector_version"):
-        if not data.get(field, "").strip():
+        value = data.get(field, "")
+        if not isinstance(value, str):
+            errors.append(f"  Semantic: required field '{field}' must be a string, got {value!r}")
+        elif not value.strip():
             errors.append(f"  Semantic: required field '{field}' is empty")
     return errors
 
@@ -91,29 +97,64 @@ def validate_application_identity(data):
     """Validate application identity uniqueness and required fields."""
     errors = []
     # No duplicate application observations by (bundle_id, path)
-    bundle_ids = [(a.get("bundle_id"), a.get("path")) for a in data.get("applications", [])]
+    apps = _application_dicts(data, errors)
     seen = set()
-    for bid in bundle_ids:
-        if bid in seen:
+    for app in apps:
+        bid = (app.get("bundle_id"), app.get("path"))
+        try:
+            duplicate = bid in seen
+            seen.add(bid)
+        except TypeError:
+            errors.append(f"  Semantic: unhashable bundle_id/path in application: {bid!r}")
+            continue
+        if duplicate:
             errors.append(f"  Semantic: duplicate application observation: {bid!r}")
-        seen.add(bid)
 
     # No empty strings in application required string fields
-    for app in data.get("applications", []):
+    for app in apps:
         for field in ("name", "bundle_id", "path"):
-            if not app.get(field, "").strip():
+            value = app.get(field, "")
+            if not isinstance(value, str):
+                errors.append(
+                    f"  Semantic: application {app.get('bundle_id', '?')!r} "
+                    f"has non-string '{field}': {value!r}"
+                )
+            elif not value.strip():
                 errors.append(
                     f"  Semantic: application {app.get('bundle_id', '?')!r} has empty '{field}'"
                 )
     return errors
 
 
+def _application_dicts(data, errors: list[str]) -> list[dict]:
+    """Return application entries that are objects, reporting any that are not."""
+    applications = data.get("applications", [])
+    if not isinstance(applications, list):
+        errors.append("  Semantic: 'applications' must be a list")
+        return []
+    apps = []
+    for index, app in enumerate(applications):
+        if isinstance(app, dict):
+            apps.append(app)
+        else:
+            errors.append(f"  Semantic: application #{index} must be an object, got {app!r}")
+    return apps
+
+
 def validate_entitlement_categories(data):
     """Validate entitlement category values."""
     errors = []
     # Entitlement categories must be from known set
-    for app in data.get("applications", []):
-        for ent in app.get("entitlements", []):
+    for app in _application_dicts(data, []):
+        entitlements = app.get("entitlements", [])
+        if not isinstance(entitlements, list):
+            continue
+        for ent in entitlements:
+            if not isinstance(ent, dict):
+                errors.append(
+                    f"  Semantic: entitlement must be an object in {app.get('bundle_id')!r}"
+                )
+                continue
             if ent.get("category") not in KNOWN_ENTITLEMENT_CATEGORIES:
                 errors.append(
                     f"  Semantic: unknown entitlement category {ent.get('category')!r} "
@@ -172,10 +213,12 @@ def main() -> int:
         return 1
 
     schema_errors = validate_schema(data, schema)
+    if schema_errors:
+        # Later stages assume schema-shaped data; report only the schema errors.
+        return _report(path, data, schema_errors)
     model_errors = validate_models(data)
-    # Semantic checks index into an object; a non-object root already failed the schema.
     semantic_errors = validate_semantics(data) if isinstance(data, dict) else []
-    return _report(path, data, schema_errors + model_errors + semantic_errors)
+    return _report(path, data, model_errors + semantic_errors)
 
 
 if __name__ == "__main__":

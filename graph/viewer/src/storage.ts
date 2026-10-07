@@ -20,3 +20,28 @@ export function getApiToken(): string | null {
 export function clearApiToken(): void {
   liveApiToken = null;
 }
+
+/** Storage can be blocked (private modes, sandboxed frames); preferences then simply do not persist. */
+export function readLocal(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function writeLocal(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Persisting a preference is best effort.
+  }
+}
+
+export function removeLocal(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Persisting a preference is best effort.
+  }
+}

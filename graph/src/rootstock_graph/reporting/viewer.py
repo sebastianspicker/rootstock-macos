@@ -27,11 +27,15 @@ import stat
 import sys
 from pathlib import Path
 from typing import Literal
-from importlib.resources.abc import Traversable
+
+try:
+    from importlib.resources.abc import Traversable
+except ImportError:  # Python 3.10
+    from importlib.abc import Traversable
 
 from ..constants import INTERACTIVE_GRAPH_MAX_EDGES, INTERACTIVE_GRAPH_MAX_NODES
 from ..paths import package_resource_dir
-from .viewer_layout import compute_layout
+from .viewer_layout import compute_layout, graph_identifier_error
 
 MAX_STATIC_VIEWER_BYTES = 64 * 1024 * 1024
 
@@ -40,6 +44,16 @@ def viewer_script_source(asset_dir: Traversable | Path | None = None) -> str:
     """Return the deterministic, self-contained TypeScript viewer bundle."""
     assets = asset_dir or package_resource_dir("viewer")
     return assets.joinpath("viewer.bundle.js").read_text(encoding="utf-8")
+
+
+def _script_safe_json(value: object) -> str:
+    """Serialise JSON so no string can open an HTML comment or close the inline script."""
+    return (
+        json.dumps(value, ensure_ascii=True)
+        .replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+    )
 
 
 def render_viewer_html(
@@ -52,10 +66,8 @@ def render_viewer_html(
     """Render either static or authenticated-live viewer bootstrap from one template."""
     asset_dir = package_resource_dir("viewer")
     template = asset_dir.joinpath("viewer_template.html").read_text(encoding="utf-8")
-    safe_json = json.dumps(data, ensure_ascii=True).replace("</", "<\\/")
-    safe_options = json.dumps(
-        {"mode": mode, "apiBaseUrl": api_base_url}, ensure_ascii=True
-    ).replace("</", "<\\/")
+    safe_json = _script_safe_json(data)
+    safe_options = _script_safe_json({"mode": mode, "apiBaseUrl": api_base_url})
     bootstrap = "RootstockViewer.mount(" + safe_json + ", " + safe_options + ");"
     replacements = {
         "VIEWER_TITLE": html_mod.escape(title),
@@ -147,6 +159,10 @@ def _validated_graph(data: object) -> dict | None:
         return None
     if not all(isinstance(member, dict) for member in [*nodes, *edges]):
         print("ERROR: Graph nodes and edges must be objects", file=sys.stderr)
+        return None
+    identifier_error = graph_identifier_error(nodes, edges)
+    if identifier_error:
+        print(f"ERROR: {identifier_error}", file=sys.stderr)
         return None
     return graph
 

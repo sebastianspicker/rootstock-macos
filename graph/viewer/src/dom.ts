@@ -26,11 +26,15 @@ export interface ViewerDom {
   queriesWorkspace: HTMLElement;
   triageList: HTMLUListElement;
   triageEmpty: HTMLElement;
+  triageUnscored: HTMLButtonElement;
   pathSource: HTMLSelectElement;
   pathDestination: HTMLSelectElement;
   pathRun: HTMLButtonElement;
   pathReset: HTMLButtonElement;
+  pathSwap: HTMLButtonElement;
   pathStatus: HTMLElement;
+  pathResult: HTMLElement;
+  pathSteps: HTMLOListElement;
   tabExplore: HTMLButtonElement;
   tabQueries: HTMLButtonElement;
   explorePanel: HTMLElement;
@@ -61,6 +65,8 @@ export interface ViewerDom {
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
   tooltip: HTMLDivElement;
+  graphKey: HTMLDetailsElement;
+  graphKeyBody: HTMLDivElement;
   focusBanner: HTMLDivElement;
   focusText: HTMLSpanElement;
   focusExit: HTMLButtonElement;
@@ -87,6 +93,7 @@ export interface ViewerDom {
   inspector: HTMLElement;
   inspectorBody: HTMLDivElement;
   inspectorClose: HTMLButtonElement;
+  inspectorAnnouncer: HTMLElement;
   detailEmpty: HTMLElement;
   timelineCollected: HTMLElement;
   timelineImported: HTMLElement;
@@ -132,11 +139,15 @@ export function collectDom(): ViewerDom {
     queriesWorkspace: required("queries-workspace"),
     triageList: required("triage-list"),
     triageEmpty: required("triage-empty"),
+    triageUnscored: required("triage-unscored"),
     pathSource: required("path-source"),
     pathDestination: required("path-destination"),
     pathRun: required("path-run"),
     pathReset: required("path-reset"),
+    pathSwap: required("path-swap"),
     pathStatus: required("path-status"),
+    pathResult: required("path-result"),
+    pathSteps: required("path-steps"),
     tabExplore: required("tab-explore"),
     tabQueries: required("tab-queries"),
     explorePanel: required("explore-panel"),
@@ -167,6 +178,8 @@ export function collectDom(): ViewerDom {
     canvas,
     context,
     tooltip: required("tooltip"),
+    graphKey: required("graph-key"),
+    graphKeyBody: required("graph-key-body"),
     focusBanner: required("focus-banner"),
     focusText: required("focus-text"),
     focusExit: required("focus-exit"),
@@ -193,6 +206,7 @@ export function collectDom(): ViewerDom {
     inspector: required("inspector"),
     inspectorBody: required("inspector-body"),
     inspectorClose: required("inspector-close"),
+    inspectorAnnouncer: required("inspector-announcer"),
     detailEmpty: required("detail-empty"),
     timelineCollected: required("timeline-collected"),
     timelineImported: required("timeline-imported"),

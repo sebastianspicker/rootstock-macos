@@ -1,6 +1,7 @@
 /** Evidence folio selectors operate on the loaded snapshot without inventing collection facts. */
 import type { GraphModel, ViewerNode, GraphEdge, QueryResult } from "./types";
 import { propertyValue } from "./runtime";
+import { shortestPath } from "./model";
 
 export const questions = [
   { id: "01", text: "Which apps with Full Disk Access allow modeled injection?" },
@@ -16,15 +17,31 @@ export const relationship = (edge: GraphEdge, name: string): boolean => {
     kind.replace(/^rs_/, "").replaceAll("_", "").toLowerCase();
   return normalize(edge.kind) === normalize(name);
 };
-export function fdaEdges(graph: GraphModel, id: string): GraphEdge[] {
+const FDA_SERVICE = "kTCCServiceSystemPolicyAllFiles";
+function fdaGrants(graph: GraphModel, id: string, allowed: boolean): GraphEdge[] {
   return (graph.outgoing.get(id) ?? [])
     .map((item) => item.edge)
     .filter(
       (edge) =>
         relationship(edge, "HAS_TCC_GRANT") &&
-        edge.properties?.allowed === true &&
-        graph.nodeById.get(edge.target)?.properties.service === "kTCCServiceSystemPolicyAllFiles",
+        edge.properties?.allowed === allowed &&
+        graph.nodeById.get(edge.target)?.properties.service === FDA_SERVICE,
     );
+}
+export function fdaEdges(graph: GraphModel, id: string): GraphEdge[] {
+  return fdaGrants(graph, id, true);
+}
+/** A recorded grant with `allowed: false` is observed evidence, not a missing fact. */
+export function deniedFdaEdges(graph: GraphModel, id: string): GraphEdge[] {
+  return fdaGrants(graph, id, false);
+}
+export function edgeKindLabel(kind: string): string {
+  return kind.replace(/^rs_/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
+}
+export function edgeBasis(edge: GraphEdge): "inferred" | "observed" {
+  return edge.properties?.inferred === true || edge.properties?._inferred === true
+    ? "inferred"
+    : "observed";
 }
 export function injectionEdges(graph: GraphModel, id: string): GraphEdge[] {
   return (graph.incoming.get(id) ?? [])
@@ -66,36 +83,35 @@ export function affectedApps(graph: GraphModel, id: string): number {
       .map((edge) => edge.source),
   ).size;
 }
-function expandPath(
-  graph: GraphModel,
-  path: string[],
-  visited: Set<string>,
-  queue: string[][],
-): void {
-  if (path.length > 5) return;
-  for (const edge of graph.outgoing.get(path.at(-1) ?? "") ?? []) {
-    if (visited.has(edge.target)) continue;
-    visited.add(edge.target);
-    queue.push([...path, edge.target]);
-  }
+/** Graph without denied grants, so path search cannot pass through a refused permission. */
+function withoutDeniedGrants(graph: GraphModel): GraphModel {
+  const allowed = (edge: GraphEdge): boolean =>
+    !(relationship(edge, "HAS_TCC_GRANT") && edge.properties?.allowed === false);
+  const outgoing = new Map(
+    [...graph.outgoing.entries()].map(([id, entries]) => [
+      id,
+      entries.filter((entry) => allowed(entry.edge)),
+    ]),
+  );
+  return { ...graph, outgoing };
 }
+/** Shortest traversable path (as the Paths workspace computes it) from the modeled payload to Full Disk Access. */
 export function shortestFdaPath(graph: GraphModel): ViewerNode[] {
   const start = graph.nodes.find((node) => node.properties.bundle_id === "attacker.payload");
   if (!start) return [];
-  const queue: string[][] = [[start.id]];
-  const visited = new Set([start.id]);
-  for (let cursor = 0; cursor < queue.length; cursor++) {
-    const path = queue[cursor];
-    if (!path) continue;
-    const last = path.at(-1);
-    if (last && graph.nodeById.get(last)?.properties.service === "kTCCServiceSystemPolicyAllFiles")
-      return path.flatMap((id) => {
-        const node = graph.nodeById.get(id);
-        return node ? [node] : [];
-      });
-    expandPath(graph, path, visited, queue);
-  }
-  return [];
+  const searchable = withoutDeniedGrants(graph);
+  const best = graph.nodes
+    .filter((target) => target.properties.service === FDA_SERVICE)
+    .map((target) => shortestPath(searchable, start.id, target.id)?.orderedNodeIds ?? [])
+    .filter((path) => path.length > 0)
+    .reduce<string[]>(
+      (shortest, path) => (shortest.length && shortest.length <= path.length ? shortest : path),
+      [],
+    );
+  return best.flatMap((id) => {
+    const node = graph.nodeById.get(id);
+    return node ? [node] : [];
+  });
 }
 export function sourceName(graph: GraphModel): string {
   const metadata = graph.payload.metadata ?? {};
@@ -214,7 +230,7 @@ export function localResult(graph: GraphModel, question: string): QueryResult {
           {
             node_names: path.map(nodeName),
             path_length: path.length - 1,
-            scope: "One shortest directed path, up to 5 hops, in the loaded snapshot",
+            scope: "One shortest traversable directed path in the loaded snapshot",
           },
         ]
       : [];

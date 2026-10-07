@@ -361,9 +361,11 @@
 .severity-dot.medium {
   background: var(--medium);
 }
-.severity-dot.informational,
-.severity-dot.low {
+.severity-dot.informational {
   background: var(--verified);
+}
+.severity-dot.low {
+  background: var(--low);
 }
 #custom-query-section label {
   display: block;

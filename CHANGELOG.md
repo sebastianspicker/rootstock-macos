@@ -107,4 +107,4 @@ before a stable release.
   procedure and retain independent versions.
 - `packages/RootstockMacFacts` is licensed separately under Apache-2.0.
 
-[0.1.0-alpha.1]: https://github.com/sebastianspicker/rootstock
+[0.1.0-alpha.1]: https://github.com/sebastianspicker/rootstock-macos

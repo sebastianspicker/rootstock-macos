@@ -9,10 +9,10 @@ import {
   runCustomCypher,
   startLiveSession,
 } from "./live";
-import { HISTORY_STORAGE_NAME, setApiToken } from "./storage";
+import { HISTORY_STORAGE_NAME, removeLocal, setApiToken } from "./storage";
 import { buildFilters } from "./view";
 import { resetFilters } from "./model";
-import { runPath } from "./paths";
+import { runPath, swapPathEndpoints } from "./paths";
 import type { Controller } from "./runtime";
 import type { ViewerDom } from "./dom";
 import type { Theme } from "./types";
@@ -46,6 +46,9 @@ function wireFilterControls(controller: Controller): void {
   dom.clearFilters.addEventListener("click", () => {
     resetFilters(state);
     dom.search.value = "";
+    dom.searchStatus.textContent = "";
+    setPressed(dom.attack, false);
+    setPressed(dom.vulnerable, false);
     buildFilters(controller);
     controller.actions.updateVisibility(controller);
   });
@@ -118,6 +121,7 @@ function wirePathControls(controller: Controller): void {
     controller.actions.updateVisibility(controller);
   });
   dom.pathRun.addEventListener("click", () => runPath(controller));
+  dom.pathSwap.addEventListener("click", () => swapPathEndpoints(controller));
   dom.pathReset.addEventListener("click", () => {
     controller.actions.resetPath(controller);
     controller.actions.updateVisibility(controller);
@@ -143,7 +147,7 @@ function wireQueryControls(controller: Controller): void {
     if (dom.cypherHistory.value) dom.cypherInput.value = dom.cypherHistory.value;
   });
   dom.clearHistory.addEventListener("click", () => {
-    localStorage.removeItem(HISTORY_STORAGE_NAME);
+    removeLocal(HISTORY_STORAGE_NAME);
     renderHistory(controller, []);
     controller.actions.setLiveStatus(controller, "Local Cypher history cleared.", "ok");
   });
@@ -174,27 +178,57 @@ export function wireKeyboardShortcuts(controller: Controller, dom: ViewerDom): v
   document.addEventListener("keydown", (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
-      document
-        .querySelector<HTMLButtonElement>(
-          "body.folio-enabled:not(.graph-tools-open) .folio-topbar button",
-        )
-        ?.click();
-      dom.search.focus();
-      dom.search.select();
+      focusSearch(dom);
       return;
     }
-    if (folioIsVisible()) return;
-    if (editableTarget(event.target)) return;
+    if (event.key === "Escape") {
+      handleEscape(controller, dom, event);
+      return;
+    }
+    if (shortcutIgnored(event)) return;
     shortcutAction(controller, dom, event.key)?.();
   });
 }
 
-export function editableTarget(target: EventTarget | null): boolean {
+/** Escape is not a character-key shortcut: it dismisses from any control (WCAG 2.1.4 exempts it). */
+function handleEscape(controller: Controller, dom: ViewerDom, event: KeyboardEvent): void {
+  if (dom.contextMenu.contains(event.target as Node)) {
+    controller.actions.hideContextMenu(controller);
+    return;
+  }
+  if (!folioIsVisible() && !inTextField(event.target)) dismissTransientUi(controller);
+}
+
+function focusSearch(dom: ViewerDom): void {
+  document
+    .querySelector<HTMLButtonElement>(
+      "body.folio-enabled:not(.graph-tools-open) .folio-topbar button",
+    )
+    ?.click();
+  dom.search.focus();
+  dom.search.select();
+}
+
+/** Single-key shortcuts never fire with modifiers or while a control has focus (WCAG 2.1.4). */
+export function shortcutIgnored(event: KeyboardEvent): boolean {
   return (
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement
+    folioIsVisible() ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.altKey ||
+    editableTarget(event.target)
   );
+}
+
+const INTERACTIVE_TARGET =
+  'button, a, input, select, textarea, summary, [role="tab"], [role="menuitem"], [contenteditable]:not([contenteditable="false"])';
+
+function inTextField(target: EventTarget | null): boolean {
+  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+}
+
+export function editableTarget(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest(INTERACTIVE_TARGET) !== null;
 }
 
 export function shortcutAction(

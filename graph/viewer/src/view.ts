@@ -4,6 +4,7 @@ export { renderNodeList, resetNodeList } from "./node-list";
 
 import { element } from "./runtime";
 import { displayKind, safeNodeColor } from "./model";
+import { renderGraphKey } from "./legend";
 import type { Controller } from "./runtime";
 
 function renderMetadataSummary(
@@ -12,7 +13,7 @@ function renderMetadataSummary(
   generatedAt: Date | null,
 ): void {
   controller.dom.metaInfo.textContent = hostname || "provenance unavailable";
-  controller.dom.snapshotTime.textContent = displayTimestamp(generatedAt);
+  setTimestamp(controller.dom.snapshotTime, generatedAt);
   controller.dom.nodeCount.textContent = String(controller.state.graph.nodes.length);
   controller.dom.edgeCount.textContent = String(controller.state.graph.links.length);
   controller.dom.provenanceSource.textContent =
@@ -26,16 +27,10 @@ function renderTimeline(
   metadata: Record<string, unknown>,
   generatedAt: Date | null,
 ): void {
-  controller.dom.timelineCollected.textContent = displayTimestamp(
-    metadataTimestamp(metadata.collected_at),
-  );
-  controller.dom.timelineImported.textContent = displayTimestamp(
-    metadataTimestamp(metadata.imported_at),
-  );
-  controller.dom.timelineDerived.textContent = displayTimestamp(
-    metadataTimestamp(metadata.derived_at),
-  );
-  controller.dom.timelineSnapshot.textContent = displayTimestamp(generatedAt);
+  setTimestamp(controller.dom.timelineCollected, metadataTimestamp(metadata.collected_at));
+  setTimestamp(controller.dom.timelineImported, metadataTimestamp(metadata.imported_at));
+  setTimestamp(controller.dom.timelineDerived, metadataTimestamp(metadata.derived_at));
+  setTimestamp(controller.dom.timelineSnapshot, generatedAt);
 }
 
 function renderProvenanceStatus(controller: Controller, metadata: Record<string, unknown>): void {
@@ -62,13 +57,22 @@ export function metadataTimestamp(value: unknown): Date | null {
   return Number.isNaN(timestamp.valueOf()) ? null : timestamp;
 }
 
+/** Date, time, and zone: a bare clock time is ambiguous across collection days and hosts. */
 export function displayTime(timestamp: Date): string {
-  return timestamp.toLocaleTimeString([], {
+  const date = timestamp.toLocaleDateString([], { dateStyle: "medium" });
+  const time = timestamp.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
+    timeZoneName: "short",
   });
+  return `${date}, ${time}`;
+}
+
+/** Shows the localized timestamp and keeps the exact ISO value in the title. */
+export function setTimestamp(target: HTMLElement, timestamp: Date | null): void {
+  target.textContent = displayTimestamp(timestamp);
+  if (timestamp) target.title = timestamp.toISOString();
+  else target.removeAttribute("title");
 }
 
 export function displayTimestamp(timestamp: Date | null): string {
@@ -154,11 +158,17 @@ export function nodeListItem(
     [
       element("span", { class: `node-symbol node-severity-${risk}`, "aria-hidden": "true" }),
       element("span", { class: "node-list-label", text: node.label ?? node.id }),
-      element("span", { class: `node-list-risk ${risk}`, text: risk }),
+      element("span", {
+        class: `node-list-risk ${risk}`,
+        text: node.properties.owned === true ? `${risk} · owned` : risk,
+      }),
       element("span", { class: "node-list-kind", text: displayKind(node.kind) }),
     ],
   );
-  button.addEventListener("click", () => controller.actions.selectNode(controller, node.id));
+  button.addEventListener("click", () => {
+    controller.actions.selectNode(controller, node.id);
+    controller.actions.revealNode(controller, node.id);
+  });
   return element("li", {}, [button]);
 }
 
@@ -173,6 +183,7 @@ export function nodeShapeClass(kind: string): string {
 export function buildFilters(controller: Controller): void {
   controller.dom.nodeFilters.replaceChildren(...nodeFilterItems(controller));
   controller.dom.edgeFilters.replaceChildren(...edgeFilterItems(controller));
+  renderGraphKey(controller, () => buildFilters(controller));
 }
 
 export function nodeFilterItems(controller: Controller): HTMLLabelElement[] {
@@ -218,6 +229,7 @@ export function filterItem(
   checkbox.addEventListener("change", () => {
     if (checkbox.checked) activeKinds.add(kind);
     else activeKinds.delete(kind);
+    renderGraphKey(controller, () => buildFilters(controller));
     controller.actions.updateVisibility(controller);
   });
   const children: Node[] = [checkbox];

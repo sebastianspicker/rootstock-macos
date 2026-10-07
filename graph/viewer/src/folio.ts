@@ -12,6 +12,7 @@ import {
   value,
   nodeName,
   localResult,
+  shortestFdaPath,
   recommendations,
   matchApplication,
 } from "./folio-data";
@@ -27,6 +28,8 @@ import {
   appIdentity,
   evidenceTable,
   modeledPath,
+  pathFigure,
+  conventionList,
   recommendationList,
   themeControl,
 } from "./folio-ui";
@@ -243,7 +246,10 @@ class EvidenceFolio {
             this.render(true);
           }),
         );
-    } else this.results(left);
+    } else {
+      this.shortestPathFigure(left);
+      this.results(left);
+    }
     left.append(warning(this.graph));
     content.append(left, this.evidenceAside());
   }
@@ -312,7 +318,21 @@ class EvidenceFolio {
         ),
       );
     }
+    aside.append(heading("Reading key"), conventionList(true));
     return aside;
+  }
+  /** Question 02 shows the path itself above its one-row result. */
+  private shortestPathFigure(parent: HTMLElement): void {
+    if (this.question !== "02") return;
+    const path = shortestFdaPath(this.graph);
+    if (path.length > 0)
+      parent.append(
+        pathFigure(
+          this.graph,
+          path.map((node) => node.id),
+          "Shortest modeled path to Full Disk Access",
+        ),
+      );
   }
   private results(parent: HTMLElement): void {
     renderResults(parent, {

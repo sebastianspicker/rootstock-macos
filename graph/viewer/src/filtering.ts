@@ -18,13 +18,32 @@ export function linkKey(edge: GraphEdge): string {
 
 /** Gives active path and focus modes precedence over ordinary filter visibility. */
 export function computeVisibility(state: ViewerState): VisibilityResult {
-  const { graph, filters, selection } = state;
-  if (selection.path.active && selection.path.result)
+  const { graph, selection } = state;
+  // In Graph the path is drawn over the ordinary filtered view; only Paths isolates it.
+  if (state.workspace === "paths" && selection.path.active && selection.path.result)
     return pathVisibility(graph, selection.path.result);
+  const visibility = baseVisibility(state);
+  if (selection.path.result && !selection.focusedId)
+    return withPath(graph, visibility, selection.path.result);
+  return visibility;
+}
+
+function baseVisibility(state: ViewerState): VisibilityResult {
+  const { graph, filters, selection } = state;
   if (selection.focusedId) return focusedVisibility(graph, selection.focusedId);
   if (filtersAreUnrestricted(filters, graph)) return unfilteredVisibility(graph);
   const nodeIds = filteredNodeIds(state);
   return { nodeIds, linkIndexes: filteredLinkIndexes(graph, filters, nodeIds) };
+}
+
+/** A retained path stays whole on the canvas even when filters hide some of its nodes. */
+function withPath(graph: GraphModel, base: VisibilityResult, path: PathResult): VisibilityResult {
+  const extra = pathVisibility(graph, path);
+  if ([...extra.nodeIds].every((id) => base.nodeIds.has(id))) return base;
+  return {
+    nodeIds: new Set([...base.nodeIds, ...extra.nodeIds]),
+    linkIndexes: new Set([...base.linkIndexes, ...extra.linkIndexes]),
+  };
 }
 
 function filtersAreUnrestricted(filters: ViewerState["filters"], graph: GraphModel): boolean {
@@ -136,7 +155,7 @@ function denseLinkIndexes(
 function edgeMatchesFilters(edge: GraphEdge, filters: ViewerState["filters"]): boolean {
   return (
     filters.activeEdgeKinds.has(edge.kind) &&
-    (!filters.attackPathsOnly || edge.properties?._traversable === true)
+    (!filters.attackPathsOnly || edge.properties?._traversable !== false)
   );
 }
 

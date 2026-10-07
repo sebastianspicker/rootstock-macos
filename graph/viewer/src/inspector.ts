@@ -5,6 +5,12 @@ import { element, propertyValue } from "./runtime";
 import type { Controller } from "./runtime";
 import type { NodeId, ViewerNode } from "./types";
 import { renderNodeList } from "./view";
+import { relationshipPanel } from "./inspector-relations";
+export {
+  relationshipPanel,
+  relationshipSummaryRow,
+  relationshipDetail,
+} from "./inspector-relations";
 
 export function inspectNode(controller: Controller, nodeId: NodeId): void {
   const node = controller.state.graph.nodeById.get(nodeId) ?? null;
@@ -26,17 +32,19 @@ export function inspectNode(controller: Controller, nodeId: NodeId): void {
 
   const footer = inspectorFooter(tabs, panels, properties);
 
+  // DOM order matches the visual order so reading and tab order follow the layout.
   controller.dom.inspectorBody.append(
     summary,
-    actions,
     tabs,
     properties,
     relationships,
     provenance,
     remediation,
+    actions,
     modelNote,
     footer,
   );
+  controller.dom.inspectorAnnouncer.textContent = `Details for ${node.label ?? node.id}`;
   controller.dom.inspector.classList.add("open");
   controller.dom.detailEmpty.hidden = true;
   renderNodeList(controller);
@@ -59,7 +67,11 @@ function inspectorSummary(node: ViewerNode): HTMLElement {
     summaryKicker(kindLabel, propertyText(node.properties.tier ?? node.properties.security_tier)),
     element("h3", { text: node.label ?? node.id }),
     element("p", { class: "field-help", text: subtitle }),
-    summaryRiskLine(risk, propertyText(node.properties.risk_score ?? node.properties.score)),
+    summaryRiskLine(
+      risk,
+      propertyText(node.properties.risk_score ?? node.properties.score),
+      node.properties.owned === true,
+    ),
   ]);
 }
 
@@ -78,7 +90,7 @@ function summaryKicker(kindLabel: string, tier: string): HTMLElement {
   return kicker;
 }
 
-function summaryRiskLine(risk: string, score: string): HTMLElement {
+function summaryRiskLine(risk: string, score: string, owned: boolean): HTMLElement {
   const riskLine = element("div", { class: "inspector-risk-line" }, [
     element("span", {
       class: `severity-badge ${risk}`,
@@ -87,12 +99,20 @@ function summaryRiskLine(risk: string, score: string): HTMLElement {
   ]);
   if (score)
     riskLine.appendChild(element("span", { class: "risk-score", text: `Risk ${score} / 10` }));
+  if (owned) riskLine.appendChild(element("span", { class: "owned-chip", text: "owned" }));
   return riskLine;
 }
 
 function inspectorActions(controller: Controller, node: ViewerNode): HTMLElement {
   const actions = element("div", { class: "inspector-actions" });
-  const focus = element("button", { type: "button", class: "secondary-action", text: "Center" });
+  if (controller.state.live.enabled) actions.appendChild(ownedAction(controller, node));
+  const center = element("button", { type: "button", class: "secondary-action", text: "Center" });
+  center.addEventListener("click", () => controller.actions.centerNode(controller, node.id));
+  const focus = element("button", {
+    type: "button",
+    class: "secondary-action",
+    text: "Neighbors only",
+  });
   focus.addEventListener("click", () => controller.actions.enterFocusMode(controller, node.id));
   const graph = element("button", {
     type: "button",
@@ -108,8 +128,7 @@ function inspectorActions(controller: Controller, node: ViewerNode): HTMLElement
     text: "Find paths from here",
   });
   path.addEventListener("click", () => controller.actions.togglePathMode(controller, node.id));
-  actions.append(focus, graph, path);
-  if (controller.state.live.enabled) actions.appendChild(ownedAction(controller, node));
+  actions.append(center, focus, graph, path);
   return actions;
 }
 
@@ -154,9 +173,13 @@ function inspectorFooter(
   });
   raw.addEventListener("click", () => {
     selectInspectorPanel(tabs, panels, "evidence");
-    properties.scrollIntoView({ block: "start", behavior: "smooth" });
+    properties.scrollIntoView({ block: "start", behavior: scrollBehavior() });
   });
   return element("div", { class: "inspector-footer" }, [raw]);
+}
+
+export function scrollBehavior(): ScrollBehavior {
+  return matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 }
 
 export function displayNodeKind(kind: string): string {
@@ -194,14 +217,41 @@ export function inspectorTabs(...panels: HTMLElement[]): HTMLDivElement {
     const tab = element("button", {
       type: "button",
       role: "tab",
+      id: `inspector-tab-${def.id}`,
+      "aria-controls": `inspector-panel-${def.id}`,
       "data-inspector-tab": def.id,
       "aria-selected": String(index === 0),
+      tabindex: index === 0 ? "0" : "-1",
       text: def.label,
     });
     tab.addEventListener("click", () => selectInspectorPanel(tabs, panels, def.id));
     tabs.appendChild(tab);
   }
+  for (const panel of panels) {
+    const id = panel.dataset.inspectorPanel ?? "";
+    panel.id = `inspector-panel-${id}`;
+    panel.setAttribute("aria-labelledby", `inspector-tab-${id}`);
+  }
+  tabs.addEventListener("keydown", (event) => moveInspectorTab(event, tabs, panels));
   return tabs;
+}
+
+/** Left and Right move between tabs with a roving tabindex; Home and End jump to the ends. */
+function moveInspectorTab(event: KeyboardEvent, tabs: HTMLElement, panels: HTMLElement[]): void {
+  const all = Array.from(tabs.querySelectorAll<HTMLButtonElement>("[data-inspector-tab]"));
+  const current = all.indexOf(document.activeElement as HTMLButtonElement);
+  if (current < 0) return;
+  const offsets: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 };
+  let next = current;
+  if (event.key in offsets) next = (current + (offsets[event.key] ?? 0) + all.length) % all.length;
+  else if (event.key === "Home") next = 0;
+  else if (event.key === "End") next = all.length - 1;
+  else return;
+  event.preventDefault();
+  const tab = all[next];
+  if (!tab) return;
+  selectInspectorPanel(tabs, panels, tab.dataset.inspectorTab ?? "evidence");
+  tab.focus();
 }
 
 export function selectInspectorPanel(
@@ -210,45 +260,11 @@ export function selectInspectorPanel(
   active: string,
 ): void {
   for (const tab of tabs.querySelectorAll<HTMLElement>("[data-inspector-tab]")) {
-    tab.setAttribute("aria-selected", String(tab.dataset.inspectorTab === active));
+    const selected = tab.dataset.inspectorTab === active;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
   }
   for (const panel of panels) panel.hidden = panel.dataset.inspectorPanel !== active;
-}
-
-export function relationshipPanel(controller: Controller, nodeId: NodeId): HTMLElement {
-  const panel = inspectorPanel("relationships");
-  panel.appendChild(element("h4", { text: "Relationship summary" }));
-  const incoming = controller.state.graph.incoming.get(nodeId) ?? [];
-  const outgoing = controller.state.graph.outgoing.get(nodeId) ?? [];
-  panel.append(
-    relationshipSummaryRow("Incoming", incoming.length),
-    relationshipSummaryRow("Outgoing", outgoing.length),
-    relationshipSummaryRow(
-      "Connected",
-      new Set([...incoming.map((entry) => entry.source), ...outgoing.map((entry) => entry.target)])
-        .size,
-    ),
-  );
-  for (const entry of incoming.slice(0, 8))
-    panel.appendChild(relationshipDetail("From", entry.edge.kind, entry.source));
-  for (const entry of outgoing.slice(0, 8))
-    panel.appendChild(relationshipDetail("To", entry.edge.kind, entry.target));
-  return panel;
-}
-
-export function relationshipSummaryRow(label: string, count: number): HTMLElement {
-  return element("div", { class: "relationship-summary-row" }, [
-    element("span", { text: label }),
-    element("strong", { text: String(count) }),
-  ]);
-}
-
-export function relationshipDetail(direction: string, kind: string, nodeId: string): HTMLElement {
-  return element("div", { class: "relationship-detail" }, [
-    element("span", { text: direction }),
-    element("strong", { text: displayNodeKind(kind) }),
-    element("code", { text: nodeId }),
-  ]);
 }
 
 function connectedRecommendations(controller: Controller, nodeId: NodeId): ViewerNode[] {
@@ -278,7 +294,7 @@ export function provenancePanel(controller: Controller): HTMLElement {
   return panel;
 }
 
-function inspectorPanel(name: string): HTMLElement {
+export function inspectorPanel(name: string): HTMLElement {
   const panel = element("section", {
     class: "prop-section inspector-panel",
     role: "tabpanel",

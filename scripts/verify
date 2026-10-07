@@ -32,6 +32,17 @@ run() {
     "$@"
 }
 
+# Run a command that must refuse: a clean non-zero exit, not a missing or crashed binary.
+expect_refusal() {
+    label=$1
+    shift
+    printf '\n==> expect refusal: %s\n' "$*"
+    status=0
+    "$@" || status=$?
+    [ "$status" -ne 0 ] || fail "$label must fail (exit 0)"
+    [ "$status" -lt 126 ] || fail "$label did not run cleanly (exit $status)"
+}
+
 run_swift_test() {
     run sh "$ROOT/scripts/swift-test" "$@"
 }
@@ -123,7 +134,7 @@ lane_swift_family() {
     need mktemp
     run python3 "$ROOT/rootstock-blue/Tools/scripts/check-field-taxonomy.py"
     (
-        family_tmp=$(mktemp -d /tmp/rootstock-family.XXXXXX)
+        family_tmp=$(mktemp -d "${TMPDIR:-/tmp}/rootstock-family.XXXXXX")
         trap 'rm -rf "$family_tmp"' EXIT HUP INT TERM
         red_project="$family_tmp/red-project"
         red_export="$family_tmp/red-family.json"
@@ -181,9 +192,8 @@ PY
             run .build/debug/rootstock-blue case verify "$blue_case"
             run .build/debug/rootstock-blue export family "$blue_case" "$blue_export"
             run .build/debug/rootstock-blue export family "$blue_case" "$blue_export_repeat"
-            if .build/debug/rootstock-blue record start; then
-                fail "unsupported rootstock-blue record start command must fail"
-            fi
+            expect_refusal "unsupported rootstock-blue record start command" \
+                .build/debug/rootstock-blue record start
         )
         [ -s "$blue_export" ] || fail "rootstock-blue family export is empty"
         run python3 - "$blue_export" "$blue_export_repeat" <<'PY'
@@ -214,9 +224,8 @@ PY
         (
             cd "$ROOT/rootstock-red"
             run bash Scripts/check-no-lab-link.sh
-            if .build/debug/rootstock-red lab persist install; then
-                fail "rootstock-red lab mutation must fail closed without authorization"
-            fi
+            expect_refusal "rootstock-red lab mutation without authorization" \
+                .build/debug/rootstock-red lab persist install
         )
         (
             cd "$ROOT/rootstock-blue"

@@ -24,18 +24,24 @@ def diff_vulnerabilities(before: ScanResult, after: ScanResult) -> Vulnerability
     after_names = {a.bundle_id: a.name for a in after.applications}
     before_names = {a.bundle_id: a.name for a in before.applications}
 
+    new_associations = _new_injection_cve_associations(
+        sorted(after_injectable - before_injectable),
+        after_names,
+        enriched,
+        _injection_cve_ids(registry),
+    )
     return VulnerabilityDiff(
-        new_cve_associations=_new_injection_cve_associations(
-            after_injectable - before_injectable,
-            after_names,
-            enriched,
-            _injection_cve_ids(registry),
-        )[:50],
+        new_cve_associations=new_associations[:50],
         resolved_cve_associations=_resolved_injection_cve_associations(
-            before_injectable - after_injectable,
+            sorted(before_injectable - after_injectable),
             before_names,
         )[:50],
-        new_kev_entries=_new_kev_entries(enriched),
+        new_kev_entries=_new_kev_entries(
+            enriched,
+            {a.bundle_id for a in after.applications},
+            {a.bundle_id for a in before.applications},
+            {assoc["cve_id"] for assoc in new_associations},
+        ),
     )
 
 
@@ -69,7 +75,7 @@ def _injection_cve_ids(registry: dict) -> set[str]:
 
 
 def _new_injection_cve_associations(
-    newly_injectable: set[str],
+    newly_injectable: list[str],
     after_names: dict[str, str],
     enriched: dict,
     injection_cve_ids: set[str],
@@ -92,7 +98,7 @@ def _new_injection_cve_associations(
 
 
 def _resolved_injection_cve_associations(
-    no_longer_injectable: set[str],
+    no_longer_injectable: list[str],
     before_names: dict[str, str],
 ) -> list[dict]:
     return [
@@ -105,13 +111,33 @@ def _resolved_injection_cve_associations(
     ]
 
 
-def _new_kev_entries(enriched: dict) -> list[dict]:
+def _new_kev_entries(
+    enriched: dict,
+    after_bundle_ids: set[str],
+    before_bundle_ids: set[str],
+    associated_cve_ids: set[str],
+) -> list[dict]:
+    """List KEV CVEs that became relevant between the two scans, sorted by CVE id.
+
+    A KEV CVE is included when its registry entry names an affected bundle id
+    that is present in the newer scan but was absent from the older one, or when
+    the diff already associates it with a newly injectable app
+    (``associated_cve_ids``).
+    """
     return [
         {
             "cve_id": cve_id,
             "title": entry.base.title,
             "kev_date_added": entry.kev_date_added,
         }
-        for cve_id, entry in enriched.items()
-        if entry.in_kev and entry.kev_date_added
+        for cve_id, entry in sorted(enriched.items())
+        if entry.in_kev
+        and entry.kev_date_added
+        and (
+            cve_id in associated_cve_ids
+            or (
+                after_bundle_ids.intersection(entry.base.affected_bundle_ids)
+                and not before_bundle_ids.intersection(entry.base.affected_bundle_ids)
+            )
+        )
     ]

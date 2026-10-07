@@ -28,6 +28,7 @@ from .report_campaign_diagrams import (
 from .report_diagrams import mermaid_attack_paths_block, mermaid_tcc_pie
 from .report_formatters import (
     escape_report_value,
+    escape_table_cell,
     format_generic_table,
     format_injectable_fda_table,
     format_electron_table,
@@ -108,7 +109,7 @@ def _build_top_attack_paths(
 
 def _append_scan_metadata(sections: list[str], metadata: dict, now: str) -> None:
     rows = _scan_metadata_rows(metadata, now)
-    escaped_rows = [[escape_report_value(cell) for cell in row] for row in rows]
+    escaped_rows = [[escape_table_cell(cell) for cell in row] for row in rows]
     sections.extend(
         [
             "## Scan Metadata",

@@ -53,12 +53,18 @@ export function renderResults(parent: HTMLElement, view: ResultsView): void {
           view.select(node);
         });
         inspect.disabled = !node;
-        inspect.title = node
-          ? "Inspect this application installation"
-          : "No unique application installation in the loaded snapshot for this row. Use Graph tools for query and path details.";
+        const cell = el("td", {}, [inspect]);
+        // The reason a row cannot be inspected is visible text, not only a tooltip.
+        if (!node)
+          cell.append(
+            para(
+              "No unique application installation in the loaded snapshot for this row. Use Graph tools for query and path details.",
+              "field-help",
+            ),
+          );
         return el("tr", {}, [
           ...columns.map((column) => el("td", { text: value(row[column]) })),
-          el("td", {}, [inspect]),
+          cell,
         ]);
       }),
     );

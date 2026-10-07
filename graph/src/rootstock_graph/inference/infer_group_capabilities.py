@@ -11,12 +11,14 @@ as explicit edges during import. This module creates CAN_DEBUG edges for
 _developer group members.
 
 Edge: User -[:CAN_DEBUG {inferred: true}]-> Application
-      (for all running or injectable applications)
+      (for non-SIP-protected applications; the synthetic attacker app is excluded)
 """
 
 from __future__ import annotations
 
 from neo4j import Session
+
+from ..constants import ATTACKER_BUNDLE_ID
 
 
 def infer(session: Session) -> int:
@@ -35,6 +37,7 @@ def infer(session: Session) -> int:
         MATCH (u:User)-[:MEMBER_OF]->(:LocalGroup {name: '_developer'})
         MATCH (a:Application)
         WHERE NOT coalesce(a.is_sip_protected, false)
+          AND a.bundle_id <> $attacker_id
           AND (a.hardened_runtime = false
                OR EXISTS {
                    MATCH (a)-[:HAS_ENTITLEMENT]->(:Entitlement {name: 'com.apple.security.get-task-allow'})
@@ -43,6 +46,7 @@ def infer(session: Session) -> int:
         SET r.inferred = true,
             r.reason = '_developer_group_membership'
         RETURN count(r) AS n
-        """
+        """,
+        attacker_id=ATTACKER_BUNDLE_ID,
     )
     return result.single()["n"]

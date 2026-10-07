@@ -430,19 +430,24 @@ body.folio-enabled {
 .folio-mark.unknown {
   color: var(--subtle);
 }
+.folio-conventions.compact dd {
+  margin-bottom: var(--space-3);
+  font-size: var(--size-2);
+}
 .folio-conventions .folio-mark.unknown::before {
   border-top-style: dotted;
 }
 
-/* Modeled path: three specimens joined by labelled relationships. */
+/* Modeled path: any number of specimens joined by labelled relationships. Auto columns
+   alternate specimen and joint widths, so the figure works for every path length. */
 .folio-path {
   display: grid;
-  grid-template-columns:
-    minmax(0, 1fr) minmax(112px, 0.8fr) minmax(0, 1fr) minmax(112px, 0.8fr)
-    minmax(0, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr) minmax(96px, 0.7fr);
   align-items: start;
   gap: var(--space-3);
   margin: 0 0 var(--space-7);
+  overflow-x: auto;
 }
 .folio-path-node {
   min-width: 0;
@@ -459,11 +464,11 @@ body.folio-enabled {
   color: var(--muted);
   font: 11.5px / 1.45 var(--font-mono);
 }
-.folio-path-node:first-child {
+.folio-path-node.modeled {
   border-top-style: dashed;
   border-top-color: var(--annotation);
 }
-.folio-path-node:first-child strong {
+.folio-path-node.modeled strong {
   color: var(--annotation);
   font-style: italic;
 }
@@ -491,6 +496,10 @@ body.folio-enabled {
 .folio-path-edge.inferred {
   color: var(--annotation);
   border-bottom-style: dashed;
+}
+.folio-path-edge.unknown {
+  color: var(--subtle);
+  border-bottom-style: dotted;
 }
 .folio-path-edge code {
   font-size: 11px;
@@ -810,10 +819,7 @@ body.folio-enabled {
     grid-template-columns: minmax(0, 1fr) minmax(240px, 0.6fr);
   }
   .folio-path {
-    grid-template-columns: minmax(0, 1fr) minmax(88px, 0.7fr) minmax(0, 1fr) minmax(88px, 0.7fr) minmax(
-        0,
-        1fr
-      );
+    grid-auto-columns: minmax(0, 1fr) minmax(88px, 0.7fr);
   }
 }
 
@@ -896,8 +902,11 @@ body.folio-enabled {
     width: 100%;
   }
   .folio-path {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+    overflow-x: visible;
   }
   .folio-path-edge {
     align-items: flex-start;
@@ -909,6 +918,9 @@ body.folio-enabled {
   }
   .folio-path-edge.inferred {
     border-left-style: dashed;
+  }
+  .folio-path-edge.unknown {
+    border-left-style: dotted;
   }
   .folio-path-edge::after {
     right: auto;
@@ -999,5 +1011,25 @@ body.folio-enabled {
   #graph-container:not([data-workspace="graph"]) #graph-canvas {
     position: absolute;
     inset: 0;
+  }
+}
+
+/* The sticky footer must not cover a focused control (WCAG 2.4.11). */
+html:has(body.folio-enabled:not(.graph-tools-open)),
+#evidence-folio {
+  scroll-padding-bottom: 96px;
+}
+
+/* Forced colors drop background tints and gradients; keep the checked state visible. */
+@media (forced-colors: active) {
+  #evidence-folio input[type="radio"]:checked {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+    background: radial-gradient(circle, CanvasText 0 4px, Canvas 4.5px);
+  }
+  .folio-choices label:has(input:checked),
+  .folio-format:has(input:checked) {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
   }
 }

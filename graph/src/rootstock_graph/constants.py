@@ -95,3 +95,16 @@ NODE_KEY_PROPERTY: dict[str, str] = {
     "Service": "id",
     "WebApp": "id",
 }
+
+# Default values for parameterised saved queries
+DEFAULT_PARAMS = {
+    "target_service": "kTCCServiceSystemPolicyAllFiles",
+    "min_permissions": 3,
+    "team_id": "",
+    "bundle_id": "",
+    "days_old": 365,
+    "min_methods": 1,
+    "username": "",
+    "scope": None,
+    "app_name": None,
+}
