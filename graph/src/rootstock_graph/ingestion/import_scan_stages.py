@@ -1,4 +1,4 @@
-"""Later-stage import phases for a scan: security, enrichment, computer, device identity."""
+"""Later-stage import phases for a scan: security, enrichment, computer, device identity, host evidence."""
 
 from __future__ import annotations
 
@@ -9,6 +9,16 @@ from .import_nodes_enrichment import (
     import_file_acls,
     import_running_processes,
     import_user_details,
+)
+from .import_nodes_inventory import (
+    import_browser_extensions,
+    import_installed_packages,
+    import_trusted_certificates,
+)
+from .import_nodes_network import (
+    import_host_settings,
+    import_network_listeners,
+    import_processes,
 )
 from .import_nodes_sandbox import import_sandbox_profiles
 from .import_nodes_security import (
@@ -79,6 +89,7 @@ def import_computer_inventory(
 ) -> None:
     computer = ComputerData(
         hostname=scan.hostname,
+        hardware_uuid=scan.hardware_uuid,
         macos_version=scan.macos_version,
         scan_id=scan.scan_id,
         scanned_at=scan.timestamp,
@@ -115,3 +126,51 @@ def import_device_identity_inventory(session, scan) -> None:
         session, scan.sandbox_profiles, scan.scan_id
     )
     print(f"  Sandbox:       {n_sandbox} profiles, {n_sandbox_edges} HAS_SANDBOX_PROFILE edges")
+
+
+def scan_firewall_enabled(scan) -> bool | None:
+    """The application firewall state recorded by this scan (None when not collected)."""
+    states = [status.enabled for status in scan.firewall_status]
+    return states[0] if states else None
+
+
+def import_host_evidence(session, scan) -> dict[str, tuple[int, ...]]:
+    """Import per-scan host evidence attached to the Computer node (run after import_computer)."""
+    host, scan_id = scan.hostname, scan.scan_id
+    return {
+        "settings": (import_host_settings(session, scan),),
+        "processes": import_processes(session, scan.running_processes, host, scan_id),
+        "listeners": import_network_listeners(
+            session, scan.network_listeners, host, scan_id, scan_firewall_enabled(scan)
+        ),
+        "certificates": import_trusted_certificates(
+            session, scan.certificate_trust_settings, host, scan_id
+        ),
+        "extensions": import_browser_extensions(session, scan.browser_extensions, host, scan_id),
+        "packages": import_installed_packages(
+            session, scan.installed_packages, scan.applications, host, scan_id
+        ),
+    }
+
+
+def import_host_evidence_inventory(session, scan) -> None:
+    counts = import_host_evidence(session, scan)
+    print(f"  Host settings: {counts['settings'][0]} Computer node updated")
+    n_proc, n_inst, n_parent, n_runs = counts["processes"]
+    print(
+        f"  Processes:     {n_proc} nodes, {n_inst} INSTANCE_OF, {n_parent} PARENT_OF, {n_runs} RUNS_ON edges"
+    )
+    n_listen, n_listens_on, n_exposed = counts["listeners"]
+    print(
+        f"  Listeners:     {n_listen} nodes, {n_listens_on} LISTENS_ON, {n_exposed} EXPOSED_ON edges"
+    )
+    n_cert, n_trusts, n_same = counts["certificates"]
+    print(
+        f"  Trusted certs: {n_cert} nodes, {n_trusts} TRUSTS_CERTIFICATE, {n_same} SAME_CERTIFICATE edges"
+    )
+    n_ext, n_has_ext, n_ext_on = counts["extensions"]
+    print(
+        f"  Browser exts:  {n_ext} nodes, {n_has_ext} HAS_EXTENSION, {n_ext_on} INSTALLED_ON edges"
+    )
+    n_pkg, n_pkg_on, n_by = counts["packages"]
+    print(f"  Packages:      {n_pkg} nodes, {n_pkg_on} INSTALLED_ON, {n_by} INSTALLED_BY edges")

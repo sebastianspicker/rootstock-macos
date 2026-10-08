@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from ..constants import NODE_KEY_PROPERTY
+from .opengraph_mapping_host import (
+    HOST_EVIDENCE_DISPLAY_FIELDS,
+    HOST_EVIDENCE_EDGE_TYPES,
+    HOST_EVIDENCE_NODE_TYPES,
+)
 
 # ── Node type mapping ───────────────────────────────────────────────────────
 
@@ -160,6 +165,7 @@ NODE_TYPE_MAP: dict[str, dict] = {
         "icon": "fa-database",
         "color": "#f778ba",
     },
+    **HOST_EVIDENCE_NODE_TYPES,
 }
 
 # Family open-export (rootstock-red / rootstock-blue) disambiguates labels that
@@ -231,6 +237,8 @@ EDGE_TYPE_MAP: dict[str, dict] = {
     "HAS_KEYTAB": {"kind": "rs_HasKeytab", "traversable": False},
     "CAN_READ_KERBEROS": {"kind": "rs_CanReadKerberos", "traversable": True},
     "AFFECTED_BY": {"kind": "rs_AffectedBy", "traversable": True},
+    "HAS_CVE_CANDIDATE": {"kind": "rs_HasCVECandidate", "traversable": False},
+    "HAS_CVE_CONTEXT": {"kind": "rs_HasCVEContext", "traversable": False},
     "MAPS_TO_TECHNIQUE": {"kind": "rs_MapsToTechnique", "traversable": False},
     "HAS_SANDBOX_PROFILE": {"kind": "rs_HasSandboxProfile", "traversable": False},
     "CAN_ESCAPE_SANDBOX": {"kind": "rs_CanEscapeSandbox", "traversable": True},
@@ -264,6 +272,7 @@ EDGE_TYPE_MAP: dict[str, dict] = {
     "OWNED_BY": {"kind": "rs_CveOwnedBy", "traversable": False},
     "RUN": {"kind": "rs_CveRun", "traversable": True},
     "SERVES": {"kind": "rs_CveServes", "traversable": True},
+    **HOST_EVIDENCE_EDGE_TYPES,
 }
 
 
@@ -394,15 +403,66 @@ _NODE_DISPLAY_FIELDS: dict[str, tuple[tuple[str, ...], str]] = {
     "TCC_Permission": (("display_name", "service"), "Unknown Permission"),
     "Entitlement": (("name",), "Unknown Entitlement"),
     "XPC_Service": (("label",), "Unknown XPC"),
+    "LaunchItem": (("label", "path"), "Unknown Launch Item"),
     "Keychain_Item": (("label",), "Unknown Keychain Item"),
+    "MDM_Profile": (("display_name", "identifier"), "Unknown Profile"),
+    "Computer": (("hostname", "computer_key"), "Unknown Host"),
+    "FirewallPolicy": ((), "Application Firewall"),
+    "RemoteAccessService": (("service",), "Remote Access"),
+    "LoginSession": (("terminal",), "Login Session"),
+    "CriticalFile": (("path",), "Unknown File"),
+    "SudoersRule": (("key",), "Sudoers Rule"),
+    "SystemExtension": (("identifier",), "System Extension"),
+    "AuthorizationRight": (("name",), "Authorization Right"),
+    "AuthorizationPlugin": (("name",), "Authorization Plugin"),
+    "CertificateAuthority": (("common_name", "sha256"), "Certificate Authority"),
+    "BluetoothDevice": (("name", "address"), "Bluetooth Device"),
+    "KerberosArtifact": (("path",), "Kerberos Artifact"),
+    "Vulnerability": (("cve_id",), "Vulnerability"),
+    "AttackTechnique": (("technique_id",), "Technique"),
+    "ThreatGroup": (("name", "group_id"), "Threat Group"),
+    "CWE": (("cwe_id",), "Weakness"),
+    "SandboxProfile": (("bundle_id",), "Sandbox Profile"),
+    "Recommendation": (("title", "text", "key"), "Recommendation"),
     "Finding": (("name", "finding_id", "id"), "Finding"),
     "Host": (("hostname", "name", "id"), "Host"),
     "Protection": (("name", "id"), "Protection"),
+    **HOST_EVIDENCE_DISPLAY_FIELDS,
 }
+
+_COMPOSITE_DISPLAY_NAMES = {
+    "Vulnerability": ("cve_id", "title"),
+    "AttackTechnique": ("technique_id", "name"),
+    "CWE": ("cwe_id", "name"),
+    "LoginSession": ("username", "terminal"),
+    "RemoteAccessService": ("service", "enabled"),
+}
+
+_SERVICE_DISPLAY = {"ssh": "Remote Login (SSH)", "screen_sharing": "Screen Sharing"}
+
+
+def _composite_display_name(label: str, props: dict) -> str | None:
+    """Two-part names such as ``CVE-2024-1 · Title`` or ``alice @ console``."""
+    fields = _COMPOSITE_DISPLAY_NAMES.get(label)
+    if not fields:
+        return None
+    first, second = (props.get(field) for field in fields)
+    if label == "RemoteAccessService":
+        name = _SERVICE_DISPLAY.get(str(first), str(first or "Remote Access"))
+        state = {True: "on", False: "off"}.get(second, "state unknown")
+        return f"{name} ({state})"
+    if label == "LoginSession":
+        return f"{first} @ {second}" if first and second else None
+    if first and second:
+        return f"{first} · {second}"
+    return None
 
 
 def node_display_name(label: str, props: dict) -> str:
     """Human-readable display name for a node."""
+    composite = _composite_display_name(label, props)
+    if composite:
+        return composite
     fields, fallback = _NODE_DISPLAY_FIELDS.get(
         label,
         (("name", "display_name", "label"), "Unknown"),

@@ -7,7 +7,8 @@ Usage:
         [--neo4j bolt://localhost:7687]
         [--neo4j-user neo4j]
         [--neo4j-password <password>]  # or NEO4J_PASSWORD
-        [--replace-host]  # delete earlier scans of the same hostname first
+        [--keep-previous-scans]  # keep earlier scans of this Mac (default: replace them;
+                                 # same hostname and hardware UUID)
 
 Exit code 0 on success, 1 on failure.
 """
@@ -37,11 +38,12 @@ from .import_scan_stages import (
     import_computer_inventory,
     import_device_identity_inventory,
     import_enrichment_inventory,
+    import_host_evidence_inventory,
     import_security_inventory,
 )
 from ..constants import FDA_SERVICE
 from ..neo4j import add_neo4j_args, connect_from_args
-from .replace_host import add_replace_host_arg, replace_host_scans
+from .replace_host import add_replace_host_arg, replace_host_requested, replace_host_scans
 from .scan_loader import load_scan
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
@@ -73,6 +75,11 @@ _NODE_LABELS = [
     "ADGroup",
     "SandboxProfile",
     "UnresolvedTCCGrant",
+    "Process",
+    "NetworkListener",
+    "TrustedCertificate",
+    "BrowserExtension",
+    "InstalledPackage",
 ]
 
 _REL_TYPES = [
@@ -96,6 +103,15 @@ _REL_TYPES = [
     "SIGNED_BY_CA",
     "ISSUED_BY",
     "PAIRED_WITH",
+    "INSTANCE_OF",
+    "PARENT_OF",
+    "RUNS_ON",
+    "LISTENS_ON",
+    "EXPOSED_ON",
+    "TRUSTS_CERTIFICATE",
+    "SAME_CERTIFICATE",
+    "HAS_EXTENSION",
+    "INSTALLED_BY",
     # Inference-created
     "CAN_INJECT_INTO",
     "CHILD_INHERITS_TCC",
@@ -121,6 +137,7 @@ _REL_TYPES = [
     "CAN_ESCAPE_SANDBOX",
     "CAN_ACCESS_MACH_SERVICE",
     "REFERENCES_TCC_PERMISSION",
+    "HAS_CVE_CONTEXT",
 ]
 
 
@@ -257,6 +274,10 @@ def _print_scan_contents(scan) -> None:
     print(f"  AD binding:       {ad_status}")
     print(f"  Kerberos arts:    {len(scan.kerberos_artifacts):>5}")
     print(f"  Sandbox profiles: {len(scan.sandbox_profiles):>5}")
+    print(f"  Net listeners:    {len(scan.network_listeners):>5}")
+    print(f"  Trusted certs:    {len(scan.certificate_trust_settings):>5}")
+    print(f"  Browser exts:     {len(scan.browser_extensions):>5}")
+    print(f"  Packages:         {len(scan.installed_packages):>5}")
     if scan.errors:
         print(f"  Collection errors:{len(scan.errors):>5}")
     print()
@@ -307,17 +328,18 @@ def _import_core_inventory(session, scan) -> tuple[int, int, str]:
     return grants_linked, grants_skipped, import_status
 
 
-def _run_import(driver, scan, replace_host: bool = False) -> ImportSummary:
+def _run_import(driver, scan, replace_host: bool = True) -> ImportSummary:
     """Run import phases in dependency order and summarize the committed graph."""
     print(f"--- Importing to Neo4j {'─' * 38}")
     with driver.session() as session:
         if replace_host:
-            n_removed = replace_host_scans(session, scan.hostname, scan.scan_id)
+            n_removed = replace_host_scans(session, scan.hostname, scan.scan_id, scan.hardware_uuid)
             print(f"  Replaced host: {n_removed} nodes removed from earlier scans")
         grants_linked, grants_skipped, import_status = _import_core_inventory(session, scan)
         import_security_inventory(session, scan)
         import_enrichment_inventory(session, scan)
         import_computer_inventory(session, scan, grants_linked, grants_skipped, import_status)
+        import_host_evidence_inventory(session, scan)
         import_device_identity_inventory(session, scan)
         # Last: users are created by Kerberos/AD import and later inference, so LOCAL_TO
         # must see every user attached to this scan.
@@ -385,7 +407,7 @@ def main() -> int:
 
     _print_scan_contents(scan)
     driver = connect_from_args(args)
-    summary = _run_import(driver, scan, replace_host=args.replace_host)
+    summary = _run_import(driver, scan, replace_host=replace_host_requested(args))
     driver.close()
     _print_import_summary(scan, summary)
     return 0

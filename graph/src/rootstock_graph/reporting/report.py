@@ -163,9 +163,25 @@ def get_scan_metadata_from_json(json_path: Path) -> dict:
             "icloud_signed_in": data.get("icloud_signed_in"),
             "icloud_drive_enabled": data.get("icloud_drive_enabled"),
             "icloud_keychain_enabled": data.get("icloud_keychain_enabled"),
+            **_inventory_counts(data),
         }
     except (AttributeError, json.JSONDecodeError, OSError, TypeError) as e:
         raise ScanMetadataError(f"Cannot read scan metadata from {json_path}: {e}") from e
+
+
+def _inventory_counts(data: dict) -> dict:
+    """Host inventory counts and the collector's error sources from the scan JSON."""
+    errors = data.get("errors") if isinstance(data.get("errors"), list) else []
+    return {
+        "process_count": len(data.get("running_processes") or []),
+        "network_listener_count": len(data.get("network_listeners") or []),
+        "trusted_certificate_count": len(data.get("certificate_trust_settings") or []),
+        "browser_extension_count": len(data.get("browser_extensions") or []),
+        "installed_package_count": len(data.get("installed_packages") or []),
+        "collection_error_sources": sorted(
+            {str(error.get("source")) for error in errors if isinstance(error, dict)}
+        ),
+    }
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

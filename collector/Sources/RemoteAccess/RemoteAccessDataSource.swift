@@ -11,6 +11,7 @@ public struct RemoteAccessDataSource: DataSource {
     public let requiresElevation = false
 
     private let sshdConfigPath: String
+    private let userSSHDirectory = FileManager.default.homeDirectoryForCurrentUser.path + "/.ssh"
     private let launchctlRunner: @Sendable ([String]) -> ShellOutcome
 
     public init(sshdConfigPath: String = "/etc/ssh/sshd_config") {
@@ -58,9 +59,10 @@ public struct RemoteAccessDataSource: DataSource {
         var port: Int? = nil
 
         if FileManager.default.fileExists(atPath: sshdConfigPath) {
-            if let contents = try? String(contentsOfFile: sshdConfigPath, encoding: .utf8) {
+            if let data = try? BoundedFileReader.read(path: sshdConfigPath) {
+                let contents = String(decoding: data, as: UTF8.self)
                 let directives = parseSSHConfig(contents)
-                config = directives
+                config = directives.merging(Self.normalizedSSHDirectives(directives)) { current, _ in current }
                 if let portStr = directives["Port"], let p = Int(portStr) {
                     port = p
                 }
@@ -73,6 +75,8 @@ public struct RemoteAccessDataSource: DataSource {
             }
         }
 
+        config.merge(userSSHConfig(errors: &errors)) { current, _ in current }
+
         return RemoteAccessService(
             service: RemoteServiceName.ssh,
             enabled: enabled,
@@ -81,30 +85,75 @@ public struct RemoteAccessDataSource: DataSource {
         )
     }
 
-    /// Parses sshd_config for security-relevant directives.
+    /// Parses sshd_config for security-relevant directives (see `SSHDConfigParser`).
     /// SSH config keys are case-insensitive per sshd_config(5); output uses canonical casing.
     func parseSSHConfig(_ contents: String) -> [String: String] {
-        let canonicalKeys: [String: String] = [
-            "port": "Port",
-            "permitrootlogin": "PermitRootLogin",
-            "passwordauthentication": "PasswordAuthentication",
-            "pubkeyauthentication": "PubkeyAuthentication",
+        var parser = SSHDConfigParser()
+        return parser.parse(contents)
+    }
+
+    /// Snake-case copies of the security directives with lower-cased values.
+    static func normalizedSSHDirectives(_ directives: [String: String]) -> [String: String] {
+        let keys = [
+            "PermitRootLogin": "permit_root_login",
+            "PasswordAuthentication": "password_authentication",
+            "PubkeyAuthentication": "pubkey_authentication",
         ]
-
-        var result: [String: String] = [:]
-        for line in contents.components(separatedBy: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty, !trimmed.hasPrefix("#") else { continue }
-
-            let parts = trimmed.split(maxSplits: 1, whereSeparator: \.isWhitespace)
-            guard parts.count == 2 else { continue }
-
-            let key = String(parts[0])
-            if let canonical = canonicalKeys[key.lowercased()] {
-                result[canonical] = String(parts[1])
+        var normalized: [String: String] = [:]
+        for (directive, key) in keys {
+            if let value = directives[directive] {
+                normalized[key] = value.lowercased()
             }
         }
-        return result
+        return normalized
+    }
+
+    /// `authorized_keys_count` and `agent_forwarding` from the current user's `~/.ssh`.
+    /// Only line counts and the `ForwardAgent` directive are recorded, never key material.
+    private func userSSHConfig(errors: inout [CollectionError]) -> [String: String] {
+        var config: [String: String] = [:]
+        if let contents = readUserSSHFile("authorized_keys", errors: &errors) {
+            config["authorized_keys_count"] = String(Self.countAuthorizedKeys(contents))
+        }
+        if let contents = readUserSSHFile("config", errors: &errors) {
+            config["agent_forwarding"] = Self.forwardsAgent(contents) ? "yes" : "no"
+        }
+        return config
+    }
+
+    /// Absent files yield nil silently; an existing but unreadable file is one recoverable error.
+    private func readUserSSHFile(_ fileName: String, errors: inout [CollectionError]) -> String? {
+        let path = "\(userSSHDirectory)/\(fileName)"
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        do {
+            return String(decoding: try BoundedFileReader.read(path: path), as: UTF8.self)
+        } catch {
+            errors.append(CollectionError(
+                source: name,
+                message: "Cannot read \(path): \(error)",
+                recoverable: true
+            ))
+            return nil
+        }
+    }
+
+    /// Number of non-empty, non-comment lines in an `authorized_keys` file.
+    static func countAuthorizedKeys(_ contents: String) -> Int {
+        contents.split(whereSeparator: \.isNewline).filter { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            return !trimmed.isEmpty && !trimmed.hasPrefix("#")
+        }.count
+    }
+
+    /// True when an ssh client config contains a `ForwardAgent yes` directive.
+    static func forwardsAgent(_ contents: String) -> Bool {
+        contents.split(whereSeparator: \.isNewline).contains { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.hasPrefix("#") else { return false }
+            let parts = trimmed.split(maxSplits: 1, whereSeparator: { $0.isWhitespace || $0 == "=" })
+            guard parts.count == 2, parts[0].lowercased() == "forwardagent" else { return false }
+            return parts[1].trimmingCharacters(in: CharacterSet(charactersIn: " =\t\"")).lowercased() == "yes"
+        }
     }
 
     // MARK: - Screen Sharing

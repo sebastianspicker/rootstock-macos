@@ -21,7 +21,8 @@ struct InjectionAssessment {
         signingInfo: CodeSigningInfo,
         entitlements: [EntitlementInfo],
         isElectron: Bool,
-        isSipProtected: Bool = false
+        isSipProtected: Bool = false,
+        electronRunAsNode: Bool? = nil
     ) -> InjectionAssessmentResult {
         let names = Set(entitlements.map(\.name))
 
@@ -44,7 +45,9 @@ struct InjectionAssessment {
             methods: injectionMethods(
                 signingInfo: signingInfo,
                 entitlementNames: names,
-                isElectron: isElectron,
+                // Electron disables ELECTRON_RUN_AS_NODE through the RunAsNode fuse; only an
+                // enabled or unreadable fuse leaves the environment-variable vector open.
+                isElectron: isElectron && electronRunAsNode != false,
                 effectiveLibraryValidation: effectiveLV
             ),
             effectiveLibraryValidation: effectiveLV

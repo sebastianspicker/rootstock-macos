@@ -8,7 +8,7 @@
 // ATT&CK: T1553.001
 
 MATCH (a:Application)
-WHERE coalesce(a.has_quarantine_flag, false) = false
+WHERE a.has_quarantine_flag = false
   AND a.is_system = false
   AND NOT coalesce(a.is_sip_protected, false)
 OPTIONAL MATCH (a)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission)

@@ -1,89 +1,83 @@
-"""Recommendation catalog and section assembly for Rootstock reports."""
+"""Recommendation section assembly for Rootstock reports.
+
+The graph is the source of truth: ``rootstock-graph-infer`` attaches
+``Recommendation`` nodes to applications and to the host, and query 100 lists
+them with the names they apply to. The report prints those rows, grouped by
+priority, so the advice matches the evidence. When the graph carries no
+recommendations (for example a snapshot imported without inference), a short
+static catalogue keyed by the report's own findings is printed instead.
+"""
 
 from __future__ import annotations
 
 
+from .report_formatters import escape_report_value
 from .report_query_results import query_rows
 
+_PRIORITY_ORDER = ("critical", "high", "medium", "low")
+_PRIORITY_HEADINGS = {
+    "critical": "Critical: fix now",
+    "high": "High: fix soon",
+    "medium": "Medium: review",
+    "low": "Low: good hygiene",
+}
+_MAX_NAMES = 8
 
-# ── Recommendations ───────────────────────────────────────────────────────────
+# ── Static fallback catalogue ─────────────────────────────────────────────────
 
 RECOMMENDATIONS = {
     "injectable_fda": [
-        "Enable Hardened Runtime for all first-party and in-house applications via the entitlements editor in Xcode.",
-        "Enable Library Validation (`com.apple.security.cs.require-library-validation`) to prevent unsigned dylib injection. [ref: CVE-2024-44168]",
-        "Audit all applications with Full Disk Access - revoke unnecessary grants via System Settings → Privacy & Security → Full Disk Access.",
-        "Use `codesign --verify --deep --strict` in CI/CD pipelines to catch hardened-runtime regressions before release.",
+        "Review every app that holds Full Disk Access (System Settings › Privacy & Security › Full Disk Access) and remove the grant from apps that code can be loaded into.",
+        "Update apps that lack Hardened Runtime or Library Validation, or ask their vendors for hardened builds. [ref: CVE-2024-44168]",
     ],
     "electron_inheritance": [
-        "Disable `ELECTRON_RUN_AS_NODE` support in production Electron builds by passing `--disable-node-options` or using `app.commandLine.appendSwitch`. [ref: CVE-2023-44402]",
-        "Sandbox Electron apps using macOS App Sandbox where feasible to limit the blast radius of ELECTRON_RUN_AS_NODE abuse.",
-        "Apply least privilege: Electron apps should not hold TCC permissions they don't actively need; request only what is strictly required.",
+        "Update Electron apps whose RunAsNode fuse is enabled; until the vendor disables it, keep them away from Full Disk Access, Accessibility and Screen Recording. [ref: CVE-2023-44402]",
     ],
     "apple_events": [
-        "Audit Apple Event automation grants in TCC - revoke `kTCCServiceAppleEvents` grants to low-trust or injectable apps. [ref: CVE-2024-44206]",
-        "Implement Apple Event permission review as part of quarterly access reviews alongside FDA and Accessibility grants.",
+        "Remove Automation permission (System Settings › Privacy & Security › Automation) from apps that do not need to control other apps. [ref: CVE-2024-44206]",
     ],
     "physical_security": [
-        "Enable Lockdown Mode on high-value targets to reduce the attack surface from zero-click exploits and hardware interfaces. [ref: CVE-2023-42861]",
-        "Configure automatic screen lock with a delay of 60 seconds or less to prevent physical-access exploitation.",
-        "Review Thunderbolt security level - set to `full` security to require user approval for Thunderbolt/USB4 peripherals.",
-        "Enable FileVault full-disk encryption on all endpoints to protect data at rest from physical theft.",
+        "Turn on FileVault and require a password within 5 seconds of sleep or screen saver.",
+        "Keep Startup Security at Full and leave booting from external media disabled unless you need it.",
     ],
     "certificate_hygiene": [
-        "Require notarization for all in-house applications before deployment to ensure Apple has scanned for known malware.",
-        "Monitor for expired signing certificates on applications with active TCC grants - expired certs weaken trust validation.",
-        "Audit non-Apple CA chains in your application inventory - these may indicate repackaged or enterprise-signed software with elevated risk.",
+        "Replace unsigned or ad-hoc-signed apps with Developer ID builds, and confirm the origin of apps that Gatekeeper reports as not notarized.",
     ],
     "icloud_risk": [
-        "Review iCloud container entitlements on injectable applications - injected code can exfiltrate data via iCloud sync to all user devices.",
-        "Consider disabling iCloud Drive on high-security endpoints where synced data could create a cross-device exfiltration path.",
-        "Audit iCloud Keychain sync on endpoints with sensitive credentials - synced keychain items are accessible on all enrolled devices.",
+        "Review iCloud container entitlements on injectable apps; injected code can sync data to every device on the Apple ID.",
     ],
     "authorization_hardening": [
-        "Audit sudoers NOPASSWD entries - remove unnecessary passwordless sudo rules that allow privilege escalation without authentication. [ref: T1548.003]",
-        "Review non-Apple authorization plugins in `/Library/Security/SecurityAgentPlugins/` - third-party plugins execute in the authorization flow.",
-        "Harden weak authorization rights that use `allow` or `authenticate-session-owner` rules for sensitive operations.",
+        "Remove NOPASSWD from sudoers rules with `sudo visudo`. [ref: T1548.003]",
+        "Review non-Apple authorization plugins in /Library/Security/SecurityAgentPlugins.",
     ],
     "shell_hooks": [
-        "Audit writable shell configuration files (.zshrc, .bashrc, .zprofile) - restrict write access to the owning user only. [ref: CVE-2023-32364]",
-        "Deploy file integrity monitoring on shell hook files to detect unauthorised modifications that could inject keyloggers or credential harvesters.",
+        "Set shell start-up files (.zshrc, .zprofile, /etc/zshrc) to owner-only write; anything written there runs in every new terminal. [ref: CVE-2023-32364]",
     ],
     "file_acl_escalation": [
-        "Audit file ACLs on security-critical files (TCC.db, sudoers, sshd_config) - remove non-root write ACEs. [ref: CVE-2024-23296]",
-        "Implement periodic ACL scanning to detect privilege creep on LaunchDaemon directories and authorization databases.",
+        "Restore root:wheel ownership and remove write bits or ACL entries on sudoers, LaunchDaemons, the authorization database and sshd_config.",
     ],
     "esf_bypass": [
-        "Harden injectable apps with ESF entitlements - these can blind EDR and security monitoring if compromised. [ref: CVE-2024-27842]",
-        "Monitor for anomalous ESF client registrations and network extension loads that may indicate tampered security tools.",
+        "Update security tools that are injectable and report the missing hardening to the vendor; a blinded Endpoint Security client hides later activity. [ref: CVE-2024-27842]",
     ],
     "sandbox_escape": [
-        "Prioritise patching sandbox escape CVEs (CVE-2023-32414, CVE-2023-38606) - sandbox escapes enable full system access from app-level compromise.",
-        "Audit unsandboxed injectable apps and consider deploying App Sandbox for in-house tools where feasible.",
+        "Update sandboxed apps that combine broad sandbox exceptions with injectability, and review whether they need those exceptions.",
     ],
     "mdm_risk": [
-        "Review MDM PPPC profiles for overgrants - ensure scripting interpreters (Python, Ruby, osascript) do not hold FDA or Accessibility grants via MDM. [ref: CVE-2024-44301]",
-        "Implement MDM profile change auditing to detect unauthorized TCC grant modifications.",
+        "Ask the MDM administrator to scope PPPC payloads so terminals and script interpreters do not receive Full Disk Access or Accessibility. [ref: CVE-2024-44301]",
     ],
     "lateral_movement": [
-        "Restrict SSH and Screen Sharing access to authorised users via MDM or `/etc/ssh/sshd_config` AllowUsers/AllowGroups directives. [ref: T1021.004]",
-        "Audit cross-host user accounts - shared credentials across hosts enable lateral movement after initial compromise.",
+        "Turn off Remote Login and Screen Sharing in System Settings › General › Sharing unless you use them; if you do, restrict them to specific users and disable SSH password authentication. [ref: T1021.004]",
     ],
     "running_processes": [
-        "Monitor running injectable processes with active TCC grants - these are live exploitation targets. [ref: CVE-2025-24085]",
-        "Implement runtime injection detection (e.g., DYLD_INSERT_LIBRARIES monitoring) for high-value processes.",
+        "Prioritise updating injectable apps that were running during the scan; they are live targets.",
     ],
     "gatekeeper_bypass": [
-        "Investigate unquarantined non-system applications - these bypassed Gatekeeper download checks. [ref: CVE-2022-42821, CVE-2024-44175]",
-        "Enable Gatekeeper enforcement via `spctl --master-enable` on all endpoints.",
-        "Review apps without quarantine attributes that hold TCC grants for potential Gatekeeper bypass abuse.",
+        "Confirm where apps without a quarantine record and without notarization came from before granting them permissions. [ref: CVE-2022-42821]",
     ],
     "general": [
-        "Ensure System Integrity Protection (SIP) is enabled on all managed endpoints (`csrutil status`).",
-        "Enforce Full Disk Access via MDM Privacy Preferences Policy Control (PPPC) profiles - maintain an allow-list of approved applications.",
-        "Review all LaunchDaemons and LaunchAgents with `launchctl list` and remove any unrecognised or unnecessary persistence items.",
-        "Deploy application allow-listing via PPPC profiles through your MDM solution.",
-        "Run Rootstock periodically (e.g., monthly or after major software installs) to detect new attack paths introduced by vendor updates.",
+        "Keep System Integrity Protection and Gatekeeper enabled (`csrutil status`, `spctl --status`).",
+        "Review LaunchDaemons and LaunchAgents periodically and remove items from software you no longer use.",
+        "Rerun Rootstock after major installs or macOS updates and compare the reports.",
     ],
 }
 
@@ -110,17 +104,80 @@ def _append_recommendations(
     sections.append("")
 
 
+# ── Graph-driven section ──────────────────────────────────────────────────────
+
+
+def _names(row: dict) -> str:
+    names = row.get("affected_names")
+    if not isinstance(names, list) or not names:
+        return ""
+    shown = ", ".join(escape_report_value(name) for name in names[:_MAX_NAMES])
+    extra = int(row.get("affected_count") or len(names)) - min(len(names), _MAX_NAMES)
+    return shown + (f" and {extra} more" if extra > 0 else "")
+
+
+def _graph_recommendation_lines(row: dict) -> list[str]:
+    title = escape_report_value(
+        row.get("title") or row.get("recommendation_key") or "Recommendation"
+    )
+    text = escape_report_value(row.get("recommendation") or "")
+    scope = "Host setting" if row.get("scope") == "host" else "Applies to"
+    lines = [f"- **{title}** — {text}"]
+    names = _names(row)
+    if names:
+        lines.append(f"  - {scope}: {names}")
+    techniques = row.get("mitigates_techniques")
+    if isinstance(techniques, list) and techniques:
+        lines.append(
+            "  - Mitigates: " + ", ".join(escape_report_value(item) for item in techniques)
+        )
+    return lines
+
+
+def append_graph_recommendations(
+    sections: list[str],
+    recommendation_rows: list[dict],
+) -> bool:
+    """Print the graph's recommendations grouped by priority. Returns False when none exist."""
+    rows = [row for row in recommendation_rows if isinstance(row, dict)]
+    if not rows:
+        return False
+    sections.append(
+        "> Each item names the setting or action for the person administering this Mac, "
+        "and the apps or host it applies to. Priorities come from the modeled exposure."
+    )
+    sections.append("")
+    for priority in _PRIORITY_ORDER:
+        group = [row for row in rows if str(row.get("priority", "")).lower() == priority]
+        if not group:
+            continue
+        sections.append(f"### {_PRIORITY_HEADINGS[priority]}")
+        for row in group:
+            sections.extend(_graph_recommendation_lines(row))
+        sections.append("")
+    return True
+
+
 def append_recommendations_section(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
     rows: object,
 ) -> None:
     sections.append("## Recommendations")
+    if append_graph_recommendations(
+        sections, query_rows(query_results, "100-top-recommendations.cypher")
+    ):
+        return
+    sections.append(
+        "> No graph recommendations were recorded (run `rootstock-graph-infer` after import). "
+        "The guidance below is selected from the report's own findings."
+    )
+    sections.append("")
     state = {
         "injectable_rows": rows.injectable,
         "electron_rows": rows.electron,
         "apple_event_rows": rows.apple_event,
-        "posture_rows_67": query_rows(query_results, "67-physical-security-overview.cypher"),
+        "posture_rows_64": query_rows(query_results, "64-weak-physical-posture.cypher"),
         "icloud_rows": rows.icloud,
         "cert_rows": rows.certificate,
     }
@@ -166,7 +223,7 @@ def _primary_recommendation_conditions(
         (
             "Physical Security Hardening",
             "physical_security",
-            bool(state["posture_rows_67"]),
+            bool(state["posture_rows_64"]),
         ),
         ("Certificate Hygiene", "certificate_hygiene", any(state["cert_rows"])),
         ("iCloud Risk Mitigation", "icloud_risk", any(state["icloud_rows"])),

@@ -148,6 +148,61 @@ def export_cross_domain(session, hostname: str) -> dict:
     return build_cross_domain_opengraph(session, hostname)
 
 
+def graph_hostname(session) -> str:
+    """Hostname of the most recent scanned Computer, or a stable fallback."""
+    row = session.run(
+        "MATCH (c:Computer) WHERE c.hostname IS NOT NULL "
+        "RETURN c.hostname AS hostname ORDER BY c.scanned_at DESC LIMIT 1"
+    ).single()
+    if row and row["hostname"]:
+        return str(row["hostname"])
+    row = session.run(
+        "MATCH (a:Application) WHERE a.scan_id IS NOT NULL RETURN a.scan_id AS scan_id LIMIT 1"
+    ).single()
+    return row["scan_id"][:8] if row else "rootstock"
+
+
+_SCAN_METADATA_KEYS = frozenset(
+    {
+        "collected_at",
+        "imported_at",
+        "collector_version",
+        "macos_version",
+        "import_status",
+        "collection_error_count",
+        "collection_error_sources",
+        "collector_had_full_disk_access",
+    }
+)
+
+
+def scan_metadata(session) -> dict:
+    """Collection timestamps and coverage of the most recent scan, for the viewer header."""
+    result = session.run(
+        """
+        MATCH (c:Computer)
+        RETURN c.scanned_at AS collected_at,
+               c.imported_at AS imported_at,
+               c.collector_version AS collector_version,
+               c.macos_version AS macos_version,
+               c.import_status AS import_status,
+               c.collection_error_count AS collection_error_count,
+               c.collection_error_sources AS collection_error_sources,
+               c.elevation_has_fda AS collector_had_full_disk_access
+        ORDER BY c.scanned_at DESC
+        LIMIT 1
+        """
+    )
+    row = next(iter(result), None)
+    if row is None:
+        return {}
+    return {
+        key: value
+        for key, value in dict(row).items()
+        if key in _SCAN_METADATA_KEYS and value is not None
+    }
+
+
 def build_opengraph(
     session,
     hostname: str,
@@ -157,18 +212,18 @@ def build_opengraph(
 ) -> dict:
     """Build the complete OpenGraph JSON structure."""
     nodes = export_nodes(session, hostname, maximum_nodes)
-    # Interactive callers request one sentinel beyond their accepted node count.
-    edges = (
-        []
-        if maximum_nodes is not None and len(nodes) >= maximum_nodes
-        else export_edges(session, hostname, maximum_edges)
-    )
+    # Interactive callers request one sentinel beyond their accepted node count; an
+    # overflowing graph is rejected without further queries.
+    overflow = maximum_nodes is not None and len(nodes) >= maximum_nodes
+    edges = [] if overflow else export_edges(session, hostname, maximum_edges)
+    metadata = {} if overflow else scan_metadata(session)
 
     return {
         "metadata": {
             "source_kind": "Rootstock",
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "hostname": hostname,
+            **metadata,
             "node_count": len(nodes),
             "edge_count": len(edges),
         },
@@ -204,14 +259,7 @@ def main() -> int:
 
     with driver.session() as session:
         # Determine hostname from graph data or CLI
-        hostname = args.hostname
-        if not hostname:
-            result = session.run(
-                "MATCH (a:Application) WHERE a.scan_id IS NOT NULL "
-                "RETURN a.scan_id AS scan_id LIMIT 1"
-            )
-            row = result.single()
-            hostname = row["scan_id"][:8] if row else "rootstock"
+        hostname = args.hostname or graph_hostname(session)
 
         if args.cross_domain:
             data = export_cross_domain(session, hostname)

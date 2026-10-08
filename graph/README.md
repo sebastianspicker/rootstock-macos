@@ -5,6 +5,18 @@ imports collector, family, and CVE artifacts into Neo4j; derives modeled
 relationships; and provides queries, reports, exports, a local API, and offline
 or live viewers.
 
+## Offline investigation
+
+`rootstock-graph-investigate scan.json --format html --output reports/investigation.html`
+produces a searchable local review queue with linked evidence and coverage.
+Add `--baseline earlier-scan.json` for durable changes, or choose `--format json`
+for structured output. No database or network connection is made. See
+[the investigation guide](../docs/INVESTIGATION.md).
+
+NVD candidates with unresolved conditions or stale, incomplete or legacy caches
+are retained separately from scored version evidence. Queries 119 and 120 show
+candidates and coverage. Reimport CVEs and rerun scoring after updating caches.
+
 ## Requirements and setup
 
 - Python 3.10 or later; use Python 3.11 for CI parity
@@ -73,6 +85,15 @@ and recommendations from both. Running `rootstock-graph-infer` without
 `--stage` does both stages in order; use the staged form, or the pipeline,
 when CVE data should influence tiers and scores.
 
+The score stage writes a `risk_score`, `risk_level` and `risk_reasons` on each
+application (the plain-language facts behind the number), and
+`posture_findings`, `posture_unknown` and a risk level on the Computer node.
+Only version-matched CVEs (`AFFECTED_BY`) influence scores and tiers; CVEs
+matched by exposure category are `HAS_CVE_CONTEXT` background edges.
+Recommendations attach to applications and to the host; query 100 lists them
+with the apps or host they apply to, and the report prints that list grouped by
+priority.
+
 Individual installed commands are also available:
 
 ```sh
@@ -89,16 +110,65 @@ NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
   --scan-json examples/demo-scan.json
 ```
 
-Application, Computer and TCC identity is scan-scoped, so importing a host again
-adds a second copy of its graph. Pass `--replace-host` to
-`rootstock-graph-import-scan`, `rootstock-graph-merge-scans` or `pipeline.sh` to
-first detach-delete every node carrying the `scan_id` of an earlier scan of the
-same hostname (the number of removed nodes is printed). It is opt-in; without
-it earlier scans are kept.
+Application, Computer and TCC identity is scan-scoped, so a host that is scanned
+again would otherwise appear twice. `rootstock-graph-import-scan`,
+`rootstock-graph-merge-scans` and `pipeline.sh` therefore detach-delete every
+node carrying the `scan_id` of an earlier scan of the same hostname before
+importing (the number of removed nodes is printed). Pass
+`--keep-previous-scans` to keep earlier scans side by side; `--replace-host` is
+still accepted and is the default behaviour.
+
+Besides applications and privacy grants, the import records host evidence:
+`Process` nodes (`INSTANCE_OF` an app, `PARENT_OF` their children, `RUNS_ON` the
+host), `NetworkListener` nodes (`LISTENS_ON` from the process and app,
+`EXPOSED_ON` the host, flagged `exposed` when not loopback and
+`reachable_without_firewall` when the firewall is off), `TrustedCertificate`
+nodes from the user and admin trust settings (`TRUSTS_CERTIFICATE`,
+`SAME_CERTIFICATE` when an app's signing chain uses it), `BrowserExtension`
+nodes (`HAS_EXTENSION` from the browser app) and `InstalledPackage` receipts
+(`INSTALLED_BY` from the apps they installed). Their keys start with the
+`scan_id`, so replacing a host removes them too. Account, remote-control,
+Software Update, DNS, proxy and hosts-file settings are properties of the
+Computer node. A `LaunchItem` is keyed by `item_key` (`<type>:<path>:<label>`)
+and an `XPC_Service` by its plist `path`, so two plists that share a label stay
+two nodes; both keep `label` as an indexed property. Launch items also carry
+their arguments, `DYLD_*` environment (as `KEY=value` strings), triggers, load
+state, program hash and containing app bundle. Queries 106-118 cover this
+evidence.
 
 Use `rootstock-graph-query --list` for the packaged query catalog. The packaged
 [query guide](src/rootstock_graph/resources/queries/README.md) explains result
 interpretation without duplicating the CLI-generated list.
+
+### CVE matching for installed software
+
+Version-matched CVEs come from two sources. Rootstock's curated registry links a
+small set of macOS-relevant CVEs by bundle id and version range
+(`AFFECTED_BY {match_tier: 'precise'}`). NVD matching covers the installed
+versions of catalogued third-party apps and the macOS release itself
+(`AFFECTED_BY {match_tier: 'cpe', match_source: 'nvd', cpe}`); see
+[DD-012](../docs/design-docs/installed-software-cve-matching.md).
+
+```sh
+# List the scan's CPE targets and the apps the catalogue does not cover (offline)
+uv run --project graph --locked rootstock-graph-cve-enrichment \
+  --list-cpe-targets --scan-json scan.json
+# Query NVD for those targets and cache the results
+NVD_API_KEY=OPTIONAL uv run --project graph --locked rootstock-graph-cve-enrichment \
+  --fetch --scan-json scan.json
+# Link cached matches (no network access)
+NEO4J_PASSWORD=CHANGE_ME uv run --project graph --locked \
+  rootstock-graph-import-vulnerabilities --scan-json scan.json
+```
+
+`graph/pipeline.sh --refresh-cve` runs the fetch step for the pipeline's scan.
+Results are cached in `~/.rootstock/cache/nvd-installed.json` for seven days;
+without `--fetch`, or when NVD cannot be reached, the cached data is used and
+uncached targets are reported. `NVD_API_KEY` is optional and raises the NVD rate
+limit; it is sent as a request header and never cached. The bundle id to CPE
+mapping lives in `src/rootstock_graph/vulnerability/cpe_catalog.py`; extend it
+for apps that `--list-cpe-targets` reports as uncatalogued. Queries 104 and 105
+list NVD matches per app and for the macOS release.
 
 ## API and viewer
 

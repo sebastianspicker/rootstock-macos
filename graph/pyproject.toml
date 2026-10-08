@@ -30,6 +30,7 @@ dev = [
 ]
 
 [project.scripts]
+rootstock-graph-investigate = "rootstock_graph.investigation.cli:main"
 rootstock-graph-api = "rootstock_graph.api:main"
 rootstock-graph-bloodhound-import = "rootstock_graph.ingestion.bloodhound_import:main"
 rootstock-graph-clear-owned = "rootstock_graph.inference.clear_owned:main"

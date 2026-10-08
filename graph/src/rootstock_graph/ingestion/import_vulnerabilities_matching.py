@@ -1,4 +1,14 @@
-"""Cypher-backed matching helpers for the two-tier AFFECTED_BY import."""
+"""Cypher-backed matching helpers for CVE matching.
+
+Two relationship types are written:
+
+* ``AFFECTED_BY`` (``match_tier = 'precise'``): the app's bundle id and version fall
+  inside a CVE's affected range. This is evidence and feeds risk, tiers, and the
+  vulnerability queries.
+* ``HAS_CVE_CONTEXT``: the app matches a technique category whose reference CVEs
+  illustrate the exposure class. This is background reading for an analyst and is
+  never counted as the app being vulnerable.
+"""
 
 from __future__ import annotations
 
@@ -66,7 +76,7 @@ def create_precise_affected_by_edge(session, *, app_id: str, cve_id: str) -> int
         """
         MATCH (app:Application) WHERE elementId(app) = $app_id
         MATCH (v:Vulnerability {cve_id: $cve_id})
-        MERGE (app)-[r:AFFECTED_BY]->(v)
+        MERGE (app)-[r:AFFECTED_BY {match_source: 'registry'}]->(v)
         SET r.match_tier = 'precise'
         RETURN count(*) AS n
         """,
@@ -83,11 +93,12 @@ def category_fallback_cves(
     return [cve for cve in cves if cve.cve_id not in precise_cve_ids]
 
 
-def import_category_affected_by_edges(
+def import_category_context_edges(
     session,
     category: str,
     cves: list[CveEntry],
 ) -> int:
+    """Link apps in ``category`` to its reference CVEs as HAS_CVE_CONTEXT (not evidence)."""
     match_clause = _CATEGORY_MATCH.get(category)
     if not match_clause:
         return 0
@@ -98,11 +109,10 @@ def import_category_affected_by_edges(
         WITH app
         UNWIND $cve_ids AS cve_id
         MATCH (v:Vulnerability {{cve_id: cve_id}})
-        MERGE (app)-[r:AFFECTED_BY]->(v)
+        MERGE (app)-[r:HAS_CVE_CONTEXT {{match_category: $category}}]->(v)
         SET r.match_tier = 'category',
-            r.match_source = 'category_fallback',
-            r.match_confidence = 'heuristic',
-            r.match_category = $category
+            r.match_source = 'category_context',
+            r.match_confidence = 'heuristic'
         RETURN count(*) AS n
     """
     result = session.run(

@@ -14,6 +14,12 @@
 #     NEO4J_URI       bolt://localhost:7687
 #     NEO4J_USER      neo4j
 #     NEO4J_PASSWORD   required unless NEO4J_AUTH=none
+#     NVD_API_KEY      optional; raises the NVD rate limit for --refresh-cve
+#
+# CVE matching for installed software: --refresh-cve also queries NVD for every
+# catalogued third-party app and for the macOS release (by CPE name and installed
+# version) and caches the results; the vulnerability import always reads that cache
+# for the scan and links matches as AFFECTED_BY evidence.
 #
 # For interactive visualization after pipeline completes (Canvas-based, pre-computed layout):
 #     uv run --project graph --locked rootstock-graph-opengraph-export -o graph.json
@@ -33,17 +39,21 @@ GRAPH_RUN=(uv run --project "$SCRIPT_DIR" --locked)
 # ── Parse arguments ─────────────────────────────────────────────────────────
 
 usage() {
-    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--report FILE] [--skip-report] [--refresh-cve] [--replace-host] [--cve-scan-export FILE] [--serve [PORT]]"
+    echo "Usage: $0 <scan.json> [--neo4j URI] [--username USER] [--report FILE] [--skip-report] [--refresh-cve] [--keep-previous-scans] [--cve-scan-export FILE] [--serve [PORT]]"
     echo ""
     echo "Runs the full Rootstock pipeline: schema → import → infer edges → vulnerabilities → infer score → report"
     echo ""
-    echo "  --refresh-cve   Fetch public CVE enrichment before import (default: cached/static only)"
-    echo "  --replace-host  Delete earlier scans of the same hostname before importing"
+    echo "  --refresh-cve   Fetch public CVE enrichment (EPSS, KEV, NVD) before import, including"
+    echo "                  NVD CVE matches for installed apps and macOS (default: cached/static only)"
+    echo "  --keep-previous-scans"
+    echo "                  Keep earlier scans of this Mac (same hostname and hardware UUID; default: replace them)"
+    echo "  --replace-host  Accepted for compatibility; replacing is the default"
     echo "  --cve-scan-export FILE"
     echo "                  Import a prebuilt cve-scan rootstock-export.json artifact"
     echo "  --serve [PORT]  Start API server after pipeline (default port: 8000)"
     echo ""
-    echo "Environment variables: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD"
+    echo "Environment variables: NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD,"
+    echo "  NVD_API_KEY (optional; speeds up NVD matching with --refresh-cve)"
     exit 1
 }
 
@@ -66,7 +76,7 @@ NEO4J_PASS="${NEO4J_PASSWORD:-}"
 REPORT_FILE=""
 SKIP_REPORT=false
 REFRESH_CVE=false
-REPLACE_HOST=false
+KEEP_PREVIOUS=false
 CVE_SCAN_EXPORT=""
 SERVE=false
 SERVE_PORT=8000
@@ -78,7 +88,8 @@ while [[ $# -gt 0 ]]; do
         --report)    REPORT_FILE="$2"; shift 2 ;;
         --skip-report) SKIP_REPORT=true; shift ;;
         --refresh-cve) REFRESH_CVE=true; shift ;;
-        --replace-host) REPLACE_HOST=true; shift ;;
+        --replace-host) shift ;;
+        --keep-previous-scans) KEEP_PREVIOUS=true; shift ;;
         --cve-scan-export) CVE_SCAN_EXPORT="$2"; shift 2 ;;
         --serve)     SERVE=true;
                      if [[ $# -gt 1 && "$2" =~ ^[0-9]+$ ]]; then SERVE_PORT="$2"; shift; fi
@@ -103,8 +114,8 @@ if [[ -n "$NEO4J_PASS" ]]; then
 fi
 NEO4J_ARGS=(--neo4j "$NEO4J_URI" --neo4j-user "$NEO4J_USER")
 IMPORT_ARGS=()
-if [[ "$REPLACE_HOST" = true ]]; then
-    IMPORT_ARGS+=(--replace-host)
+if [[ "$KEEP_PREVIOUS" = true ]]; then
+    IMPORT_ARGS+=(--keep-previous-scans)
 fi
 
 echo "╔══════════════════════════════════════════════════╗"
@@ -128,7 +139,7 @@ echo ""
 
 echo "── Step 2/7: Enriching CVE data ──"
 if [[ "$REFRESH_CVE" = true ]]; then
-    "${GRAPH_RUN[@]}" rootstock-graph-cve-enrichment --fetch
+    "${GRAPH_RUN[@]}" rootstock-graph-cve-enrichment --fetch --scan-json "$SCAN_FILE"
     echo "  CVE enrichment refreshed"
 else
     echo "  Using cached CVE enrichment and static registry (--refresh-cve to fetch)"
@@ -159,7 +170,7 @@ echo ""
 # Reads inferred relationships for its category heuristics, so it runs after the edge stage.
 
 echo "── Step 5/7: Importing vulnerability data ──"
-"${GRAPH_RUN[@]}" rootstock-graph-import-vulnerabilities "${NEO4J_ARGS[@]}"
+"${GRAPH_RUN[@]}" rootstock-graph-import-vulnerabilities --scan-json "$SCAN_FILE" "${NEO4J_ARGS[@]}"
 echo ""
 
 # ── Step 6/7: Inference (score) ──────────────────────────────────────────────

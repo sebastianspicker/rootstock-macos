@@ -160,6 +160,9 @@ def _risk_bar(count: int, max_count: int = 20) -> str:
     return " `" + "#" * filled + ("+" if count > max_count else "") + "`"
 
 
+_LEVEL_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3, "informational": 4}
+
+
 def format_executive_summary(
     critical_count: int,
     high_count: int,
@@ -167,21 +170,79 @@ def format_executive_summary(
     tier_counts: dict[str, int] | None = None,
     icloud_exposure_count: int = 0,
     certificate_risk_count: int = 0,
+    risk_levels: dict[str, int] | None = None,
+    host_level: str = "unknown",
+    host_findings: list[str] | None = None,
+    host_unknown: list[str] | None = None,
+    top_recommendations: list[str] | None = None,
 ) -> str:
-    """Format the Executive Summary section with severity indicators."""
-    lines = [
-        f"**Overall Risk: {_overall_risk(critical_count, high_count)}**",
-        "",
-        "| Severity | Count | Indicator |",
-        "|----------|------:|-----------|",
-        f"| Critical | {critical_count} |{_risk_bar(critical_count)} |",
-        f"| High     | {high_count} |{_risk_bar(high_count)} |",
-    ]
+    """Format the Executive Summary section with severity indicators.
+
+    When graph risk levels are available they drive the headline: the overall
+    risk is the worst of the highest application level and the host posture
+    level, and the severity table counts applications per level. The legacy
+    query-count view remains as the fallback for graphs without scoring.
+    """
+    levels = risk_levels or {}
+    if levels or host_level not in ("unknown", ""):
+        lines = [
+            f"**Overall Risk: {_overall_risk_from_levels(levels, host_level)}**",
+            "",
+            "| Severity | Applications | Indicator |",
+            "|----------|-------------:|-----------|",
+        ]
+        for level in ("critical", "high", "medium", "low"):
+            count = levels.get(level, 0)
+            lines.append(f"| {level.capitalize():<8} | {count} |{_risk_bar(count)} |")
+        _append_host_posture(lines, host_level, host_findings or [], host_unknown or [])
+    else:
+        lines = [
+            f"**Overall Risk: {_overall_risk(critical_count, high_count)}**",
+            "",
+            "| Severity | Count | Indicator |",
+            "|----------|------:|-----------|",
+            f"| Critical | {critical_count} |{_risk_bar(critical_count)} |",
+            f"| High     | {high_count} |{_risk_bar(high_count)} |",
+        ]
 
     _append_tier_classification(lines, tier_counts)
     _append_exposure_summary(lines, icloud_exposure_count, certificate_risk_count)
     _append_top_attack_paths(lines, top_paths)
+    _append_top_recommendations(lines, top_recommendations or [])
     return "\n".join(lines)
+
+
+def _overall_risk_from_levels(levels: dict[str, int], host_level: str) -> str:
+    present = [level for level, count in levels.items() if count > 0 and level in _LEVEL_RANK]
+    if host_level in _LEVEL_RANK:
+        present.append(host_level)
+    if not present:
+        return "LOW"
+    worst = min(present, key=lambda level: _LEVEL_RANK[level])
+    return "LOW" if worst == "informational" else worst.upper()
+
+
+def _append_host_posture(
+    lines: list[str], host_level: str, findings: list[str], unknown: list[str]
+) -> None:
+    lines.append("")
+    label = host_level.capitalize() if host_level in _LEVEL_RANK else "Unknown"
+    lines.append(f"**Host posture:** {label}")
+    for finding in findings:
+        lines.append(f"- {escape_report_value(finding)}")
+    if not findings and host_level in _LEVEL_RANK:
+        lines.append("- No definite weaknesses in the collected host settings.")
+    if unknown:
+        lines.append("- Not collected: " + ", ".join(escape_report_value(item) for item in unknown))
+
+
+def _append_top_recommendations(lines: list[str], titles: list[str]) -> None:
+    if not titles:
+        return
+    lines.append("")
+    lines.append("**Top recommendations:**")
+    for index, title in enumerate(titles, 1):
+        lines.append(f"{index}. {title}")
 
 
 def _overall_risk(critical_count: int, high_count: int) -> str:

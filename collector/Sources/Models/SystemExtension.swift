@@ -10,7 +10,7 @@ public struct SystemExtension: GraphNode {
     /// Code signing team ID.
     public let teamId: String?
 
-    /// Extension category: network, endpoint_security, or driver.
+    /// Extension category: network, endpoint_security, driver, or kernel_extension.
     public let extensionType: ExtensionType
 
     /// Whether the extension is currently enabled.
@@ -24,6 +24,7 @@ public struct SystemExtension: GraphNode {
         case network
         case endpointSecurity = "endpoint_security"
         case driver
+        case kernelExtension = "kernel_extension"
     }
 
     public init(identifier: String, teamId: String?, extensionType: ExtensionType, enabled: Bool, subscribedEvents: [String] = []) {

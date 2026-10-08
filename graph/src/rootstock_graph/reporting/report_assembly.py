@@ -11,9 +11,12 @@ from tabulate import tabulate
 from .query_runner import discover_queries
 from .report_vulnerability_intelligence import append_vulnerability_intelligence
 from .report_recommendations import append_recommendations_section
+from .report_formatters_host import host_evidence_summary_lines, host_inventory_metadata_rows
+from .report_sections_host import append_host_evidence_sections
 from .report_sections import (
     append_extended_query_sections,
     append_threat_landscape,
+    append_tier_classification_section,
     append_vulnerability_mapping,
     collect_active_categories,
 )
@@ -54,6 +57,9 @@ class ReportRows:
     tier_counts: dict[str, int]
     icloud: tuple[list[dict], list[dict], list[dict]]
     certificate: tuple[list[dict], list[dict], list[dict]]
+    risk_distribution: list[dict]
+    posture: list[dict]
+    recommendations: list[dict]
 
 
 # ── Themed Section Builders ──────────────────────────────────────────────────
@@ -121,6 +127,7 @@ def _scan_metadata_rows(metadata: dict, now: str) -> list[list[str]]:
     return [
         *_base_scan_metadata_rows(metadata, now),
         *_count_scan_metadata_rows(metadata),
+        *host_inventory_metadata_rows(metadata),
         *_icloud_metadata_rows(metadata),
     ]
 
@@ -173,10 +180,46 @@ def _icloud_metadata_rows(metadata: dict) -> list[list[str]]:
     ]
 
 
+def _risk_level_counts(rows: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        level = str(row.get("risk_level") or "").lower()
+        if level:
+            counts[level] = counts.get(level, 0) + int(row.get("app_count") or 0)
+    return counts
+
+
+def _host_posture(rows: list[dict]) -> tuple[str, list[str], list[str]]:
+    if not rows:
+        return "unknown", [], []
+    row = rows[0]
+    findings = row.get("posture_findings")
+    unknown = row.get("posture_unknown")
+    return (
+        str(row.get("posture_level") or "unknown").lower(),
+        [str(item) for item in findings] if isinstance(findings, list) else [],
+        [str(item) for item in unknown] if isinstance(unknown, list) else [],
+    )
+
+
+def _top_recommendation_titles(rows: list[dict], limit: int = 5) -> list[str]:
+    titles: list[str] = []
+    for row in rows:
+        title = row.get("title") or row.get("recommendation_key")
+        if title:
+            count = int(row.get("affected_count") or 0)
+            scope = "host" if row.get("scope") == "host" else f"{count} app(s)"
+            titles.append(f"{escape_report_value(title)} ({row.get('priority', '?')}, {scope})")
+        if len(titles) >= limit:
+            break
+    return titles
+
+
 def _append_executive_summary(
     sections: list[str],
     rows: ReportRows,
 ) -> None:
+    host_level, host_findings, host_unknown = _host_posture(rows.posture)
     sections.append("## Executive Summary")
     sections.append(
         format_executive_summary(
@@ -186,6 +229,11 @@ def _append_executive_summary(
             tier_counts=rows.tier_counts or None,
             icloud_exposure_count=sum(len(group) for group in rows.icloud),
             certificate_risk_count=sum(len(group) for group in rows.certificate),
+            risk_levels=_risk_level_counts(rows.risk_distribution),
+            host_level=host_level,
+            host_findings=host_findings,
+            host_unknown=host_unknown,
+            top_recommendations=_top_recommendation_titles(rows.recommendations),
         )
     )
     sections.append("")
@@ -336,6 +384,9 @@ def _collect_report_rows(query_results: dict[str, list[dict] | str]) -> ReportRo
             _get_query_rows(query_results, "61-adhoc-signed-with-tcc.cypher"),
             _get_query_rows(query_results, "62-non-apple-ca-chain.cypher"),
         ),
+        risk_distribution=_get_query_rows(query_results, "96-risk-score-distribution.cypher"),
+        posture=_get_query_rows(query_results, "67-physical-security-overview.cypher"),
+        recommendations=_get_query_rows(query_results, "100-top-recommendations.cypher"),
     )
 
 
@@ -348,13 +399,9 @@ def _append_report_body(
     """Append sections in the stable public report order from normalized rows."""
     append_vulnerability_intelligence(sections)
     _append_core_finding_sections(sections, rows)
-    append_extended_query_sections(
-        sections,
-        query_results,
-        queries,
-        rows.tier_counts,
-        rows.icloud[0],
-    )
+    append_extended_query_sections(sections, query_results, queries, rows.icloud[0])
+    append_host_evidence_sections(sections, query_results, queries)
+    append_tier_classification_section(sections, query_results, queries, rows.tier_counts)
     append_vulnerability_mapping(
         sections,
         collect_active_categories(
@@ -390,6 +437,7 @@ def assemble_report(
     sections.append("")
     _append_scan_metadata(sections, metadata, now)
     _append_executive_summary(sections, rows)
+    sections.extend(host_evidence_summary_lines(query_results, metadata))
     _append_report_body(sections, query_results, queries, rows)
 
     _append_optional_family_sections(sections, metadata)

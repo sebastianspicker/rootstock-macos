@@ -41,7 +41,7 @@ export const NODE_SHAPE_RULES: ReadonlyArray<{
   { pattern: /Vulnerability|AttackTechnique|ThreatGroup|CWE/, shape: "diamond" },
   { pattern: /TCCPermission|Entitlement|AuthRight|SandboxProfile/, shape: "hexagon" },
   { pattern: /User|Group/, shape: "triangle" },
-  { pattern: /Host|Service|Daemon|LaunchAgent/, shape: "square" },
+  { pattern: /Host|Service|Daemon|LaunchAgent|Process|NetworkListener/, shape: "square" },
 ];
 
 export function drawNodeShape(

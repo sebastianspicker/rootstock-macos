@@ -9,11 +9,15 @@ extension ScanOrchestrator {
         async let sipTask = detectSIP()
         async let filevaultTask = detectFileVault()
         async let icloudTask = detectICloudStatus()
+        async let hostSettingsTask = detectHostSecuritySettings()
+        async let networkConfigurationTask = detectNetworkConfiguration()
         return await HostPostureProbeResults(
             gatekeeper: gatekeeperTask,
             sip: sipTask,
             filevault: filevaultTask,
-            icloud: icloudTask
+            icloud: icloudTask,
+            hostSettings: hostSettingsTask,
+            networkConfiguration: networkConfigurationTask
         )
     }
 

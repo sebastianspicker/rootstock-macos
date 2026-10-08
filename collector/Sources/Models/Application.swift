@@ -6,10 +6,17 @@ public struct Application: Codable, Sendable, GraphNode {
     public let bundleId: String
     public let path: String
     public let version: String?
+    /// Resolved main executable (`Contents/MacOS/<CFBundleExecutable>`).
+    public let executablePath: String?
+    /// SHA-256 of the main executable for third-party apps; nil otherwise.
+    public let executableSha256: String?
     public let teamId: String?
     public let hardenedRuntime: Bool?
     public let libraryValidation: Bool?
     public let isElectron: Bool
+    /// Electron `RunAsNode` fuse state: true = ELECTRON_RUN_AS_NODE works, false = fuse
+    /// disabled, nil = not an Electron app or the fuse wire could not be read.
+    public let electronRunAsNode: Bool?
     public let isSystem: Bool
     public let signed: Bool?
     public let codeSigningAnalysisError: Bool
@@ -26,6 +33,8 @@ public struct Application: Codable, Sendable, GraphNode {
     public let certificateTrustValid: Bool?
     public let certificateChain: [CertificateDetail]
     public let isNotarized: Bool?
+    /// Gatekeeper assessment source reported by `spctl` (for example "Notarized Developer ID").
+    public let gatekeeperAssessment: String?
     public let isAdhocSigned: Bool
     public let entitlements: [EntitlementInfo]
     public let injectionMethods: [InjectionMethod]
@@ -40,22 +49,35 @@ public struct Application: Codable, Sendable, GraphNode {
         public let bundleId: String
         public let path: String
         public let version: String?
+        public let executablePath: String?
+        public let executableSha256: String?
 
-        public init(name: String, bundleId: String, path: String, version: String?) {
+        public init(
+            name: String,
+            bundleId: String,
+            path: String,
+            version: String?,
+            executablePath: String? = nil,
+            executableSha256: String? = nil
+        ) {
             self.name = name
             self.bundleId = bundleId
             self.path = path
             self.version = version
+            self.executablePath = executablePath
+            self.executableSha256 = executableSha256
         }
     }
 
     public struct Flags: Codable, Sendable {
         public let isElectron: Bool
         public let isSystem: Bool
+        public let electronRunAsNode: Bool?
 
-        public init(isElectron: Bool, isSystem: Bool) {
+        public init(isElectron: Bool, isSystem: Bool, electronRunAsNode: Bool? = nil) {
             self.isElectron = isElectron
             self.isSystem = isSystem
+            self.electronRunAsNode = electronRunAsNode
         }
     }
 
@@ -66,6 +88,7 @@ public struct Application: Codable, Sendable, GraphNode {
         public let signed: Bool?
         public let codeSigningAnalysisError: Bool
         public let isNotarized: Bool?
+        public let gatekeeperAssessment: String?
         public let isAdhocSigned: Bool
         public let signingCertificateCN: String?
         public let signingCertificateSHA256: String?
@@ -89,6 +112,7 @@ public struct Application: Codable, Sendable, GraphNode {
             self.signed = signed
             self.codeSigningAnalysisError = analysis.codeSigningAnalysisError
             self.isNotarized = analysis.isNotarized
+            self.gatekeeperAssessment = analysis.gatekeeperAssessment
             self.isAdhocSigned = analysis.isAdhocSigned
             self.signingCertificateCN = certificate.signingCertificateCN
             self.signingCertificateSHA256 = certificate.signingCertificateSHA256
@@ -103,15 +127,18 @@ public struct Application: Codable, Sendable, GraphNode {
     public struct SigningAnalysis: Codable, Sendable {
         public let codeSigningAnalysisError: Bool
         public let isNotarized: Bool?
+        public let gatekeeperAssessment: String?
         public let isAdhocSigned: Bool
 
         public init(
             codeSigningAnalysisError: Bool = false,
             isNotarized: Bool? = nil,
-            isAdhocSigned: Bool = false
+            isAdhocSigned: Bool = false,
+            gatekeeperAssessment: String? = nil
         ) {
             self.codeSigningAnalysisError = codeSigningAnalysisError
             self.isNotarized = isNotarized
+            self.gatekeeperAssessment = gatekeeperAssessment
             self.isAdhocSigned = isAdhocSigned
         }
     }
@@ -195,10 +222,13 @@ public struct Application: Codable, Sendable, GraphNode {
         self.bundleId = identity.bundleId
         self.path = identity.path
         self.version = identity.version
+        self.executablePath = identity.executablePath
+        self.executableSha256 = identity.executableSha256
         self.teamId = signing.teamId
         self.hardenedRuntime = signing.hardenedRuntime
         self.libraryValidation = signing.libraryValidation
         self.isElectron = flags.isElectron
+        self.electronRunAsNode = flags.electronRunAsNode
         self.isSystem = flags.isSystem
         self.signed = signing.signed
         self.codeSigningAnalysisError = signing.codeSigningAnalysisError
@@ -215,6 +245,7 @@ public struct Application: Codable, Sendable, GraphNode {
         self.certificateTrustValid = signing.certificateTrustValid
         self.certificateChain = signing.certificateChain
         self.isNotarized = signing.isNotarized
+        self.gatekeeperAssessment = signing.gatekeeperAssessment
         self.isAdhocSigned = signing.isAdhocSigned
         self.entitlements = entitlementState.entitlements
         self.injectionMethods = entitlementState.injectionMethods
@@ -228,10 +259,13 @@ public struct Application: Codable, Sendable, GraphNode {
         case bundleId = "bundle_id"
         case path
         case version
+        case executablePath = "executable_path"
+        case executableSha256 = "executable_sha256"
         case teamId = "team_id"
         case hardenedRuntime = "hardened_runtime"
         case libraryValidation = "library_validation"
         case isElectron = "is_electron"
+        case electronRunAsNode = "electron_run_as_node"
         case isSystem = "is_system"
         case signed
         case codeSigningAnalysisError = "code_signing_analysis_error"
@@ -241,6 +275,7 @@ public struct Application: Codable, Sendable, GraphNode {
         case entitlementsAvailable = "entitlements_available"
         case entitlementExtractionError = "entitlement_extraction_error"
         case isNotarized = "is_notarized"
+        case gatekeeperAssessment = "gatekeeper_assessment"
         case isAdhocSigned = "is_adhoc_signed"
         case signingCertificateCN = "signing_certificate_cn"
         case signingCertificateSHA256 = "signing_certificate_sha256"
@@ -304,11 +339,18 @@ extension Application {
     }
 
     private var identity: Identity {
-        Identity(name: name, bundleId: bundleId, path: path, version: version)
+        Identity(
+            name: name,
+            bundleId: bundleId,
+            path: path,
+            version: version,
+            executablePath: executablePath,
+            executableSha256: executableSha256
+        )
     }
 
     private var flags: Flags {
-        Flags(isElectron: isElectron, isSystem: isSystem)
+        Flags(isElectron: isElectron, isSystem: isSystem, electronRunAsNode: electronRunAsNode)
     }
 
     private var signing: Signing {
@@ -320,7 +362,8 @@ extension Application {
             analysis: SigningAnalysis(
                 codeSigningAnalysisError: codeSigningAnalysisError,
                 isNotarized: isNotarized,
-                isAdhocSigned: isAdhocSigned
+                isAdhocSigned: isAdhocSigned,
+                gatekeeperAssessment: gatekeeperAssessment
             ),
             certificate: CertificateState(
                 signingCertificateCN: signingCertificateCN,

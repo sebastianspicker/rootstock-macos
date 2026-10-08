@@ -6,6 +6,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GRAPH_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 WHEEL_DIR="$(mktemp -d "${TMPDIR:-/tmp}/rootstock-graph-wheel.XXXXXX")"
 VENV_DIR="$(mktemp -d "${TMPDIR:-/tmp}/rootstock-graph-venv.XXXXXX")"
+# macOS TMPDIR commonly ends in a slash; align paths with CLI normalization.
+WHEEL_DIR="$(cd "$WHEEL_DIR" && pwd -P)"
+VENV_DIR="$(cd "$VENV_DIR" && pwd -P)"
 
 cleanup() {
     rm -rf "$WHEEL_DIR" "$VENV_DIR"
@@ -30,6 +33,9 @@ cat >"$WHEEL_DIR/graph.json" <<'EOF'
 {"metadata":{"hostname":"wheel"},"graph":{"nodes":[],"edges":[]}}
 EOF
 
+"$VENV_DIR/bin/rootstock-graph-investigate" "$WHEEL_DIR/scan.json" \
+    --format html --output "$WHEEL_DIR/investigation.html" >/dev/null
+grep -F "Review queue" "$WHEEL_DIR/investigation.html" >/dev/null
 "$VENV_DIR/bin/rootstock-graph-query" --help >/dev/null
 "$VENV_DIR/bin/rootstock-graph-viewer" --help >/dev/null
 "$VENV_DIR/bin/rootstock-graph-api" --help >/dev/null

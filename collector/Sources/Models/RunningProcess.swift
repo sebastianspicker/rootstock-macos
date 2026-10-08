@@ -16,8 +16,12 @@ public struct RunningProcess: GraphNode {
     /// Resolved bundle ID (nil if process doesn't correspond to a known .app).
     public let bundleId: String?
 
-    public init(pid: Int, user: String, command: String, bundleId: String?) {
+    /// Parent process ID.
+    public let ppid: Int?
+
+    public init(pid: Int, user: String, command: String, bundleId: String?, ppid: Int? = nil) {
         self.pid = pid
+        self.ppid = ppid
         self.user = user
         self.command = command
         self.bundleId = bundleId
@@ -28,5 +32,6 @@ public struct RunningProcess: GraphNode {
         case user
         case command
         case bundleId = "bundle_id"
+        case ppid
     }
 }

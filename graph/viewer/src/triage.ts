@@ -52,6 +52,13 @@ function inferredIncoming(controller: Controller, node: ViewerNode): number {
   ).length;
 }
 
+function firstReason(node: ViewerNode): string {
+  const reasons = node.properties.risk_reasons;
+  const first = Array.isArray(reasons) ? reasons.find((item) => typeof item === "string") : "";
+  if (typeof first !== "string") return "";
+  return first.length > 80 ? `${first.slice(0, 79).trimEnd()}…` : first;
+}
+
 /** `risk 7 · 2 inferred relationships in · role`, omitting parts that are absent. */
 export function triageMeta(controller: Controller, node: ViewerNode): string {
   const score = numericRisk(node);
@@ -60,6 +67,8 @@ export function triageMeta(controller: Controller, node: ViewerNode): string {
   if (inferred > 0)
     parts.push(`${inferred} inferred ${inferred === 1 ? "relationship" : "relationships"} in`);
   if (typeof node.properties.modeled_role === "string") parts.push(node.properties.modeled_role);
+  const reason = firstReason(node);
+  if (reason) parts.push(reason);
   return parts.join(" · ");
 }
 

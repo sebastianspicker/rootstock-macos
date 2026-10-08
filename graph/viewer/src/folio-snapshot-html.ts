@@ -10,6 +10,8 @@ import {
   nodeName,
   value,
 } from "./folio-data";
+import { hostSummaryTables } from "./folio-host-summary";
+import type { SummaryTable } from "./folio-host-summary";
 
 // Plain scanner report: light by default with a dark variant, sans text, mono identifiers, flat tables.
 const stylesheet = `
@@ -122,6 +124,36 @@ function advice(graph: GraphModel): HTMLElement {
   );
   return section;
 }
+function hostTable(summary: SummaryTable): HTMLElement {
+  const section = el("section", {}, [
+    el("h2", { text: summary.title }),
+    el("p", { text: summary.note }),
+  ]);
+  if (!summary.rows.length) {
+    section.append(el("p", { text: "No rows match in the loaded snapshot." }));
+    return section;
+  }
+  const head = el(
+    "tr",
+    {},
+    summary.columns.map((text) => el("th", { scope: "col", text })),
+  );
+  const body = summary.rows.map((row) =>
+    el(
+      "tr",
+      {},
+      row.map((text) => el("td", { text })),
+    ),
+  );
+  section.append(
+    el("div", { class: "table-wrap" }, [
+      el("table", {}, [el("thead", {}, [head]), el("tbody", {}, body)]),
+    ]),
+  );
+  if (summary.omitted)
+    section.append(el("p", { text: `${summary.omitted} more row(s) in the loaded snapshot.` }));
+  return section;
+}
 export function snapshotHtml(graph: GraphModel): string {
   const page = el("html", { lang: "en" }, [
     el("head", {}, [
@@ -147,6 +179,7 @@ export function snapshotHtml(graph: GraphModel): string {
         el("p", { class: "warning", text: coverageText(graph) }),
         applications(graph),
         advice(graph),
+        ...hostSummaryTables(graph).map(hostTable),
         el("footer", {
           text: "Prepared from local snapshot evidence. Host settings are unchanged. Recommendations still require review and action.",
         }),

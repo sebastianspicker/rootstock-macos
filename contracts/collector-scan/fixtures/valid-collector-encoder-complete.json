@@ -38,6 +38,7 @@
       "certificate_expires" : "2030-06-15T00:00:00Z",
       "certificate_trust_valid" : true,
       "code_signing_analysis_error" : false,
+      "electron_run_as_node" : true,
       "entitlement_extraction_error" : "synthetic partial extraction warning",
       "entitlements" : [
         {
@@ -48,6 +49,9 @@
         }
       ],
       "entitlements_available" : true,
+      "executable_path" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "executable_sha256" : "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+      "gatekeeper_assessment" : "Notarized Developer ID",
       "hardened_runtime" : false,
       "injection_methods" : [
         "dyld_insert",
@@ -68,6 +72,7 @@
       "path" : "\/Applications\/AcmeWidget.app",
       "quarantine_info" : {
         "has_quarantine_flag" : true,
+        "origin_host" : "downloads.acme.example",
         "quarantine_agent" : "com.acme.browser",
         "quarantine_timestamp" : "2026-02-01T08:00:00Z",
         "was_translocated" : true,
@@ -130,6 +135,40 @@
   ],
   "bluetooth_discoverable" : false,
   "bluetooth_enabled" : true,
+  "browser_extensions" : [
+    {
+      "browser" : "chrome",
+      "browser_bundle_id" : "com.google.Chrome",
+      "enabled" : true,
+      "extension_id" : "abcdefghijklmnopabcdefghijklmnop",
+      "from_webstore" : true,
+      "host_permissions" : [
+        "<all_urls>"
+      ],
+      "install_location" : "webstore",
+      "install_time" : "2026-02-10T12:00:00Z",
+      "manifest_version" : 3,
+      "name" : "Acme Web Helper",
+      "path" : "\/Users\/acme-admin\/Library\/Application Support\/Google\/Chrome\/Default\/Extensions\/abcdefghijklmnopabcdefghijklmnop\/1.4.0_0",
+      "permissions" : [
+        "cookies",
+        "webRequest"
+      ],
+      "profile" : "Default",
+      "version" : "1.4.0"
+    }
+  ],
+  "certificate_trust_settings" : [
+    {
+      "domain" : "admin",
+      "is_self_signed" : true,
+      "issuer" : "Acme Interception Root",
+      "not_after" : "2036-01-01T00:00:00Z",
+      "sha256" : "3434343434343434343434343434343434343434343434343434343434343434",
+      "subject" : "Acme Interception Root",
+      "trust_result" : "trust_root"
+    }
+  ],
   "collector_version" : "0.0.0-fixture",
   "display_sleep_timeout" : 10,
   "elevation" : {
@@ -174,10 +213,40 @@
     }
   ],
   "gatekeeper_enabled" : true,
+  "hardware_uuid" : "5E3A1C2B-7D4F-4A6E-9B8C-0F1E2D3C4B5A",
+  "host_security_settings" : {
+    "auto_login_user" : "acme-admin",
+    "guest_account_enabled" : false,
+    "mrt_version" : "1.93",
+    "remote_apple_events_enabled" : false,
+    "remote_management_enabled" : true,
+    "root_account_enabled" : false,
+    "software_update" : {
+      "automatic_check" : true,
+      "automatic_download" : true,
+      "install_app_updates" : true,
+      "install_security_responses" : true,
+      "install_system_updates" : false,
+      "last_successful_check" : "2026-03-19T06:00:00Z"
+    },
+    "xprotect_remediator_version" : "145",
+    "xprotect_version" : "5290"
+  },
   "hostname" : "acme-macbook-pro",
   "icloud_drive_enabled" : true,
   "icloud_keychain_enabled" : false,
   "icloud_signed_in" : true,
+  "installed_packages" : [
+    {
+      "install_date" : "2026-01-15T09:30:00Z",
+      "install_prefix" : "\/",
+      "install_process" : "installer",
+      "is_apple" : false,
+      "package_file_name" : "AcmeWidget-4.2.0.pkg",
+      "package_id" : "com.acme.widget.pkg",
+      "version" : "4.2.0"
+    }
+  ],
   "kerberos_artifacts" : [
     {
       "artifact_type" : "ccache",
@@ -280,51 +349,188 @@
   ],
   "launch_items" : [
     {
+      "bundle_path" : "\/Applications\/AcmeWidget.app",
+      "disabled" : false,
+      "dyld_environment" : {
+        "DYLD_INSERT_LIBRARIES" : "\/Library\/Acme\/libacme-hook.dylib"
+      },
+      "environment_variable_names" : [
+        "ACME_MODE",
+        "DYLD_INSERT_LIBRARIES"
+      ],
+      "interval_seconds" : 3600,
       "label" : "com.acme.widget.daemon",
+      "loaded" : true,
       "path" : "\/Library\/LaunchDaemons\/com.acme.widget.daemon.plist",
+      "plist_modified" : "2026-03-18T07:30:00Z",
       "plist_owner" : "root",
       "plist_writable_by_non_root" : false,
       "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_arguments" : [
+        "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+        "--background"
+      ],
+      "program_exists" : true,
       "program_owner" : "acme-admin",
+      "program_sha256" : "1212121212121212121212121212121212121212121212121212121212121212",
+      "program_signing_id" : "com.acme.widget",
+      "program_team_id" : "ACME123456",
       "program_writable_by_non_root" : true,
       "run_at_load" : true,
+      "session_type" : "Aqua",
+      "triggers" : [
+        "start_interval",
+        "watch_paths"
+      ],
       "type" : "daemon",
       "user" : "acme-admin"
     },
     {
+      "bundle_path" : "\/Applications\/AcmeWidget.app",
+      "disabled" : false,
+      "dyld_environment" : {
+        "DYLD_INSERT_LIBRARIES" : "\/Library\/Acme\/libacme-hook.dylib"
+      },
+      "environment_variable_names" : [
+        "ACME_MODE",
+        "DYLD_INSERT_LIBRARIES"
+      ],
+      "interval_seconds" : 3600,
       "label" : "com.acme.widget.agent",
+      "loaded" : true,
       "path" : "\/Library\/LaunchDaemons\/com.acme.widget.agent.plist",
+      "plist_modified" : "2026-03-18T07:30:00Z",
       "plist_owner" : "root",
       "plist_writable_by_non_root" : false,
       "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_arguments" : [
+        "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+        "--background"
+      ],
+      "program_exists" : true,
       "program_owner" : "acme-admin",
+      "program_sha256" : "1212121212121212121212121212121212121212121212121212121212121212",
+      "program_signing_id" : "com.acme.widget",
+      "program_team_id" : "ACME123456",
       "program_writable_by_non_root" : true,
       "run_at_load" : true,
+      "session_type" : "Aqua",
+      "triggers" : [
+        "start_interval",
+        "watch_paths"
+      ],
       "type" : "agent",
       "user" : "acme-admin"
     },
     {
+      "bundle_path" : "\/Applications\/AcmeWidget.app",
+      "disabled" : false,
+      "dyld_environment" : {
+        "DYLD_INSERT_LIBRARIES" : "\/Library\/Acme\/libacme-hook.dylib"
+      },
+      "environment_variable_names" : [
+        "ACME_MODE",
+        "DYLD_INSERT_LIBRARIES"
+      ],
+      "interval_seconds" : 3600,
       "label" : "com.acme.widget.login_item",
+      "loaded" : true,
       "path" : "\/Library\/LaunchDaemons\/com.acme.widget.login_item.plist",
+      "plist_modified" : "2026-03-18T07:30:00Z",
       "plist_owner" : "root",
       "plist_writable_by_non_root" : false,
       "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_arguments" : [
+        "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+        "--background"
+      ],
+      "program_exists" : true,
       "program_owner" : "acme-admin",
+      "program_sha256" : "1212121212121212121212121212121212121212121212121212121212121212",
+      "program_signing_id" : "com.acme.widget",
+      "program_team_id" : "ACME123456",
       "program_writable_by_non_root" : true,
       "run_at_load" : true,
+      "session_type" : "Aqua",
+      "triggers" : [
+        "start_interval",
+        "watch_paths"
+      ],
       "type" : "login_item",
       "user" : "acme-admin"
     },
     {
+      "bundle_path" : "\/Applications\/AcmeWidget.app",
+      "disabled" : false,
+      "dyld_environment" : {
+        "DYLD_INSERT_LIBRARIES" : "\/Library\/Acme\/libacme-hook.dylib"
+      },
+      "environment_variable_names" : [
+        "ACME_MODE",
+        "DYLD_INSERT_LIBRARIES"
+      ],
+      "interval_seconds" : 3600,
       "label" : "com.acme.widget.cron",
+      "loaded" : true,
       "path" : "\/Library\/LaunchDaemons\/com.acme.widget.cron.plist",
+      "plist_modified" : "2026-03-18T07:30:00Z",
       "plist_owner" : "root",
       "plist_writable_by_non_root" : false,
       "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_arguments" : [
+        "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+        "--background"
+      ],
+      "program_exists" : true,
       "program_owner" : "acme-admin",
+      "program_sha256" : "1212121212121212121212121212121212121212121212121212121212121212",
+      "program_signing_id" : "com.acme.widget",
+      "program_team_id" : "ACME123456",
       "program_writable_by_non_root" : true,
       "run_at_load" : true,
+      "session_type" : "Aqua",
+      "triggers" : [
+        "start_interval",
+        "watch_paths"
+      ],
       "type" : "cron",
+      "user" : "acme-admin"
+    },
+    {
+      "bundle_path" : "\/Applications\/AcmeWidget.app",
+      "disabled" : false,
+      "dyld_environment" : {
+        "DYLD_INSERT_LIBRARIES" : "\/Library\/Acme\/libacme-hook.dylib"
+      },
+      "environment_variable_names" : [
+        "ACME_MODE",
+        "DYLD_INSERT_LIBRARIES"
+      ],
+      "interval_seconds" : 3600,
+      "label" : "com.acme.widget.login_hook",
+      "loaded" : true,
+      "path" : "\/Library\/LaunchDaemons\/com.acme.widget.login_hook.plist",
+      "plist_modified" : "2026-03-18T07:30:00Z",
+      "plist_owner" : "root",
+      "plist_writable_by_non_root" : false,
+      "program" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "program_arguments" : [
+        "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+        "--background"
+      ],
+      "program_exists" : true,
+      "program_owner" : "acme-admin",
+      "program_sha256" : "1212121212121212121212121212121212121212121212121212121212121212",
+      "program_signing_id" : "com.acme.widget",
+      "program_team_id" : "ACME123456",
+      "program_writable_by_non_root" : true,
+      "run_at_load" : true,
+      "session_type" : "Aqua",
+      "triggers" : [
+        "start_interval",
+        "watch_paths"
+      ],
+      "type" : "login_hook",
       "user" : "acme-admin"
     }
   ],
@@ -380,6 +586,57 @@
       ]
     }
   ],
+  "network_configuration" : {
+    "dns_servers" : [
+      "10.0.0.53",
+      "10.0.1.53"
+    ],
+    "hosts_entries" : [
+      {
+        "address" : "10.0.0.10",
+        "hostnames" : [
+          "intranet.acme.example",
+          "intranet"
+        ]
+      }
+    ],
+    "proxies" : [
+      {
+        "host" : "proxy.acme.example",
+        "kind" : "http",
+        "port" : 3128,
+        "service" : "Wi-Fi"
+      },
+      {
+        "kind" : "pac",
+        "service" : "Wi-Fi",
+        "url" : "http:\/\/wpad.acme.example\/proxy.pac"
+      }
+    ],
+    "search_domains" : [
+      "corp.acme.example"
+    ]
+  },
+  "network_listeners" : [
+    {
+      "address" : "*",
+      "bundle_id" : "com.acme.widget",
+      "is_loopback" : false,
+      "pid" : 4242,
+      "port" : 8443,
+      "process_name" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
+      "protocol" : "tcp",
+      "state" : "listen",
+      "user" : "acme-admin"
+    },
+    {
+      "address" : "127.0.0.1",
+      "is_loopback" : true,
+      "port" : 5353,
+      "protocol" : "udp",
+      "state" : "bound"
+    }
+  ],
   "remote_access_services" : [
     {
       "config" : {
@@ -404,6 +661,7 @@
       "bundle_id" : "com.acme.widget",
       "command" : "\/Applications\/AcmeWidget.app\/Contents\/MacOS\/AcmeWidget",
       "pid" : 4242,
+      "ppid" : 1,
       "user" : "acme-admin"
     }
   ],
@@ -467,6 +725,15 @@
       "enabled" : true,
       "extension_type" : "driver",
       "identifier" : "com.acme.widget.extension.driver",
+      "subscribed_events" : [
+        "ES_EVENT_TYPE_NOTIFY_EXEC"
+      ],
+      "team_id" : "ACME123456"
+    },
+    {
+      "enabled" : true,
+      "extension_type" : "kernel_extension",
+      "identifier" : "com.acme.widget.extension.kernel_extension",
       "subscribed_events" : [
         "ES_EVENT_TYPE_NOTIFY_EXEC"
       ],

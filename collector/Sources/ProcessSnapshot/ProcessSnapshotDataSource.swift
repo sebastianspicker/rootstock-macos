@@ -15,7 +15,7 @@ public struct ProcessSnapshotDataSource: DataSource {
     }
 
     public func collect() async -> DataSourceResult {
-        guard let output = Shell.run("/bin/ps", ["axo", "pid,user,comm"]) else {
+        guard let output = Shell.run("/bin/ps", ["axo", "pid,ppid,user,comm"]) else {
             return DataSourceResult(
                 nodes: [],
                 errors: [CollectionError(source: name, message: "Failed to run ps", recoverable: true)]
@@ -26,7 +26,7 @@ public struct ProcessSnapshotDataSource: DataSource {
         return DataSourceResult(nodes: processes, errors: [])
     }
 
-    /// Parse `ps axo pid,user,comm` output.
+    /// Parse `ps axo pid,ppid,user,comm` output (`comm` may contain spaces).
     internal static func parsePsOutput(_ output: String, knownApps: [Application]) -> [RunningProcess] {
         // Build path → bundleId lookup (only full .app paths - no short names to avoid collisions)
         var pathToBundle: [String: String] = [:]
@@ -42,10 +42,11 @@ public struct ProcessSnapshotDataSource: DataSource {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             guard !trimmed.hasPrefix("PID") else { continue }
 
-            let parts = trimmed.split(separator: " ", maxSplits: 2, omittingEmptySubsequences: true)
-            guard parts.count >= 3, let pid = Int(parts[0]) else { continue }
-            let user = String(parts[1])
-            let command = parts[2].trimmingCharacters(in: .whitespaces)
+            let parts = trimmed.split(separator: " ", maxSplits: 3, omittingEmptySubsequences: true)
+            guard parts.count >= 4, let pid = Int(parts[0]) else { continue }
+            let ppid = Int(parts[1])
+            let user = String(parts[2])
+            let command = parts[3].trimmingCharacters(in: .whitespaces)
 
             // Resolve bundle ID: direct path match or .app/ prefix extraction
             var bundleId = pathToBundle[command]
@@ -59,7 +60,8 @@ public struct ProcessSnapshotDataSource: DataSource {
                 pid: pid,
                 user: user,
                 command: command,
-                bundleId: bundleId
+                bundleId: bundleId,
+                ppid: ppid
             ))
         }
 

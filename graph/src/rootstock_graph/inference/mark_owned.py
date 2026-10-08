@@ -12,8 +12,10 @@ Usage:
     # Mark a user as owned
     rootstock-graph-mark-owned --username admin
 
-    # Mark any node by label and key
-    rootstock-graph-mark-owned --label XPC_Service --key com.example.daemon.xpc
+    # Mark any node by label and its key property (constants.NODE_KEY_PROPERTY):
+    # XPC_Service by plist path, LaunchItem by "<type>:<path>:<label>"
+    rootstock-graph-mark-owned --label XPC_Service --key /Library/LaunchDaemons/com.example.helper.plist
+    rootstock-graph-mark-owned --label LaunchItem --key daemon:/Library/LaunchDaemons/com.example.daemon.plist:com.example.daemon
 
     # Mark multiple apps at once
     rootstock-graph-mark-owned --bundle-id com.googlecode.iterm2 com.tinyspeck.slackmacgap
@@ -73,7 +75,7 @@ def mark_by_label_key(session, label: str, keys: list[str], timestamp: str) -> i
         )
 
     # SAFETY: `label` is safe to interpolate - NODE_KEY_PROPERTY.get(label) above
-    # rejects any label not in the hardcoded allowlist (constants.py:23-43).
+    # rejects any label not in the hardcoded allowlist (constants.NODE_KEY_PROPERTY).
     # All allowlist keys are clean identifier strings (e.g. "Application", "User").
     result = session.run(
         f"""
@@ -116,7 +118,14 @@ def _build_parser() -> argparse.ArgumentParser:
     group.add_argument("--label", help="Neo4j label for generic node marking (use with --key)")
     group.add_argument("--list", action="store_true", help="List all currently owned nodes")
 
-    parser.add_argument("--key", nargs="+", help="Unique key value(s) for --label mode")
+    parser.add_argument(
+        "--key",
+        nargs="+",
+        help=(
+            "Unique key value(s) for --label mode: XPC_Service by plist path, "
+            "LaunchItem by '<type>:<path>:<label>', Process by '<scan_id>:<pid>'"
+        ),
+    )
     parser.add_argument(
         "--allow-zero",
         action="store_true",

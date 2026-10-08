@@ -2,11 +2,80 @@
 import type { GraphModel, ViewerNode, GraphEdge, QueryResult } from "./types";
 import { propertyValue } from "./runtime";
 import { shortestPath } from "./model";
+import { hostAnswer } from "./folio-host-answers";
+import { hostSummaryMarkdown } from "./folio-host-summary";
 
+/** Ids match the packaged query files: live mode runs the query, offline mode a snapshot selector. */
 export const questions = [
-  { id: "01", text: "Which apps with Full Disk Access allow modeled injection?" },
-  { id: "02", text: "What is the shortest modeled path to Full Disk Access?" },
-  { id: "100", text: "Which recommendations affect the most applications?" },
+  {
+    id: "01",
+    text: "Which apps with Full Disk Access allow modeled injection?",
+    answers: "Apps holding an allowed Full Disk Access grant that local code could be loaded into.",
+  },
+  {
+    id: "02",
+    text: "What is the shortest modeled path to Full Disk Access?",
+    answers: "One chain of preconditions from local code to Full Disk Access.",
+  },
+  {
+    id: "100",
+    text: "Which recommendations affect the most applications?",
+    answers: "Recorded recommendations ranked by the number of applications they apply to.",
+  },
+  {
+    id: "104",
+    text: "Which installed apps have CVEs matched through NVD?",
+    answers: "Apps whose exact installed version NVD lists as affected, with KEV and CVSS leaders.",
+  },
+  {
+    id: "119",
+    text: "Which CVE candidates still need verification?",
+    answers:
+      "Conditional, stale, incomplete or legacy NVD evidence, kept outside CVE risk scoring.",
+  },
+  {
+    id: "120",
+    text: "Where is CVE coverage missing or out of date?",
+    answers:
+      "Per-product catalogue and cache status; missing evidence does not mean no vulnerabilities.",
+  },
+  {
+    id: "106",
+    text: "Which sockets are bound to non-loopback addresses?",
+    answers: "Recorded sockets and firewall context; remote reachability has not been tested.",
+  },
+  {
+    id: "107",
+    text: "Which custom root certificates does this Mac trust?",
+    answers: "Certificates added to user or admin trust settings, which can sign for any website.",
+  },
+  {
+    id: "108",
+    text: "Which browser extensions can read every site or came from outside the store?",
+    answers: "Extensions with access to all sites, or loaded unpacked or side-loaded.",
+  },
+  {
+    id: "109",
+    text: "Which launch items set DYLD_* environment variables?",
+    answers:
+      "Recorded loader environment settings; whether they are honored requires verification.",
+  },
+  {
+    id: "110",
+    text: "Which launch items point to a program that no longer exists?",
+    answers:
+      "Programs recorded as missing; review loaded state, permissions and uninstall history.",
+  },
+  {
+    id: "111",
+    text: "Which launch items run from user-writable or temporary locations?",
+    answers: "Launch items whose program or plist an ordinary user could replace.",
+  },
+  {
+    id: "117",
+    text: "How are this Mac's account, remote-control and update settings configured?",
+    answers: "One row per host setting, assessed as weak, ok or unknown (not collected).",
+  },
 ] as const;
 export const value = (input: unknown): string =>
   (typeof input === "string" ? input : propertyValue(input)) || "Unknown";
@@ -121,6 +190,36 @@ export function sourceName(graph: GraphModel): string {
     ? "Collector scan"
     : "Unknown";
 }
+const COMPUTER_KIND = /^(rs_)?Computer$/;
+const stringItems = (input: unknown): string[] =>
+  Array.isArray(input)
+    ? input.filter((item): item is string => typeof item === "string" && item !== "")
+    : [];
+/** The first recorded Computer node, which carries the host-level posture. */
+export function hostNode(graph: GraphModel): ViewerNode | undefined {
+  return graph.nodes.find((node) => COMPUTER_KIND.test(node.kind));
+}
+/** Host risk level (missing means informational), definite weaknesses, and settings not collected. */
+export function hostPosture(graph: GraphModel): {
+  level: string;
+  findings: string[];
+  unknown: string[];
+} {
+  const properties = hostNode(graph)?.properties ?? {};
+  const level =
+    typeof properties.risk_level === "string" ? properties.risk_level.toLowerCase() : "";
+  return {
+    level: ["critical", "high", "medium", "low", "informational"].includes(level)
+      ? level
+      : "informational",
+    findings: stringItems(properties.posture_findings),
+    unknown: stringItems(properties.posture_unknown),
+  };
+}
+/** Plain-language facts behind an application's risk score. */
+export function riskReasons(node: ViewerNode): string[] {
+  return stringItems(node.properties.risk_reasons);
+}
 export function scopeMetadata(graph: GraphModel): {
   host: string;
   collected: string;
@@ -212,6 +311,7 @@ export function snapshotSummary(graph: GraphModel): string {
       (node) =>
         `- ${value(node.properties.priority)}: ${value(node.properties.text ?? node.label)} (${affectedApps(graph, node.id)} affected applications)`,
     ),
+    ...hostSummaryMarkdown(graph),
   ].join("\n");
 }
 
@@ -229,6 +329,7 @@ export function localResult(graph: GraphModel, question: string): QueryResult {
       priority: node.properties.priority,
       affected_apps: affectedApps(graph, node.id),
     }));
+  else if (question !== "02") rows = hostAnswer(graph, question) ?? [];
   else {
     const path = shortestFdaPath(graph);
     rows = path.length
@@ -241,5 +342,7 @@ export function localResult(graph: GraphModel, question: string): QueryResult {
         ]
       : [];
   }
-  return { rows, columns: Object.keys(rows[0] ?? {}), count: rows.length, truncated: false };
+  // `_node_id` links an offline row to its node; it is not a query column.
+  const columns = Object.keys(rows[0] ?? {}).filter((key) => !key.startsWith("_"));
+  return { rows, columns, count: rows.length, truncated: false };
 }

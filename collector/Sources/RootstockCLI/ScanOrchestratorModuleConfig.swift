@@ -25,6 +25,10 @@ enum RootstockModuleID: String, CaseIterable, Sendable {
     case kerberos
     case sandbox
     case quarantine
+    case networkListeners = "networklisteners"
+    case trustSettings = "trustsettings"
+    case browserExtensions = "browserextensions"
+    case installedPackages = "installedpackages"
 }
 
 enum RootstockModuleConfigError: Error, CustomStringConvertible {

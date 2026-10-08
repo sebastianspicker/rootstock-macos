@@ -21,18 +21,42 @@ path, and query workspace.
 
 - Connect to the local API with its bearer token. The viewer keeps the token
   in memory for the current page only; a reload asks for it again.
-- Review available scan metadata and collection gaps, then select an FDA,
-  modeled-path, or recommendation question. Live mode executes the corresponding
-  packaged query; offline mode inspects only relationships in the loaded snapshot.
+- Review available scan metadata and collection gaps, then select a question:
+  apps with Full Disk Access and modeled injection (01), the shortest modeled
+  path to Full Disk Access (02), recommendations (100), installed apps with
+  NVD-matched CVEs (104), network listeners by exposure (106), custom trusted
+  root certificates (107), browser extensions with access to every site or
+  installed outside the store (108), launch items with `DYLD_*` injection (109),
+  launch items whose program is missing (110) or user-writable (111), and host
+  security settings (117). Each question names what it answers. Live mode
+  executes the packaged query with the same id; offline mode answers from the
+  nodes, relationships and properties in the loaded snapshot and returns the
+  same columns. Rows that describe a listener, certificate, extension, launch
+  item or host open that node in Graph tools.
 - Inspect application evidence, distinguish observed grants from inferred paths,
   and review recommendations before preparing a Markdown or HTML download.
   The Evidence basis key labels each fact Observed, Inferred (violet) or Not
   collected; actions are blue and collection gaps are amber.
 - Download a full assessment in live mode or a clearly labelled snapshot summary
-  offline. The browser controls the destination; completion confirms that the
+  offline. The snapshot summary adds host settings, network listeners, the trust
+  store, browser extensions, non-Apple installer receipts and NVD CVE counts
+  when the snapshot contains them. The browser controls the destination; completion confirms that the
   download started, not that a file was saved to a particular directory.
+- Read the host posture on the Scope page: the host's risk level, the settings
+  that weaken it, and the settings the scan could not read.
 - Triage a deterministic risk queue, open a finding dossier in place, and move
-  selected evidence into graph inspection without losing context.
+  selected evidence into graph inspection without losing context. Each dossier
+  opens with a one-line explanation of the node kind, lists the reasons behind
+  the risk score, and explains what every relationship asserts. Dossiers group
+  the key facts of each kind before the remaining recorded fields: Host
+  settings on the Computer (accounts, remote control, Software Update,
+  XProtect, DNS, proxies, hosts entries, macOS CVE counts; an unread setting
+  shows "Not collected"), arguments, `DYLD_*` environment (highlighted),
+  triggers, load state, hash and containing bundle on launch items, the
+  executable hash and download host on applications, and the endpoint,
+  certificate, extension, receipt or process facts on those kinds.
+  `AFFECTED_BY` rows say whether the version matched Rootstock's curated
+  registry or an NVD CPE.
 - Search and filter the Graph workspace, select nodes from the canvas or
   semantic list, inspect relationships, and control the viewport.
 - Select endpoints, compute or reset an ordered route, and preserve a completed

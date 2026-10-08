@@ -1,11 +1,11 @@
 import Foundation
 import SQLite3
 
-enum SQLiteError: Error, LocalizedError {
+public enum SQLiteError: Error, LocalizedError {
     case cannotOpen(path: String, message: String)
     case queryFailed(code: Int32, message: String)
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .cannotOpen(let path, let message):
             return "Cannot open SQLite database at \(path): \(message)"
@@ -18,10 +18,10 @@ enum SQLiteError: Error, LocalizedError {
 /// Read-only wrapper around the C sqlite3 API.
 /// Works transparently with WAL-mode databases (like TCC.db), which allows
 /// reads to proceed concurrently with tccd writes.
-final class SQLiteDatabase {
+public final class SQLiteDatabase {
     private var db: OpaquePointer?
 
-    init(path: String) throws {
+    public init(path: String) throws {
         let rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, nil)
         guard rc == SQLITE_OK else {
             let msg = db.flatMap { String(validatingCString: sqlite3_errmsg($0)) } ?? "unknown error"
@@ -40,7 +40,7 @@ final class SQLiteDatabase {
 
     /// Return the column names of a table using PRAGMA table_info.
     /// Returns an empty set if the table doesn't exist or the DB can't be queried.
-    func columnNames(table: String) -> Set<String> {
+    public func columnNames(table: String) -> Set<String> {
         // PRAGMA arguments cannot be parameterised; table name is caller-controlled.
         // Only called internally with the hardcoded literal "access".
         guard let rows = try? query("PRAGMA table_info(\(table))") else {
@@ -51,7 +51,12 @@ final class SQLiteDatabase {
 
     /// Execute a SELECT query and return rows as dictionaries.
     /// Throws `SQLiteError.queryFailed` on prepare or step errors.
-    func query(_ sql: String) throws -> [[String: Any]] {
+    public func query(_ sql: String) throws -> [[String: Any]] {
+        try query(sql, textParameters: [])
+    }
+
+    /// Execute a SELECT query with positional text parameters (`?`) and return rows.
+    public func query(_ sql: String, textParameters: [String]) throws -> [[String: Any]] {
         guard let db = db else {
             throw SQLiteError.queryFailed(code: SQLITE_MISUSE, message: "Database handle is nil")
         }
@@ -64,6 +69,14 @@ final class SQLiteDatabase {
         }
         defer { sqlite3_finalize(stmt) }
 
+        let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+        for (offset, value) in textParameters.enumerated() {
+            let bindRC = sqlite3_bind_text(stmt, Int32(offset + 1), value, -1, transient)
+            guard bindRC == SQLITE_OK else {
+                let msg = String(validatingCString: sqlite3_errmsg(db)) ?? "unknown error"
+                throw SQLiteError.queryFailed(code: bindRC, message: msg)
+            }
+        }
         return try readRows(from: stmt, db: db)
     }
 

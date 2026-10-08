@@ -1,6 +1,6 @@
 /** Evidence-stage aside: application identity, recommendations, and reading guidance. */
 
-import { nodeName, recommendations, value } from "./folio-data";
+import { nodeName, recommendations, riskReasons, value } from "./folio-data";
 import {
   appIdentity,
   button,
@@ -10,6 +10,7 @@ import {
   heading,
   para,
   recommendationList,
+  riskReasonList,
 } from "./folio-ui";
 import type { GraphModel, ViewerNode } from "./types";
 
@@ -28,6 +29,8 @@ export function renderEvidenceAside(options: EvidenceAsideOptions): HTMLElement 
   if (selected) {
     aside.append(
       appIdentity(selected),
+      heading("Why this app is flagged"),
+      riskReasonList(riskReasons(selected)),
       heading("Recommendations"),
       para(
         "Advice to reduce potential exposure. Review priority and applicability before taking action.",

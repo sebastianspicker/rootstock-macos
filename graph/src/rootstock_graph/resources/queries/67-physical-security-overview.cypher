@@ -29,5 +29,8 @@ RETURN c.hostname                    AS hostname,
        c.external_boot_allowed       AS external_boot,
        c.filevault_enabled           AS filevault,
        c.sip_enabled                 AS sip,
-       c.gatekeeper_enabled          AS gatekeeper
+       c.gatekeeper_enabled          AS gatekeeper,
+       c.risk_level                  AS posture_level,
+       c.posture_findings            AS posture_findings,
+       c.posture_unknown             AS posture_unknown
 ORDER BY c.hostname

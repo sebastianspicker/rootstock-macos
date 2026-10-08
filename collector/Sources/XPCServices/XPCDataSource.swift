@@ -96,7 +96,7 @@ public struct XPCDataSource: DataSource {
     ) -> (keys: [String], error: CollectionError?) {
         let outcome = runCommand(
             "/usr/bin/codesign",
-            ["-d", "--entitlements", ":-", path],
+            ["-d", "--entitlements", "-", "--xml", path],
             10
         )
         let result: ShellResult

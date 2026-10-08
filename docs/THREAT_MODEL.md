@@ -34,7 +34,13 @@ its separate posture commands perform documented read-only local probes.
 Real output can expose security-relevant host and organization data:
 
 - Core scans and graph exports can identify applications, users, groups,
-  entitlements, TCC grants, persistence, services, and modeled paths.
+  entitlements, TCC grants, persistence, services, and modeled paths. They also
+  record network listeners with their processes, user and admin certificate
+  trust settings, browser extensions with their permissions, installer package
+  receipts, DNS servers, proxies and hosts-file entries, launch item arguments
+  and `DYLD_*` environment, quarantine origin hosts, and executable hashes. This
+  is metadata only (no certificate keys, extension data, or file contents), but
+  it describes the host's network and software in detail.
 - cve-scan output can contain package versions, URLs, service banners, TLS
   metadata, scope ownership, and remediation state.
 - Red output can contain host posture, paths, finding evidence, scope and

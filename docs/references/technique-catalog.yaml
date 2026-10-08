@@ -416,8 +416,10 @@ techniques:
       red : collect.browser_extension_dualuse + base + collection compound + lab plan
       blue : BROWSEREXTDUALUSE parser + harden + detection
       path/meta only - never dumps extension secrets or cookies
+      graph : BrowserExtension nodes (broad host access, sensitive permissions, unpacked/external)
     mappings:
-      graph_queries: []
+      graph_queries:
+        - 108-risky-browser-extensions.cypher
       red_findings:
         - rootstock.vector.persist.browser_extension_dualuse
         - rootstock.vector.persist.browser_extension_collection_compound
@@ -1459,3 +1461,34 @@ techniques:
       blue_detections:
         - softwareupdate_catalog
     status: mapped
+
+  - id: rootstock.tech.network_listener_exposure
+    title: Network listeners reachable from other machines
+    attack_techniques: ["T1210", "T1049"]
+    surfaces: ["network", "listener", "firewall"]
+    depth_notes: |
+      collector : netstat listeners with pid, owner and app bundle (module networklisteners)
+      graph : NetworkListener nodes, LISTENS_ON / EXPOSED_ON, reachable_without_firewall
+    mappings:
+      graph_queries:
+        - 106-network-listeners-by-exposure.cypher
+        - 116-process-listener-map.cypher
+      red_findings: []
+      blue_detections: []
+    status: graph_only
+
+  - id: rootstock.tech.launchd_env_injection
+    title: Launchd DYLD_* environment injection and hijackable persistence programs
+    attack_techniques: ["T1574.006", "T1543.004"]
+    surfaces: ["launchd", "dyld", "persist"]
+    depth_notes: |
+      collector : DYLD_* EnvironmentVariables, program existence and location per launch item
+      graph : launchd_env_injection / persistence_hijack / stale_persistence categories
+    mappings:
+      graph_queries:
+        - 109-launchd-environment-injection.cypher
+        - 110-stale-persistence.cypher
+        - 111-persistence-user-writable-locations.cypher
+      red_findings: []
+      blue_detections: []
+    status: graph_only

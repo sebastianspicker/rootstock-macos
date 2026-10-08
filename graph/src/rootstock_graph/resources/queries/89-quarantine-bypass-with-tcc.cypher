@@ -8,8 +8,8 @@
 // ATT&CK: T1553.001
 
 MATCH (a:Application)-[:HAS_TCC_GRANT {allowed: true}]->(t:TCC_Permission)
-WHERE coalesce(a.has_quarantine_flag, false) = false
-  AND coalesce(a.is_notarized, false) = false
+WHERE a.has_quarantine_flag = false
+  AND a.is_notarized = false
   AND a.is_system = false
   AND NOT coalesce(a.is_sip_protected, false)
 WITH a, collect(DISTINCT t.service) AS tcc_permissions

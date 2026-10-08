@@ -8,7 +8,7 @@ Application/User nodes get linked via INSTALLED_ON/LOCAL_TO edges.
 
 Usage:
     rootstock-graph-merge-scans --input scan1.json scan2.json [--neo4j bolt://localhost:7687]
-        [--replace-host]  # delete earlier scans of each hostname first
+        [--replace-host]  # delete earlier scans of each Mac (hostname + hardware UUID) first
 
 Exit code 0 on success, 1 on failure.
 """
@@ -28,11 +28,12 @@ from . import import_nodes_sandbox
 from . import import_nodes_security
 from . import import_nodes_security_enterprise
 from . import import_nodes_services
+from . import import_scan_stages
 from ..neo4j import add_neo4j_args, connect_from_args
 from ..models import ScanResult, ComputerData
 
 from .import_scan import classify_import_status
-from .replace_host import add_replace_host_arg, replace_host_scans
+from .replace_host import add_replace_host_arg, replace_host_requested, replace_host_scans
 from .scan_loader import load_scan
 
 
@@ -44,6 +45,7 @@ def _report_scan_errors(scan: ScanResult) -> None:
 def _scan_computer(scan: ScanResult) -> ComputerData:
     return ComputerData(
         hostname=scan.hostname,
+        hardware_uuid=scan.hardware_uuid,
         macos_version=scan.macos_version,
         scan_id=scan.scan_id,
         scanned_at=scan.timestamp,
@@ -97,12 +99,12 @@ def _import_device_identity(session, scan: ScanResult) -> None:
     )
 
 
-def import_scan(session, scan: ScanResult, replace_host: bool = False) -> None:
+def import_scan(session, scan: ScanResult, replace_host: bool = True) -> None:
     """Import a single scan with all its data."""
     hostname = scan.hostname
 
     if replace_host:
-        n_removed = replace_host_scans(session, hostname, scan.scan_id)
+        n_removed = replace_host_scans(session, hostname, scan.scan_id, scan.hardware_uuid)
         print(f"  [{hostname}] replaced earlier scans: {n_removed} nodes removed")
 
     if scan.errors:
@@ -121,6 +123,7 @@ def import_scan(session, scan: ScanResult, replace_host: bool = False) -> None:
         ),
     )
     _import_device_identity(session, scan)
+    import_scan_stages.import_host_evidence(session, scan)
     n_installed = import_nodes_core.import_installed_on(session, hostname, scan.scan_id)
     n_local_to = import_nodes_core.import_local_to(session, hostname, scan.scan_id)
 
@@ -145,7 +148,7 @@ def main() -> int:
         return 1
 
     driver = connect_from_args(args)
-    _import_scans(driver, scans, replace_host=args.replace_host)
+    _import_scans(driver, scans, replace_host=replace_host_requested(args))
     print(f"\nMerged {len(scans)} scans from hosts: {', '.join(hostnames)}")
     return 0
 
@@ -203,7 +206,7 @@ def _validate_unique_hostnames(hostnames: list[str]) -> bool:
     return True
 
 
-def _import_scans(driver, scans: list[ScanResult], replace_host: bool = False) -> None:
+def _import_scans(driver, scans: list[ScanResult], replace_host: bool = True) -> None:
     print(f"Importing {len(scans)} scan(s)...")
 
     with driver.session() as session:

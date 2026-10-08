@@ -33,6 +33,11 @@
       "minLength": 1,
       "description": "Hostname of the scanned macOS machine."
     },
+    "hardware_uuid": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "description": "IOPlatformUUID of the scanned Mac. Distinguishes Macs that share a hostname when earlier scans are replaced; absent when it could not be read."
+    },
     "macos_version": {
       "type": "string",
       "minLength": 1,
@@ -173,6 +178,46 @@
       "items": { "$ref": "#/$defs/SandboxProfile" },
       "default": [],
       "description": "Parsed SBPL sandbox profiles for sandboxed applications."
+    },
+    "network_listeners": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/NetworkListener" },
+      "default": [],
+      "description": "Listening TCP sockets and bound UDP sockets with their owning processes."
+    },
+    "certificate_trust_settings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TrustedCertificate" },
+      "default": [],
+      "description": "Certificates with explicit trust settings in the user or admin trust-settings domain."
+    },
+    "browser_extensions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/BrowserExtension" },
+      "default": [],
+      "description": "Extensions installed in Chromium-family, Firefox, and Safari profiles."
+    },
+    "installed_packages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/InstalledPackage" },
+      "default": [],
+      "description": "Installer package receipts from /var/db/receipts."
+    },
+    "host_security_settings": {
+      "oneOf": [
+        { "$ref": "#/$defs/HostSecuritySettings" },
+        { "type": "null" }
+      ],
+      "default": null,
+      "description": "Account, remote administration, software update, and malware-protection settings."
+    },
+    "network_configuration": {
+      "oneOf": [
+        { "$ref": "#/$defs/NetworkConfiguration" },
+        { "type": "null" }
+      ],
+      "default": null,
+      "description": "DNS resolver, proxy, and hosts-file configuration."
     },
     "gatekeeper_enabled": {
       "type": ["boolean", "null"],
@@ -431,6 +476,11 @@
           "type": "boolean",
           "default": false,
           "description": "Whether app translocation was applied."
+        },
+        "origin_host": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Host name of the download URL from the LaunchServices quarantine events database (never the full URL)."
         }
       }
     },
@@ -466,6 +516,16 @@
           "default": null,
           "description": "CFBundleShortVersionString."
         },
+        "executable_path": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Resolved main executable (Contents/MacOS/<CFBundleExecutable>)."
+        },
+        "executable_sha256": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Lower-case hex SHA-256 of the main executable for third-party apps; null otherwise."
+        },
         "team_id": {
           "type": ["string", "null"],
           "default": null,
@@ -484,6 +544,11 @@
         "is_electron": {
           "type": "boolean",
           "description": "Whether this is an Electron-based application."
+        },
+        "electron_run_as_node": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Electron RunAsNode fuse state: true when ELECTRON_RUN_AS_NODE is honoured, false when the fuse disables it, null when the app is not Electron or the fuse wire could not be read."
         },
         "is_system": {
           "type": "boolean",
@@ -529,6 +594,11 @@
           "type": ["boolean", "null"],
           "default": null,
           "description": "Whether the application is notarized by Apple (null if unknown)."
+        },
+        "gatekeeper_assessment": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Gatekeeper assessment source reported by spctl (for example \"Notarized Developer ID\" or \"App Store\"); null when not assessed."
         },
         "is_adhoc_signed": {
           "type": "boolean",
@@ -782,7 +852,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["daemon", "agent", "login_item", "cron"],
+          "enum": ["daemon", "agent", "login_item", "cron", "login_hook"],
           "description": "Type of persistence mechanism."
         },
         "program": {
@@ -819,6 +889,92 @@
           "type": "boolean",
           "default": false,
           "description": "Whether the executable is writable by non-root users."
+        },
+        "program_team_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Team identifier of the program's code signature; null when unsigned, Apple-signed, or not read."
+        },
+        "program_signing_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Signing identifier of the program's code signature; null when unsigned or not read."
+        },
+        "program_arguments": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "ProgramArguments from the plist (at most 16 entries, each truncated to 256 characters)."
+        },
+        "environment_variable_names": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Sorted keys of EnvironmentVariables; values are never recorded."
+        },
+        "dyld_environment": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "default": {},
+          "description": "EnvironmentVariables entries whose key starts with DYLD_ (key to value)."
+        },
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "start_interval",
+              "start_calendar_interval",
+              "watch_paths",
+              "queue_directories",
+              "sockets",
+              "mach_services",
+              "launch_events",
+              "inetd_compatibility"
+            ]
+          },
+          "default": [],
+          "description": "Sorted launch triggers derived from the presence of the corresponding plist keys."
+        },
+        "interval_seconds": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "StartInterval in seconds."
+        },
+        "session_type": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "LimitLoadToSessionType (first element when an array)."
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disabled key of the plist."
+        },
+        "loaded": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether launchd currently has the label loaded; null when launchctl could not be consulted."
+        },
+        "program_exists": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the program path exists on disk; null when there is no program."
+        },
+        "program_sha256": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Lower-case hex SHA-256 of the program file; null when not hashed."
+        },
+        "plist_modified": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "ISO 8601 UTC modification time of the plist, crontab, or hook source file."
+        },
+        "bundle_path": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Containing .app path for items embedded in an application bundle."
         }
       }
     },
@@ -1061,7 +1217,7 @@
     },
     "SystemExtension": {
       "type": "object",
-      "description": "A macOS system extension (network, endpoint security, or driver).",
+      "description": "A macOS system extension (network, endpoint security, or driver) or third-party kernel extension.",
       "required": ["identifier", "extension_type", "enabled"],
       "additionalProperties": false,
       "properties": {
@@ -1077,7 +1233,7 @@
         },
         "extension_type": {
           "type": "string",
-          "enum": ["network", "endpoint_security", "driver"],
+          "enum": ["network", "endpoint_security", "driver", "kernel_extension"],
           "description": "Type of system extension."
         },
         "enabled": {
@@ -1143,6 +1299,11 @@
           "type": ["string", "null"],
           "default": null,
           "description": "Bundle identifier of the associated application, if any."
+        },
+        "ppid": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "Parent process ID."
         }
       }
     },
@@ -1403,6 +1564,401 @@
           "type": ["boolean", "null"],
           "default": null,
           "description": "Whether tickets are forwardable by default (krb5.conf)."
+        }
+      }
+    },
+    "NetworkListener": {
+      "type": "object",
+      "description": "A listening TCP socket or bound UDP socket reported by netstat.",
+      "required": ["protocol", "address", "port", "is_loopback", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": ["tcp", "udp"],
+          "description": "Transport protocol."
+        },
+        "address": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Local address as printed by netstat (e.g. '*', '127.0.0.1', '::1')."
+        },
+        "port": {
+          "type": "integer",
+          "description": "Local port."
+        },
+        "is_loopback": {
+          "type": "boolean",
+          "description": "Whether the socket is bound to a loopback address only; wildcard addresses are not loopback."
+        },
+        "state": {
+          "type": "string",
+          "enum": ["listen", "bound"],
+          "description": "listen for TCP LISTEN sockets, bound for UDP sockets."
+        },
+        "pid": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "Owning process ID."
+        },
+        "process_name": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Command of the owning process (full path when available)."
+        },
+        "user": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "User owning the process."
+        },
+        "bundle_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Bundle identifier of the application the owning process belongs to."
+        }
+      }
+    },
+    "TrustedCertificate": {
+      "type": "object",
+      "description": "A certificate with explicit trust settings in the user or admin trust-settings domain.",
+      "required": ["sha256", "subject", "domain", "trust_result", "is_self_signed"],
+      "additionalProperties": false,
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Lower-case hex SHA-256 of the DER certificate."
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject summary of the certificate."
+        },
+        "issuer": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Issuer common name when readable."
+        },
+        "domain": {
+          "type": "string",
+          "enum": ["user", "admin"],
+          "description": "Trust-settings domain the entry comes from."
+        },
+        "trust_result": {
+          "type": "string",
+          "enum": ["trust_root", "trust_as_root", "deny", "unspecified", "invalid"],
+          "description": "Strongest trust-settings result for the certificate."
+        },
+        "is_self_signed": {
+          "type": "boolean",
+          "description": "Whether subject equals issuer."
+        },
+        "not_after": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "ISO 8601 UTC expiry when readable."
+        }
+      }
+    },
+    "BrowserExtension": {
+      "type": "object",
+      "description": "A browser extension installed in a Chromium-family, Firefox, or Safari profile.",
+      "required": [
+        "browser",
+        "profile",
+        "extension_id",
+        "name",
+        "version",
+        "permissions",
+        "host_permissions",
+        "install_location",
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "browser": {
+          "type": "string",
+          "enum": ["chrome", "chromium", "brave", "edge", "vivaldi", "arc", "opera", "firefox", "safari"],
+          "description": "Browser the extension is installed in."
+        },
+        "browser_bundle_id": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Bundle identifier of the browser application."
+        },
+        "profile": {
+          "type": "string",
+          "description": "Profile directory name (empty for Safari)."
+        },
+        "extension_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Chromium extension ID, Firefox add-on ID, or Safari extension bundle ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Manifest name with localized placeholders resolved when possible."
+        },
+        "version": {
+          "type": "string",
+          "description": "Installed extension version."
+        },
+        "manifest_version": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "Manifest manifest_version."
+        },
+        "permissions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "API permissions declared by the manifest."
+        },
+        "host_permissions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Host permissions and match patterns declared by the manifest."
+        },
+        "from_webstore": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the extension came from the browser's store; null when unknown."
+        },
+        "enabled": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the extension is enabled; null when unknown."
+        },
+        "install_time": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "ISO 8601 UTC install time."
+        },
+        "install_location": {
+          "type": "string",
+          "enum": ["webstore", "unpacked", "external", "policy", "component", "unknown"],
+          "description": "How the extension was installed."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Directory of the installed extension version."
+        }
+      }
+    },
+    "InstalledPackage": {
+      "type": "object",
+      "description": "An installer package receipt from /var/db/receipts.",
+      "required": ["package_id", "is_apple"],
+      "additionalProperties": false,
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "PackageIdentifier (fallback: receipt plist basename)."
+        },
+        "version": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "PackageVersion."
+        },
+        "install_date": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "InstallDate as ISO 8601 UTC."
+        },
+        "install_prefix": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "InstallPrefixPath."
+        },
+        "install_process": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "InstallProcessName."
+        },
+        "package_file_name": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "PackageFileName."
+        },
+        "is_apple": {
+          "type": "boolean",
+          "description": "Whether package_id starts with 'com.apple.'."
+        }
+      }
+    },
+    "SoftwareUpdateSettings": {
+      "type": "object",
+      "description": "Software Update automation settings.",
+      "additionalProperties": false,
+      "properties": {
+        "automatic_check": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "AutomaticCheckEnabled (absent means true)."
+        },
+        "automatic_download": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "AutomaticDownload."
+        },
+        "install_security_responses": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "ConfigDataInstall and CriticalUpdateInstall; null when both are absent."
+        },
+        "install_system_updates": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "AutomaticallyInstallMacOSUpdates."
+        },
+        "install_app_updates": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "AutoUpdate from com.apple.commerce."
+        },
+        "last_successful_check": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "LastFullSuccessfulDate as ISO 8601 UTC."
+        }
+      }
+    },
+    "HostSecuritySettings": {
+      "type": "object",
+      "description": "Host-wide account, remote administration, update, and malware-protection settings.",
+      "additionalProperties": false,
+      "properties": {
+        "guest_account_enabled": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "GuestEnabled from the system loginwindow preferences."
+        },
+        "auto_login_user": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "autoLoginUser from the system loginwindow preferences."
+        },
+        "root_account_enabled": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the root account has an enabled authentication authority."
+        },
+        "remote_apple_events_enabled": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the Remote Apple Events service is loaded."
+        },
+        "remote_management_enabled": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "Whether the Remote Management agent is loaded."
+        },
+        "software_update": {
+          "oneOf": [
+            { "$ref": "#/$defs/SoftwareUpdateSettings" },
+            { "type": "null" }
+          ],
+          "default": null,
+          "description": "Software Update automation settings."
+        },
+        "xprotect_version": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "XProtect bundle version."
+        },
+        "xprotect_remediator_version": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "XProtect Remediator version."
+        },
+        "mrt_version": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Malware Removal Tool version."
+        }
+      }
+    },
+    "ProxySetting": {
+      "type": "object",
+      "description": "An enabled proxy configured on a network service.",
+      "required": ["service", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "service": {
+          "type": "string",
+          "description": "UserDefinedName of the network service."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["http", "https", "socks", "pac"],
+          "description": "Proxy kind."
+        },
+        "host": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Proxy host."
+        },
+        "port": {
+          "type": ["integer", "null"],
+          "default": null,
+          "description": "Proxy port."
+        },
+        "url": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Proxy auto-configuration URL (pac only)."
+        }
+      }
+    },
+    "HostsEntry": {
+      "type": "object",
+      "description": "A non-default /etc/hosts line.",
+      "required": ["address", "hostnames"],
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IP address of the entry."
+        },
+        "hostnames": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Host names mapped to the address."
+        }
+      }
+    },
+    "NetworkConfiguration": {
+      "type": "object",
+      "description": "DNS resolver, proxy, and hosts-file configuration.",
+      "required": ["dns_servers", "search_domains", "proxies", "hosts_entries"],
+      "additionalProperties": false,
+      "properties": {
+        "dns_servers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "DNS servers of the primary resolver, deduplicated in order."
+        },
+        "search_domains": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Search domains of the primary resolver."
+        },
+        "proxies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ProxySetting" },
+          "default": [],
+          "description": "Enabled proxy settings per network service."
+        },
+        "hosts_entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/HostsEntry" },
+          "default": [],
+          "description": "Non-default /etc/hosts entries."
         }
       }
     },

@@ -12,6 +12,7 @@ public struct CodeSigningDataSource {
         let resolvedPath: String
         let sipProtected: Bool
         let isNotarized: Bool?
+        let gatekeeperAssessment: String?
     }
 
     private let analyzer = CodeSigningAnalyzer()
@@ -71,7 +72,8 @@ public struct CodeSigningDataSource {
             signingInfo: info,
             entitlements: app.entitlements,
             isElectron: app.isElectron,
-            isSipProtected: sipProtected
+            isSipProtected: sipProtected,
+            electronRunAsNode: app.electronRunAsNode
         ) : nil
         let notarization = notarizationStatus(
             appPath: resolvedPath,
@@ -91,7 +93,8 @@ public struct CodeSigningDataSource {
                 state: DerivedApplicationState(
                     resolvedPath: resolvedPath,
                     sipProtected: sipProtected,
-                    isNotarized: notarization.value
+                    isNotarized: notarization.value,
+                    gatekeeperAssessment: notarization.source
                 )
             ),
             errors: errors
@@ -112,7 +115,8 @@ public struct CodeSigningDataSource {
                 signingInfo: info,
                 assessmentResult: assessmentResult,
                 resolvedPath: state.resolvedPath,
-                isNotarized: state.isNotarized
+                isNotarized: state.isNotarized,
+                gatekeeperAssessment: state.gatekeeperAssessment
             ),
             security: securityState(from: app, sipProtected: state.sipProtected),
             entitlementState: entitlementState(
@@ -130,7 +134,8 @@ public struct CodeSigningDataSource {
         signingInfo info: CodeSigningInfo,
         assessmentResult: InjectionAssessmentResult?,
         resolvedPath: String,
-        isNotarized: Bool?
+        isNotarized: Bool?,
+        gatekeeperAssessment: String? = nil
     ) -> Application.Signing {
         let analysisFailed = info.analysisError
         let chain = info.certificateChain
@@ -144,7 +149,8 @@ public struct CodeSigningDataSource {
             analysis: Application.SigningAnalysis(
                 codeSigningAnalysisError: analysisFailed,
                 isNotarized: isNotarized,
-                isAdhocSigned: analysisFailed ? false : info.isAdhoc
+                isAdhocSigned: analysisFailed ? false : info.isAdhoc,
+                gatekeeperAssessment: gatekeeperAssessment
             ),
             certificate: Application.CertificateState(
                 signingCertificateCN: leafCert?.commonName,
@@ -198,14 +204,14 @@ public struct CodeSigningDataSource {
         appPath: String,
         app: Application,
         signingInfo info: CodeSigningInfo
-    ) -> (value: Bool?, error: CollectionError?) {
+    ) -> (value: Bool?, source: String?, error: CollectionError?) {
         guard !info.analysisError && !app.isSystem && info.signed else {
-            return (nil, nil)
+            return (nil, nil, nil)
         }
-        return Self.notarizationStatus(
-            from: runCommand("/usr/sbin/spctl", ["-a", "-vv", appPath], 15),
-            appPath: appPath
-        )
+        let outcome = runCommand("/usr/sbin/spctl", ["-a", "-vv", appPath], 15)
+        let status = Self.notarizationStatus(from: outcome, appPath: appPath)
+        let output = outcome.result.map { $0.stderr + "\n" + $0.stdout } ?? ""
+        return (status.value, Self.assessmentSource(from: output), status.error)
     }
 
     private func isExpired(certificate: CertificateDetail?) -> Bool {
@@ -215,6 +221,9 @@ public struct CodeSigningDataSource {
     }
 
     /// Translate Gatekeeper command state without treating infrastructure failures as rejection.
+    ///
+    /// Only an explicit "rejected" verdict from `spctl` counts as not notarized; internal
+    /// errors, timeouts and launch failures leave the status unknown.
     static func notarizationStatus(
         from outcome: ShellOutcome,
         appPath: String
@@ -222,8 +231,29 @@ public struct CodeSigningDataSource {
         switch outcome {
         case .success:
             return (true, nil)
-        case .nonZeroExit:
-            return (false, nil)
+        case .nonZeroExit(let result):
+            let output = [result.stderr, result.stdout]
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            let lowered = output.lowercased()
+            if lowered.contains("rejected") {
+                return (false, nil)
+            }
+            if lowered.contains("accepted") {
+                return (true, nil)
+            }
+            let detail = output.isEmpty
+                ? "process exited with status \(result.terminationStatus)"
+                : output
+            return (
+                nil,
+                CollectionError(
+                    source: "CodeSigning",
+                    message: "Notarization status unknown for \(appPath): \(detail)",
+                    recoverable: true
+                )
+            )
         case .admissionTimedOut, .launchFailed, .executionTimedOut:
             return (
                 nil,
@@ -234,6 +264,19 @@ public struct CodeSigningDataSource {
                 )
             )
         }
+    }
+
+    /// Extracts the `source=` value from `spctl -a -vv` output
+    /// (for example "Notarized Developer ID", "App Store", "Developer ID").
+    static func assessmentSource(from output: String) -> String? {
+        for line in output.split(whereSeparator: \.isNewline) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("source=") else { continue }
+            let value = trimmed.dropFirst("source=".count)
+                .trimmingCharacters(in: .whitespaces)
+            return value.isEmpty ? nil : value
+        }
+        return nil
     }
 
     /// Detect launch constraint category for an application (macOS 13+).

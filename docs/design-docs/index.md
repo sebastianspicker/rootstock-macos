@@ -22,6 +22,10 @@ separate pages.
 | DD-009 | [cve-scan Artifact Bridge](cve-scan-artifact-bridge.md) | Accepted | cve-scan stays separately buildable and Rootstock imports only `rootstock-export.json` |
 | DD-010 | [Product Family Architecture](product-family.md) | Accepted | Products build separately and exchange files; shared Swift code contains neutral facts |
 | DD-011 | [Family Artifact Bridges](family-artifact-bridges.md) | Accepted | Optional file imports with explicit formats and version checks |
+| DD-012 | [Installed Software CVE Matching](installed-software-cve-matching.md) | Accepted | Exact-version NVD `cpeName` lookups, client-side range re-checks, and an offline cache beside the curated registry |
+| DD-013 | [Graph Node Identity](graph-node-identity.md) | Accepted | Launch items keyed by `item_key` and XPC services by plist path instead of label |
+
+| DD-014 | [Offline Investigation](offline-investigation.md) | Implemented; review pending | Evidence-backed offline reports, baseline changes, explicit CVE uncertainty and coverage |
 
 ### DD-001: Collector Language Choice
 

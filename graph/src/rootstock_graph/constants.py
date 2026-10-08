@@ -22,6 +22,7 @@ TIER_PROPERTY = "tier"
 # Risk scoring properties (set by infer_risk_score.py)
 RISK_SCORE_PROPERTY = "risk_score"
 RISK_LEVEL_PROPERTY = "risk_level"
+RISK_REASONS_PROPERTY = "risk_reasons"
 ATTACK_CATEGORIES_PROPERTY = "attack_categories"
 CRITICAL_FINDING_COUNT_PROPERTY = "critical_finding_count"
 HIGH_FINDING_COUNT_PROPERTY = "high_finding_count"
@@ -34,12 +35,14 @@ INTERACTIVE_GRAPH_MAX_EDGES = 50_000
 # Used by rootstock-graph-mark-owned (node lookup) and
 # rootstock-graph-opengraph-export (ID generation).
 # Keychain_Item uses a composite key (label+kind) handled separately where needed.
+# LaunchItem is keyed by "<type>:<path>:<label>" and XPC_Service by its plist path,
+# so two plists that share a label stay two nodes.
 NODE_KEY_PROPERTY: dict[str, str] = {
     "Application": "bundle_id",
     "TCC_Permission": "service",
     "Entitlement": "name",
-    "XPC_Service": "label",
-    "LaunchItem": "label",
+    "XPC_Service": "path",
+    "LaunchItem": "item_key",
     "MDM_Profile": "identifier",
     "User": "name",
     "LocalGroup": "name",
@@ -79,6 +82,11 @@ NODE_KEY_PROPERTY: dict[str, str] = {
     "Repository": "id",
     "Service": "id",
     "WebApp": "id",
+    "Process": "process_key",
+    "NetworkListener": "listener_key",
+    "TrustedCertificate": "certificate_key",
+    "BrowserExtension": "extension_key",
+    "InstalledPackage": "package_key",
 }
 
 # Default values for parameterised saved queries
@@ -92,4 +100,5 @@ DEFAULT_PARAMS = {
     "username": "",
     "scope": None,
     "app_name": None,
+    "days": 30,
 }

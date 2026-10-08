@@ -1,12 +1,14 @@
 /** Renders the node dossier inspector: summary, tabs, evidence, relations, and remediation. */
 
 import { toggleOwned } from "./live";
+import { nodeKindDescription } from "./glossary";
 import { displayKind } from "./model";
 import { element, propertyValue } from "./runtime";
 import type { Controller } from "./runtime";
 import type { NodeId, ViewerNode } from "./types";
 import { renderNodeList } from "./view";
 import { relationshipPanel } from "./inspector-relations";
+import { factPropertyKeys, keyFacts } from "./inspector-facts";
 export {
   relationshipPanel,
   relationshipSummaryRow,
@@ -64,7 +66,8 @@ function inspectorSummary(node: ViewerNode): HTMLElement {
   const kindLabel = displayNodeKind(node.kind);
   const shortId = node.id.length <= 40 ? node.id : "";
   const subtitle = shortId ? `${kindLabel} · ${shortId}` : kindLabel;
-  return element("div", { class: "inspector-summary" }, [
+  const about = nodeKindDescription(node.kind);
+  const children = [
     summaryKicker(kindLabel, propertyText(node.properties.tier ?? node.properties.security_tier)),
     element("h3", { text: node.label ?? node.id }),
     element("p", { class: "field-help", text: subtitle }),
@@ -73,7 +76,9 @@ function inspectorSummary(node: ViewerNode): HTMLElement {
       propertyText(node.properties.risk_score ?? node.properties.score),
       node.properties.owned === true,
     ),
-  ]);
+  ];
+  if (about) children.push(element("p", { class: "inspector-about field-help", text: about }));
+  return element("div", { class: "inspector-summary" }, children);
 }
 
 function propertyText(value: unknown): string {
@@ -143,19 +148,74 @@ function ownedAction(controller: Controller, node: ViewerNode): HTMLButtonElemen
   return owned;
 }
 
+/** Properties rendered as their own lists above the raw rows. */
+const LISTED_PROPERTIES = new Set(["risk_reasons", "posture_findings", "posture_unknown"]);
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string" && item !== "")
+    : [];
+}
+
+function listSection(title: string, items: string[], className: string): HTMLElement[] {
+  return [
+    element("h4", { text: title }),
+    element(
+      "ul",
+      { class: className },
+      items.map((item) => element("li", { text: item })),
+    ),
+  ];
+}
+
+/** "Why this score", and for the Computer node the host findings and uncollected settings. */
+export function evidenceExplanations(node: ViewerNode): HTMLElement[] {
+  const reasons = stringList(node.properties.risk_reasons);
+  const sections = reasons.length ? listSection("Why this score", reasons, "risk-reasons") : [];
+  if (node.kind !== "rs_Computer") return sections;
+  const findings = stringList(node.properties.posture_findings);
+  const unknown = stringList(node.properties.posture_unknown);
+  sections.push(
+    ...(findings.length
+      ? listSection("Host findings", findings, "risk-reasons")
+      : [
+          element("h4", { text: "Host findings" }),
+          element("p", {
+            class: "field-help",
+            text: "No definite weaknesses in the collected settings.",
+          }),
+        ]),
+  );
+  if (unknown.length) sections.push(...listSection("Not collected", unknown, "gap-list"));
+  return sections;
+}
+
+function propertyRowValue(key: string, value: unknown): string {
+  return key === "collection_error_sources" && Array.isArray(value)
+    ? stringList(value).join(", ")
+    : propertyValue(value);
+}
+
 function inspectorProperties(node: ViewerNode): HTMLElement {
   const properties = element("section", {
     class: "prop-section inspector-panel",
     role: "tabpanel",
     "data-inspector-panel": "evidence",
   });
+  const facts = keyFacts(node);
+  properties.append(...evidenceExplanations(node), ...facts);
+  if (facts.length) properties.appendChild(element("h4", { text: "Other recorded fields" }));
+  const shown = factPropertyKeys(node.kind);
   for (const [key, value] of Object.entries(node.properties)
-    .filter(([entryKey]) => !entryKey.startsWith("_"))
+    .filter(
+      ([entryKey]) =>
+        !entryKey.startsWith("_") && !LISTED_PROPERTIES.has(entryKey) && !shown.has(entryKey),
+    )
     .sort(([left], [right]) => left.localeCompare(right))) {
     properties.appendChild(
       element("div", { class: "prop-row" }, [
         element("span", { class: "prop-key", text: displayPropertyKey(key) }),
-        element("span", { class: "prop-val", text: propertyValue(value) }),
+        element("span", { class: "prop-val", text: propertyRowValue(key, value) }),
       ]),
     );
   }
@@ -316,18 +376,39 @@ function appendEmptyRecommendationState(panel: HTMLElement, count: number): void
   }
 }
 
-function appendRecommendations(panel: HTMLElement, connected: ViewerNode[]): void {
-  for (const recommendation of connected) {
-    panel.appendChild(
-      element("div", { class: "recommendation-card" }, [
-        element("span", { class: "recommendation-marker", "aria-hidden": "true" }),
-        element("div", {}, [
-          element("strong", { text: recommendation.label ?? recommendation.id }),
-          element("p", { class: "field-help", text: "Graph recommendation" }),
-        ]),
-      ]),
+function recommendationText(node: ViewerNode, key: string): string {
+  const value = node.properties[key];
+  return typeof value === "string" ? value : "";
+}
+
+function recommendationCard(recommendation: ViewerNode): HTMLElement {
+  const title =
+    recommendationText(recommendation, "title") || (recommendation.label ?? recommendation.id);
+  const text = recommendationText(recommendation, "text");
+  const priority = recommendationText(recommendation, "priority").toLowerCase();
+  const heading: HTMLElement[] = [element("strong", { text: title })];
+  if (priority)
+    heading.push(
+      element("span", {
+        class: `folio-priority ${["critical", "high", "medium", "low"].includes(priority) ? priority : ""}`,
+        text: priority,
+      }),
     );
-  }
+  const body = [element("div", { class: "recommendation-heading" }, heading)];
+  body.push(
+    element("p", {
+      class: "field-help",
+      text: text && text !== title ? text : "Graph recommendation",
+    }),
+  );
+  return element("div", { class: "recommendation-card" }, [
+    element("span", { class: "recommendation-marker", "aria-hidden": "true" }),
+    element("div", {}, body),
+  ]);
+}
+
+function appendRecommendations(panel: HTMLElement, connected: ViewerNode[]): void {
+  for (const recommendation of connected) panel.appendChild(recommendationCard(recommendation));
 }
 
 export function provenanceChain(controller: Controller): HTMLElement {

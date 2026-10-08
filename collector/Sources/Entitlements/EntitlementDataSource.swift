@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import HostCommand
 
 /// Discovers installed apps and extracts their entitlements.
 public struct EntitlementDataSource: DataSource {
@@ -85,11 +86,17 @@ public struct EntitlementDataSource: DataSource {
         extractor: EntitlementExtractor,
         classifier: EntitlementClassifier
     ) -> ProcessedApp {
-        let extraction = extractor.extract(from: URL(fileURLWithPath: app.executablePath))
+        let extraction = app.executablePath.map { extractor.extract(from: URL(fileURLWithPath: $0)) }
+            ?? EntitlementExtractionResult(
+                entitlements: [:],
+                available: false,
+                errorMessage: "Bundle executable name is not a plain file name"
+            )
         let entitlementDict = extraction.entitlements
         let entitlements = classifier.classify(entitlementDict)
         let sandbox = classifier.analyzeSandbox(entitlementDict)
-        let error = extraction.available ? nil : CollectionError(
+        // AppDiscovery already reported bundles whose executable name was rejected.
+        let error = extraction.available || app.executablePath == nil ? nil : CollectionError(
             source: "Entitlements",
             message: "Failed to extract entitlements for \(app.bundleId): \(extraction.errorMessage ?? "unknown error")",
             recoverable: true
@@ -99,9 +106,15 @@ public struct EntitlementDataSource: DataSource {
                 name: app.name,
                 bundleId: app.bundleId,
                 path: app.path,
-                version: app.version
+                version: app.version,
+                executablePath: app.executablePath,
+                executableSha256: executableDigest(for: app)
             ),
-            flags: Application.Flags(isElectron: app.isElectron, isSystem: app.isSystem),
+            flags: Application.Flags(
+                isElectron: app.isElectron,
+                isSystem: app.isSystem,
+                electronRunAsNode: app.electronRunAsNode
+            ),
             signing: Application.Signing(signed: nil),  // CodeSigningDataSource.enrich() sets the real value.
             security: Application.Security(
                 isSandboxed: sandbox.isSandboxed,
@@ -115,5 +128,14 @@ public struct EntitlementDataSource: DataSource {
             )
         )
         return ProcessedApp(application: application, error: error)
+    }
+
+    /// SHA-256 of a third-party app's main executable; Apple and `/System/` apps are skipped.
+    private static func executableDigest(for app: DiscoveredApp) -> String? {
+        guard let executablePath = app.executablePath, !app.isSystem, !app.path.hasPrefix("/System/"),
+              !executablePath.hasPrefix("/System/") else {
+            return nil
+        }
+        return FileDigest.sha256(ofFileAt: executablePath)
     }
 }

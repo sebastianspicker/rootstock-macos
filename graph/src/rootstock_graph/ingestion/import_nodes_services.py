@@ -12,13 +12,16 @@ from ..models import (
     MDMProfileData,
     LaunchItemData,
 )
+from .path_classification import program_in_user_writable_location
+
+from .launch_item_facts import dyld_environment_entries, dyld_injection, launch_item_key
 
 logger = logging.getLogger(__name__)
 
 
 def import_xpc_services(session: Session, services: list[XPCServiceData]) -> tuple[int, int]:
     """
-    MERGE XPC_Service nodes and COMMUNICATES_WITH edges.
+    MERGE XPC_Service nodes (keyed by plist path) and COMMUNICATES_WITH edges.
 
     COMMUNICATES_WITH edges are created when an Application has an Entitlement
     whose name exactly matches one of the service's mach_service names - indicating
@@ -60,8 +63,8 @@ def _merge_xpc_service_nodes(
     session.run(
         """
         UNWIND $records AS r
-        MERGE (x:XPC_Service {label: r.label})
-        SET x.path          = r.path,
+        MERGE (x:XPC_Service {path: r.path})
+        SET x.label         = r.label,
             x.program       = r.program,
             x.type          = r.type,
             x.user          = r.user,
@@ -84,7 +87,7 @@ def _link_xpc_communicates_with_edges(
         UNWIND $records AS r
         WITH r WHERE size(r.mach_services) > 0
         UNWIND r.mach_services AS svc_name
-        MATCH (x:XPC_Service {label: r.label})
+        MATCH (x:XPC_Service {path: r.path})
         MATCH (a:Application)-[:HAS_ENTITLEMENT]->(e:Entitlement {name: svc_name})
         MERGE (a)-[rel:COMMUNICATES_WITH {mach_service: svc_name}]->(x)
         RETURN count(rel) AS n
@@ -100,9 +103,15 @@ def import_launch_items(
     """
     MERGE LaunchItem nodes, User nodes (for RUNS_AS), and infer graph edges.
 
+    A LaunchItem is keyed by ``item_key = "<type>:<path>:<label>"``: one plist is one
+    job, and two plists that share a label (a sysdiagnose collision) stay two nodes.
+
     Edges created:
-      - (Application)-[:PERSISTS_VIA]->(LaunchItem): when an app's bundle path
-        is a prefix of the launch item's program path
+      - (Application)-[:PERSISTS_VIA]->(LaunchItem): when an app's bundle path is a
+        prefix of the launch item's program path (``match: 'program_path'``), when
+        the program is signed by the app's team (``match: 'team_id'``), when the
+        item label is namespaced under the app's bundle id (``match: 'label'``), or
+        when the item is embedded in the app bundle (``match: 'bundle_path'``)
       - (LaunchItem)-[:RUNS_AS]->(User): when the item has a user field
       - (User)-[:CAN_HIJACK]->(LaunchItem): when a daemon binary is writable by non-root
 
@@ -123,6 +132,7 @@ def import_launch_items(
 def _launch_item_records(items: list[LaunchItemData]) -> list[dict[str, object]]:
     return [
         {
+            "item_key": launch_item_key(i.type, i.path, i.label),
             "label": i.label,
             "path": i.path,
             "type": i.type,
@@ -133,6 +143,22 @@ def _launch_item_records(items: list[LaunchItemData]) -> list[dict[str, object]]
             "program_owner": i.program_owner,
             "plist_writable_by_non_root": i.plist_writable_by_non_root,
             "program_writable_by_non_root": i.program_writable_by_non_root,
+            "program_team_id": i.program_team_id,
+            "program_signing_id": i.program_signing_id,
+            "program_arguments": i.program_arguments,
+            "environment_variable_names": i.environment_variable_names,
+            "dyld_environment": dyld_environment_entries(i.dyld_environment),
+            "launchd_dyld_injection": dyld_injection(i.dyld_environment),
+            "triggers": list(i.triggers),
+            "interval_seconds": i.interval_seconds,
+            "session_type": i.session_type,
+            "disabled": i.disabled,
+            "loaded": i.loaded,
+            "program_exists": i.program_exists,
+            "program_sha256": i.program_sha256,
+            "plist_modified": i.plist_modified,
+            "bundle_path": i.bundle_path,
+            "program_in_user_writable_location": program_in_user_writable_location(i.program),
         }
         for i in items
     ]
@@ -145,8 +171,9 @@ def _merge_launch_item_nodes(
     session.run(
         """
         UNWIND $records AS r
-        MERGE (l:LaunchItem {label: r.label})
-        SET l.path       = r.path,
+        MERGE (l:LaunchItem {item_key: r.item_key})
+        SET l.label      = r.label,
+            l.path       = r.path,
             l.type       = r.type,
             l.program    = r.program,
             l.run_at_load = r.run_at_load,
@@ -154,10 +181,80 @@ def _merge_launch_item_nodes(
             l.plist_owner = r.plist_owner,
             l.program_owner = r.program_owner,
             l.plist_writable_by_non_root = r.plist_writable_by_non_root,
-            l.program_writable_by_non_root = r.program_writable_by_non_root
+            l.program_writable_by_non_root = r.program_writable_by_non_root,
+            l.program_team_id = r.program_team_id,
+            l.program_signing_id = r.program_signing_id,
+            l.program_arguments = r.program_arguments,
+            l.environment_variable_names = r.environment_variable_names,
+            l.dyld_environment = r.dyld_environment,
+            l.launchd_dyld_injection = r.launchd_dyld_injection,
+            l.triggers = r.triggers,
+            l.interval_seconds = r.interval_seconds,
+            l.session_type = r.session_type,
+            l.disabled = r.disabled,
+            l.loaded = r.loaded,
+            l.program_exists = r.program_exists,
+            l.program_sha256 = r.program_sha256,
+            l.plist_modified = r.plist_modified,
+            l.bundle_path = r.bundle_path,
+            l.program_in_user_writable_location = r.program_in_user_writable_location
         """,
         records=records,
     )
+
+
+_PERSISTENCE_LINK_RULES: tuple[tuple[str, str], ...] = (
+    (
+        "program_path",
+        """
+        WITH r WHERE r.program IS NOT NULL
+        MATCH (l:LaunchItem {item_key: r.item_key})
+        MATCH (a:Application)
+        WHERE r.program STARTS WITH a.path + '/'
+        """,
+    ),
+    # A helper signed by the same Developer ID team as an installed third-party app
+    # belongs to that vendor; Apple's own daemons carry no team id and are skipped.
+    (
+        "team_id",
+        """
+        WITH r WHERE r.program_team_id IS NOT NULL
+        MATCH (l:LaunchItem {item_key: r.item_key})
+        MATCH (a:Application {team_id: r.program_team_id})
+        WHERE NOT coalesce(a.is_system, false)
+        """,
+    ),
+    # `us.zoom.xos.ZoomDaemon` under `us.zoom.xos`: a label namespaced under the app's
+    # bundle id (or the app id under the label) names the same product. The shorter
+    # (prefix) side needs at least three components, so a bare vendor prefix such as
+    # `com.google` cannot tie every product of that vendor together. Heuristic match.
+    (
+        "label",
+        """
+        WITH r WHERE NOT r.label STARTS WITH 'com.apple.'
+        MATCH (l:LaunchItem {item_key: r.item_key})
+        MATCH (a:Application)
+        WHERE NOT coalesce(a.is_system, false)
+          AND NOT a.bundle_id STARTS WITH 'com.apple.'
+          AND ((r.label STARTS WITH a.bundle_id + '.' AND size(split(a.bundle_id, '.')) >= 3)
+            OR (a.bundle_id STARTS WITH r.label + '.' AND size(split(r.label, '.')) >= 3))
+        """,
+    ),
+    # Items under `<App>.app/Contents/Library/{LaunchAgents,LaunchDaemons,LoginItems}`
+    # carry the containing bundle; a nested helper app still belongs to the outer app.
+    (
+        "bundle_path",
+        """
+        WITH r WHERE r.bundle_path IS NOT NULL
+        MATCH (l:LaunchItem {item_key: r.item_key})
+        MATCH (a:Application)
+        WHERE r.bundle_path = a.path OR r.bundle_path STARTS WITH a.path + '/'
+        """,
+    ),
+)
+
+# Rules whose edges only suggest ownership; the edge records ``confidence``.
+_HEURISTIC_LINK_RULES = frozenset({"label"})
 
 
 def _link_persistence_edges(
@@ -165,21 +262,28 @@ def _link_persistence_edges(
     records: list[dict[str, object]],
     scan_id: str | None,
 ) -> int:
-    result = session.run(
-        """
-        UNWIND $records AS r
-        WITH r WHERE r.program IS NOT NULL
-        MATCH (l:LaunchItem {label: r.label})
-        MATCH (a:Application)
-        WHERE r.program STARTS WITH a.path
-          AND ($scan_id IS NULL OR a.scan_id = $scan_id)
-        MERGE (a)-[rel:PERSISTS_VIA]->(l)
-        RETURN count(rel) AS n
-        """,
-        records=records,
-        scan_id=scan_id,
-    )
-    return result.single()["n"]
+    """Create PERSISTS_VIA with a ``match`` reason; the strongest rule that fires wins.
+
+    Edges from heuristic rules also carry ``confidence: 'heuristic'``.
+    """
+    total = 0
+    for reason, match_clause in _PERSISTENCE_LINK_RULES:
+        result = session.run(
+            f"""
+            UNWIND $records AS r
+            {match_clause}
+              AND ($scan_id IS NULL OR a.scan_id = $scan_id)
+            MERGE (a)-[rel:PERSISTS_VIA]->(l)
+            ON CREATE SET rel.match = $reason, rel.confidence = $confidence
+            RETURN count(rel) AS n
+            """,
+            records=records,
+            scan_id=scan_id,
+            reason=reason,
+            confidence="heuristic" if reason in _HEURISTIC_LINK_RULES else None,
+        )
+        total += result.single()["n"]
+    return total
 
 
 def _link_runs_as_edges(session: Session, records: list[dict[str, object]]) -> int:
@@ -187,7 +291,7 @@ def _link_runs_as_edges(session: Session, records: list[dict[str, object]]) -> i
         """
         UNWIND $records AS r
         WITH r WHERE r.user IS NOT NULL
-        MATCH (l:LaunchItem {label: r.label})
+        MATCH (l:LaunchItem {item_key: r.item_key})
         MERGE (u:User {name: r.user})
         MERGE (l)-[rel:RUNS_AS]->(u)
         RETURN count(rel) AS n
@@ -206,7 +310,7 @@ def _link_launch_hijack_edges(
         UNWIND $records AS r
         WITH r WHERE r.type = 'daemon'
           AND r.program_writable_by_non_root = true
-        MATCH (l:LaunchItem {label: r.label})
+        MATCH (l:LaunchItem {item_key: r.item_key})
         MATCH (u:User)-[:MEMBER_OF]->(:LocalGroup {name: 'admin'})
         MERGE (u)-[rel:CAN_HIJACK]->(l)
         SET rel.reason = 'program_writable_by_non_root'

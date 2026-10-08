@@ -21,6 +21,8 @@ public struct ScanResult: Codable, Sendable {
     public let scanId: String
     public let timestamp: String
     public let hostname: String
+    /// `IOPlatformUUID` of the Mac; nil when it could not be read.
+    public let hardwareUUID: String?
     public let macosVersion: String
     public let collectorVersion: String
     public let elevation: ElevationInfo
@@ -45,6 +47,12 @@ public struct ScanResult: Codable, Sendable {
     public let systemExtensions: [SystemExtension]
     public let sandboxProfiles: [SandboxProfile]
     public let sudoersRules: [SudoersRule]
+    public let networkListeners: [NetworkListener]
+    public let certificateTrustSettings: [TrustedCertificate]
+    public let browserExtensions: [BrowserExtension]
+    public let installedPackages: [InstalledPackage]
+    public let hostSecuritySettings: HostSecuritySettings?
+    public let networkConfiguration: NetworkConfiguration?
     public let externalBootAllowed: Bool?
     public let displaySleepTimeout: Int?
     public let secureBootLevel: String?
@@ -66,6 +74,7 @@ public struct ScanResult: Codable, Sendable {
         public let scanId: String
         public let timestamp: String
         public let hostname: String
+        public let hardwareUUID: String?
         public let macosVersion: String
         public let collectorVersion: String
 
@@ -73,12 +82,14 @@ public struct ScanResult: Codable, Sendable {
             scanId: String,
             timestamp: String,
             hostname: String,
+            hardwareUUID: String? = nil,
             macosVersion: String,
             collectorVersion: String
         ) {
             self.scanId = scanId
             self.timestamp = timestamp
             self.hostname = hostname
+            self.hardwareUUID = hardwareUUID
             self.macosVersion = macosVersion
             self.collectorVersion = collectorVersion
         }
@@ -106,11 +117,16 @@ public struct ScanResult: Codable, Sendable {
         public let runningProcesses: [RunningProcess]
         public let localGroups: [LocalGroup]
         public let applications: [Application]
+        public let networkListeners: [NetworkListener]
+        public let certificateTrustSettings: [TrustedCertificate]
+        public let browserExtensions: [BrowserExtension]
+        public let installedPackages: [InstalledPackage]
 
         public init(
             core: CoreCollections = CoreCollections(),
             accountAccess: AccountAccessCollections = AccountAccessCollections(),
-            system: SystemCollections = SystemCollections()
+            system: SystemCollections = SystemCollections(),
+            inventory: InventoryCollections = InventoryCollections()
         ) {
             self.sudoersRules = accountAccess.sudoersRules
             self.sandboxProfiles = system.sandboxProfiles
@@ -133,6 +149,10 @@ public struct ScanResult: Codable, Sendable {
             self.runningProcesses = system.runningProcesses
             self.localGroups = accountAccess.localGroups
             self.applications = core.applications
+            self.networkListeners = inventory.networkListeners
+            self.certificateTrustSettings = inventory.certificateTrustSettings
+            self.browserExtensions = inventory.browserExtensions
+            self.installedPackages = inventory.installedPackages
         }
     }
 
@@ -231,48 +251,6 @@ public struct ScanResult: Codable, Sendable {
             self.adBinding = adBinding
             self.kerberosArtifacts = kerberosArtifacts
             self.sandboxProfiles = sandboxProfiles
-        }
-    }
-
-    public struct HostPosture: Codable, Sendable {
-        public let gatekeeperEnabled: Bool?
-        public let lockdownModeEnabled: Bool?
-        public let icloudSignedIn: Bool?
-        public let sipEnabled: Bool?
-        public let bluetoothEnabled: Bool?
-        public let icloudDriveEnabled: Bool?
-        public let filevaultEnabled: Bool?
-        public let bluetoothDiscoverable: Bool?
-        public let icloudKeychainEnabled: Bool?
-        public let screenLockEnabled: Bool?
-        public let thunderboltSecurityLevel: String?
-        public let screenLockDelay: Int?
-        public let secureBootLevel: String?
-        public let displaySleepTimeout: Int?
-        public let externalBootAllowed: Bool?
-
-        public init(
-            gatekeeperEnabled: Bool? = nil,
-            sipEnabled: Bool? = nil,
-            filevaultEnabled: Bool? = nil,
-            physicalSecurity: PhysicalSecurity = PhysicalSecurity(),
-            icloud: ICloud = ICloud()
-        ) {
-            self.gatekeeperEnabled = gatekeeperEnabled
-            self.lockdownModeEnabled = physicalSecurity.lockdownModeEnabled
-            self.icloudSignedIn = icloud.icloudSignedIn
-            self.sipEnabled = sipEnabled
-            self.bluetoothEnabled = physicalSecurity.bluetoothEnabled
-            self.icloudDriveEnabled = icloud.icloudDriveEnabled
-            self.filevaultEnabled = filevaultEnabled
-            self.bluetoothDiscoverable = physicalSecurity.bluetoothDiscoverable
-            self.icloudKeychainEnabled = icloud.icloudKeychainEnabled
-            self.screenLockEnabled = physicalSecurity.screenLockEnabled
-            self.thunderboltSecurityLevel = physicalSecurity.thunderboltSecurityLevel
-            self.screenLockDelay = physicalSecurity.screenLockDelay
-            self.secureBootLevel = physicalSecurity.secureBootLevel
-            self.displaySleepTimeout = physicalSecurity.displaySleepTimeout
-            self.externalBootAllowed = physicalSecurity.externalBootAllowed
         }
     }
 
@@ -377,6 +355,7 @@ public struct ScanResult: Codable, Sendable {
     ) {
         (self.scanId, self.timestamp) = (metadata.scanId, metadata.timestamp)
         (self.hostname, self.macosVersion) = (metadata.hostname, metadata.macosVersion)
+        self.hardwareUUID = metadata.hardwareUUID
         self.collectorVersion = metadata.collectorVersion
         self.elevation = elevation
         self.applications = collections.applications
@@ -400,6 +379,12 @@ public struct ScanResult: Codable, Sendable {
         self.systemExtensions = collections.systemExtensions
         self.sandboxProfiles = collections.sandboxProfiles
         self.sudoersRules = collections.sudoersRules
+        self.networkListeners = collections.networkListeners
+        self.certificateTrustSettings = collections.certificateTrustSettings
+        self.browserExtensions = collections.browserExtensions
+        self.installedPackages = collections.installedPackages
+        self.hostSecuritySettings = hostPosture.hostSecuritySettings
+        self.networkConfiguration = hostPosture.networkConfiguration
         self.externalBootAllowed = hostPosture.externalBootAllowed
         self.displaySleepTimeout = hostPosture.displaySleepTimeout
         self.secureBootLevel = hostPosture.secureBootLevel
@@ -422,6 +407,7 @@ public struct ScanResult: Codable, Sendable {
         case scanId = "scan_id"
         case timestamp
         case hostname
+        case hardwareUUID = "hardware_uuid"
         case macosVersion = "macos_version"
         case collectorVersion = "collector_version"
         case elevation
@@ -446,6 +432,12 @@ public struct ScanResult: Codable, Sendable {
         case adBinding = "ad_binding"
         case kerberosArtifacts = "kerberos_artifacts"
         case sandboxProfiles = "sandbox_profiles"
+        case networkListeners = "network_listeners"
+        case certificateTrustSettings = "certificate_trust_settings"
+        case browserExtensions = "browser_extensions"
+        case installedPackages = "installed_packages"
+        case hostSecuritySettings = "host_security_settings"
+        case networkConfiguration = "network_configuration"
         case gatekeeperEnabled = "gatekeeper_enabled"
         case sipEnabled = "sip_enabled"
         case filevaultEnabled = "filevault_enabled"

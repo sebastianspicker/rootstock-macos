@@ -2494,6 +2494,10 @@ thead th {
 .inspector-risk-line {
   margin-top: 2px;
 }
+.inspector-summary .inspector-about {
+  margin-top: 6px;
+  font: var(--size-2) / 1.5 var(--font-ui);
+}
 .owned-chip {
   display: inline-flex;
   align-items: center;
@@ -2697,6 +2701,10 @@ thead th {
   color: var(--subtle);
   font: var(--size-1) var(--font-mono);
 }
+.relationship-explain {
+  grid-column: 2 / 4;
+  line-height: 1.4;
+}
 .relationship-note {
   grid-column: 2 / 4;
   color: var(--subtle);
@@ -2729,6 +2737,33 @@ thead th {
   margin-top: 5px;
   border: 1.5px solid var(--rule-strong);
   border-radius: 1px;
+}
+
+.recommendation-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+/* Risk explanations: facts behind a score, and settings the collector could not read */
+.risk-reasons,
+.gap-list {
+  margin: 0 0 8px;
+  padding: 0 0 0 18px;
+  font-size: var(--size-2);
+  line-height: 1.5;
+}
+.risk-reasons li,
+.gap-list li {
+  padding: 2px 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.gap-list {
+  padding: 4px 8px 4px 24px;
+  border-left: 3px solid var(--gap-rule);
+  background: var(--gap-dim);
 }
 
 /* Actions, model note, raw fields */
@@ -2776,6 +2811,22 @@ thead th {
 }
 .raw-evidence:hover:not(:disabled) {
   color: var(--text);
+}
+
+/* Kind-specific key facts: flagged values carry the severity edge, absent ones the gap edge. */
+.key-facts {
+  margin-bottom: 4px;
+}
+.prop-row.fact-flag {
+  padding-left: 8px;
+  border-left: 3px solid var(--high);
+}
+.prop-row.fact-missing {
+  padding-left: 8px;
+  border-left: 3px solid var(--gap-rule);
+}
+.prop-row.fact-missing .prop-val {
+  color: var(--gap);
 }
 
 /* ===== footer.css ===== */
@@ -3557,6 +3608,48 @@ body.folio-enabled {
   color: var(--subtle);
 }
 
+/* Host posture: severity, definite weaknesses and settings that were not collected */
+.folio-posture {
+  margin: var(--space-4) 0;
+}
+.folio-posture .severity-badge {
+  margin-bottom: var(--space-2);
+}
+.folio-posture ul {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-5);
+  font-size: var(--size-3);
+  line-height: 1.5;
+}
+.folio-posture .folio-warning ul {
+  margin: 0;
+}
+.folio-posture h3 {
+  margin: var(--space-2) 0 var(--space-1);
+  color: var(--subtle);
+  font: 600 var(--size-1) / 1.2 var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.folio-reasons {
+  margin: 0;
+  padding-left: var(--space-5);
+  font-size: var(--size-2);
+  line-height: 1.5;
+}
+.folio-host-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  color: var(--muted);
+  font: 600 var(--size-1) / 1.4 var(--font-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
 /* Question choice: selectable table rows */
 .folio-choices,
 .folio-output {
@@ -3584,6 +3677,15 @@ body.folio-enabled {
   font: 400 var(--size-4) / 1.4 var(--font-ui);
   cursor: pointer;
   transition: background-color var(--duration) var(--ease);
+}
+.folio-qtext {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.folio-qhelp {
+  color: var(--muted);
+  font: 400 var(--size-2) / 1.4 var(--font-ui);
 }
 .folio-choices legend + label,
 .folio-output legend + .folio-format {
@@ -3879,6 +3981,12 @@ body.folio-enabled {
 }
 .folio-table-scroll {
   overflow-x: auto;
+}
+.folio-table-scroll .folio-table td {
+  min-width: 8rem;
+}
+.folio-table-scroll .folio-table td:first-child {
+  min-width: 12rem;
 }
 .folio-main-column > label[for="folio-result-search"] {
   display: block;

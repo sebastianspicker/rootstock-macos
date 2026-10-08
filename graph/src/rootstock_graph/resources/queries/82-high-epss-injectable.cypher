@@ -5,12 +5,17 @@
 // Parameters: none
 // Prerequisites: rootstock-graph-import-scan + rootstock-graph-import-vulnerabilities + rootstock-graph-tier-classification must have run
 
-MATCH (app:Application)-[:AFFECTED_BY]->(v:Vulnerability)
-WHERE v.epss_score > 0.3
+MATCH (app:Application)-[r:AFFECTED_BY]->(v:Vulnerability)
+WHERE r.match_tier IN ['precise', 'cpe']
+  AND v.epss_score > 0.3
   AND size(app.injection_methods) > 0
 RETURN app.name AS app_name,
        app.bundle_id AS bundle_id,
        app.injection_methods AS injection_methods,
+       r.match_tier AS match_tier,
+       coalesce(r.match_source, 'registry') AS match_source,
+       r.cpe AS cpe,
+       v.source AS cve_source,
        v.cve_id AS cve_id,
        v.cvss_score AS cvss,
        v.epss_score AS epss,

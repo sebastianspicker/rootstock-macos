@@ -1,5 +1,7 @@
 # Rootstock documentation
 
+[Investigate a Mac offline](INVESTIGATION.md): evidence-backed findings, baseline changes and CVE coverage.
+
 Start with a component README for installation and commands. Use these guides
 when you need to understand settings, evidence, or how the tools work together.
 

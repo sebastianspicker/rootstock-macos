@@ -11,6 +11,15 @@ from __future__ import annotations
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .models_inventory import (
+    BrowserExtensionData,
+    HostSecuritySettingsData,
+    InstalledPackageData,
+    NetworkConfigurationData,
+    NetworkListenerData,
+    TrustedCertificateData,
+)
+
 
 class ElevationInfo(BaseModel):
     is_root: bool
@@ -73,6 +82,7 @@ class QuarantineInfoData(BaseModel):
     quarantine_timestamp: str | None = None
     was_user_approved: bool = False
     was_translocated: bool = False
+    origin_host: str | None = None
 
 
 class ApplicationData(BaseModel):
@@ -82,10 +92,13 @@ class ApplicationData(BaseModel):
     bundle_id: str = Field(min_length=1)
     path: str = Field(min_length=1)
     version: str | None = None
+    executable_path: str | None = None
+    executable_sha256: str | None = None
     team_id: str | None = None
     hardened_runtime: bool | None = None
     library_validation: bool | None = None
     is_electron: bool
+    electron_run_as_node: bool | None = None
     is_system: bool
     signed: bool | None = None
     code_signing_analysis_error: bool = False
@@ -95,6 +108,7 @@ class ApplicationData(BaseModel):
     entitlements_available: bool = True
     entitlement_extraction_error: str | None = None
     is_notarized: bool | None = None
+    gatekeeper_assessment: str | None = None
     is_adhoc_signed: bool = False
     signing_certificate_cn: str | None = None
     signing_certificate_sha256: str | None = None
@@ -163,10 +177,22 @@ class KeychainItemData(BaseModel):
     sensitivity: KeychainSensitivity | None = None
 
 
+LaunchTrigger = Literal[
+    "start_interval",
+    "start_calendar_interval",
+    "watch_paths",
+    "queue_directories",
+    "sockets",
+    "mach_services",
+    "launch_events",
+    "inetd_compatibility",
+]
+
+
 class LaunchItemData(BaseModel):
     label: str = Field(min_length=1)
     path: str = Field(min_length=1)
-    type: Literal["daemon", "agent", "login_item", "cron"]
+    type: Literal["daemon", "agent", "login_item", "cron", "login_hook"]
     program: str | None = None
     run_at_load: bool = False
     user: str | None = None
@@ -174,6 +200,20 @@ class LaunchItemData(BaseModel):
     program_owner: str | None = None
     plist_writable_by_non_root: bool = False
     program_writable_by_non_root: bool = False
+    program_team_id: str | None = None
+    program_signing_id: str | None = None
+    program_arguments: list[str] = Field(default_factory=list)
+    environment_variable_names: list[str] = Field(default_factory=list)
+    dyld_environment: dict[str, str] = Field(default_factory=dict)
+    triggers: list[LaunchTrigger] = Field(default_factory=list)
+    interval_seconds: int | None = None
+    session_type: str | None = None
+    disabled: bool = False
+    loaded: bool | None = None
+    program_exists: bool | None = None
+    program_sha256: str | None = None
+    plist_modified: str | None = None
+    bundle_path: str | None = None
 
 
 class XPCServiceData(BaseModel):
@@ -238,7 +278,7 @@ class AuthorizationPluginData(BaseModel):
 class SystemExtensionData(BaseModel):
     identifier: str = Field(min_length=1)
     team_id: str | None = None
-    extension_type: Literal["network", "endpoint_security", "driver"]
+    extension_type: Literal["network", "endpoint_security", "driver", "kernel_extension"]
     enabled: bool
     subscribed_events: list[str] = Field(default_factory=list)
 
@@ -255,6 +295,7 @@ class RunningProcessData(BaseModel):
     user: str = Field(min_length=1)
     command: str = Field(min_length=1)
     bundle_id: str | None = None
+    ppid: int | None = None
 
 
 class UserDetailData(BaseModel):
@@ -341,6 +382,7 @@ class ComputerData(BaseModel):
     """Represents a scanned macOS host. Auto-derived from ScanResult metadata."""
 
     hostname: str = Field(min_length=1)
+    hardware_uuid: str | None = Field(default=None, min_length=1)
     macos_version: str = Field(min_length=1)
     scan_id: str = Field(min_length=1)
     scanned_at: str = Field(min_length=1)
@@ -357,6 +399,7 @@ class ScanResult(BaseModel):
     scan_id: str = Field(min_length=1)
     timestamp: str = Field(min_length=1)
     hostname: str = Field(min_length=1)
+    hardware_uuid: str | None = Field(default=None, min_length=1)
     macos_version: str = Field(min_length=1)
     collector_version: str = Field(min_length=1)
     elevation: ElevationInfo
@@ -381,6 +424,12 @@ class ScanResult(BaseModel):
     ad_binding: ADBindingData | None = None
     kerberos_artifacts: list[KerberosArtifactData] = Field(default_factory=list)
     sandbox_profiles: list[SandboxProfileData] = Field(default_factory=list)
+    network_listeners: list[NetworkListenerData] = Field(default_factory=list)
+    certificate_trust_settings: list[TrustedCertificateData] = Field(default_factory=list)
+    browser_extensions: list[BrowserExtensionData] = Field(default_factory=list)
+    installed_packages: list[InstalledPackageData] = Field(default_factory=list)
+    host_security_settings: HostSecuritySettingsData | None = None
+    network_configuration: NetworkConfigurationData | None = None
     gatekeeper_enabled: PostureFlag = None
     sip_enabled: PostureFlag = None
     filevault_enabled: PostureFlag = None

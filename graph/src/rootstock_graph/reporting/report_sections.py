@@ -62,7 +62,7 @@ def _has_any_query_rows(
     return any(query_rows(query_results, filename) for filename in filenames)
 
 
-def _append_titled_query_section(
+def append_titled_query_section(
     sections: list[str],
     title: str,
     risk_text: str,
@@ -81,13 +81,12 @@ def append_extended_query_sections(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
     queries: list[dict],
-    tier_counts: dict[str, int],
     icloud_rows_68: list[dict],
 ) -> None:
+    """Sections up to the host evidence; the tier overview follows them (see assembly)."""
     _append_static_extended_query_sections(sections, query_results, queries)
     _append_physical_posture_section(sections, query_results, queries)
     _append_icloud_risk_section(sections, query_results, queries, icloud_rows_68)
-    _append_tier_classification_section(sections, query_results, queries, tier_counts)
 
 
 def _append_static_extended_query_sections(
@@ -96,7 +95,7 @@ def _append_static_extended_query_sections(
     queries: list[dict],
 ) -> None:
     for title, risk_text, query_ids in _extended_section_specs():
-        _append_titled_query_section(
+        append_titled_query_section(
             sections,
             title,
             risk_text,
@@ -152,7 +151,7 @@ def _append_physical_posture_section(
     queries: list[dict],
 ) -> None:
     posture_rows = query_rows(query_results, "67-physical-security-overview.cypher")
-    _append_titled_query_section(
+    append_titled_query_section(
         sections,
         "## Physical & Remote Access Posture",
         "> Risk: Weak physical security posture (disabled screen lock, Thunderbolt "
@@ -174,7 +173,7 @@ def _append_icloud_risk_section(
     queries: list[dict],
     icloud_rows_68: list[dict],
 ) -> None:
-    _append_titled_query_section(
+    append_titled_query_section(
         sections,
         "## Cloud & iCloud Risk",
         "> Risk: Injectable applications with iCloud container entitlements can "
@@ -190,13 +189,13 @@ def _append_icloud_risk_section(
     sections.append("")
 
 
-def _append_tier_classification_section(
+def append_tier_classification_section(
     sections: list[str],
     query_results: dict[str, list[dict] | str],
     queries: list[dict],
     tier_counts: dict[str, int],
 ) -> None:
-    _append_titled_query_section(
+    append_titled_query_section(
         sections,
         "## Tier Classification Overview",
         "> Tier 0 assets are the crown jewels - apps with Full Disk Access, "
@@ -404,9 +403,12 @@ def append_vulnerability_mapping(
     vuln_section = _build_vulnerability_section(active_categories)
     if not vuln_section:
         return
-    sections.append("## Top Vulnerabilities & ATT&CK Mapping")
+    sections.append("## Reference CVEs & ATT&CK Mapping")
     sections.append(
-        "> CVE references and MITRE ATT&CK techniques relevant to findings on this host."
+        "> Background for the exposure classes found on this host: published CVEs that "
+        "illustrate each technique and the MITRE ATT&CK techniques they map to. These "
+        "are not version matches against installed software; confirmed matches are in "
+        "the Version-Matched Vulnerabilities query (85)."
     )
     sections.append("")
     sections.append(vuln_section)
@@ -420,9 +422,11 @@ def append_threat_landscape(
     threat_rows = query_rows(query_results, "92-apt-group-exposure.cypher")
     if not threat_rows:
         return
-    sections.append("## Threat Landscape: APT Group Exposure")
+    sections.append("## Threat Landscape: Technique Context")
     sections.append(
-        "> APT groups whose techniques are relevant to vulnerabilities found on this host."
+        "> Threat groups whose documented techniques match exposure classes modeled on "
+        "this host. `affected_apps` are version-matched CVEs; `context_apps` only share "
+        "the technique class and are not known to carry the CVE."
     )
     sections.append("")
     sections.append(format_generic_table(threat_rows))

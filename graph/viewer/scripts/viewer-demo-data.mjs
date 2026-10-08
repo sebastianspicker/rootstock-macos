@@ -1,5 +1,7 @@
 /** Deterministic, entirely synthetic graph data for the public static demo. */
 
+import { DEMO_HOST_SETTINGS, hostEvidence } from "./viewer-demo-host-data.mjs";
+
 const GENERATED_AT = "2026-08-30T14:00:00Z";
 const SYNTHETIC_EVIDENCE = "Synthetic Graphite Laboratory Bench evidence";
 const SYNTHETIC_RISK_SCORE = { critical: 9, high: 7, medium: 5, low: 3, informational: 1 };
@@ -40,6 +42,7 @@ function edge(source, target, kind, traversable, evidenceId) {
 }
 
 export const PRIMARY_DOSSIER_ID = "demo-fixture-notes";
+const HOST_EVIDENCE = hostEvidence(SYNTHETIC_EVIDENCE);
 
 export const demoGraph = {
   metadata: {
@@ -71,6 +74,10 @@ export const demoGraph = {
           asset_class: "synthetic process",
           bundle_id: "attacker.payload",
           modeled_role: "entry precondition",
+          risk_reasons: [
+            "Stands in for local code that is already running as the signed-in user.",
+            "Its injection into other apps is modeled, not observed.",
+          ],
         },
       ),
       node(
@@ -92,6 +99,11 @@ export const demoGraph = {
           is_sip_protected: false,
           injection_methods: ["dyld_insert", "missing_library_validation"],
           modeled_role: "controlled application",
+          risk_reasons: [
+            "Hardened Runtime is off, so DYLD_INSERT_LIBRARIES can load code into it.",
+            "Library Validation is off, so an unsigned library can be loaded.",
+            "It holds an allowed Full Disk Access grant that injected code would inherit.",
+          ],
         },
       ),
       node(
@@ -164,6 +176,10 @@ export const demoGraph = {
           asset_class: "synthetic helper",
           bundle_identifier: "com.fixture.helper.synthetic",
           modeled_role: "launch precondition",
+          risk_reasons: [
+            "A launch item starts this component automatically at login.",
+            "Its launch context is not constrained, so another process can influence it.",
+          ],
         },
       ),
       node(
@@ -180,6 +196,11 @@ export const demoGraph = {
           bundle_identifier: "com.fixture.xpc.synthetic",
           library_validation: false,
           modeled_role: "relay",
+          risk_reasons: [
+            "Library Validation is off, so an unsigned library can be loaded.",
+            "It holds an allowed Accessibility grant and can write the protected archive.",
+            "Its Mach service does not check who calls it.",
+          ],
         },
       ),
       node(
@@ -194,6 +215,34 @@ export const demoGraph = {
         {
           asset_class: "synthetic browser context",
           modeled_role: "secondary impact",
+          risk_reasons: [
+            "An app with Accessibility can drive its interface.",
+            "It is reached only through a modeled relationship.",
+          ],
+        },
+      ),
+      node(
+        "demo-host",
+        "rs_Computer",
+        "Graphite Laboratory Bench (synthetic)",
+        120,
+        110,
+        "#8b949e",
+        "high",
+        "SYN-GLB-N18",
+        {
+          asset_class: "synthetic host",
+          hostname: "Graphite Laboratory Bench (synthetic)",
+          ...DEMO_HOST_SETTINGS,
+          posture_findings: [
+            "FileVault disk encryption is off",
+            "The application firewall is off",
+            "macOS updates are not installed automatically",
+            "1 custom root certificate(s) are trusted: Synthetic Inspection Root",
+            "1 network listener(s) accept connections from other machines while the firewall is off",
+            "The installed macOS build is affected by 1 actively exploited CVE(s) (CISA KEV)",
+          ],
+          posture_unknown: ["screen lock"],
         },
       ),
       node(
@@ -253,6 +302,8 @@ export const demoGraph = {
         {
           asset_class: "synthetic remediation",
           key: "audit_fda_grants",
+          title: "Review unnecessary Full Disk Access grants",
+          scope: "app",
           priority: "critical",
           text: "Review unnecessary Full Disk Access grants.",
           modeled_role: "recommended control",
@@ -297,6 +348,8 @@ export const demoGraph = {
         "SYN-GLB-N16",
         {
           key: "harden_runtime",
+          title: "Enable Hardened Runtime",
+          scope: "app",
           priority: "critical",
           text: "Enable Hardened Runtime for first-party and in-house applications.",
         },
@@ -312,10 +365,30 @@ export const demoGraph = {
         "SYN-GLB-N17",
         {
           key: "library_validation",
+          title: "Enable Library Validation",
+          scope: "app",
           priority: "critical",
           text: "Enable Library Validation to prevent unsigned dylib injection.",
         },
       ),
+      node(
+        "demo-enable-filevault",
+        "rs_Recommendation",
+        "Turn on FileVault",
+        1_400,
+        340,
+        "#aec59b",
+        "high",
+        "SYN-GLB-N19",
+        {
+          key: "enable_filevault",
+          title: "Turn on FileVault disk encryption",
+          scope: "host",
+          priority: "high",
+          text: "Turn on FileVault so the disk is encrypted at rest.",
+        },
+      ),
+      ...HOST_EVIDENCE.nodes,
     ],
     edges: [
       edge("demo-local-process", "demo-fixture-notes", "rs_CanInjectInto", true, "SYN-GLB-E01"),
@@ -379,6 +452,8 @@ export const demoGraph = {
         false,
         "SYN-GLB-E19",
       ),
+      edge("demo-host", "demo-enable-filevault", "rs_HasRecommendation", false, "SYN-GLB-E20"),
+      ...HOST_EVIDENCE.edges,
     ],
   },
 };

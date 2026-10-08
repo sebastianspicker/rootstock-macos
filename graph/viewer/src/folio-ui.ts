@@ -10,6 +10,8 @@ import {
   isPartialCollection,
   edgeKindLabel,
   edgeBasis,
+  hostNode,
+  hostPosture,
 } from "./folio-data";
 import type { Controller } from "./runtime";
 import type { GraphEdge, GraphModel, Theme, ViewerNode } from "./types";
@@ -33,6 +35,13 @@ export function facts(rows: [string, string][], label = false): HTMLDListElement
     { class: label ? "folio-facts folio-label" : "folio-facts" },
     rows.flatMap(([name, content]) => [el("dt", { text: name }), el("dd", { text: content })]),
   );
+}
+/** Opens the Graph tools workspace over the assessment flow. */
+export function openGraphTools(controller: Controller): void {
+  document.body.classList.add("graph-tools-open");
+  document.getElementById("graph-tools-toggle")?.setAttribute("aria-expanded", "true");
+  controller.dom.workspaceTitle.focus();
+  window.dispatchEvent(new Event("resize"));
 }
 /** Mirrors the Graph tools theme select so the assessment flow follows the same theme. */
 export function themeControl(controller: Controller): HTMLElement {
@@ -62,6 +71,45 @@ export function warning(graph: GraphModel): HTMLElement {
     para(coverageText(graph)),
   ]);
 }
+function postureList(items: string[]): HTMLUListElement {
+  return el(
+    "ul",
+    {},
+    items.map((item) => el("li", { text: item })),
+  );
+}
+/** Host risk level, definite weaknesses and settings the collector could not read; empty without a host. */
+export function hostPostureBlock(graph: GraphModel): HTMLElement[] {
+  if (!hostNode(graph)) return [];
+  const { level, findings, unknown } = hostPosture(graph);
+  const block = el("section", { class: "folio-posture", "aria-label": "Host posture" }, [
+    el("h2", { class: "folio-section-label", text: "Host posture" }),
+    el("span", {
+      class: `severity-badge ${level}`,
+      text: level.charAt(0).toUpperCase() + level.slice(1),
+    }),
+    findings.length
+      ? postureList(findings)
+      : para("No definite weaknesses in the collected settings.", "folio-note"),
+  ]);
+  if (unknown.length)
+    block.append(
+      el("div", { class: "folio-warning", role: "note" }, [
+        el("span", { class: "folio-warning-mark", text: "Not collected" }),
+        postureList(unknown),
+      ]),
+    );
+  return [block];
+}
+/** Facts behind an application's risk score, or a note when none were recorded. */
+export function riskReasonList(reasons: string[]): HTMLElement {
+  if (!reasons.length) return para("No risk reasons recorded.", "folio-note");
+  return el(
+    "ul",
+    { class: "folio-reasons" },
+    reasons.map((reason) => el("li", { text: reason })),
+  );
+}
 export function intro(title: string, text: string, step: string): HTMLElement {
   return el("header", { class: "folio-intro" }, [
     para(step, "folio-sheet"),
@@ -74,6 +122,10 @@ export function conventions(): HTMLElement {
   return el("aside", { class: "folio-aside" }, [
     heading("Evidence basis"),
     conventionList(),
+    para(
+      "HAS_CVE_CONTEXT links a CVE as background for a technique class; it is not evidence that the app is vulnerable.",
+      "folio-note",
+    ),
     para(
       "A modeled path is a chain of preconditions. It does not show that anything was exploited. This viewer never changes host settings.",
       "folio-note",
@@ -260,6 +312,8 @@ export function recommendationList(nodes: ViewerNode[]): HTMLElement {
         el("h3", { text: title }),
         el("span", { class: `folio-priority ${tone}`, text: priority }),
       ]);
+      if (node.properties.scope === "host")
+        body.append(" ", el("span", { class: "folio-host-tag", text: "Host setting" }));
       // Many recorded recommendations repeat their title as text; print it once.
       if (text.replace(/\.$/, "").toLowerCase() !== title.toLowerCase()) body.append(para(text));
       return el("li", {}, [el("span", { class: "folio-number", text: String(index + 1) }), body]);

@@ -32,9 +32,14 @@ import {
   pathFigure,
   recommendationList,
   themeControl,
+  openGraphTools,
 } from "./folio-ui";
 
 type Stage = "scope" | "evidence" | "report" | "complete";
+function questionLead(id: string): string {
+  const question = questions.find((candidate) => candidate.id === id);
+  return question ? `${question.text} ${question.answers}` : "Review the analysis results.";
+}
 const instances = new WeakMap<Controller, EvidenceFolio>();
 export function mountFolio(controller: Controller): void {
   const root = document.getElementById("evidence-folio");
@@ -116,12 +121,7 @@ class EvidenceFolio {
   }
   private header(): HTMLElement {
     const { host, collected, source } = scopeMetadata(this.graph);
-    const controls = button("Graph tools", () => {
-      document.body.classList.add("graph-tools-open");
-      document.getElementById("graph-tools-toggle")?.setAttribute("aria-expanded", "true");
-      this.controller.dom.workspaceTitle.focus();
-      window.dispatchEvent(new Event("resize"));
-    });
+    const controls = button("Graph tools", () => openGraphTools(this.controller));
     return el("header", { class: "folio-topbar" }, [
       el("div", { class: "folio-brand" }, [
         el("span", { class: "folio-mark-r", text: "R", "aria-hidden": "true" }),
@@ -267,8 +267,7 @@ class EvidenceFolio {
       title,
       selected
         ? `Inspect the recorded facts and modeled relationships for ${nodeName(selected)}. This explains an exposure, not confirmation of compromise.`
-        : (questions.find((question) => question.id === this.question)?.text ??
-            "Review the analysis results."),
+        : questionLead(this.question),
       "Step 2 of 3 · Evidence",
     );
   }
@@ -306,6 +305,11 @@ class EvidenceFolio {
         this.adviceError = "";
         this.render(true);
         void this.loadAdvice();
+      },
+      inspect: (node) => {
+        openGraphTools(this.controller);
+        this.controller.actions.inspectNode(this.controller, node.id);
+        this.controller.actions.revealNode(this.controller, node.id);
       },
     });
   }

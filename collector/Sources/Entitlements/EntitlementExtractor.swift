@@ -14,7 +14,7 @@ public struct EntitlementExtractionResult {
 /// Extracts the entitlements dictionary from a signed executable.
 ///
 /// Primary method: Security.framework `SecCodeCopySigningInformation`
-/// Fallback: `codesign -d --entitlements :- <path>` CLI output parsed as plist
+/// Fallback: `codesign -d --entitlements - --xml <path>` CLI output parsed as plist
 public struct EntitlementExtractor: Sendable {
 
     private static let logger = Logger(subsystem: "com.rootstock.collector", category: "EntitlementExtractor")
@@ -78,7 +78,7 @@ public struct EntitlementExtractor: Sendable {
     private func extractWithCodesignCLI(path: String) -> [String: Any]? {
         guard let result = Shell.runProcess(
             "/usr/bin/codesign",
-            ["-d", "--entitlements", ":-", path],
+            ["-d", "--entitlements", "-", "--xml", path],
             timeoutSeconds: 10
         ), result.terminationStatus == 0, !result.timedOut else {
             return nil

@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import SQLiteSupport
 import RootstockMacFacts
 
 /// Reads TCC (Transparency, Consent, and Control) grants from macOS TCC databases.

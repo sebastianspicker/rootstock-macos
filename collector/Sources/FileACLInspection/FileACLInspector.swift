@@ -50,7 +50,13 @@ public struct FileACLInspector {
         let aclResult = readACLEntries(path)
         let aclEntries = aclResult.entries
         let isSipProtected = Self.isSIPProtected(path)
-        let isWritableByNonRoot = Self.checkWritableByNonRoot(posixPerms: posixPerms, owner: owner, aclEntries: aclEntries)
+        let isWritableByNonRoot = Self.checkWritableByNonRoot(
+            posixPerms: posixPerms,
+            owner: owner,
+            group: group,
+            aclEntries: aclEntries,
+            expectedOwner: Self.expectedOwner(of: path)
+        )
 
         return (FileACL(
             path: path,
@@ -109,28 +115,58 @@ public struct FileACLInspector {
         sipPrefixes.contains { path.hasPrefix($0) }
     }
 
-    /// Determine if a file is writable by a non-root user.
-    /// Checks: world-writable bit (o+w), group-writable if group is not wheel/admin,
-    /// or explicit ACL write grants.
-    public static func checkWritableByNonRoot(posixPerms: Int, owner: String, aclEntries: [String]) -> Bool {
-        // World-writable (others write bit)
+    /// Groups whose write bit does not widen access beyond root-equivalent accounts.
+    private static let rootEquivalentGroups: Set<String> = ["wheel", "daemon"]
+
+    /// The account expected to own a path: the home-directory user for files under
+    /// `/Users/<name>/`, otherwise root. Owner-writability by the expected owner is the
+    /// normal state of a file and is not a weakness.
+    public static func expectedOwner(of path: String) -> String {
+        let components = path.split(separator: "/", omittingEmptySubsequences: true)
+        if components.count >= 2, components[0] == "Users", components[1] != "Shared" {
+            return String(components[1])
+        }
+        return "root"
+    }
+
+    /// Determine if a file is writable by someone other than its expected owner or root.
+    ///
+    /// True when the file is world-writable, group-writable by a group that is not
+    /// root-equivalent, carries an ACL entry that allows writing, or is owner-writable
+    /// by an account that is neither root nor the owner the path implies (for example a
+    /// LaunchDaemon plist owned by a regular user). A user's own dotfiles, launch agents
+    /// and keychain are writable by that user by design and are not reported.
+    public static func checkWritableByNonRoot(
+        posixPerms: Int,
+        owner: String,
+        group: String,
+        aclEntries: [String],
+        expectedOwner: String
+    ) -> Bool {
         if posixPerms & 0o002 != 0 {
             return true
         }
-
-        // Owner is not root but has write permission
-        if owner != "root" && posixPerms & 0o200 != 0 {
+        if posixPerms & 0o020 != 0 && !rootEquivalentGroups.contains(group) {
             return true
         }
-
-        // ACL grants write to non-root
-        for entry in aclEntries {
-            let lower = entry.lowercased()
-            if lower.contains("allow") && lower.contains("write") {
-                return true
-            }
+        if owner != "root" && owner != expectedOwner && posixPerms & 0o200 != 0 {
+            return true
         }
+        return aclEntries.contains { entry in
+            let lower = entry.lowercased()
+            return lower.contains("allow") && lower.contains("write")
+        }
+    }
 
-        return false
+    /// Legacy form without group or path context: treats the file as root-owned by
+    /// expectation, so any non-root owner with write permission is reported.
+    public static func checkWritableByNonRoot(posixPerms: Int, owner: String, aclEntries: [String]) -> Bool {
+        checkWritableByNonRoot(
+            posixPerms: posixPerms,
+            owner: owner,
+            group: "wheel",
+            aclEntries: aclEntries,
+            expectedOwner: "root"
+        )
     }
 }

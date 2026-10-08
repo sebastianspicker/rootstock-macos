@@ -47,6 +47,10 @@ let package = Package(
                 "KerberosArtifacts",
                 "Sandbox",
                 "Quarantine",
+                "NetworkListeners",
+                "TrustSettings",
+                "BrowserExtensions",
+                "InstalledPackages",
             ]
         ),
         .target(
@@ -69,12 +73,17 @@ let package = Package(
             dependencies: ["Models", "HostCommand"]
         ),
         .target(
+            name: "SQLiteSupport",
+            dependencies: [],
+            linkerSettings: [.linkedLibrary("sqlite3")]
+        ),
+        .target(
             name: "TCC",
             dependencies: [
                 "Models",
+                "SQLiteSupport",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
-            ],
-            linkerSettings: [.linkedLibrary("sqlite3")]
+            ]
         ),
         .target(
             name: "Entitlements",
@@ -106,7 +115,8 @@ let package = Package(
                 "HostCommand",
                 "LaunchdPlists",
                 .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
-            ]
+            ],
+            linkerSettings: [.linkedFramework("Security")]
         ),
         .target(
             name: "Keychain",
@@ -131,7 +141,7 @@ let package = Package(
         ),
         .target(
             name: "Firewall",
-            dependencies: ["Models"]
+            dependencies: ["Models", "HostCommand"]
         ),
         .target(
             name: "LoginSession",
@@ -197,7 +207,24 @@ let package = Package(
         ),
         .target(
             name: "Quarantine",
-            dependencies: ["Models"]
+            dependencies: ["Models", "SQLiteSupport"]
+        ),
+        .target(
+            name: "NetworkListeners",
+            dependencies: ["Models", "HostCommand"]
+        ),
+        .target(
+            name: "TrustSettings",
+            dependencies: ["Models"],
+            linkerSettings: [.linkedFramework("Security"), .linkedFramework("CryptoKit")]
+        ),
+        .target(
+            name: "BrowserExtensions",
+            dependencies: ["Models", "HostCommand"]
+        ),
+        .target(
+            name: "InstalledPackages",
+            dependencies: ["Models", "HostCommand"]
         ),
         .testTarget(
             name: "ExportTests",
@@ -210,6 +237,34 @@ let package = Package(
         .testTarget(
             name: "SandboxTests",
             dependencies: ["Sandbox"]
+        ),
+        .testTarget(
+            name: "NetworkListenersTests",
+            dependencies: ["NetworkListeners", "Models"]
+        ),
+        .testTarget(
+            name: "BrowserExtensionsTests",
+            dependencies: ["BrowserExtensions", "Models"]
+        ),
+        .testTarget(
+            name: "InstalledPackagesTests",
+            dependencies: ["InstalledPackages", "Models"]
+        ),
+        .testTarget(
+            name: "PersistenceTests",
+            dependencies: ["Persistence", "LaunchdPlists", "Models"]
+        ),
+        .testTarget(
+            name: "ProcessSnapshotTests",
+            dependencies: ["ProcessSnapshot", "Models"]
+        ),
+        .testTarget(
+            name: "RemoteAccessTests",
+            dependencies: ["RemoteAccess"]
+        ),
+        .testTarget(
+            name: "EntitlementsTests",
+            dependencies: ["Entitlements"]
         ),
     ].filter { target in
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()

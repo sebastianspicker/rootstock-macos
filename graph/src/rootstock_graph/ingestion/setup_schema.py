@@ -25,8 +25,8 @@ CONSTRAINTS = [
     ("app_key_unique", "Application", "a.app_key"),
     ("tcc_service_unique", "TCC_Permission", "t.service"),
     ("ent_name_unique", "Entitlement", "e.name"),
-    ("xpc_label_unique", "XPC_Service", "x.label"),
-    ("launch_label_unique", "LaunchItem", "l.label"),
+    ("xpc_path_unique", "XPC_Service", "x.path"),
+    ("launch_item_key_unique", "LaunchItem", "l.item_key"),
     ("mdm_id_unique", "MDM_Profile", "m.identifier"),
     ("user_name_unique", "User", "u.name"),
     ("group_name_unique", "LocalGroup", "g.name"),
@@ -66,6 +66,11 @@ CONSTRAINTS = [
     ("cve_scan_service_id_unique", "Service", "svc.id"),
     ("cve_scan_vulnerability_id_unique", "Vulnerability", "v.id"),
     ("cve_scan_webapp_id_unique", "WebApp", "web.id"),
+    ("process_key_unique", "Process", "p.process_key"),
+    ("listener_key_unique", "NetworkListener", "nl.listener_key"),
+    ("trusted_cert_key_unique", "TrustedCertificate", "tc.certificate_key"),
+    ("browser_ext_key_unique", "BrowserExtension", "be.extension_key"),
+    ("installed_pkg_key_unique", "InstalledPackage", "ip.package_key"),
 ]
 
 # Composite uniqueness constraint (Keychain items keyed by label + kind)
@@ -81,6 +86,9 @@ LEGACY_CONSTRAINTS = [
     "sandbox_bundle_unique",
     "session_terminal_unique",
     "keychain_item_label",
+    # LaunchItem / XPC_Service identity moved off `label` (two plists may share one).
+    "launch_label_unique",
+    "xpc_label_unique",
 ]
 
 # Additional indexes for query performance (beyond what constraints provide)
@@ -101,6 +109,13 @@ INDEXES = [
     ("app_risk_score", "Application", "a.risk_score"),
     ("computer_hostname", "Computer", "c.hostname"),
     ("sandbox_bundle_id", "SandboxProfile", "sp.bundle_id"),
+    ("launch_item_label", "LaunchItem", "l.label"),
+    ("xpc_service_label", "XPC_Service", "x.label"),
+    ("process_scan_id", "Process", "p.scan_id"),
+    ("listener_scan_id", "NetworkListener", "nl.scan_id"),
+    ("trusted_cert_sha256", "TrustedCertificate", "tc.sha256"),
+    ("browser_ext_scan_id", "BrowserExtension", "be.scan_id"),
+    ("installed_pkg_scan_id", "InstalledPackage", "ip.scan_id"),
 ]
 
 

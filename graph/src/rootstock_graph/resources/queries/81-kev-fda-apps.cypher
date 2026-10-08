@@ -6,9 +6,14 @@
 // Prerequisites: rootstock-graph-import-scan + rootstock-graph-import-vulnerabilities + rootstock-graph-tier-classification must have run
 
 MATCH (app:Application)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission {service: 'kTCCServiceSystemPolicyAllFiles'})
-MATCH (app)-[:AFFECTED_BY]->(v:Vulnerability {in_kev: true})
+MATCH (app)-[r:AFFECTED_BY]->(v:Vulnerability {in_kev: true})
+WHERE r.match_tier IN ['precise', 'cpe']
 RETURN app.name AS app_name,
        app.bundle_id AS bundle_id,
+       r.match_tier AS match_tier,
+       coalesce(r.match_source, 'registry') AS match_source,
+       r.cpe AS cpe,
+       v.source AS cve_source,
        v.cve_id AS cve_id,
        v.cvss_score AS cvss,
        v.epss_score AS epss,

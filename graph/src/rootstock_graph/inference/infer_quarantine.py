@@ -2,8 +2,8 @@
 infer_quarantine.py - Infer Gatekeeper bypass relationships from quarantine attributes.
 
 Creates BYPASSED_GATEKEEPER edges from the attacker node to applications that:
-  - Are not notarized (is_notarized = false)
-  - Lack the quarantine flag (has_quarantine_flag = false)
+  - Are observed as not notarized (is_notarized = false; unknown is not false)
+  - Are observed without the quarantine flag (has_quarantine_flag = false)
   - Are not system apps (is_system = false)
   - Are not SIP-protected (is_sip_protected = false)
 
@@ -35,8 +35,10 @@ def infer(session: Session) -> int:
     result = session.run(
         """
         MATCH (a:Application)
-        WHERE coalesce(a.is_notarized, false) = false
-          AND coalesce(a.has_quarantine_flag, false) = false
+        // Both facts must be observed: an unknown notarization or quarantine state is
+        // a collection gap, not a bypass.
+        WHERE a.is_notarized = false
+          AND a.has_quarantine_flag = false
           AND NOT coalesce(a.is_system, false)
           AND NOT coalesce(a.is_sip_protected, false)
           AND a.bundle_id <> $attacker_id
@@ -44,8 +46,8 @@ def infer(session: Session) -> int:
         MATCH (attacker:Application {bundle_id: $attacker_id})
         MERGE (attacker)-[r:BYPASSED_GATEKEEPER]->(a)
         SET r.inferred = true,
-            r.is_notarized = coalesce(a.is_notarized, false),
-            r.has_quarantine_flag = coalesce(a.has_quarantine_flag, false),
+            r.is_notarized = a.is_notarized,
+            r.has_quarantine_flag = a.has_quarantine_flag,
             r.quarantine_agent = a.quarantine_agent
         RETURN count(r) AS n
         """,

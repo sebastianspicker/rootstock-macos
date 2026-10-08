@@ -10,7 +10,10 @@ Investigate macOS security exposure and its supporting evidence.
 Rootstock helps you investigate macOS security exposure: which apps hold
 sensitive permissions, which protections are missing, and how those facts
 connect. It collects local metadata, builds a graph in Neo4j, and lets you
-inspect the evidence in queries, reports, and a browser viewer.
+inspect the evidence in queries, reports, and a browser viewer. The same scan
+records network listeners, trusted root certificates, browser extensions,
+installer receipts and host security settings, and installed app and macOS
+versions can be matched against NVD CVEs by exact CPE.
 
 The repository also includes independent tools for scoped CVE scanning,
 read-only assessment, and offline incident analysis. Each has its own commands
@@ -33,9 +36,11 @@ through the same flow.
 
 ### 1. Assessment scope
 
-Verify the scan source and collection coverage, then choose the question to run.
-The demo includes a missing-evidence warning so you can see how partial
-collection is presented.
+Verify the scan source and collection coverage, then choose the question to run:
+modeled paths to Full Disk Access, recommendations, NVD-matched CVEs, exposed
+listeners, custom root certificates, risky browser extensions, launchd
+persistence and host settings. The demo includes a missing-evidence warning so
+you can see how partial collection is presented.
 
 ![Scope review with synthetic source metadata, a collection warning, and security questions](docs/assets/screenshots/scope.png)
 
@@ -92,6 +97,20 @@ See [Architecture](docs/ARCHITECTURE.md) for dependency and runtime flows and
 Python 3.11 is the tested version (repository development and CI). The graph
 package declares Python 3.10 support, but 3.10 is untested. Install only the
 environment needed for the component you are working on.
+
+## Investigate an existing scan
+
+Generate a searchable local report without setting up Neo4j:
+
+```sh
+uv run --project graph --locked rootstock-graph-investigate scan.json \
+  --format html --output reports/investigation.html
+```
+
+The report connects findings to evidence, shows collection and CVE coverage, and
+supports `--baseline earlier-scan.json` for changes to persistence, software,
+permissions and trust. Use `--format json` for automation. See the
+[offline investigation guide](docs/INVESTIGATION.md).
 
 ## Core quick start
 

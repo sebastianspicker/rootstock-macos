@@ -10,6 +10,8 @@ formats defined in [`contracts/`](../contracts/README.md).
 flowchart LR
     Host[macOS host] --> Collector[Collector]
     Collector -->|legacy scan.json| Graph[Rootstock Graph]
+    Collector -->|scan.json| Investigation[Offline investigation]
+    Investigation --> LocalOutputs[HTML, JSON, text]
     Scope[Declared CVE scope] --> CVE[cve-scan]
     CVE -->|export v7| Graph
     Red[Rootstock Red] -->|family export v1| Graph
@@ -29,7 +31,7 @@ records separately from Neo4j, and each export has its own format.
 
 | Path | Responsibility | Data and dependencies |
 | --- | --- | --- |
-| `collector/` | Local Swift host collection | One target per data source plus `Models`, `Export`, `HostCommand`, `LaunchdPlists`, `FileACLInspection`, and the CLI; writes one legacy, unversioned `scan.json`; no network collection path. |
+| `collector/` | Local Swift host collection | One target per data source (including `NetworkListeners`, `TrustSettings`, `BrowserExtensions` and `InstalledPackages`) plus `Models`, `Export`, `HostCommand`, `LaunchdPlists`, `FileACLInspection`, `SQLiteSupport`, and the CLI; writes one legacy, unversioned `scan.json`; no network collection path. |
 | `graph/` | Python import, inference, queries, reports, and API in `src/rootstock_graph/`; viewer sources in the self-contained Node project `graph/viewer/` | Owns Neo4j graph state and packaged `rootstock-graph-*` commands. |
 | `modules/cve-scan/` | Scoped CVE evidence collection and reporting | Owns run directories and a versioned graph export; no Neo4j dependency. |
 | `rootstock-red/` | Read-only assessment (`RootstockCore`, `MacEnumKit`, `MacVulnKit`, `MacReportKit`) plus a separately linked lab (`RootstockLab`) | Owns findings and project artifacts; lab mutation uses operator self-attestation and dry-run controls. |
@@ -71,15 +73,20 @@ checks the packaged collector-scan schema mirror, the Pydantic model, and
 semantic constraints. `graph/pipeline.sh` then sequences
 schema setup, optional CVE refresh, collector import, optional cve-scan import,
 the inference edge stage, vulnerability import, the inference score stage, and
-reporting. The vulnerability importer's category heuristics read inferred
+reporting. The CVE refresh (`--refresh-cve`) also matches the scan's installed
+apps and macOS release against NVD by exact CPE and stores the results in the
+offline cache `~/.rootstock/cache/nvd-installed.json`; the vulnerability import
+reads that cache without network access. The vulnerability importer's category heuristics read inferred
 relationships, and tier classification, risk scoring, and recommendations read
 the CVE links, which is why inference is split around the import.
 
 Python graph code lives in `graph/src/rootstock_graph/`. Foundation modules
-(`category_predicates`, `constants`, `cypher`, `models`, `neo4j`, `paths`,
+(`category_predicates`, `constants`, `cypher`, `models`, `models_inventory`, `neo4j`, `paths`,
 `server_validation`) sit below `vulnerability`, `ingestion`, `reporting`,
 `api_support` (routes, schemas, dependencies), and `api`; `inference` sits on
-the foundation and feeds `api_support`. the private `graph/tests/test_architecture.py`
+the foundation and feeds `api_support`. The independent `investigation` layer
+uses foundation, vulnerability and ingestion helpers to produce offline findings
+and reports without a database. the private `graph/tests/test_architecture.py`
 enforces the layering. Root-level graph files are orchestration or frontend
 inputs, not Python command adapters. CLI commands are declared in
 `graph/pyproject.toml`.
@@ -88,7 +95,7 @@ inputs, not Python command adapters. CLI commands are declared in
 
 | Artifact | Canonical contract | Producer | Consumers | Compatibility rule |
 | --- | --- | --- | --- | --- |
-| Collector scan | `contracts/collector-scan/legacy-unversioned.schema.json` | Collector | Graph, Blue | No in-place breaking change; introduce a new versioned artifact instead. |
+| Collector scan | `contracts/collector-scan/legacy-unversioned.schema.json` | Collector | Graph, Blue | No in-place breaking change; introduce a new versioned artifact instead. Optional additions (such as the host inventory and settings collections) are additive and keep older scans valid. |
 | CVE graph export | `contracts/cve-scan-export/v7/schema.json` | cve-scan | Graph | Reject unsupported schema versions and vocabulary. |
 | Family open export | `contracts/family-open-export/v1/schema.json` | Red, Blue | Graph | Additive v1 evolution only; reject unsupported versions and endpoints. |
 | Red findings JSONL | `contracts/red-findings-to-blue-jsonl/v1/` | Red | Blue | Preserve required finding fields; Blue may ignore additional fields. |

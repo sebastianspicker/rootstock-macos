@@ -216,6 +216,10 @@
 .inspector-risk-line {
   margin-top: 2px;
 }
+.inspector-summary .inspector-about {
+  margin-top: 6px;
+  font: var(--size-2) / 1.5 var(--font-ui);
+}
 .owned-chip {
   display: inline-flex;
   align-items: center;
@@ -419,6 +423,10 @@
   color: var(--subtle);
   font: var(--size-1) var(--font-mono);
 }
+.relationship-explain {
+  grid-column: 2 / 4;
+  line-height: 1.4;
+}
 .relationship-note {
   grid-column: 2 / 4;
   color: var(--subtle);
@@ -451,6 +459,33 @@
   margin-top: 5px;
   border: 1.5px solid var(--rule-strong);
   border-radius: 1px;
+}
+
+.recommendation-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+/* Risk explanations: facts behind a score, and settings the collector could not read */
+.risk-reasons,
+.gap-list {
+  margin: 0 0 8px;
+  padding: 0 0 0 18px;
+  font-size: var(--size-2);
+  line-height: 1.5;
+}
+.risk-reasons li,
+.gap-list li {
+  padding: 2px 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.gap-list {
+  padding: 4px 8px 4px 24px;
+  border-left: 3px solid var(--gap-rule);
+  background: var(--gap-dim);
 }
 
 /* Actions, model note, raw fields */
@@ -498,4 +533,20 @@
 }
 .raw-evidence:hover:not(:disabled) {
   color: var(--text);
+}
+
+/* Kind-specific key facts: flagged values carry the severity edge, absent ones the gap edge. */
+.key-facts {
+  margin-bottom: 4px;
+}
+.prop-row.fact-flag {
+  padding-left: 8px;
+  border-left: 3px solid var(--high);
+}
+.prop-row.fact-missing {
+  padding-left: 8px;
+  border-left: 3px solid var(--gap-rule);
+}
+.prop-row.fact-missing .prop-val {
+  color: var(--gap);
 }

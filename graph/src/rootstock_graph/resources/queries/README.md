@@ -1,6 +1,6 @@
 # Rootstock Cypher queries
 
-The installed graph package includes 103 read-only analysis queries. The CLI
+The installed graph package includes 120 read-only analysis queries. The CLI
 builds its catalog from the name, category, severity, parameter, and purpose
 headers in each `.cypher` file. Use that generated catalog for the current list.
 
@@ -69,3 +69,5 @@ A query that returns no rows does not prove that the host is secure. Check that:
 
 Query output can contain confidential host and organization data. Save it in a
 private directory and keep it out of source control.
+
+Queries **119** (CVE candidates) and **120** (CVE coverage) distinguish unverified or stale NVD evidence from current version matches. Candidates do not feed CVE risk scoring.

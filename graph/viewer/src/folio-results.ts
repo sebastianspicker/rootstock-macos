@@ -1,12 +1,15 @@
 /** Searchable semantic query results with installation-specific evidence selection. */
 import type { GraphModel, QueryResult, ViewerNode } from "./types";
 import { value, matchApplication } from "./folio-data";
+import { resultNode } from "./folio-host-answers";
 import { el, para, button } from "./folio-ui";
 interface ResultsView {
   graph: GraphModel;
   live: boolean;
   result: QueryResult | undefined;
   select(node: ViewerNode | undefined): void;
+  /** Opens a non-application row's node in Graph tools. */
+  inspect(node: ViewerNode): void;
 }
 export function renderResults(parent: HTMLElement, view: ResultsView): void {
   const rows = view.result?.rows ?? [];
@@ -48,20 +51,7 @@ export function renderResults(parent: HTMLElement, view: ResultsView): void {
     );
     body.replaceChildren(
       ...filtered.map((row) => {
-        const node = matchApplication(view.graph, row);
-        const inspect = button("Inspect evidence", () => {
-          view.select(node);
-        });
-        inspect.disabled = !node;
-        const cell = el("td", {}, [inspect]);
-        // The reason a row cannot be inspected is visible text, not only a tooltip.
-        if (!node)
-          cell.append(
-            para(
-              "No unique application installation in the loaded snapshot for this row. Use Graph tools for query and path details.",
-              "field-help",
-            ),
-          );
+        const cell = el("td", {}, [inspectControl(view, row)]);
         return el("tr", {}, [
           ...columns.map((column) => el("td", { text: value(row[column]) })),
           cell,
@@ -86,4 +76,22 @@ export function renderResults(parent: HTMLElement, view: ResultsView): void {
     search,
     el("div", { class: "folio-table-scroll" }, [table]),
   );
+}
+
+/** App rows open the evidence view; other rows open their node in Graph tools when it is unique. */
+function inspectControl(view: ResultsView, row: Record<string, unknown>): HTMLElement {
+  const app = matchApplication(view.graph, row);
+  if (app) return button("Inspect evidence", () => view.select(app));
+  const node = resultNode(view.graph, row);
+  if (node) return button("Open in Graph tools", () => view.inspect(node));
+  const inspect = button("Inspect evidence", () => {});
+  inspect.disabled = true;
+  // The reason a row cannot be inspected is visible text, not only a tooltip.
+  return el("div", {}, [
+    inspect,
+    para(
+      "No unique node in the loaded snapshot for this row. Use Graph tools for query and path details.",
+      "field-help",
+    ),
+  ]);
 }

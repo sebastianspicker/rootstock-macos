@@ -2,7 +2,8 @@ import Foundation
 import Models
 import HostCommand
 
-/// Enumerates system extensions via `systemextensionsctl list`.
+/// Enumerates system extensions via `systemextensionsctl list` and third-party
+/// kernel extensions via `kmutil showloaded`.
 public struct SystemExtensionDataSource: DataSource {
     public let name = "System Extensions"
     public let requiresElevation = false
@@ -10,15 +11,57 @@ public struct SystemExtensionDataSource: DataSource {
     public init() {}
 
     public func collect() async -> DataSourceResult {
-        guard let output = Shell.run("/usr/bin/systemextensionsctl", ["list"]) else {
-            return DataSourceResult(
-                nodes: [],
-                errors: [CollectionError(source: name, message: "Failed to run systemextensionsctl", recoverable: true)]
-            )
+        var extensions: [SystemExtension] = []
+        var errors: [CollectionError] = []
+        if let output = Shell.run("/usr/bin/systemextensionsctl", ["list"]) {
+            extensions = Self.parseSystemExtensionsOutput(output)
+        } else {
+            errors.append(CollectionError(source: name, message: "Failed to run systemextensionsctl", recoverable: true))
         }
 
-        let extensions = Self.parseSystemExtensionsOutput(output)
-        return DataSourceResult(nodes: extensions, errors: [])
+        let kmutil = Shell.execute("/usr/bin/kmutil", ["showloaded", "--list-only", "--no-kernel-components"])
+        if case .success(let result) = kmutil {
+            extensions.append(contentsOf: Self.parseLoadedKernelExtensions(result.stdout))
+        } else {
+            errors.append(CollectionError(
+                source: name,
+                message: "Failed to run kmutil showloaded: \(kmutil.failureDescription ?? "unknown failure")",
+                recoverable: true
+            ))
+        }
+        return DataSourceResult(nodes: extensions, errors: errors)
+    }
+
+    /// Parse `kmutil showloaded --list-only` output into third-party kernel extensions.
+    /// A row's bundle id is the token followed by its `(version)`; a bare bundle-id line
+    /// is accepted too. Apple kexts (`com.apple.`) are skipped and ids are deduplicated.
+    internal static func parseLoadedKernelExtensions(_ output: String) -> [SystemExtension] {
+        var seen = Set<String>()
+        var extensions: [SystemExtension] = []
+        for line in output.split(whereSeparator: \.isNewline) {
+            guard let identifier = kernelExtensionIdentifier(String(line)),
+                  !identifier.hasPrefix("com.apple."),
+                  seen.insert(identifier).inserted else { continue }
+            extensions.append(SystemExtension(
+                identifier: identifier,
+                teamId: nil,
+                extensionType: .kernelExtension,
+                enabled: true,
+                subscribedEvents: []
+            ))
+        }
+        return extensions
+    }
+
+    private static func kernelExtensionIdentifier(_ line: String) -> String? {
+        let tokens = line.split(whereSeparator: \.isWhitespace).map(String.init)
+        if tokens.count == 1, isBundleIdentifier(tokens[0]) {
+            return tokens[0]
+        }
+        for index in tokens.indices.dropLast() where tokens[index + 1].hasPrefix("(") {
+            if isBundleIdentifier(tokens[index]) { return tokens[index] }
+        }
+        return nil
     }
 
     /// Parse `systemextensionsctl list` output.

@@ -2,18 +2,35 @@
 
 Application, Computer and TCC identity is scan-scoped (the scan_id is part of the
 node key), so re-importing a host would otherwise leave the earlier scan's graph
-next to the new one. This is opt-in via ``--replace-host``.
+next to the new one and every finding would appear twice. Replacing earlier scans
+of the same Mac is therefore the default; ``--keep-previous-scans`` opts out
+for operators who want history side by side. ``--replace-host`` is accepted for
+compatibility and is a no-op.
 
-Caveat: every node carrying a ``scan_id`` of an earlier scan of the same hostname
+An earlier scan belongs to the same Mac when its Computer has the same hostname and
+the same ``hardware_uuid`` (or both scans lack one). Hostnames such as
+``MacBook-Pro.local`` collide between machines, so an earlier scan with the same
+hostname but a different hardware UUID is kept and a warning names it.
+
+Caveat: every node carrying a ``scan_id`` of an earlier scan of the same Mac
 is removed, including nodes that were shared with other hosts' scans through that
 scan_id. Nodes without a ``scan_id`` are never touched.
 """
 
 from __future__ import annotations
 
+import sys
+from collections.abc import Iterable, Mapping
+
 from neo4j import Session
 
-__all__ = ["add_replace_host_arg", "previous_scan_ids", "replace_host_scans"]
+__all__ = [
+    "add_replace_host_arg",
+    "previous_scan_ids",
+    "replace_host_requested",
+    "replace_host_scans",
+    "split_previous_scans",
+]
 
 _DELETE_BATCH_SIZE = 1000
 
@@ -22,30 +39,75 @@ def add_replace_host_arg(parser) -> None:
     parser.add_argument(
         "--replace-host",
         action="store_true",
+        help="Accepted for compatibility; replacing earlier scans of the host is the default.",
+    )
+    parser.add_argument(
+        "--keep-previous-scans",
+        action="store_true",
         help=(
-            "Before importing, delete every node from earlier scans of the same hostname "
-            "(default: keep earlier scans alongside the new one)"
+            "Keep earlier scans of the same Mac (hostname and hardware UUID) in the graph "
+            "instead of deleting them "
+            "before this import (every finding then appears once per scan)"
         ),
     )
 
 
-def previous_scan_ids(session: Session, hostname: str, scan_id: str) -> list[str]:
-    """Return scan_ids of Computer nodes for this hostname that differ from scan_id."""
+def replace_host_requested(args) -> bool:
+    """True unless the operator asked to keep earlier scans."""
+    return not getattr(args, "keep_previous_scans", False)
+
+
+def split_previous_scans(
+    rows: Iterable[Mapping[str, object]], hardware_uuid: str | None
+) -> tuple[list[str], list[str]]:
+    """Split earlier scans of a hostname into (same Mac, other Mac) scan_ids.
+
+    A row is the same Mac when its ``hardware_uuid`` equals ``hardware_uuid``, or both
+    are null. Rows with the same hostname but a different UUID are another Mac.
+    """
+    same: list[str] = []
+    other: list[str] = []
+    for row in rows:
+        scan_id = str(row["scan_id"])
+        target = same if row.get("hardware_uuid") == hardware_uuid else other
+        if scan_id not in target:
+            target.append(scan_id)
+    return same, other
+
+
+def previous_scan_ids(
+    session: Session, hostname: str, scan_id: str, hardware_uuid: str | None = None
+) -> list[str]:
+    """Return scan_ids of earlier Computer nodes of the same Mac (see module docstring).
+
+    Earlier scans with this hostname but a different hardware UUID are kept; a warning
+    naming each of them is printed to stderr.
+    """
     result = session.run(
         """
         MATCH (c:Computer {hostname: $hostname})
         WHERE c.scan_id IS NOT NULL AND c.scan_id <> $scan_id
-        RETURN collect(DISTINCT c.scan_id) AS scan_ids
+        RETURN c.scan_id AS scan_id, c.hardware_uuid AS hardware_uuid
+        ORDER BY scan_id
         """,
         hostname=hostname,
         scan_id=scan_id,
     )
-    return list(result.single()["scan_ids"])
+    same, other = split_previous_scans(result, hardware_uuid)
+    for other_scan in other:
+        print(
+            f"  Warning: keeping scan {other_scan}: hostname {hostname!r} matches but the "
+            "hardware UUID differs (another Mac with the same name)",
+            file=sys.stderr,
+        )
+    return same
 
 
-def replace_host_scans(session: Session, hostname: str, scan_id: str) -> int:
-    """Detach-delete all nodes of earlier scans of this host. Returns nodes removed."""
-    scan_ids = previous_scan_ids(session, hostname, scan_id)
+def replace_host_scans(
+    session: Session, hostname: str, scan_id: str, hardware_uuid: str | None = None
+) -> int:
+    """Detach-delete all nodes of earlier scans of this Mac. Returns nodes removed."""
+    scan_ids = previous_scan_ids(session, hostname, scan_id, hardware_uuid)
     if not scan_ids:
         return 0
 

@@ -25,6 +25,8 @@ extension ScanOrchestrator {
         let icloudSignedIn: Bool?
         let icloudDriveEnabled: Bool?
         let icloudKeychainEnabled: Bool?
+        let hostSecuritySettings: HostSecuritySettings
+        let networkConfiguration: NetworkConfiguration
     }
 
     struct HostProbeResult {
@@ -44,6 +46,8 @@ extension ScanOrchestrator {
         let sip: HostProbeResult
         let filevault: HostProbeResult
         let icloud: ICloudProbeResult
+        let hostSettings: HostSettingsProbeResult
+        let networkConfiguration: NetworkConfigurationProbeResult
     }
 
     /// Typed, normalized module output before it is assembled into `ScanResult`.
@@ -66,6 +70,7 @@ extension ScanOrchestrator {
         let physicalSecurity: PhysicalSecurityCollection
         let activeDirectory: ActiveDirectoryCollection
         let kerberosArtifacts: [KerberosArtifact]
+        let inventory: ScanResult.InventoryCollections
     }
 
     typealias TimedDataSourceResult = (DataSourceResult, Double)

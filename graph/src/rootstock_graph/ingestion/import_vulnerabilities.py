@@ -6,12 +6,16 @@ Reads the enriched CVE registry (static + cached EPSS/KEV/NVD data) and creates:
   - (:Vulnerability) nodes with EPSS, KEV, CVSS, CVSS vector properties
   - (:AttackTechnique) nodes with tactic/name
   - (:Vulnerability)-[:MAPS_TO_TECHNIQUE]->(:AttackTechnique) edges
-  - (:Application)-[:AFFECTED_BY]->(:Vulnerability) edges via two-tier matching:
-      Tier 1 (precise): bundle ID + version range match
-      Tier 2 (category fallback): existing category-based heuristic matching
+  - (:Application)-[:AFFECTED_BY]->(:Vulnerability) edges only for precise matches
+    (bundle ID + version range); these are evidence and feed risk and tiers
+  - (:Application)-[:HAS_CVE_CONTEXT]->(:Vulnerability) edges for apps whose
+    modeled exposure class matches a reference CVE; these are background context
+    and are never counted as the app being vulnerable
+  - with --scan-json: cached NVD matches for the scan's installed software and macOS
+    release as AFFECTED_BY {match_tier: 'cpe'} evidence (see import_installed_cves.py)
 
 Usage:
-    rootstock-graph-import-vulnerabilities [--neo4j bolt://localhost:7687]
+    rootstock-graph-import-vulnerabilities [--neo4j bolt://localhost:7687] [--scan-json scan.json]
 
 Exit code 0 on success, 1 on failure.
 """
@@ -21,6 +25,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from pathlib import Path
 
 from ..neo4j import add_neo4j_args, connect_from_args
 from ..vulnerability.cve_reference import CWE_REGISTRY, REGISTRY_VERSION
@@ -28,10 +33,11 @@ from ..vulnerability.cve_reference_catalog import GROUP_REGISTRY, GROUP_TECHNIQU
 from ..vulnerability.cve_reference_models import CveEntry
 from ..vulnerability.cve_enrichment import enrich_registry, EnrichedCveEntry, temporal_score
 from ..vulnerability.version_matcher import extract_macos_max_version
+from .import_installed_cves import import_installed_matches
 from .import_vulnerabilities_matching import (
     category_fallback_cves,
     create_precise_affected_by_edge,
-    import_category_affected_by_edges,
+    import_category_context_edges,
     precise_match_records,
     precise_record_is_affected,
 )
@@ -108,7 +114,8 @@ def import_vulnerability_nodes(session) -> int:
         """
         UNWIND $batch AS row
         MERGE (v:Vulnerability {cve_id: row.cve_id})
-        SET v.title = row.title,
+        SET v.source = 'registry',
+            v.title = row.title,
             v.cvss_score = row.cvss_score,
             v.epss_score = row.epss_score,
             v.epss_percentile = row.epss_percentile,
@@ -261,11 +268,12 @@ def _import_precise_cve_affected_by_edges(session, cve: CveEntry) -> tuple[int, 
     return count, warning_count
 
 
-def import_affected_by_edges(session) -> tuple[int, int]:
-    """Tier 2: Create AFFECTED_BY edges based on category matching (fallback).
+def import_cve_context_edges(session) -> tuple[int, int]:
+    """Create HAS_CVE_CONTEXT edges from exposure categories to reference CVEs.
 
-    CVEs that already have Tier 1 (precise) edges are excluded from Tier 2
-    to avoid duplicating edges for the same CVE with a weaker match tier.
+    CVEs that have precise (AFFECTED_BY) matching rules are excluded so a CVE is
+    either evidence for the apps it names or context for a technique class, never
+    both.
     """
     # Collect CVE IDs already handled by Tier 1
     precise_cve_ids = {cve.cve_id for cve in _collect_precise_cves()}
@@ -279,10 +287,10 @@ def import_affected_by_edges(session) -> tuple[int, int]:
             continue
 
         try:
-            count += import_category_affected_by_edges(session, category, fallback_cves)
+            count += import_category_context_edges(session, category, fallback_cves)
         except Exception as e:
             warning_count += 1
-            print(f"  Warning: AFFECTED_BY for category '{category}' failed: {e}")
+            print(f"  Warning: HAS_CVE_CONTEXT for category '{category}' failed: {e}")
 
     return count, warning_count
 
@@ -369,26 +377,34 @@ def import_cwe_edges(session) -> int:
     return result.single()["n"]
 
 
-def import_all(session) -> dict[str, int]:
-    """Run the full vulnerability import pipeline."""
+def import_all(session, scan_json: Path | None = None) -> dict[str, object]:
+    """Run the full vulnerability import pipeline.
+
+    With ``scan_json``, cached NVD matches for that scan's installed software are
+    imported after the static registry (before CWE edges, so their CWEs are linked).
+    """
     vuln_count = import_vulnerability_nodes(session)
     tech_count = import_technique_nodes(session)
     maps_count = import_technique_edges(session)
     precise_count, precise_warnings = import_precise_affected_by_edges(session)
-    category_count, category_warnings = import_affected_by_edges(session)
-    warning_count = precise_warnings + category_warnings
+    context_count, context_warnings = import_cve_context_edges(session)
+    warning_count = precise_warnings + context_warnings
     group_count = import_threat_group_nodes(session)
     group_edge_count = import_group_technique_edges(session)
     cwe_count = import_cwe_nodes(session)
+    installed = import_installed_matches(session, scan_json) if scan_json is not None else None
+    if scan_json is not None and installed is None:
+        warning_count += 1
     cwe_edge_count = import_cwe_edges(session)
 
     return {
+        "installed": installed,
         "vulnerabilities": vuln_count,
         "techniques": tech_count,
         "maps_to_technique": maps_count,
         "affected_by_precise": precise_count,
-        "affected_by_category": category_count,
-        "affected_by": precise_count + category_count,
+        "affected_by": precise_count,
+        "cve_context": context_count,
         "threat_groups": group_count,
         "uses_technique": group_edge_count,
         "cwe_nodes": cwe_count,
@@ -400,31 +416,58 @@ def import_all(session) -> dict[str, int]:
 # ── CLI ──────────────────────────────────────────────────────────────────
 
 
+def _print_installed_counts(installed: dict | None) -> None:
+    if installed is None:
+        print("  NVD installed matches: scan could not be loaded", file=sys.stderr)
+        return
+    print(
+        f"  NVD installed matches: {installed['cached_targets']}/{installed['targets']} "
+        f"CPE targets cached, {installed['cve_nodes_created']} new CVE nodes, "
+        f"{installed['app_edges']} app AFFECTED_BY edges, "
+        f"{installed['host_edges']} macOS AFFECTED_BY edges"
+    )
+    missing = installed["missing"]
+    if missing:
+        print(
+            f"  {len(missing)} CPE target(s) have no NVD cache entry; "
+            "run the pipeline with --refresh-cve to fetch them:"
+        )
+        for target in missing:
+            print(f"    {target.name} {target.version} ({target.cpe_name})")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Import Vulnerability and AttackTechnique nodes into Neo4j"
     )
     add_neo4j_args(parser)
+    parser.add_argument(
+        "--scan-json",
+        type=Path,
+        metavar="PATH",
+        help="Also import cached NVD matches for this scan's installed software and macOS",
+    )
     args = parser.parse_args()
 
     driver = connect_from_args(args)
 
     print(f"Importing vulnerability data (registry v{REGISTRY_VERSION})...")
     with driver.session() as session:
-        counts = import_all(session)
+        counts = import_all(session, args.scan_json)
 
     driver.close()
 
     print(f"  Vulnerability nodes: {counts['vulnerabilities']}")
     print(f"  AttackTechnique nodes: {counts['techniques']}")
     print(f"  MAPS_TO_TECHNIQUE edges: {counts['maps_to_technique']}")
-    print(f"  AFFECTED_BY edges (precise): {counts['affected_by_precise']}")
-    print(f"  AFFECTED_BY edges (category): {counts['affected_by_category']}")
-    print(f"  AFFECTED_BY edges (total): {counts['affected_by']}")
+    print(f"  AFFECTED_BY edges (version-matched evidence): {counts['affected_by']}")
+    print(f"  HAS_CVE_CONTEXT edges (technique context): {counts['cve_context']}")
     print(f"  ThreatGroup nodes: {counts['threat_groups']}")
     print(f"  USES_TECHNIQUE edges: {counts['uses_technique']}")
     print(f"  CWE nodes: {counts['cwe_nodes']}")
     print(f"  HAS_CWE edges: {counts['has_cwe_edges']}")
+    if args.scan_json is not None:
+        _print_installed_counts(counts["installed"])
     if counts.get("warning_count", 0) > 0:
         print(
             f"  WARNING: {counts['warning_count']} vulnerability edge(s) failed; "

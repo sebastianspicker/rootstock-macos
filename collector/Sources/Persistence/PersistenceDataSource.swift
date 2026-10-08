@@ -9,17 +9,24 @@ import LaunchdPlists
 /// Sources scanned:
 ///   • LaunchDaemons: /System/Library/LaunchDaemons/, /Library/LaunchDaemons/
 ///   • LaunchAgents:  /Library/LaunchAgents/, ~/Library/LaunchAgents/
+///   • App-embedded:  <App>.app/Contents/Library/{LaunchAgents,LaunchDaemons,LoginItems}
 ///   • Login Items:   ~/Library/Application Support/com.apple.backgroundtaskmanagementagent/backgrounditems.btm
+///   • Login hooks:   LoginHook / LogoutHook in com.apple.loginwindow preferences
 ///   • Cron jobs:     /etc/crontab, /var/at/tabs/<user>
 ///
 /// Launchd directory inventory uses `LaunchdPlistParser` backed by
-/// `LaunchdPlistFacts` (RootstockMacFacts).
+/// `LaunchdPlistFacts` (RootstockMacFacts). Loaded state comes from one
+/// `launchctl list` and one `launchctl print system` run.
 public struct PersistenceDataSource: DataSource {
     public let name = "Persistence"
     public let requiresElevation = false
 
     private let cronParser = CronParser()
-    private let plistParser = LaunchdPlistParser()
+    let plistParser = LaunchdPlistParser()
+    private let signingIdentity = ProgramSigningIdentity()
+
+    /// Applications from the scan whose bundles may embed launchd jobs or login items.
+    let knownApps: [Application]
 
     private static let daemonDirs = [
         MacSecurityPaths.appleLaunchDaemons,
@@ -33,34 +40,47 @@ public struct PersistenceDataSource: DataSource {
         ).path,
     ]
 
-    public init() { }
+    public init(knownApps: [Application] = []) {
+        self.knownApps = knownApps
+    }
 
     public func collect() async -> DataSourceResult {
         var items: [LaunchItem] = []
         var errors: [CollectionError] = []
 
+        let (loadedState, launchctlErrors) = LaunchctlLoadedState.collect()
+        appendRecoverableErrors(launchctlErrors, to: &errors)
+
         // 1. LaunchDaemons
         for dir in Self.daemonDirs {
             let (entries, errs) = parseLaunchdDirectory(at: dir)
-            items += entries.map { launchItemFrom($0, type: .daemon) }
+            items += entries.map { launchItemFrom($0, type: .daemon, loadedState: loadedState) }
             appendRecoverableErrors(errs, to: &errors)
         }
 
         // 2. LaunchAgents
         for dir in Self.agentDirs {
             let (entries, errs) = parseLaunchdDirectory(at: dir)
-            items += entries.map { launchItemFrom($0, type: .agent) }
+            items += entries.map { launchItemFrom($0, type: .agent, loadedState: loadedState) }
             appendRecoverableErrors(errs, to: &errors)
         }
 
-        // 3. Login Items (BTM database)
+        // 3. Launchd jobs and login items embedded in application bundles
+        let (embeddedItems, embeddedErrors) = collectEmbeddedItems(loadedState: loadedState)
+        items += embeddedItems
+        appendRecoverableErrors(embeddedErrors, to: &errors)
+
+        // 4. Login Items (BTM database)
         let (loginItems, loginErrors) = collectLoginItems()
-        items += loginItems
+        items += loginItems.map { withProgramFacts($0, plistModified: nil) }
         appendRecoverableErrors(loginErrors, to: &errors)
 
-        // 4. Cron jobs
+        // 5. Login hooks
+        items += collectLoginHooks()
+
+        // 6. Cron jobs
         let (cronItems, cronErrors) = collectCronJobs()
-        items += cronItems
+        items += cronItems.map { withProgramFacts($0, plistModified: FileTimestamp.modified(path: $0.path)) }
         appendRecoverableErrors(cronErrors, to: &errors)
 
         return DataSourceResult(nodes: items, errors: errors)
@@ -81,10 +101,13 @@ public struct PersistenceDataSource: DataSource {
         plistParser.parseDirectory(at: dirPath)
     }
 
-    private func launchItemFrom(_ entry: LaunchdPlistParser.ParsedEntry, type: LaunchItem.ItemType) -> LaunchItem {
-        let plistOwnership = fileOwnership(at: entry.plistPath)
-        let programOwnership = entry.program.map { fileOwnership(at: $0) }
-
+    func launchItemFrom(
+        _ entry: LaunchdPlistParser.ParsedEntry,
+        type: LaunchItem.ItemType,
+        loadedState: LaunchctlLoadedState,
+        bundlePath: String? = nil
+    ) -> LaunchItem {
+        let facts = ProgramFacts(program: entry.program)
         return LaunchItem(
             label: entry.label,
             path: entry.plistPath,
@@ -92,11 +115,84 @@ public struct PersistenceDataSource: DataSource {
             program: entry.program,
             runAtLoad: entry.runAtLoad,
             user: entry.user,
+            ownership: ownership(plistPath: entry.plistPath, program: entry.program),
+            details: LaunchItem.Details(
+                programArguments: entry.programArguments,
+                environmentVariableNames: entry.environmentVariableNames,
+                dyldEnvironment: entry.dyldEnvironment,
+                triggers: entry.triggers,
+                intervalSeconds: entry.intervalSeconds,
+                sessionType: entry.sessionType,
+                disabled: entry.disabled,
+                loaded: loadedState.loaded(label: entry.label, type: type),
+                programExists: facts.exists,
+                programSha256: facts.sha256,
+                plistModified: entry.plistModified,
+                bundlePath: bundlePath
+            )
+        )
+    }
+
+    /// Ownership and signing identity of a configuration file and the program it starts.
+    func ownership(plistPath: String, program: String?) -> LaunchItem.Ownership {
+        let plistOwnership = fileOwnership(at: plistPath)
+        let programOwnership = program.map { fileOwnership(at: $0) }
+        // Apple's own launchd jobs under /System carry no team identifier and never
+        // belong to a third-party app, so only other plists are worth a signature read.
+        let identity: ProgramSigningIdentity.Identity? = plistPath.hasPrefix("/System/")
+            ? nil
+            : program.flatMap { signingIdentity.identity(forProgramAt: $0) }
+        return LaunchItem.Ownership(
+            plistOwner: plistOwnership.owner,
+            programOwner: programOwnership?.owner,
+            plistWritableByNonRoot: plistOwnership.writableByNonRoot,
+            programWritableByNonRoot: programOwnership?.writableByNonRoot ?? false,
+            programTeamId: identity?.teamId,
+            programSigningId: identity?.signingId
+        )
+    }
+
+    /// Existence and digest of a launch item's program.
+    struct ProgramFacts {
+        let exists: Bool?
+        let sha256: String?
+
+        /// Relative programs (e.g. bare names resolved through launchd's PATH) are not probed:
+        /// they would resolve against the collector's working directory instead.
+        init(program: String?) {
+            guard let program, program.hasPrefix("/") else {
+                exists = nil
+                sha256 = nil
+                return
+            }
+            exists = FileManager.default.fileExists(atPath: program)
+            sha256 = program.hasPrefix("/System/") ? nil : FileDigest.sha256(ofFileAt: program)
+        }
+    }
+
+    /// Copy of `item` with program existence, digest and source modification time filled in.
+    private func withProgramFacts(_ item: LaunchItem, plistModified: String?) -> LaunchItem {
+        let facts = ProgramFacts(program: item.program)
+        return LaunchItem(
+            label: item.label,
+            path: item.path,
+            type: item.type,
+            program: item.program,
+            runAtLoad: item.runAtLoad,
+            user: item.user,
             ownership: LaunchItem.Ownership(
-                plistOwner: plistOwnership.owner,
-                programOwner: programOwnership?.owner,
-                plistWritableByNonRoot: plistOwnership.writableByNonRoot,
-                programWritableByNonRoot: programOwnership?.writableByNonRoot ?? false
+                plistOwner: item.plistOwner,
+                programOwner: item.programOwner,
+                plistWritableByNonRoot: item.plistWritableByNonRoot,
+                programWritableByNonRoot: item.programWritableByNonRoot,
+                programTeamId: item.programTeamId,
+                programSigningId: item.programSigningId
+            ),
+            details: LaunchItem.Details(
+                programArguments: item.programArguments,
+                programExists: facts.exists,
+                programSha256: facts.sha256,
+                plistModified: plistModified
             )
         )
     }
@@ -128,6 +224,9 @@ public struct PersistenceDataSource: DataSource {
 
     // MARK: - Login Items (BTM)
 
+    /// The BackgroundItems store grows with every registered item; a few MiB is normal.
+    static let maximumBTMBytes = 16 * 1024 * 1024
+
     private func collectLoginItems() -> ([LaunchItem], [String]) {
         let btmPath = NSHomeDirectory() + "/" + MacSecurityPaths.backgroundItemsBTMRelative
 
@@ -136,7 +235,7 @@ public struct PersistenceDataSource: DataSource {
             // No BTM file - try sfltool fallback (Sequoia+)
             return collectLoginItemsViaSfltool()
         }
-        guard let data = fm.contents(atPath: btmPath) else {
+        guard let data = try? BoundedFileReader.read(path: btmPath, limit: Self.maximumBTMBytes) else {
             return collectLoginItemsViaSfltool()
         }
 

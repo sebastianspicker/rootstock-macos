@@ -20,6 +20,8 @@ const requiredMarkers = [
   "demo-primary-dossier",
   "SYN-GLB-N12",
   "SYN-GLB-E16",
+  "SYN-GLB-N23",
+  "SYN-GLB-E32",
   "RootstockViewer.mount(",
   'mode: "static"',
   "Network access is disabled in this static demo.",
@@ -48,7 +50,7 @@ function fail(message) {
 }
 
 function verifyGraphSize(nodes, edges) {
-  if (nodes.length !== 17 || edges.length !== 19) {
+  if (nodes.length !== 30 || edges.length !== 33) {
     fail(`synthetic graph size changed unexpectedly: ${nodes.length} nodes, ${edges.length} edges`);
   }
 }

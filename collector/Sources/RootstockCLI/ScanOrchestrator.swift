@@ -4,7 +4,6 @@ import TCC
 import Entitlements
 import CodeSigning
 import XPCServices
-import Persistence
 import Keychain
 import MDM
 import Groups
@@ -15,7 +14,6 @@ import AuthorizationDB
 import AuthorizationPlugins
 import SystemExtensions
 import Sudoers
-import ProcessSnapshot
 import FileACLs
 import ShellHooks
 import PhysicalSecurity
@@ -23,6 +21,9 @@ import ActiveDirectory
 import KerberosArtifacts
 import Sandbox
 import Quarantine
+import TrustSettings
+import BrowserExtensions
+import InstalledPackages
 
 /// Coordinates all data source modules and assembles the final ScanResult.
 struct ScanOrchestrator: Sendable {
@@ -128,7 +129,6 @@ struct ScanOrchestrator: Sendable {
         [
             IndependentModule(id: .tcc) { await TCCDataSource().collect() },
             IndependentModule(id: .xpc) { await XPCDataSource().collect() },
-            IndependentModule(id: .persistence) { await PersistenceDataSource().collect() },
             IndependentModule(id: .keychain) { await KeychainDataSource().collect() },
             IndependentModule(id: .mdm) { await MDMDataSource().collect() },
             IndependentModule(id: .groups) { await GroupDataSource().collect() },
@@ -146,6 +146,9 @@ struct ScanOrchestrator: Sendable {
             IndependentModule(id: .fileACLs) { await FileACLDataSource().collect() },
             IndependentModule(id: .shellHooks) { await ShellHookDataSource().collect() },
             IndependentModule(id: .kerberos) { await KerberosArtifactDataSource().collect() },
+            IndependentModule(id: .trustSettings) { await TrustSettingsDataSource().collect() },
+            IndependentModule(id: .browserExtensions) { await BrowserExtensionsDataSource().collect() },
+            IndependentModule(id: .installedPackages) { await InstalledPackagesDataSource().collect() },
         ]
     }
 
@@ -191,7 +194,7 @@ struct ScanOrchestrator: Sendable {
         return await timed { ActiveDirectoryDataSource().collectWithBindingOutcome() }
     }
 
-    private func collectNodes<T>(
+    func collectNodes<T>(
         _ timedResult: (DataSourceResult, Double)?,
         as _: T.Type,
         label: String,
@@ -218,7 +221,7 @@ struct ScanOrchestrator: Sendable {
             xpcServices: collectNodes(taskResults.result(for: .xpc), as: XPCService.self, label: "XPC", noun: "services", errors: &errors),
             keychainAcls: collectNodes(taskResults.result(for: .keychain), as: KeychainItem.self, label: "Keychain", noun: "items", errors: &errors),
             mdmProfiles: collectNodes(taskResults.result(for: .mdm), as: MDMProfile.self, label: "MDM", noun: "profiles", errors: &errors),
-            launchItems: collectNodes(taskResults.result(for: .persistence), as: LaunchItem.self, label: "Persistence", noun: "items", errors: &errors),
+            launchItems: await collectLaunchItems(config: config, applications: applications, errors: &errors),
             groupCollection: collectGroups(taskResults.result(for: .groups), errors: &errors),
             remoteAccessServices: collectNodes(taskResults.result(for: .remoteAccess), as: RemoteAccessService.self, label: "RemoteAccess", noun: "services", errors: &errors),
             firewallStatus: collectNodes(taskResults.result(for: .firewall), as: FirewallStatus.self, label: "Firewall", noun: "policies", errors: &errors),
@@ -231,7 +234,8 @@ struct ScanOrchestrator: Sendable {
             fileAcls: collectFileACLs(taskResults.result(for: .fileACLs), shellHooks: taskResults.result(for: .shellHooks), errors: &errors),
             physicalSecurity: collectPhysicalSecurity(taskResults.physicalSecurity, errors: &errors),
             activeDirectory: collectActiveDirectory(taskResults.activeDirectory, errors: &errors),
-            kerberosArtifacts: collectNodes(taskResults.result(for: .kerberos), as: KerberosArtifact.self, label: "Kerberos", noun: "artifacts", errors: &errors)
+            kerberosArtifacts: collectNodes(taskResults.result(for: .kerberos), as: KerberosArtifact.self, label: "Kerberos", noun: "artifacts", errors: &errors),
+            inventory: await collectInventory(config: config, applications: applications, taskResults: taskResults, errors: &errors)
         )
     }
 
@@ -315,23 +319,6 @@ struct ScanOrchestrator: Sendable {
         )
     }
 
-    private func collectRunningProcesses(
-        config: ModuleConfig,
-        applications: [Application],
-        errors: inout [CollectionError]
-    ) async -> [RunningProcess] {
-        guard config.includes(.processSnapshot) else { return [] }
-        let (result, elapsed) = await timed {
-            await ProcessSnapshotDataSource(knownApps: applications).collect()
-        }
-        let runningProcesses = result.nodes.compactMap { $0 as? RunningProcess }
-        errors.append(contentsOf: result.errors)
-        if verbose {
-            err("  [Processes]    completed in \(format(elapsed))  (\(runningProcesses.count) processes, \(result.errors.count) errors)")
-        }
-        return runningProcesses
-    }
-
     private func collectHostPosture(
         probeResults: HostPostureProbeResults,
         errors: inout [CollectionError]
@@ -343,6 +330,8 @@ struct ScanOrchestrator: Sendable {
                 probeResults.filevault.error,
                 probeResults.icloud.error
             ].compactMap { $0 }
+                + probeResults.hostSettings.errors
+                + probeResults.networkConfiguration.errors
         )
         return HostPostureCollection(
             gatekeeperEnabled: probeResults.gatekeeper.value,
@@ -350,126 +339,9 @@ struct ScanOrchestrator: Sendable {
             filevaultEnabled: probeResults.filevault.value,
             icloudSignedIn: probeResults.icloud.signedIn,
             icloudDriveEnabled: probeResults.icloud.driveEnabled,
-            icloudKeychainEnabled: probeResults.icloud.keychainEnabled
-        )
-    }
-
-    private func makeScanResult(
-        applications: [Application], modules: ScanModuleCollection,
-        hostPosture: HostPostureCollection, errors: [CollectionError]
-    ) -> ScanResult {
-        ScanResult(
-            metadata: makeMetadata(),
-            elevation: ElevationInfo(isRoot: getuid() == 0, hasFda: detectFDA()),
-            collections: makeCollections(applications: applications, modules: modules),
-            hostPosture: makeHostPosture(from: hostPosture, modules: modules),
-            errors: errors
-        )
-    }
-
-    private func makeMetadata() -> ScanResult.Metadata {
-        ScanResult.Metadata(
-            scanId: UUID().uuidString,
-            timestamp: ISO8601DateFormatter().string(from: Date()),
-            hostname: ProcessInfo.processInfo.hostName,
-            macosVersion: ProcessInfo.processInfo.operatingSystemVersionString,
-            collectorVersion: RootstockCommand.collectorVersion
-        )
-    }
-
-    private func makeCollections(
-        applications: [Application],
-        modules: ScanModuleCollection
-    ) -> ScanResult.Collections {
-        ScanResult.Collections(
-            core: makeCoreCollections(applications: applications, modules: modules),
-            accountAccess: makeAccountAccessCollections(modules),
-            system: makeSystemCollections(applications: applications, modules: modules)
-        )
-    }
-
-    private func makeCoreCollections(
-        applications: [Application],
-        modules: ScanModuleCollection
-    ) -> ScanResult.CoreCollections {
-        ScanResult.CoreCollections(
-            applications: applications,
-            tccGrants: modules.tccGrants,
-            xpcServices: modules.xpcServices,
-            keychainAcls: modules.keychainAcls,
-            mdmProfiles: modules.mdmProfiles,
-            launchItems: modules.launchItems
-        )
-    }
-
-    private func makeAccountAccessCollections(
-        _ modules: ScanModuleCollection
-    ) -> ScanResult.AccountAccessCollections {
-        ScanResult.AccountAccessCollections(
-            localGroups: modules.groupCollection.localGroups + modules.activeDirectory.localGroups,
-            remoteAccessServices: modules.remoteAccessServices,
-            firewallStatus: modules.firewallStatus,
-            loginSessions: modules.loginSessions,
-            authorization: ScanResult.AuthorizationCollections(
-                authorizationRights: modules.authorizationRights,
-                authorizationPlugins: modules.authorizationPlugins,
-                systemExtensions: modules.systemExtensions
-            ),
-            sudoersRules: modules.sudoersRules
-        )
-    }
-
-    private func makeSystemCollections(
-        applications: [Application],
-        modules: ScanModuleCollection
-    ) -> ScanResult.SystemCollections {
-        ScanResult.SystemCollections(
-            runningProcesses: modules.runningProcesses,
-            userDetails: modules.groupCollection.userDetails + modules.activeDirectory.userDetails,
-            fileAcls: modules.fileAcls,
-            bluetoothDevices: modules.physicalSecurity.bluetoothDevices,
-            adBinding: modules.activeDirectory.binding,
-            kerberosArtifacts: modules.kerberosArtifacts,
-            sandboxProfiles: applications.compactMap(\.sandboxProfile)
-        )
-    }
-
-    private func makeHostPosture(
-        from hostPosture: HostPostureCollection,
-        modules: ScanModuleCollection
-    ) -> ScanResult.HostPosture {
-        ScanResult.HostPosture(
-            gatekeeperEnabled: hostPosture.gatekeeperEnabled,
-            sipEnabled: hostPosture.sipEnabled,
-            filevaultEnabled: hostPosture.filevaultEnabled,
-            physicalSecurity: makePhysicalSecurity(from: modules.physicalSecurity),
-            icloud: ScanResult.ICloud(
-                icloudSignedIn: hostPosture.icloudSignedIn,
-                icloudDriveEnabled: hostPosture.icloudDriveEnabled,
-                icloudKeychainEnabled: hostPosture.icloudKeychainEnabled
-            )
-        )
-    }
-
-    private func makePhysicalSecurity(
-        from physicalSecurity: PhysicalSecurityCollection
-    ) -> ScanResult.PhysicalSecurity {
-        ScanResult.PhysicalSecurity(
-            device: ScanResult.DeviceSecurity(
-                lockdownModeEnabled: physicalSecurity.lockdownModeEnabled,
-                bluetoothEnabled: physicalSecurity.bluetoothEnabled,
-                bluetoothDiscoverable: physicalSecurity.bluetoothDiscoverable
-            ),
-            screen: ScanResult.ScreenSecurity(
-                screenLockEnabled: physicalSecurity.screenLockEnabled,
-                screenLockDelay: physicalSecurity.screenLockDelay,
-                displaySleepTimeout: physicalSecurity.displaySleepTimeout
-            ),
-            boot: ScanResult.BootSecurity(
-                thunderboltSecurityLevel: physicalSecurity.thunderboltSecurityLevel,
-                secureBootLevel: physicalSecurity.secureBootLevel,
-                externalBootAllowed: physicalSecurity.externalBootAllowed
-            )
+            icloudKeychainEnabled: probeResults.icloud.keychainEnabled,
+            hostSecuritySettings: probeResults.hostSettings.settings,
+            networkConfiguration: probeResults.networkConfiguration.configuration
         )
     }
 
@@ -491,7 +363,7 @@ struct ScanOrchestrator: Sendable {
     }
 
     /// Detects Full Disk Access by attempting to read the system TCC database.
-    private func detectFDA() -> Bool {
+    func detectFDA() -> Bool {
         TCCAccessProbe.canQueryDatabase(at: TCCAccessProbe.systemDatabasePath)
     }
 

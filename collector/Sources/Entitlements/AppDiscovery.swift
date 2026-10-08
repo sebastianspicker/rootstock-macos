@@ -8,8 +8,11 @@ struct DiscoveredApp {
     let bundleId: String
     let path: String
     let version: String?
-    let executablePath: String
+    /// Nil when `CFBundleExecutable` names a path outside `Contents/MacOS`.
+    let executablePath: String?
     let isElectron: Bool
+    /// Electron RunAsNode fuse: nil when not Electron or the fuse wire was not found.
+    let electronRunAsNode: Bool?
     let isSystem: Bool
 }
 
@@ -244,17 +247,24 @@ struct AppDiscovery {
         let name = applicationName(from: plist, resolvedURL: resolvedURL)
         let version = plist["CFBundleShortVersionString"] as? String
         let execName = plist["CFBundleExecutable"] as? String ?? name
-        let execURL = contentsURL.appendingPathComponent("MacOS").appendingPathComponent(execName)
-
-        guard fileManager.fileExists(atPath: execURL.path) else {
+        let execPath = BundlePaths.executablePath(bundle: resolvedURL.path, executableName: execName)
+        if let execPath, !fileManager.fileExists(atPath: execPath) {
             return (nil, CollectionError(
                 source: "Entitlements",
-                message: "Skipping \(url.path): executable missing at \(execURL.path)",
+                message: "Skipping \(url.path): executable missing at \(execPath)",
                 recoverable: true
             ))
         }
+        let unsafeExecutableError = execPath != nil ? nil : CollectionError(
+            source: "Entitlements",
+            message: "\(url.path): CFBundleExecutable is not a plain file name; executable not inspected",
+            recoverable: true
+        )
 
         let isElectron = detectElectron(contentsURL: contentsURL)
+        let electronRunAsNode = isElectron
+            ? ElectronFuses.runAsNodeEnabled(frameworksURL: contentsURL.appendingPathComponent("Frameworks"))
+            : nil
         // Use the original (pre-symlink) path for reporting; resolved path for file I/O.
         // /usr/local/ is user-writable and not SIP-protected, so it is not a system path.
         let resolvedPath = resolvedURL.path
@@ -266,10 +276,11 @@ struct AppDiscovery {
             bundleId: bundleId,
             path: url.path,                 // original path (symlink or direct)
             version: version,
-            executablePath: execURL.path,   // resolved path for codesign / Security.framework
+            executablePath: execPath,       // resolved path for codesign / Security.framework
             isElectron: isElectron,
+            electronRunAsNode: electronRunAsNode,
             isSystem: isSystem
-        ), nil)
+        ), unsafeExecutableError)
     }
 
     private func readInfoPlist(

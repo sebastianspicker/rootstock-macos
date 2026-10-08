@@ -1,7 +1,7 @@
 /** Scope and question form, kept independent of asynchronous investigation state. */
 import type { GraphModel } from "./types";
 import { scopeMetadata, questions } from "./folio-data";
-import { el, intro, facts, warning, para, conventions, button } from "./folio-ui";
+import { el, intro, facts, warning, para, conventions, button, hostPostureBlock } from "./folio-ui";
 interface ScopeView {
   graph: GraphModel;
   live: boolean;
@@ -37,6 +37,7 @@ export function renderScope(content: HTMLElement, view: ScopeView): void {
     ),
     warning(view.graph),
   );
+  left.append(...hostPostureBlock(view.graph));
   const choices = el("fieldset", { class: "folio-choices" }, [
     el("legend", { text: "Choose a security question" }),
   ]);
@@ -51,7 +52,10 @@ export function renderScope(content: HTMLElement, view: ScopeView): void {
       el("label", {}, [
         input,
         el("code", { class: "folio-qid", text: `Q${question.id}`, "aria-hidden": "true" }),
-        el("span", { text: question.text }),
+        el("span", { class: "folio-qtext" }, [
+          el("span", { text: question.text }),
+          el("small", { class: "folio-qhelp", text: question.answers }),
+        ]),
       ]),
     );
   }

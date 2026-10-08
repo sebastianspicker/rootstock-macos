@@ -25,18 +25,23 @@ public struct QuarantineInfo: Codable, Sendable {
     /// Whether the app was translocated to a randomised read-only path (flag 0x0020).
     public let wasTranslocated: Bool
 
+    /// Host name of the download URL from the LaunchServices quarantine events database.
+    public let originHost: String?
+
     public init(
         hasQuarantineFlag: Bool,
         quarantineAgent: String? = nil,
         quarantineTimestamp: String? = nil,
         wasUserApproved: Bool = false,
-        wasTranslocated: Bool = false
+        wasTranslocated: Bool = false,
+        originHost: String? = nil
     ) {
         self.hasQuarantineFlag = hasQuarantineFlag
         self.quarantineAgent = quarantineAgent
         self.quarantineTimestamp = quarantineTimestamp
         self.wasUserApproved = wasUserApproved
         self.wasTranslocated = wasTranslocated
+        self.originHost = originHost
     }
 
     enum CodingKeys: String, CodingKey {
@@ -45,5 +50,6 @@ public struct QuarantineInfo: Codable, Sendable {
         case quarantineTimestamp = "quarantine_timestamp"
         case wasUserApproved = "was_user_approved"
         case wasTranslocated = "was_translocated"
+        case originHost = "origin_host"
     }
 }

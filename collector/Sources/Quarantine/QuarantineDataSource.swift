@@ -1,5 +1,6 @@
 import Foundation
 import Models
+import SQLiteSupport
 
 /// Reads `com.apple.quarantine` extended attributes from application bundles.
 ///
@@ -24,7 +25,15 @@ public struct QuarantineDataSource {
     /// Flag bitmask: application was translocated.
     private static let translocatedFlag: UInt32 = 0x0020
 
-    public init() {}
+    /// LaunchServices quarantine events database of the current user.
+    private let eventsDatabasePath: String
+
+    public init(
+        eventsDatabasePath: String = FileManager.default.homeDirectoryForCurrentUser.path
+            + "/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2"
+    ) {
+        self.eventsDatabasePath = eventsDatabasePath
+    }
 
     // MARK: - Public API
 
@@ -53,11 +62,15 @@ public struct QuarantineDataSource {
         var result = applications
         var count = 0
         var errors: [CollectionError] = []
+        var eventIdentifiers: [Int: String] = [:]
         for i in result.indices {
             let read = readQuarantineResult(at: result[i].path)
             result[i] = result[i].with(quarantineInfo: read.info)
             if read.info?.hasQuarantineFlag == true {
                 count += 1
+            }
+            if let eventId = read.eventId {
+                eventIdentifiers[i] = eventId
             }
             if let message = read.error {
                 errors.append(CollectionError(
@@ -67,7 +80,73 @@ public struct QuarantineDataSource {
                 ))
             }
         }
+        if !eventIdentifiers.isEmpty {
+            errors.append(contentsOf: attachOriginHosts(to: &result, eventIdentifiers: eventIdentifiers))
+        }
         return (result, count, errors)
+    }
+
+    // MARK: - Quarantine events database
+
+    /// Looks up each event UUID in the LaunchServices quarantine events database and
+    /// records only the host of the download (fallback: origin) URL. An unreadable
+    /// database is one error for the whole module, not one per application.
+    private func attachOriginHosts(
+        to applications: inout [Application],
+        eventIdentifiers: [Int: String]
+    ) -> [CollectionError] {
+        guard FileManager.default.fileExists(atPath: eventsDatabasePath) else { return [] }
+        let database: SQLiteDatabase
+        do {
+            database = try SQLiteDatabase(path: eventsDatabasePath)
+        } catch {
+            return [CollectionError(
+                source: name,
+                message: "Cannot open quarantine events database \(eventsDatabasePath): \(error.localizedDescription)",
+                recoverable: true
+            )]
+        }
+        for (index, eventId) in eventIdentifiers.sorted(by: { $0.key < $1.key }) {
+            let rows: [[String: Any]]
+            do {
+                rows = try database.query(Self.originQuery, textParameters: [eventId])
+            } catch {
+                return [CollectionError(
+                    source: name,
+                    message: "Cannot query quarantine events database \(eventsDatabasePath): \(error.localizedDescription)",
+                    recoverable: true
+                )]
+            }
+            guard let row = rows.first,
+                  let host = Self.originHost(
+                      dataURL: row["LSQuarantineDataURLString"] as? String,
+                      originURL: row["LSQuarantineOriginURLString"] as? String
+                  ),
+                  let info = applications[index].quarantineInfo else { continue }
+            applications[index] = applications[index].with(quarantineInfo: info.with(originHost: host))
+        }
+        return []
+    }
+
+    static let originQuery = "SELECT LSQuarantineDataURLString, LSQuarantineOriginURLString "
+        + "FROM LSQuarantineEvent WHERE LSQuarantineEventIdentifier = ?"
+
+    /// Host of the download URL, falling back to the origin URL. Never the full URL.
+    static func originHost(dataURL: String?, originURL: String?) -> String? {
+        for candidate in [dataURL, originURL] {
+            if let candidate, let host = URL(string: candidate)?.host, !host.isEmpty {
+                return host
+            }
+        }
+        return nil
+    }
+
+    /// Event UUID: the fourth `;`-separated field of the quarantine attribute.
+    static func eventIdentifier(fromQuarantineString raw: String) -> String? {
+        let components = raw.split(separator: ";", omittingEmptySubsequences: false)
+        guard components.count > 3 else { return nil }
+        let eventId = components[3].trimmingCharacters(in: .whitespacesAndNewlines)
+        return eventId.isEmpty ? nil : eventId
     }
 
     // MARK: - Quarantine attribute reading
@@ -80,14 +159,14 @@ public struct QuarantineDataSource {
 
     /// Distinguishes an absent attribute (`info.hasQuarantineFlag == false`) from a
     /// read failure (`info == nil`, `error` set).
-    private func readQuarantineResult(at path: String) -> (info: QuarantineInfo?, error: String?) {
+    private func readQuarantineResult(at path: String) -> (info: QuarantineInfo?, eventId: String?, error: String?) {
         let canonicalPath = URL(fileURLWithPath: path).resolvingSymlinksInPath().path
         let candidates = canonicalPath == path ? [path] : [canonicalPath, path]
         var failure: String?
         for candidate in candidates {
             switch readQuarantineXattr(path: candidate) {
             case .value(let raw):
-                return (Self.parseQuarantineString(raw), nil)
+                return (Self.parseQuarantineString(raw), Self.eventIdentifier(fromQuarantineString: raw), nil)
             case .absent:
                 continue
             case .failed(let message):
@@ -95,9 +174,9 @@ public struct QuarantineDataSource {
             }
         }
         if let failure {
-            return (nil, failure)
+            return (nil, nil, failure)
         }
-        return (QuarantineInfo(hasQuarantineFlag: false), nil)
+        return (QuarantineInfo(hasQuarantineFlag: false), nil, nil)
     }
 
     /// Parse the quarantine hex string into structured data.
@@ -182,5 +261,18 @@ public struct QuarantineDataSource {
             return .absent
         }
         return .failed("getxattr failed: \(String(cString: strerror(code))) (errno \(code))")
+    }
+}
+
+private extension QuarantineInfo {
+    func with(originHost: String) -> QuarantineInfo {
+        QuarantineInfo(
+            hasQuarantineFlag: hasQuarantineFlag,
+            quarantineAgent: quarantineAgent,
+            quarantineTimestamp: quarantineTimestamp,
+            wasUserApproved: wasUserApproved,
+            wasTranslocated: wasTranslocated,
+            originHost: originHost
+        )
     }
 }

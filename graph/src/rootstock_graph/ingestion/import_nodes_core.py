@@ -72,7 +72,7 @@ def computer_import_context(
         icloud_drive_enabled=scan.icloud_drive_enabled,
         icloud_keychain_enabled=scan.icloud_keychain_enabled,
         collection_error_count=len(scan.errors),
-        collection_error_sources=[error.source for error in scan.errors] if scan.errors else [],
+        collection_error_sources=_error_source_summary(scan.errors),
         tcc_grants_linked=grants_linked,
         tcc_grants_skipped=grants_skipped,
         import_status=import_status,
@@ -81,6 +81,15 @@ def computer_import_context(
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _error_source_summary(errors) -> list[str]:
+    """One entry per source, most frequent first: ``"Entitlements (2)"``."""
+    counts: dict[str, int] = {}
+    for error in errors or []:
+        counts[error.source] = counts.get(error.source, 0) + 1
+    ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    return [f"{source} ({count})" if count > 1 else source for source, count in ordered]
 
 
 def import_computer(
@@ -96,6 +105,7 @@ def import_computer(
         MERGE (c:Computer {computer_key: $computer_key})
         SET c.macos_version = $macos_version,
             c.hostname = $hostname,
+            c.hardware_uuid = $hardware_uuid,
             c.scan_id = $scan_id,
             c.scanned_at = $scanned_at,
             c.collector_version = $collector_version,
@@ -120,8 +130,10 @@ def import_computer(
             c.collection_error_sources = $collection_error_sources,
             c.tcc_grants_linked = $tcc_grants_linked,
             c.tcc_grants_skipped = $tcc_grants_skipped,
-            c.import_status = $import_status
+            c.import_status = $import_status,
+            c.imported_at = $imported_at
         """,
+        imported_at=_now_iso(),
         **params,
     )
     return 1
@@ -140,6 +152,7 @@ def _computer_identity_params(computer: ComputerData) -> dict[str, object]:
     return {
         "computer_key": f"{computer.scan_id}:{computer.hostname}",
         "hostname": computer.hostname,
+        "hardware_uuid": computer.hardware_uuid,
         "macos_version": computer.macos_version,
         "scan_id": computer.scan_id,
         "scanned_at": computer.scanned_at,
@@ -250,10 +263,13 @@ def _merge_application_records(
             a.name             = r.name,
             a.path             = r.path,
             a.version          = r.version,
+            a.executable_path  = r.executable_path,
+            a.executable_sha256 = r.executable_sha256,
             a.team_id          = r.team_id,
             a.hardened_runtime = r.hardened_runtime,
             a.library_validation = r.library_validation,
             a.is_electron      = r.is_electron,
+            a.electron_run_as_node = r.electron_run_as_node,
             a.is_system        = r.is_system,
             a.signed           = r.signed,
             a.code_signing_analysis_error = r.code_signing_analysis_error,
@@ -263,6 +279,7 @@ def _merge_application_records(
             a.entitlements_available = r.entitlements_available,
             a.entitlement_extraction_error = r.entitlement_extraction_error,
             a.is_notarized     = r.is_notarized,
+            a.gatekeeper_assessment = r.gatekeeper_assessment,
             a.is_adhoc_signed  = r.is_adhoc_signed,
             a.signing_certificate_cn = r.signing_certificate_cn,
             a.signing_certificate_sha256 = r.signing_certificate_sha256,
@@ -277,6 +294,7 @@ def _merge_application_records(
             a.quarantine_timestamp = r.quarantine_timestamp,
             a.was_user_approved = r.was_user_approved,
             a.was_translocated = r.was_translocated,
+            a.origin_host      = r.origin_host,
             a.scan_id          = r.scan_id,
             a.imported_at      = r.imported_at
         """,
@@ -295,10 +313,13 @@ def _application_record(
         "name": app.name,
         "path": app.path,
         "version": app.version,
+        "executable_path": app.executable_path,
+        "executable_sha256": app.executable_sha256,
         "team_id": app.team_id,
         "hardened_runtime": app.hardened_runtime,
         "library_validation": app.library_validation,
         "is_electron": app.is_electron,
+        "electron_run_as_node": app.electron_run_as_node,
         "is_system": app.is_system,
         "signed": app.signed,
         "code_signing_analysis_error": app.code_signing_analysis_error,
@@ -308,6 +329,7 @@ def _application_record(
         "entitlements_available": app.entitlements_available,
         "entitlement_extraction_error": app.entitlement_extraction_error,
         "is_notarized": app.is_notarized,
+        "gatekeeper_assessment": app.gatekeeper_assessment,
         "is_adhoc_signed": app.is_adhoc_signed,
         "signing_certificate_cn": app.signing_certificate_cn,
         "signing_certificate_sha256": app.signing_certificate_sha256,
@@ -332,6 +354,7 @@ def _application_quarantine_record(app: ApplicationData) -> dict[str, object]:
             "quarantine_timestamp": None,
             "was_user_approved": None,
             "was_translocated": None,
+            "origin_host": None,
         }
     return {
         "has_quarantine_flag": quarantine.has_quarantine_flag,
@@ -339,6 +362,7 @@ def _application_quarantine_record(app: ApplicationData) -> dict[str, object]:
         "quarantine_timestamp": quarantine.quarantine_timestamp,
         "was_user_approved": quarantine.was_user_approved,
         "was_translocated": quarantine.was_translocated,
+        "origin_host": quarantine.origin_host,
     }
 
 

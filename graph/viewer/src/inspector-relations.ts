@@ -1,6 +1,7 @@
 /** Inspector relationship tab: counts by basis and navigable incoming and outgoing rows. */
 
 import { edgeIsInferred, edgeIsTraversable } from "./canvas-edges";
+import { edgeKindDescription } from "./glossary";
 import { element } from "./runtime";
 import type { Controller } from "./runtime";
 import type { GraphEdge, NodeId } from "./types";
@@ -106,5 +107,8 @@ export function relationshipDetail(
   ];
   if (!edgeIsTraversable(edge))
     children.push(element("span", { class: "relationship-note", text: "not traversable" }));
+  const explanation = edgeKindDescription(edge.kind, edge.properties);
+  if (explanation)
+    children.push(element("span", { class: "relationship-explain field-help", text: explanation }));
   return element("div", { class: `relationship-detail ${basis}` }, children);
 }
