@@ -103,6 +103,6 @@ public struct PackageKitDesignParser: ArtifactParser {
     }
 
     private func packageKitEnvelope(item: [String: Any], sourceURL: URL, details: PackageKitDetails, fields: [String: String]) -> EventEnvelope {
-        EventEnvelope(identity: EventEnvelope.Identity(kind: "packagekit.design", label: "PACKAGEKITDESIGN"), capture: EventEnvelope.Capture(source: .parser, eventTime: parseDate(item["timestamp"] ?? item["collected_at"]) ?? Date(), collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "packagekit|design|\(details.servicePresent)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.9))
+        recordEvent(at: item["timestamp"] ?? item["collected_at"]) { time in EventEnvelope(identity: EventEnvelope.Identity(kind: "packagekit.design", label: "PACKAGEKITDESIGN"), capture: EventEnvelope.Capture(source: .parser, eventTime: time, collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "packagekit|design|\(details.servicePresent)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.9)) }
     }
 }

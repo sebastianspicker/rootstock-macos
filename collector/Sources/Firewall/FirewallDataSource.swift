@@ -75,89 +75,62 @@ public struct FirewallDataSource: DataSource {
 
     private func collectFromSocketFilterFW() -> LiveResult {
         var errors: [CollectionError] = []
-
-        func output(_ flag: String) -> String? {
-            let arguments = [flag]
-            let command = "\(Self.socketFilterFWPath) \(flag)"
-            let outcome = runCommand(
-                Self.socketFilterFWPath, arguments, Shell.defaultTimeoutSeconds
-            )
-            guard case .success(let result) = outcome else {
-                errors.append(CollectionError(
-                    source: "Firewall",
-                    message: "\(command) failed: \(outcome.failureDescription ?? "command failure")",
-                    recoverable: true
-                ))
-                return nil
-            }
-            return result.stdout
+        let state = probe("--getglobalstate", errors: &errors, parse: Self.parseGlobalState)
+        let stealth = probe("--getstealthmode", errors: &errors, parse: Self.parseStealthMode)
+        let allowed = probe("--getallowsigned", errors: &errors) { text in
+            let parsed = Self.parseAllowSigned(text)
+            return parsed.builtIn == nil && parsed.downloaded == nil ? nil : parsed
+        }
+        let blockAll = probe("--getblockall", errors: &errors, parse: Self.parseBlockAll)
+        let appRules = probe("--listapps", errors: &errors) { text in
+            text.lowercased().contains("total number of apps") ? Self.parseListApps(text) : nil
         }
 
-        func unparseable(_ flag: String, _ text: String) {
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Block-all (global state 2) implies the firewall is enabled. The model has no
+        // separate block-all field, so it is folded into `enabled`.
+        let enabled = blockAll == true ? true : state
+
+        let anyData = state != nil || stealth != nil || allowed != nil
+            || blockAll != nil || appRules != nil
+        return LiveResult(
+            status: FirewallStatus(
+                enabled: enabled,
+                stealthMode: stealth,
+                allowSigned: allowed?.downloaded,
+                allowBuiltIn: allowed?.builtIn,
+                appRules: appRules ?? []
+            ),
+            errors: errors,
+            anyDataCollected: anyData
+        )
+    }
+
+    /// Runs `socketfilterfw <flag>` and parses its output. A failed command or an
+    /// unparseable answer is recorded in `errors` and yields nil.
+    private func probe<Value>(
+        _ flag: String,
+        errors: inout [CollectionError],
+        parse: (String) -> Value?
+    ) -> Value? {
+        let outcome = runCommand(Self.socketFilterFWPath, [flag], Shell.defaultTimeoutSeconds)
+        guard case .success(let result) = outcome else {
+            errors.append(CollectionError(
+                source: "Firewall",
+                message: "\(Self.socketFilterFWPath) \(flag) failed: \(outcome.failureDescription ?? "command failure")",
+                recoverable: true
+            ))
+            return nil
+        }
+        guard let value = parse(result.stdout) else {
+            let trimmed = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
             errors.append(CollectionError(
                 source: "Firewall",
                 message: "\(Self.socketFilterFWPath) \(flag) returned unparseable output: \(trimmed)",
                 recoverable: true
             ))
+            return nil
         }
-
-        var state: Bool?
-        if let text = output("--getglobalstate") {
-            state = Self.parseGlobalState(text)
-            if state == nil { unparseable("--getglobalstate", text) }
-        }
-        var stealth: Bool?
-        if let text = output("--getstealthmode") {
-            stealth = Self.parseStealthMode(text)
-            if stealth == nil { unparseable("--getstealthmode", text) }
-        }
-        var allowBuiltIn: Bool?
-        var allowSigned: Bool?
-        if let text = output("--getallowsigned") {
-            let parsed = Self.parseAllowSigned(text)
-            allowBuiltIn = parsed.builtIn
-            allowSigned = parsed.downloaded
-            if allowBuiltIn == nil && allowSigned == nil { unparseable("--getallowsigned", text) }
-        }
-        var blockAll: Bool?
-        if let text = output("--getblockall") {
-            blockAll = Self.parseBlockAll(text)
-            if blockAll == nil { unparseable("--getblockall", text) }
-        }
-        var appRules: [FirewallAppRule] = []
-        var listAppsOK = false
-        if let text = output("--listapps") {
-            if text.lowercased().contains("total number of apps") {
-                appRules = Self.parseListApps(text)
-                listAppsOK = true
-            } else {
-                unparseable("--listapps", text)
-            }
-        }
-
-        // Block-all (global state 2) implies the firewall is enabled. The model has no
-        // separate block-all field, so it is folded into `enabled`.
-        let enabled: Bool?
-        if blockAll == true {
-            enabled = true
-        } else {
-            enabled = state
-        }
-
-        let anyData = state != nil || stealth != nil || allowBuiltIn != nil
-            || allowSigned != nil || blockAll != nil || listAppsOK
-        return LiveResult(
-            status: FirewallStatus(
-                enabled: enabled,
-                stealthMode: stealth,
-                allowSigned: allowSigned,
-                allowBuiltIn: allowBuiltIn,
-                appRules: appRules
-            ),
-            errors: errors,
-            anyDataCollected: anyData
-        )
+        return value
     }
 
     /// Parses `--getglobalstate`: "Firewall is enabled. (State = 1)". State 2 is block-all.

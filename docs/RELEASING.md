@@ -101,7 +101,9 @@ The archive contains the renamed collector executable, GPL-3.0 license,
 and shared Swift package are available in the source repository.
 
 The build script does not sign or notarize the binary. State that limitation
-on any uploaded alpha release.
+on any uploaded alpha release, and copy the first-run steps from the collector
+README's "Run a release archive" section (checksum check, then
+`xattr -d com.apple.quarantine rootstock-collector`) into the release notes.
 
 ## Release check workflow
 

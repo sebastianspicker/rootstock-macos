@@ -25,8 +25,8 @@ extension RootstockBlueCLI {
           rootstock-blue export family <path.rsbcase> <out.json>
           rootstock-blue report markdown <path.rsbcase> <out.md> [--content-root PATH]
           rootstock-blue detect run --ruleset samples [--content-root PATH] [--case <path.rsbcase>]
-          rootstock-blue ir posture --case <path.rsbcase> [--source <artifact-tree>] [--live]
-          rootstock-blue ir harden --case <path.rsbcase> [--source <artifact-tree>] [--live]
+          rootstock-blue ir posture --case <path.rsbcase> (--source <artifact-tree> | --live)
+          rootstock-blue ir harden --case <path.rsbcase> (--source <artifact-tree> | --live)
           rootstock-blue ir triage --case <path.rsbcase> --source <artifact-tree> [--content-root PATH] [--offline]
           rootstock-blue santa ingest <log.jsonl> --case <path.rsbcase>
           rootstock-blue preflight <pack> [--content-root PATH] [--offline]

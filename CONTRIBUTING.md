@@ -111,5 +111,11 @@ the behavior that changed, the checks you ran, and any relevant check you could
 not run. Include synthetic fixtures for new evidence shapes; never attach real
 host or case data.
 
+Public CI does not run unit tests: the suites are private, so the checks on a
+pull request cover builds, lint, contracts, and smoke runs only. A maintainer
+runs the affected private suites locally before merging. Describe how to
+reproduce the behavior you changed (input, command, expected output) so the
+maintainer can add or extend a private test.
+
 Report vulnerabilities in Rootstock itself through the private process in
 [SECURITY.md](SECURITY.md), rather than a public issue.

@@ -42,6 +42,16 @@ calls attention to the incomplete update. Format v0 does not claim that these
 updates are atomic or durable across power loss because it does not enforce
 ordered synchronization of every file and directory.
 
+An interrupted write leaves `.rsbcase-write-lock/journal.json`, which names the
+operation and target. While it exists, `case verify` and every later write fail
+with "unfinished case write journal" (or "case package is busy" if another
+`rootstock-blue` process is still writing). If no other process is using the
+case, recover by creating a new case and repeating the imports from the
+original sources; Blue never modifies its sources. Keep the old package for
+reference if you need it. Blue does not delete the journal or reseal the
+checksums itself, because the interrupted update may have left partial
+evidence in the package.
+
 One logical event batch uses one case write journal and can include one custody
 note. Verification reads event and custody JSONL incrementally and checks each
 event through a prepared SQLite lookup. It finds duplicates with a

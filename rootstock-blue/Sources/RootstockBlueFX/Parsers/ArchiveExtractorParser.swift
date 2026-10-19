@@ -107,23 +107,25 @@ public struct ArchiveExtractorParser: ArtifactParser {
             user: itemString(item, keys: ["user"]) ?? inferUser(from: sourceURL.path) ?? "",
             risk: riskTags(item, thirdParty: thirdParty)
         )
-        return EventEnvelope(
-            identity: EventEnvelope.Identity(
-                kind: "archive.extractor",
-                label: "ARCHIVEEXTRACTOR"
-            ),
-            capture: EventEnvelope.Capture(
-                source: .parser,
-                eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(),
-                collectedAt: Date()
-            ),
-            payload: EventEnvelope.Payload(
-                entityRefs: [EntityID(kind: .host, value: "archive|\(name.lowercased())|\(thirdParty)")],
-                properties: archiveFields(details),
-                provenance: ArtifactRoot.pathKey(sourceURL),
-                confidence: 0.9
+        return recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in
+            EventEnvelope(
+                identity: EventEnvelope.Identity(
+                    kind: "archive.extractor",
+                    label: "ARCHIVEEXTRACTOR"
+                ),
+                capture: EventEnvelope.Capture(
+                    source: .parser,
+                    eventTime: time,
+                    collectedAt: Date()
+                ),
+                payload: EventEnvelope.Payload(
+                    entityRefs: [EntityID(kind: .host, value: "archive|\(name.lowercased())|\(thirdParty)")],
+                    properties: archiveFields(details),
+                    provenance: ArtifactRoot.pathKey(sourceURL),
+                    confidence: 0.9
+                )
             )
-        )
+        }
     }
 
     private func inferThirdParty(name: String, path: String) -> Bool {

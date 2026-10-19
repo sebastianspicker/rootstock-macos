@@ -104,7 +104,7 @@ public struct InfoStealerPathParser: ArtifactParser {
     }
 
     private func stealerEnvelope(item: [String: Any], sourceURL: URL, details: StealerDetails, fields: [String: String]) -> EventEnvelope {
-        EventEnvelope(identity: EventEnvelope.Identity(kind: "stealer.path", label: "INFOSTEALERPATH"), capture: EventEnvelope.Capture(source: .parser, eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(), collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "stealer|\(details.family)|\(details.path.hashValue)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88))
+        recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in EventEnvelope(identity: EventEnvelope.Identity(kind: "stealer.path", label: "INFOSTEALERPATH"), capture: EventEnvelope.Capture(source: .parser, eventTime: time, collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "stealer|\(details.family)|\(details.path)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88)) }
     }
 
     private static let familyMarkers: [(family: String, markers: [String])] = [

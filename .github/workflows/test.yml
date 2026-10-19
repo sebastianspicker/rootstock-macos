@@ -104,7 +104,8 @@ jobs:
           fi
 
   swift-tests:
-    name: Swift Tests
+    # Required status check on main: keep the ruleset in sync when renaming.
+    name: Collector Swift build
     needs: swift-paths
     if: needs.swift-paths.outputs.changed == 'true'
     runs-on: macos-26
@@ -159,8 +160,8 @@ jobs:
         run: sh scripts/verify swift-family
 
   graph:
-    # Preserve the required status name configured on the protected main branch.
-    name: Python Tests
+    # Required status check on main: keep the ruleset in sync when renaming.
+    name: Graph lint and smoke
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

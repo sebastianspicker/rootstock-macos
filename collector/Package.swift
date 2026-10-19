@@ -266,6 +266,14 @@ let package = Package(
             name: "EntitlementsTests",
             dependencies: ["Entitlements"]
         ),
+        .testTarget(
+            name: "CodeSigningTests",
+            dependencies: ["CodeSigning", "HostCommand"]
+        ),
+        .testTarget(
+            name: "FirewallTests",
+            dependencies: ["Firewall", "HostCommand", "Models"]
+        ),
     ].filter { target in
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         let path = root.appendingPathComponent(target.path ?? "Tests/\(target.name)").path

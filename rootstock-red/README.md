@@ -105,6 +105,11 @@ authenticate the operator or establish permission. Some actions accept paths
 and can change local state after the operator passes `--no-dry-run`. Review the
 plan and resolved paths before doing so, and run lab actions only under written
 rules of engagement. The default `rootstock-red` executable cannot run them.
+`lab.persist.shellrc` changes only a file the lab owns: its target (an explicit
+`rcFile`, the `labRoot` file, or the default under `~/Library/RootstockLab`)
+must be absent, empty, or already have a line starting with the lab marker.
+Real shell startup files such as `~/.zshrc` must already have that line, even
+when they do not exist yet.
 
 See [Lab boundary](NOT_FOR_PRODUCTION_IMPLANT.md) and
 [Acceptable use](ACCEPTABLE_USE.md).

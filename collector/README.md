@@ -24,6 +24,24 @@ analysis.
 
 ## Run a release archive
 
+Release archives are not signed or notarized. When the archive was downloaded
+with a browser, macOS Gatekeeper blocks the extracted binary with a message
+that Apple could not verify it. Check the published checksum first, then remove
+the quarantine attribute from the collector binary only:
+
+```bash
+shasum -a 256 -c rootstock-collector-v0.1.0-alpha.1-macos-universal.tar.gz.sha256
+tar -xzf rootstock-collector-v0.1.0-alpha.1-macos-universal.tar.gz
+cd rootstock-collector-v0.1.0-alpha.1-macos-universal
+xattr -d com.apple.quarantine rootstock-collector
+```
+
+`xattr` reports "No such xattr" when the binary carries no quarantine
+attribute; that is harmless. Alternatively, run the binary
+once, then allow it under System Settings > Privacy & Security > Open Anyway.
+If you would rather not run an unsigned binary, build from source as described
+in the repository README.
+
 ```bash
 ./rootstock-collector --output scan.json
 ```
@@ -62,8 +80,11 @@ exposure from noise:
 
 - Code signing: Hardened Runtime, Library Validation, ad-hoc signature,
   certificate chain, and the Gatekeeper assessment from `spctl`
-  (`is_notarized`, `gatekeeper_assessment`). An `spctl` failure leaves the
-  status unknown; only an explicit rejection means "not notarized".
+  (`is_notarized`, `gatekeeper_assessment`). An explicit rejection, or an
+  accepted app whose assessment source is plain `Developer ID`, means "not
+  notarized". An `spctl` failure, or an accepted verdict without an assessment
+  source (for example when Gatekeeper assessments are disabled), leaves the
+  status unknown.
 - Electron: whether the `RunAsNode` fuse is enabled (`electron_run_as_node`).
   Apps that disable the fuse are not reported as injectable through
   `ELECTRON_RUN_AS_NODE`.

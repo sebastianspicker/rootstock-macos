@@ -17,21 +17,30 @@ enum FirefoxExtensionReader {
         case .entries(let names): profiles = names.filter { !$0.hasPrefix(".") }
         }
         for profile in profiles {
-            let profileDir = "\(profilesRoot)/\(profile)"
-            guard !access.isSymbolicLink(profileDir) else { continue }
-            let path = "\(profileDir)/extensions.json"
-            switch access.readFile(path, BrowserFileAccess.manifestLimit) {
-            case .absent: continue
-            case .failed(let message): result.errors.append("Cannot read \(path): \(message)")
-            case .data(let data):
-                guard let extensions = parseExtensionsJSON(data, profile: profile, profileDir: profileDir) else {
-                    result.errors.append("Malformed Firefox extensions.json \(path)")
-                    continue
-                }
-                result.extensions.append(contentsOf: extensions)
-            }
+            readProfile(profile, profilesRoot: profilesRoot, access: access, into: &result)
         }
         return result
+    }
+
+    private static func readProfile(
+        _ profile: String,
+        profilesRoot: String,
+        access: BrowserFileAccess,
+        into result: inout BrowserReadResult
+    ) {
+        let profileDir = "\(profilesRoot)/\(profile)"
+        guard !access.isSymbolicLink(profileDir) else { return }
+        let path = "\(profileDir)/extensions.json"
+        switch access.readFile(path, BrowserFileAccess.manifestLimit) {
+        case .absent: return
+        case .failed(let message): result.errors.append("Cannot read \(path): \(message)")
+        case .data(let data):
+            guard let extensions = parseExtensionsJSON(data, profile: profile, profileDir: profileDir) else {
+                result.errors.append("Malformed Firefox extensions.json \(path)")
+                return
+            }
+            result.extensions.append(contentsOf: extensions)
+        }
     }
 
     /// Parse `extensions.json`; nil when the document is malformed.

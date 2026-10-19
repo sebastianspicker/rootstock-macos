@@ -93,6 +93,6 @@ public struct URLSchemeHandlerParser: ArtifactParser {
     }
 
     private func handlerEnvelope(item: [String: Any], sourceURL: URL, details: HandlerDetails, fields: [String: String]) -> EventEnvelope {
-        EventEnvelope(identity: EventEnvelope.Identity(kind: "url_scheme.handler", label: "URLSCHEMEHANDLER"), capture: EventEnvelope.Capture(source: .parser, eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(), collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "url_scheme|\(details.scheme.isEmpty ? details.path : details.scheme)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88))
+        recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in EventEnvelope(identity: EventEnvelope.Identity(kind: "url_scheme.handler", label: "URLSCHEMEHANDLER"), capture: EventEnvelope.Capture(source: .parser, eventTime: time, collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "url_scheme|\(details.scheme.isEmpty ? details.path : details.scheme)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88)) }
     }
 }

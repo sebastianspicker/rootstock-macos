@@ -94,6 +94,6 @@ public struct ShortcutsAppIntentsParser: ArtifactParser {
     }
 
     private func shortcutEnvelope(item: [String: Any], sourceURL: URL, details: ShortcutDetails, fields: [String: String]) -> EventEnvelope {
-        EventEnvelope(identity: EventEnvelope.Identity(kind: "shortcuts.automation", label: "SHORTCUTSAPPINTENTS"), capture: EventEnvelope.Capture(source: .parser, eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(), collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "shortcuts|\(details.name.isEmpty ? details.path : details.name)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88))
+        recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in EventEnvelope(identity: EventEnvelope.Identity(kind: "shortcuts.automation", label: "SHORTCUTSAPPINTENTS"), capture: EventEnvelope.Capture(source: .parser, eventTime: time, collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "shortcuts|\(details.name.isEmpty ? details.path : details.name)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88)) }
     }
 }

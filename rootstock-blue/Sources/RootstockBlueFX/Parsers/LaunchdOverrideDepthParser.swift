@@ -99,6 +99,6 @@ public struct LaunchdOverrideDepthParser: ArtifactParser {
     }
 
     private func overrideEnvelope(item: [String: Any], sourceURL: URL, details: OverrideDetails, fields: [String: String]) -> EventEnvelope {
-        EventEnvelope(identity: EventEnvelope.Identity(kind: "launchd.override_depth", label: "LAUNCHDOVERRIDEDEPTH"), capture: EventEnvelope.Capture(source: .parser, eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(), collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .persistence, value: "launchd_depth|\(details.label.isEmpty ? details.path : details.label)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.9))
+        recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in EventEnvelope(identity: EventEnvelope.Identity(kind: "launchd.override_depth", label: "LAUNCHDOVERRIDEDEPTH"), capture: EventEnvelope.Capture(source: .parser, eventTime: time, collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .persistence, value: "launchd_depth|\(details.label.isEmpty ? details.path : details.label)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.9)) }
     }
 }

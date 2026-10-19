@@ -144,20 +144,22 @@ enum SurfaceMarkerEngine {
         if spec.keys.emitsOptionalFields {
             addOptionalFields(from: item, to: &fields, prefix: prefix)
         }
-        return EventEnvelope(
-            identity: EventEnvelope.Identity(kind: spec.eventType, label: spec.manifest.id),
-            capture: EventEnvelope.Capture(
-                source: .parser,
-                eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(),
-                collectedAt: Date()
-            ),
-            payload: EventEnvelope.Payload(
-                entityRefs: [EntityID(kind: .host, value: "\(prefix)|\(name.isEmpty ? path : name)")],
-                properties: fields,
-                provenance: ArtifactRoot.pathKey(sourceURL),
-                confidence: 0.88
+        return recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in
+            EventEnvelope(
+                identity: EventEnvelope.Identity(kind: spec.eventType, label: spec.manifest.id),
+                capture: EventEnvelope.Capture(
+                    source: .parser,
+                    eventTime: time,
+                    collectedAt: Date()
+                ),
+                payload: EventEnvelope.Payload(
+                    entityRefs: [EntityID(kind: .host, value: "\(prefix)|\(name.isEmpty ? path : name)")],
+                    properties: fields,
+                    provenance: ArtifactRoot.pathKey(sourceURL),
+                    confidence: 0.88
+                )
             )
-        )
+        }
     }
 
     private static func addOptionalFields(from item: [String: Any], to fields: inout [String: String], prefix: String) {

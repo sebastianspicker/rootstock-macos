@@ -14,12 +14,12 @@ extension RootstockBlueCLI {
         case "harden": try handleIRHarden(Array(args.dropFirst()))
         case "triage": try handleIRTriage(Array(args.dropFirst()))
         default:
-            throw RootstockBlueError.io("usage: ir posture|harden --case <path> [--source <tree>] [--live] | ir triage --case <path> --source <tree>")
+            throw RootstockBlueError.io("usage: ir posture|harden --case <path> (--source <tree> | --live) | ir triage --case <path> --source <tree>")
         }
     }
 
     static func handleIRPosture(_ args: [String]) throws {
-        let pkg = try casePackage(from: args, usage: "ir posture requires --case <path.rsbcase>")
+        let pkg = try casePackage(from: args, usage: "ir posture requires --case <path.rsbcase> and --source <tree> or --live")
         let result = try postureResult(args)
         let count = try HostIRPosture.write(result.events, into: CaseEventSink(package: pkg), mode: result.mode)
         print("ir_posture mode=\(result.mode) events_written=\(count)")
@@ -32,9 +32,9 @@ extension RootstockBlueCLI {
         }
     }
 
-    /// Hardening / defense assessment with structured remediation (live or offline).
+    /// Hardening / defense assessment with structured remediation (offline, or live with --live).
     static func handleIRHarden(_ args: [String]) throws {
-        let pkg = try casePackage(from: args, usage: "ir harden requires --case <path.rsbcase> [--source <tree>] [--live]")
+        let pkg = try casePackage(from: args, usage: "ir harden requires --case <path.rsbcase> and --source <tree> or --live")
         let result = try hardeningResult(args)
         let count = try HardeningAssessment.write(result.findings, into: CaseEventSink(package: pkg), mode: result.mode)
         let failures = result.findings.filter { $0.status == "fail" }.count
@@ -63,19 +63,21 @@ extension RootstockBlueCLI {
     }
 
     private static func postureResult(_ args: [String]) throws -> (events: [EventEnvelope], mode: String) {
-        if let index = args.firstIndex(of: "--source"), args.count > index + 1 {
-            let source = ImageSource.infer(from: URL(fileURLWithPath: args[index + 1]))
-            return (try HostIRPosture.enumerateOffline(source: source), "offline")
+        switch try IRHostTarget.parse(args, command: "ir posture") {
+        case .offline(let root):
+            return (try HostIRPosture.enumerateOffline(source: ImageSource.infer(from: root)), "offline")
+        case .live:
+            return (HostIRPosture.enumerateLive(runStatusProbes: true), "live")
         }
-        return (HostIRPosture.enumerateLive(runStatusProbes: true), "live")
     }
 
     private static func hardeningResult(_ args: [String]) throws -> (findings: [HardeningAssessment.Finding], mode: String) {
-        if let index = args.firstIndex(of: "--source"), args.count > index + 1 {
-            let source = ImageSource.infer(from: URL(fileURLWithPath: args[index + 1]))
-            return (try HardeningAssessment.assessOffline(source: source), "offline")
+        switch try IRHostTarget.parse(args, command: "ir harden") {
+        case .offline(let root):
+            return (try HardeningAssessment.assessOffline(source: ImageSource.infer(from: root)), "offline")
+        case .live:
+            return (HardeningAssessment.assessLive(runStatusProbes: true), "live")
         }
-        return (HardeningAssessment.assessLive(runStatusProbes: true), "live")
     }
 }
 

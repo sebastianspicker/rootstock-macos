@@ -183,6 +183,29 @@ NEO4J_PASSWORD=CHANGE_ME_WRITE uv run --project graph --locked \
   rootstock-graph-api --port 8000
 ```
 
+Create the read account once, as the writer, before the first start. This is
+the statement CI uses; it reads both passwords from the environment, so neither
+lands in shell history:
+
+```sh
+NEO4J_PASSWORD=CHANGE_ME_WRITE uv run --project graph --locked python - <<'PY'
+import os
+from neo4j import GraphDatabase
+
+uri = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+auth = (os.environ.get("NEO4J_USER", "neo4j"), os.environ["NEO4J_PASSWORD"])
+with GraphDatabase.driver(uri, auth=auth) as driver, driver.session(database="system") as session:
+    session.run(
+        "CREATE USER $user IF NOT EXISTS SET PASSWORD $password CHANGE NOT REQUIRED",
+        user=os.environ["NEO4J_READ_USER"],
+        password=os.environ["NEO4J_READ_PASSWORD"],
+    )
+PY
+```
+
+On Neo4j Enterprise, also run `GRANT ROLE reader TO rootstock_graph_read` in
+the `system` database.
+
 The API checks at startup whether the read account can write (a rolled-back
 `CREATE`). Neo4j Community, which the bundled Docker Compose file and CI use,
 has no role-based access control, so the check only warns there and ad-hoc

@@ -20,7 +20,7 @@ extension CasePackage {
 
     func writeHashManifest(allowWriteJournal: Bool = false) throws {
         if !allowWriteJournal, FileManager.default.fileExists(atPath: writeLockURL.path) {
-            throw RootstockBlueError.invalidCasePackage("unfinished case write journal")
+            throw unfinishedWriteJournalError(lead: "unfinished case write journal")
         }
         var lines: [String] = []
         for url in try canonicalEvidenceFiles() {
@@ -66,7 +66,7 @@ extension CasePackage {
 
     private func verifyWriteJournal(_ allowWriteJournal: Bool) throws {
         guard allowWriteJournal || !FileManager.default.fileExists(atPath: writeLockURL.path) else {
-            throw RootstockBlueError.invalidCasePackage("unfinished case write journal")
+            throw unfinishedWriteJournalError(lead: "unfinished case write journal")
         }
     }
 
@@ -191,12 +191,23 @@ extension CasePackage {
         CasePackageVerification.isSafeRelativePath(path)
     }
 
+    /// The case stays fail-closed after an interrupted write. Recovery is a new case
+    /// re-imported from the original sources; Blue never reseals possibly partial evidence.
+    func unfinishedWriteJournalError(lead: String) -> RootstockBlueError {
+        RootstockBlueError.invalidCasePackage(
+            "\(lead) (\(writeLockURL.lastPathComponent)/journal.json names the operation). "
+                + "If no other rootstock-blue process is using this case, an earlier write was interrupted "
+                + "and the case can no longer be verified: create a new case and repeat the imports "
+                + "from the original sources"
+        )
+    }
+
     func beginWriteJournal(operation: String, target: String, eventID: String?) throws {
         let fm = FileManager.default
         do {
             try fm.createDirectory(at: writeLockURL, withIntermediateDirectories: false)
-        } catch {
-            throw RootstockBlueError.invalidCasePackage("case package is busy or has an unfinished write journal")
+        } catch where fm.fileExists(atPath: writeLockURL.path) {
+            throw unfinishedWriteJournalError(lead: "case package is busy or has an unfinished write journal")
         }
         let journal = CaseWriteJournal(operation: operation, target: target, eventID: eventID)
         let encoder = JSONEncoder()

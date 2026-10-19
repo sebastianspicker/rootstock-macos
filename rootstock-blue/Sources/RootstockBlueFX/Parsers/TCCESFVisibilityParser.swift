@@ -71,23 +71,25 @@ public struct TCCESFVisibilityParser: ArtifactParser {
         let depth = visibilityDepth(item: item, tccListable: report.tccListable, toolPresent: report.toolPresent)
         let risk = visibilityRiskTags(item: item, depth: depth)
 
-        return EventEnvelope(
-            identity: EventEnvelope.Identity(
-                kind: "tcc_esf.visibility",
-                label: "TCCESFVISIBILITY"
-            ),
-            capture: EventEnvelope.Capture(
-                source: .parser,
-                eventTime: parseDate(item["timestamp"] ?? item["assessed_at"]) ?? Date(),
-                collectedAt: Date()
-            ),
-            payload: EventEnvelope.Payload(
-                entityRefs: [EntityID(kind: .host, value: "visibility|\(depth)|\(report.toolPresent)")],
-                properties: visibilityFields(depth: depth, report: report, risk: risk),
-                provenance: ArtifactRoot.pathKey(sourceURL),
-                confidence: 0.9
+        return recordEvent(at: item["timestamp"] ?? item["assessed_at"]) { time in
+            EventEnvelope(
+                identity: EventEnvelope.Identity(
+                    kind: "tcc_esf.visibility",
+                    label: "TCCESFVISIBILITY"
+                ),
+                capture: EventEnvelope.Capture(
+                    source: .parser,
+                    eventTime: time,
+                    collectedAt: Date()
+                ),
+                payload: EventEnvelope.Payload(
+                    entityRefs: [EntityID(kind: .host, value: "visibility|\(depth)|\(report.toolPresent)")],
+                    properties: visibilityFields(depth: depth, report: report, risk: risk),
+                    provenance: ArtifactRoot.pathKey(sourceURL),
+                    confidence: 0.9
+                )
             )
-        )
+        }
     }
 
     private func visibilityDepth(item: [String: Any], tccListable: Bool, toolPresent: Bool) -> String {

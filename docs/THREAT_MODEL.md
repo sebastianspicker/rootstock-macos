@@ -23,7 +23,7 @@ its protections stop. The products run separately and have different risks.
 | cve-scan | Network collection and feed refresh require explicit scope or flags | Writes run artifacts and caches; does not modify scanned services |
 | Rootstock Red assessment | No current network client; `--allow-network` is an policy flag for future or registered network modules | Reads posture and writes findings, state, and audit artifacts |
 | Rootstock Red Lab | Network disabled in the current lab context | Separate executable; defaults to dry-run and can create or remove documented state after operator self-attestation and non-dry-run selection |
-| Rootstock Blue | Offline case analysis by default | Writes case packages, timelines, detections, custody records, and reports; selected live posture commands read the running host |
+| Rootstock Blue | Offline case analysis by default | Writes case packages, timelines, detections, custody records, and reports; `ir posture` and `ir harden` read the running host only when `--live` is passed |
 
 Rootstock Blue ships no Endpoint Security client, subscription path, system
 extension, or blocking mode. Its event-session API accepts synthetic fixtures;

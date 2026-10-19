@@ -47,6 +47,17 @@ func parseDate(_ any: Any?) -> Date? {
     return nil
 }
 
+/// Builds a parsed record's event at the record's own time. A record without a parseable
+/// timestamp gets the epoch sentinel and `timestamp_missing=true`, never the parse time.
+func recordEvent(at rawTime: Any?, _ make: (Date) -> EventEnvelope) -> EventEnvelope {
+    guard let time = parseDate(rawTime) else {
+        var event = make(Date(timeIntervalSince1970: 0))
+        event.fields["timestamp_missing"] = "true"
+        return event
+    }
+    return make(time)
+}
+
 /// Infer macOS username from a path containing `/Users/<name>/…`.
 func inferUser(from path: String) -> String? {
     let parts = path.split(separator: "/").map(String.init)
@@ -82,12 +93,15 @@ func stringArray(_ value: Any?) -> [String] {
 public final class ArtifactFailureLog: @unchecked Sendable {
     private let lock = NSLock()
     private var entries: [String] = []
+    private var recorded: Set<String> = []
 
     public init() {}
 
+    /// Records a note once; parsers that read the same artifact do not inflate the count.
     public func record(_ note: String) {
         lock.lock()
         defer { lock.unlock() }
+        guard recorded.insert(note).inserted else { return }
         entries.append(note)
     }
 
@@ -95,6 +109,7 @@ public final class ArtifactFailureLog: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         entries.removeAll()
+        recorded.removeAll()
     }
 
     public func snapshot() -> [String] {
@@ -135,9 +150,14 @@ public enum ArtifactIO {
         try? JSONSerialization.jsonObject(with: data)
     }
 
+    /// Present but malformed JSON is recorded in `failures`; a missing file is not.
     public static func jsonObject(contentsOf url: URL) -> Any? {
         guard let data = data(contentsOf: url) else { return nil }
-        return jsonObject(from: data)
+        guard let object = jsonObject(from: data) else {
+            failures.record("\(url.path): parse failed: not valid JSON")
+            return nil
+        }
+        return object
     }
 
     public static func jsonDict(from data: Data) -> [String: Any]? {
@@ -154,9 +174,14 @@ public enum ArtifactIO {
         return try? PropertyListSerialization.propertyList(from: data, options: [], format: &format)
     }
 
+    /// Present but malformed property lists are recorded in `failures`; a missing file is not.
     public static func plistObject(contentsOf url: URL) -> Any? {
         guard let data = data(contentsOf: url) else { return nil }
-        return plistObject(from: data)
+        guard let object = plistObject(from: data) else {
+            failures.record("\(url.path): parse failed: not a valid property list")
+            return nil
+        }
+        return object
     }
 
     public static func plistDict(from data: Data) -> [String: Any]? {
@@ -164,8 +189,7 @@ public enum ArtifactIO {
     }
 
     public static func plistDict(contentsOf url: URL) -> [String: Any]? {
-        guard let data = data(contentsOf: url) else { return nil }
-        return plistDict(from: data)
+        plistObject(contentsOf: url) as? [String: Any]
     }
 
     /// Top-level array of dictionaries (InstallHistory, Safari downloads, Wi‑Fi, etc.).
@@ -174,8 +198,7 @@ public enum ArtifactIO {
     }
 
     public static func plistArray(contentsOf url: URL) -> [[String: Any]]? {
-        guard let data = data(contentsOf: url) else { return nil }
-        return plistArray(from: data)
+        plistObject(contentsOf: url) as? [[String: Any]]
     }
 
     /// Dictionary entries from a plist root (array of dicts, or nested under keys).
@@ -249,16 +272,28 @@ public enum ArtifactIO {
     }
 
     /// Parse JSONL (skip empty and `#` comment lines).
+    ///
+    /// Records end at LF or CRLF only: U+2028/U+2029 inside a JSON string are not record
+    /// separators. Malformed records are skipped and counted in `failures`.
     public static func jsonlDictionaries(contentsOf url: URL) -> [[String: Any]] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let data = data(contentsOf: url) else { return [] }
+        guard let text = String(data: data, encoding: .utf8) else {
+            failures.record("\(url.path): parse failed: not UTF-8 text")
+            return []
+        }
         var rows: [[String: Any]] = []
-        for rawLine in text.split(whereSeparator: \.isNewline) {
-            let line = String(rawLine).trimmingCharacters(in: .whitespaces)
+        var malformed = 0
+        for rawLine in text.split(whereSeparator: { $0 == "\n" || $0 == "\r\n" }) {
+            let line = String(rawLine).trimmingCharacters(in: .whitespacesAndNewlines)
             if line.isEmpty || line.hasPrefix("#") { continue }
-            guard let data = line.data(using: .utf8),
-                  let obj = jsonDict(from: data)
-            else { continue }
+            guard let obj = jsonDict(from: Data(line.utf8)) else {
+                malformed += 1
+                continue
+            }
             rows.append(obj)
+        }
+        if malformed > 0 {
+            failures.record("\(url.path): parse failed: \(malformed) malformed JSONL record(s) skipped")
         }
         return rows
     }

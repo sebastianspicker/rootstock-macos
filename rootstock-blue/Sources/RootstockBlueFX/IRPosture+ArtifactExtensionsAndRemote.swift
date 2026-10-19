@@ -63,7 +63,9 @@ extension HostIRPosture {
     }
 
     private static func ardMarkerValues(_ marker: URL) -> (allLocalUsers: Bool, enabled: Bool?)? {
-        if marker.pathExtension == "json", let json = ArtifactIO.jsonDict(contentsOf: marker) {
+        if marker.pathExtension == "json" {
+            // A JSON marker is never re-read as a property list, so a bad file counts once.
+            guard let json = ArtifactIO.jsonDict(contentsOf: marker) else { return nil }
             let allUsers = boolish(json["ARD_AllLocalUsers"]) ?? boolish(json["ard_all_local_users"]) ?? boolish(json["all_local_users"])
             return allUsers.map { ($0, boolish(json["enabled"]) ?? boolish(json["ard_enabled"])) }
         }

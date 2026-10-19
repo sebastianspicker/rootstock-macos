@@ -48,23 +48,25 @@ public struct CloudSyncParser: ArtifactParser {
     private func makeEvent(from item: [String: Any], sourceURL: URL) -> EventEnvelope? {
         let record = CloudSyncRecord(item: item, sourceURL: sourceURL, inferredProvider: inferredProvider)
         guard record.isMeaningful else { return nil }
-        return EventEnvelope(
-            identity: EventEnvelope.Identity(
-                kind: "cloud.provider_sync",
-                label: "CLOUDSYNC"
-            ),
-            capture: EventEnvelope.Capture(
-                source: .parser,
-                eventTime: parseDate(item["last_sync"] ?? item["timestamp"]) ?? Date(),
-                collectedAt: Date()
-            ),
-            payload: EventEnvelope.Payload(
-                entityRefs: record.entities,
-                properties: record.fields,
-                provenance: ArtifactRoot.pathKey(sourceURL),
-                confidence: 0.9
+        return recordEvent(at: item["last_sync"] ?? item["timestamp"]) { time in
+            EventEnvelope(
+                identity: EventEnvelope.Identity(
+                    kind: "cloud.provider_sync",
+                    label: "CLOUDSYNC"
+                ),
+                capture: EventEnvelope.Capture(
+                    source: .parser,
+                    eventTime: time,
+                    collectedAt: Date()
+                ),
+                payload: EventEnvelope.Payload(
+                    entityRefs: record.entities,
+                    properties: record.fields,
+                    provenance: ArtifactRoot.pathKey(sourceURL),
+                    confidence: 0.9
+                )
             )
-        )
+        }
     }
 
     private static let configuredPaths = [

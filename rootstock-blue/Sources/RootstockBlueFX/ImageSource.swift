@@ -16,11 +16,17 @@ public enum ImageSource: Sendable {
         }
     }
 
-    /// Fails unless the source is an existing directory; images and archives must be mounted or extracted first.
+    /// Fails unless the source is an existing directory; images and archives must be mounted or extracted first,
+    /// and unified log archives go through `uls parse` instead.
     public func validate() throws {
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
             throw RootstockBlueError.io("source not found: \(url.path)")
+        }
+        if case .logarchive = self {
+            throw RootstockBlueError.io(
+                "\(url.path) is a unified log archive, not an artifact tree; convert it with `rootstock-blue uls parse <logarchive> --out <events.jsonl>`"
+            )
         }
         guard case .directory = self else {
             throw RootstockBlueError.io("mounted directory required: \(url.path) is a disk image or archive; mount or extract it first")

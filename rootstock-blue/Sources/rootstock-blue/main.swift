@@ -253,23 +253,27 @@ struct RootstockBlueCLI {
         guard let idx = args.firstIndex(of: "--case"), args.count > idx + 1 else {
             let (events, failures) = try engine.parseCollectingFailures(source: source)
             print("parsed_events=\(events.count) plugins=\(engine.runtime.parserIDs().joined(separator: ","))")
-            printParseFailures(failures)
             for e in events.prefix(10) {
                 print("  \(e.sourcePlugin) \(e.eventType) entities=\(e.entityRefs.count)")
             }
+            try reportParseFailures(failures)
             return
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[idx + 1]))
         let n = try engine.parse(source: source, into: CaseEventSink(package: pkg))
         print("parsed_events=\(n) plugins=\(engine.runtime.parserIDs().joined(separator: ","))")
         print("wrote \(n) events into case \(pkg.rootURL.path)")
-        printParseFailures(ArtifactIO.failures.snapshot())
+        try reportParseFailures(ArtifactIO.failures.snapshot())
     }
 
-    private static func printParseFailures(_ failures: [String]) {
+    /// Prints artifact failures and fails the command so scripts see partial evidence.
+    private static func reportParseFailures(_ failures: [String]) throws {
         guard !failures.isEmpty else { return }
         print("failed_artifacts=\(failures.count)")
         for note in failures.prefix(10) { print("  warning: \(note)") }
+        throw RootstockBlueError.io(
+            "\(failures.count) artifact(s) could not be read or parsed; events from readable artifacts were kept"
+        )
     }
 
     static func handleTimeline(_ args: [String]) throws {

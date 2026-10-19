@@ -98,7 +98,7 @@ public struct BrowserExtensionDualUseParser: ArtifactParser {
     }
 
     private func extensionEnvelope(item: [String: Any], sourceURL: URL, details: ExtensionDetails, fields: [String: String]) -> EventEnvelope {
-        EventEnvelope(identity: EventEnvelope.Identity(kind: "browser.extension_dualuse", label: "BROWSEREXTDUALUSE"), capture: EventEnvelope.Capture(source: .parser, eventTime: parseDate(item["timestamp"] ?? item["seen_at"]) ?? Date(), collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "ext_dualuse|\(details.browser)|\(details.extensionID.isEmpty ? details.path : details.extensionID)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88))
+        recordEvent(at: item["timestamp"] ?? item["seen_at"]) { time in EventEnvelope(identity: EventEnvelope.Identity(kind: "browser.extension_dualuse", label: "BROWSEREXTDUALUSE"), capture: EventEnvelope.Capture(source: .parser, eventTime: time, collectedAt: Date()), payload: EventEnvelope.Payload(entityRefs: [EntityID(kind: .host, value: "ext_dualuse|\(details.browser)|\(details.extensionID.isEmpty ? details.path : details.extensionID)")], properties: fields, provenance: ArtifactRoot.pathKey(sourceURL), confidence: 0.88)) }
     }
 
     private func inferBrowser(_ path: String) -> String {

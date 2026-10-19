@@ -74,7 +74,7 @@ public struct ShellRCLabAction: LabAction {
             "Leave all other RC content untouched",
         ]
         let cleanup = [
-            "Run remove operation or delete line containing \(Self.markerPrefix)",
+            "Run remove operation or delete the line starting with \(Self.markerPrefix)",
             "Verify no residual \(Self.markerPrefix) in \(rcURL.path)",
         ]
 
@@ -91,7 +91,7 @@ public struct ShellRCLabAction: LabAction {
         if fm.fileExists(atPath: rcURL.path) {
             body = try String(contentsOf: rcURL, encoding: .utf8)
         }
-        if body.contains(Self.markerPrefix) {
+        if Self.hasMarkerLine(body) {
             return installAlreadyPresentResult(rcURL: rcURL, steps: steps, cleanup: cleanup)
         }
         if !body.isEmpty && !body.hasSuffix("\n") {
@@ -122,7 +122,7 @@ public struct ShellRCLabAction: LabAction {
         var present = false
         if exists {
             let body = try String(contentsOf: rcURL, encoding: .utf8)
-            present = body.contains(Self.markerPrefix)
+            present = Self.hasMarkerLine(body)
         }
         return ActionResult(
             actionId: Self.id,
@@ -145,7 +145,7 @@ public struct ShellRCLabAction: LabAction {
     private func remove(rcURL: URL, marker: String, dryRun: Bool) throws -> ActionResult {
         let steps = [
             "Read \(rcURL.path) if present",
-            "Drop lines containing \(Self.markerPrefix)",
+            "Drop lines starting with \(Self.markerPrefix)",
             "Rewrite file or leave absent files untouched",
         ]
         try LabMarkerLifecycle.assertNoUnsafeSymlinks(to: rcURL)
@@ -179,7 +179,7 @@ public struct ShellRCLabAction: LabAction {
         let body = try String(contentsOf: rcURL, encoding: .utf8)
         let filtered = body
             .split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { !$0.contains(Self.markerPrefix) }
+            .filter { !Self.isMarkerLine($0) }
             .map(String.init)
             .joined(separator: "\n")
         try filtered.write(to: rcURL, atomically: true, encoding: .utf8)
@@ -204,17 +204,31 @@ public struct ShellRCLabAction: LabAction {
             try assertSafeRCPath(url)
             return url
         }
+        let url: URL
         if let labRoot = params["labRoot"], !labRoot.isEmpty {
             let root = URL(fileURLWithPath: labRoot, isDirectory: true).standardizedFileURL
-            return root.appendingPathComponent("dotfiles").appendingPathComponent(".zshrc_lab")
+            url = root.appendingPathComponent("dotfiles").appendingPathComponent(".zshrc_lab")
+        } else {
+            // Safe default: never touch the user's real ~/.zshrc unless explicitly passed.
+            url = FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/RootstockLab/dotfiles/.zshrc_lab")
+                .standardizedFileURL
         }
-        // Safe default: never touch the user's real ~/.zshrc unless explicitly passed.
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/RootstockLab/dotfiles/.zshrc_lab")
-            .standardizedFileURL
+        try assertSafeRCPath(url)
+        return url
     }
 
-    /// Reject path traversal attempts that try to escape via `..` in surprising ways.
+    /// A lab marker is a whole line that starts with the marker prefix; a mention elsewhere does not count.
+    static func isMarkerLine<S: StringProtocol>(_ line: S) -> Bool {
+        line.hasPrefix(markerPrefix)
+    }
+
+    static func hasMarkerLine(_ body: String) -> Bool {
+        body.split(whereSeparator: \.isNewline).contains { isMarkerLine($0) }
+    }
+
+    /// Accept an rcFile only when the lab owns it: the file is absent, empty, or already has a
+    /// lab marker line. Real shell startup files must already carry the marker even when absent.
     public static func assertSafeRCPath(_ url: URL) throws {
         let path = url.standardizedFileURL.path
         if path.contains("\0") {
@@ -223,15 +237,21 @@ public struct ShellRCLabAction: LabAction {
         guard !path.isEmpty else {
             throw RootstockError.invalidArgument("rcFile must not be empty")
         }
-        // Real shell startup files are never lab-managed: only touch them when a lab marker is already present.
         let protectedNames: Set<String> = [
             ".zshrc", ".zprofile", ".zshenv", ".zlogin", ".bashrc", ".bash_profile", ".profile",
         ]
-        guard protectedNames.contains(url.lastPathComponent) else { return }
+        let fileExists = FileManager.default.fileExists(atPath: path)
         let existing = try? String(contentsOf: url.standardizedFileURL, encoding: .utf8)
-        guard existing?.contains(markerPrefix) == true else {
+        if let existing, hasMarkerLine(existing) { return }
+        if protectedNames.contains(url.lastPathComponent) {
             throw RootstockError.invalidArgument(
                 "rcFile \(path) is a real shell startup file without a lab marker; use a dedicated lab file under ~/Library/RootstockLab"
+            )
+        }
+        guard fileExists else { return }
+        guard existing?.isEmpty == true else {
+            throw RootstockError.invalidArgument(
+                "rcFile \(path) already exists without a lab marker; refusing to modify a file the lab does not own"
             )
         }
     }

@@ -106,9 +106,15 @@ starting the API; a working import connection alone is not sufficient.
 
 ### Can I import scans from multiple Macs?
 
-Yes. Each import is tagged with `scan_id`, and the importer preserves per-host
-installations. Import multiple JSON files into the same Neo4j instance with
-`rootstock-graph-merge-scans` or repeated `rootstock-graph-import-scan` runs.
+Not reliably in this alpha; use one Neo4j database per Mac. Applications,
+installations, and privacy grants are kept per scan, but launch items, XPC
+services, remote-access and firewall settings, system extensions, sudoers
+rules, Kerberos artifacts, and similar host state are stored as shared nodes.
+A second Mac's import overwrites those values, and some inferred admin-access
+edges can link one Mac's accounts to another Mac's items. To review several
+Macs, run `rootstock-graph-investigate` on each scan, or import each scan into
+its own database. To compare two scans of the same Mac, use
+`rootstock-graph-investigate --baseline` or `rootstock-graph-diff-scans`.
 
 ### Why do some queries return no results?
 

@@ -222,15 +222,21 @@ public struct CodeSigningDataSource {
 
     /// Translate Gatekeeper command state without treating infrastructure failures as rejection.
     ///
-    /// Only an explicit "rejected" verdict from `spctl` counts as not notarized; internal
-    /// errors, timeouts and launch failures leave the status unknown.
+    /// An explicit "rejected" verdict from `spctl` counts as not notarized. An "accepted"
+    /// verdict is not proof of notarization: Developer ID apps signed before notarization
+    /// was required are accepted with `source=Developer ID`, and a host with assessments
+    /// disabled accepts everything without a `source=` line. Internal errors, timeouts,
+    /// launch failures and accepted verdicts without a source leave the status unknown.
     static func notarizationStatus(
         from outcome: ShellOutcome,
         appPath: String
     ) -> (value: Bool?, error: CollectionError?) {
         switch outcome {
-        case .success:
-            return (true, nil)
+        case .success(let result):
+            return acceptedNotarizationStatus(
+                output: result.stderr + "\n" + result.stdout,
+                appPath: appPath
+            )
         case .nonZeroExit(let result):
             let output = [result.stderr, result.stdout]
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -241,7 +247,10 @@ public struct CodeSigningDataSource {
                 return (false, nil)
             }
             if lowered.contains("accepted") {
-                return (true, nil)
+                return acceptedNotarizationStatus(
+                    output: result.stderr + "\n" + result.stdout,
+                    appPath: appPath
+                )
             }
             let detail = output.isEmpty
                 ? "process exited with status \(result.terminationStatus)"
@@ -264,6 +273,29 @@ public struct CodeSigningDataSource {
                 )
             )
         }
+    }
+
+    /// Notarization for an "accepted" Gatekeeper verdict, decided by its `source=` value.
+    ///
+    /// Apple-reviewed sources (for example "Mac App Store" or "Apple System") stay accepted.
+    private static func acceptedNotarizationStatus(
+        output: String,
+        appPath: String
+    ) -> (value: Bool?, error: CollectionError?) {
+        guard let source = assessmentSource(from: output)?.lowercased() else {
+            return (
+                nil,
+                CollectionError(
+                    source: "CodeSigning",
+                    message: "Notarization status unknown for \(appPath): Gatekeeper accepted the app without an assessment source (assessments may be disabled)",
+                    recoverable: true
+                )
+            )
+        }
+        if source.contains("unnotarized") || source == "developer id" {
+            return (false, nil)
+        }
+        return (true, nil)
     }
 
     /// Extracts the `source=` value from `spctl -a -vv` output
