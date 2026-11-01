@@ -15,6 +15,30 @@ records network listeners, trusted root certificates, browser extensions,
 installer receipts and host security settings, and installed app and macOS
 versions can be matched against NVD CVEs by exact CPE.
 
+<details>
+<summary>Status and limitations</summary>
+
+> [!NOTE]
+> Rootstock is an independent experimental project for investigating macOS security exposure and
+> supporting evidence. Developed independently alongside my main professional work. This evolving
+> alpha provides source and workflows to review, adapt and validate within an authorized
+> environment, not a ready-to-use security assurance or incident response product.
+>
+> **Disclaimer.** Findings depend on collection coverage and interpretation; modeled exposure is
+> not proof of exploitation. Outputs do not certify system security or the completeness of an
+> incident investigation. Verify conclusions against underlying evidence, protect sensitive scan
+> and case data, and obtain appropriate authorization before active research or lab operations.
+
+</details>
+
+```mermaid
+flowchart LR
+    Mac["Mac metadata"] --> Scan["Local scan JSON"]
+    Scan --> Graph["Neo4j evidence graph"]
+    Graph --> Review["Queries, reports and viewer"]
+    Scan --> Offline["Offline investigation report"]
+```
+
 The repository also includes independent tools for scoped CVE scanning,
 read-only assessment, and offline incident analysis. Each has its own commands
 and artifacts; you can use the component you need.

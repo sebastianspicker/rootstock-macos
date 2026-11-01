@@ -33,17 +33,19 @@ sh scripts/verify full                                 # every lane, local only
 ```
 
 The first command is the everyday release-surface check and tolerates a dirty
-tree. The second additionally requires a clean working tree; CI runs it on
-every push and pull request. Setting `ROOTSTOCK_VERIFY_FOR_TAG=1` as well
+tree. The second additionally requires a clean working tree; verification CI
+runs it for Dependabot-authored pull requests or manual dispatch. Security
+analysis retains its independent triggers. Setting `ROOTSTOCK_VERIFY_FOR_TAG=1` as well
 requires the release-only metadata, today a `date-released` value in
-`CITATION.cff`, and is what the [Release check workflow](#release-check-workflow)
-runs on `v*` tags. The third runs every lane and needs Neo4j; CI never runs it.
+`CITATION.cff`, and is required locally before tagging. The
+[Release check workflow](#release-check-workflow) is manual on `main`.
+The third runs every lane and needs Neo4j; CI never runs it.
 
 The release lane checks public files, version agreement (including the
 lockfiles and the changelog link), source size, and the static demo. It
-requires the public inputs to be Git-tracked and rejects private working
-material. Files that exist locally but have not been added to Git will fail
-this check. Private test suites and their fixtures must remain gitignored and
+requires public inputs to be Git-tracked and rejects tracked private material
+or unignored private packets. Ignored local notes and ledgers may remain in
+the checkout. Private test suites and their fixtures must remain gitignored and
 untracked. The lanes listed in [Quality gates](QUALITY.md) run them only when
 installed locally; release checks reject tracked private suites.
 
@@ -107,9 +109,9 @@ README's "Run a release archive" section (checksum check, then
 
 ## Release check workflow
 
-`.github/workflows/release-check.yml` runs on `v*` tags and on manual
-dispatch. On a `macos-26` runner with Xcode 26.6 it runs
-`ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 ROOTSTOCK_VERIFY_FOR_TAG=1 sh scripts/verify release`, then
+`.github/workflows/release-check.yml` runs only through manual dispatch on
+`main`. On a `macos-26` runner with Xcode 26.6 it runs
+`ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 sh scripts/verify release`, then
 `collector/scripts/build-release.sh`, and uploads `release/*` as the
 `rootstock-collector-release` workflow artifact. It has read-only permissions
 and does not create a release or publish anything; download and inspect the

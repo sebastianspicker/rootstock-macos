@@ -80,6 +80,9 @@ Thumbs.db
 /review.md
 /security_review.md
 /status.md
+/ALPHA_AUDIT_*.md
+/ALPHA_IMPLEMENTATION_*.md
+/ALPHA_PR_DESCRIPTION.md
 /docs/*-agent.md
 /docs/*-handoff.md
 /docs/*-ledger.md

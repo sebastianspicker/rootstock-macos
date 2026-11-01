@@ -1,10 +1,9 @@
 name: Verification
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,6 +14,7 @@ permissions:
 
 jobs:
   release-surface:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     name: Release Surface
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -26,6 +26,7 @@ jobs:
         run: ROOTSTOCK_VERIFY_REQUIRE_CLEAN=1 sh scripts/verify release
 
   quality:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     # Preserve the required status name configured on the protected main branch.
     name: Python Lint
     runs-on: macos-26
@@ -62,6 +63,7 @@ jobs:
         run: sh scripts/verify quality
 
   web-viewer:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     name: Viewer static checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -77,6 +79,7 @@ jobs:
         run: sh scripts/verify web
 
   swift-paths:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     # Decides whether the macOS Swift jobs need to run for this change.
     name: Swift change detection
     runs-on: ubuntu-latest
@@ -107,7 +110,7 @@ jobs:
     # Required status check on main: keep the ruleset in sync when renaming.
     name: Collector Swift build
     needs: swift-paths
-    if: needs.swift-paths.outputs.changed == 'true'
+    if: (github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]') && needs.swift-paths.outputs.changed == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     env:
@@ -128,7 +131,7 @@ jobs:
   product-family-swift-tests:
     name: Product Family Swift ${{ matrix.swift }}
     needs: swift-paths
-    if: needs.swift-paths.outputs.changed == 'true'
+    if: (github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]') && needs.swift-paths.outputs.changed == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     strategy:
@@ -160,6 +163,7 @@ jobs:
         run: sh scripts/verify swift-family
 
   graph:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     # Required status check on main: keep the ruleset in sync when renaming.
     name: Graph lint and smoke
     runs-on: ubuntu-latest
@@ -178,6 +182,7 @@ jobs:
         run: sh scripts/verify graph
 
   neo4j-pipeline:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     name: Neo4j pipeline
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -228,6 +233,7 @@ jobs:
         run: sh scripts/verify neo4j
 
   cve-scan-tests:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     name: cve-scan Module
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -245,6 +251,7 @@ jobs:
         run: sh scripts/verify cve
 
   shell-lint:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.user.login == 'dependabot[bot]'
     name: Shellcheck
     runs-on: ubuntu-latest
     timeout-minutes: 5

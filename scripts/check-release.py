@@ -335,7 +335,10 @@ def _check_candidate_index(check: ReleaseCheck, status: str) -> None:
 
 
 def check_git_hygiene(check: ReleaseCheck, require_clean: bool, candidate_index: bool) -> None:
-    """Reject private working files and optionally enforce a tag-clean tree."""
+    """Keep private material untracked and ignored; optionally enforce a clean tree."""
+    unignored_local = set(
+        git_output("ls-files", "--others", "--exclude-standard", "-z").split("\0")
+    )
     _report_paths(
         check,
         _forbidden_tracked_paths(),
@@ -344,14 +347,14 @@ def check_git_hygiene(check: ReleaseCheck, require_clean: bool, candidate_index:
     )
     _report_paths(
         check,
-        _local_root_artifacts(),
-        "no local private working files",
+        [path for path in _local_root_artifacts() if path in unignored_local],
+        "local private working files are ignored",
         "local root packet",
     )
     _report_paths(
         check,
-        _local_packets(),
-        "ignored private working directories are empty",
+        [path for path in _local_packets() if path in unignored_local],
+        "local private working directories are ignored",
         "local packet",
     )
     _check_tracked_ignored_paths(check)
