@@ -4,6 +4,8 @@
 // Severity: Critical
 // Parameters: none
 // Prerequisites: rootstock-graph-import-scan + rootstock-graph-infer must have run; Keychain collector data required
+// Data gap: the bundled collector does not record keychain ACL trusted apps yet, so
+// CAN_READ_KEYCHAIN edges exist only when imported data carries them; no rows is not a result.
 //
 // Attack model: injection relationship → app named by Keychain ACL metadata
 //

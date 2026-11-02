@@ -88,9 +88,12 @@ def classify_tier1(session) -> int:
                 MATCH (app)-[:CAN_READ_KEYCHAIN]->(:Keychain_Item)
             }}
             OR
-            // Persists via root-running daemon
+            // Persists via root-running daemon (launchd runs a daemon without UserName as root)
             EXISTS {{
-                MATCH (app)-[:PERSISTS_VIA]->(li:LaunchItem {{type: 'daemon'}})-[:RUNS_AS]->(:User {{name: 'root'}})
+                MATCH (app)-[:PERSISTS_VIA]->(li:LaunchItem {{type: 'daemon'}})
+                OPTIONAL MATCH (li)-[:RUNS_AS]->(u:User)
+                WITH li, u WHERE coalesce(u.name, 'root') = 'root'
+                RETURN li
             }}
         )
         SET app.{TIER_PROPERTY} = 1

@@ -13,11 +13,11 @@ public struct PersistAuditCollector: Collector {
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         var state = CollectedState()
         state.launchAgents = Self.enumerateUserLaunchAgents()
-        state.systemLaunchAgents = Self.enumeratePlists(
-            at: URL(fileURLWithPath: MacSecurityPaths.systemLaunchAgents, isDirectory: true)
+        state.systemLaunchAgents = LaunchPlistSupport.enumeratePlists(
+            in: URL(fileURLWithPath: MacSecurityPaths.systemLaunchAgents, isDirectory: true)
         )
-        state.launchDaemons = Self.enumeratePlists(
-            at: URL(fileURLWithPath: MacSecurityPaths.systemLaunchDaemons, isDirectory: true)
+        state.launchDaemons = LaunchPlistSupport.enumeratePlists(
+            in: URL(fileURLWithPath: MacSecurityPaths.systemLaunchDaemons, isDirectory: true)
         )
         state.collectorNotes[Self.id] =
             "user LA=\(state.launchAgents.count); /Library LA=\(state.systemLaunchAgents.count); LD=\(state.launchDaemons.count)"
@@ -25,21 +25,8 @@ public struct PersistAuditCollector: Collector {
     }
 
     public static func enumerateUserLaunchAgents() -> [LaunchAgentEntry] {
-        enumeratePlists(
-            at: MacSecurityPaths.userLaunchAgents(home: FileManager.default.homeDirectoryForCurrentUser)
+        LaunchPlistSupport.enumeratePlists(
+            in: MacSecurityPaths.userLaunchAgents(home: FileManager.default.homeDirectoryForCurrentUser)
         )
-    }
-
-    public static func enumeratePlists(at dir: URL) -> [LaunchAgentEntry] {
-        LaunchdPlistFacts.listPlistPaths(in: dir.path)
-            .map { path in
-                let summary = LaunchdPlistFacts.summarize(plistPath: path)
-                return LaunchAgentEntry(
-                    label: summary.label,
-                    path: path,
-                    programArguments: summary.effectiveArguments
-                )
-            }
-            .sorted { $0.path < $1.path }
     }
 }

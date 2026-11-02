@@ -4,6 +4,8 @@
 // Severity: High
 // Parameters: none
 // Prerequisites: rootstock-graph-import-scan must have run
+// Data gap: the bundled collector does not record keychain ACL trusted apps yet, so
+// CAN_READ_KEYCHAIN edges exist only when imported data carries them; no rows is not a result.
 //
 // Finds Application nodes explicitly listed in Keychain ACL metadata.
 //

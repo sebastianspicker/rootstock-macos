@@ -97,7 +97,7 @@ public struct DyldEnvLabAction: LabAction {
         ]
         let body = """
         # rootstock-red-lab dyld env surface marker (NOT loaded automatically)
-        # app=\(app)
+        # app=\(LabPaths.sanitizePathComponent(app))
         # Documented keys only - do not export into production apps from assess hosts:
         # DYLD_INSERT_LIBRARIES=
         # DYLD_LIBRARY_PATH=
@@ -152,7 +152,7 @@ public struct DyldEnvLabAction: LabAction {
     }
 
     private func remove(markerURL: URL, app: String, dryRun: Bool) throws -> ActionResult {
-        let exists = LabMarkerLifecycle.markerExists(at: markerURL)
+        let exists = try LabMarkerLifecycle.markerExistsChecked(at: markerURL)
         let steps = ["Delete env marker if present: \(markerURL.path)"]
 
         if dryRun {
@@ -195,13 +195,10 @@ public struct DyldEnvLabAction: LabAction {
     }
 
     public static func markerURL(labRoot: URL, app: String) -> URL {
-        let safeApp = sanitizePathComponent(app)
+        let safeApp = LabPaths.sanitizePathComponent(app)
         return labRoot
             .appendingPathComponent("dyld-env-markers", isDirectory: true)
             .appendingPathComponent("\(safeApp).env", isDirectory: false)
     }
 
-    private static func sanitizePathComponent(_ raw: String) -> String {
-        LabPaths.sanitizePathComponent(raw)
-    }
 }

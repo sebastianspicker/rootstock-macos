@@ -103,28 +103,49 @@ def _import_vulnerability_nodes(session, records: list[dict[str, object]]) -> in
 
 
 def _import_edges(session, export: CveScanExport) -> int:
+    labels = {require_node_id(n, "node"): require_node_label(n, "node") for n in export.nodes}
     count = 0
     for edge_type, records in sorted(build_edge_records(export).items()):
-        result = session.run(
-            f"""
-            UNWIND $records AS row
-            MATCH (source {{id: row.source_id}})
-            MATCH (target {{id: row.target_id}})
-            MERGE (source)-[r:{edge_type}]->(target)
-            SET r.source = $source,
-                r.cve_scan_scope_name = $scope_name,
-                r.cve_scan_generated_at = $generated_at,
-                r.cve_scan_profile = $scan_profile
-            RETURN count(r) AS n
-            """,
-            records=records,
-            source=IMPORT_SOURCE,
-            scope_name=export.scope_name,
-            generated_at=export.generated_at,
-            scan_profile=export.scan_profile,
-        )
-        count += int(result.single()["n"])
+        for (source_label, target_label), group in group_by_endpoint_labels(records, labels):
+            result = session.run(
+                f"""
+                UNWIND $records AS row
+                MATCH (source{label_pattern(source_label)} {{id: row.source_id}})
+                MATCH (target{label_pattern(target_label)} {{id: row.target_id}})
+                MERGE (source)-[r:{edge_type}]->(target)
+                SET r.source = $source,
+                    r.cve_scan_scope_name = $scope_name,
+                    r.cve_scan_generated_at = $generated_at,
+                    r.cve_scan_profile = $scan_profile
+                RETURN count(r) AS n
+                """,
+                records=group,
+                source=IMPORT_SOURCE,
+                scope_name=export.scope_name,
+                generated_at=export.generated_at,
+                scan_profile=export.scan_profile,
+            )
+            count += int(result.single()["n"])
     return count
+
+
+def group_by_endpoint_labels(
+    records: list[dict[str, str]], labels: dict[str, str]
+) -> list[tuple[tuple[str | None, str | None], list[dict[str, str]]]]:
+    """Group edge records by endpoint label so MATCH can use the label's id index.
+
+    An endpoint that is not a node of this export keeps a label-less MATCH (existing graph node).
+    """
+    groups: dict[tuple[str | None, str | None], list[dict[str, str]]] = {}
+    for record in records:
+        key = (labels.get(record["source_id"]), labels.get(record["target_id"]))
+        groups.setdefault(key, []).append(record)
+    return sorted(groups.items(), key=lambda item: (item[0][0] or "", item[0][1] or ""))
+
+
+def label_pattern(label: str | None) -> str:
+    """`:Label` for a validated identifier, or nothing when the label is unknown."""
+    return f":`{label}`" if label else ""
 
 
 def _import_affected_by_aliases(session, export: CveScanExport) -> int:

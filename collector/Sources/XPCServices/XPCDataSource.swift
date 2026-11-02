@@ -67,7 +67,8 @@ public struct XPCDataSource: DataSource {
         from entry: LaunchdPlistParser.ParsedEntry,
         type: XPCService.ServiceType
     ) -> (service: XPCService, error: CollectionError?) {
-        let entitlementResult = entry.program.map(extractEntitlementKeys)
+        // Only absolute programs reach codesign: a relative or "-"-prefixed value is not a file we own.
+        let entitlementResult = entry.program.flatMap { $0.hasPrefix("/") ? $0 : nil }.map(extractEntitlementKeys)
             ?? (keys: [], error: nil)
 
         return (XPCService(

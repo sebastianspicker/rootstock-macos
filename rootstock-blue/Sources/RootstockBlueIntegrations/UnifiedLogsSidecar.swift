@@ -214,11 +214,6 @@ public enum UnifiedLogsSidecar {
         return lstat(url.path, &info) == 0
     }
 
-    private static func isRegularFile(at url: URL) -> Bool {
-        var info = stat()
-        return lstat(url.path, &info) == 0 && (info.st_mode & S_IFMT) == S_IFREG
-    }
-
     private static func isRealDirectory(at url: URL) -> Bool {
         var info = stat()
         return lstat(url.path, &info) == 0 && (info.st_mode & S_IFMT) == S_IFDIR

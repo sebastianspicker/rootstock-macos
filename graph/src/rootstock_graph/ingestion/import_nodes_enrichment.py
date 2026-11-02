@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _mode_digit_allows_write(mode: str, index: int) -> bool:
     """Return whether the octal mode digit at ``index`` grants write access."""
-    trimmed = mode[-3:]
+    trimmed = mode.zfill(3)[-3:]  # "%o" drops leading zeros: 0o022 is "22"
     if len(trimmed) != 3 or not trimmed[index].isdigit():
         return False
     return int(trimmed[index]) in {2, 3, 6, 7}

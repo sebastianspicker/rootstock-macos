@@ -14,6 +14,9 @@ public struct FirefoxParser: ArtifactParser {
 
     public init() {}
 
+    static let visitRowCap = 5000
+    static let annoRowCap = 2000
+
     private struct VisitDetails {
         let url: String
         let title: String
@@ -111,9 +114,11 @@ public struct FirefoxParser: ArtifactParser {
                   COALESCE(CAST(v.visit_date AS TEXT), '') AS visit_date
                 FROM moz_historyvisits v
                 LEFT JOIN moz_places p ON v.place_id = p.id
-                LIMIT 5000;
+                ORDER BY v.visit_date DESC
+                LIMIT \(Self.visitRowCap);
                 """
         )
+        ArtifactIO.noteTruncation(reader, url: sourceURL, rows: rows.count, cap: Self.visitRowCap, countSQL: "SELECT count(*) AS n FROM moz_historyvisits;")
         return rows.map { makeSQLiteVisit($0, sourceURL: sourceURL, user: user) }
     }
 
@@ -149,9 +154,11 @@ public struct FirefoxParser: ArtifactParser {
                 FROM moz_annos a
                 LEFT JOIN moz_places p ON a.place_id = p.id
                 WHERE a.content LIKE 'file://%' OR a.content LIKE '/%'
-                LIMIT 2000;
+                ORDER BY a.dateAdded DESC
+                LIMIT \(Self.annoRowCap);
                 """
         )
+        ArtifactIO.noteTruncation(reader, url: sourceURL, rows: rows.count, cap: Self.annoRowCap, countSQL: "SELECT count(*) AS n FROM moz_annos WHERE content LIKE 'file://%' OR content LIKE '/%';")
         return rows.map { makeSQLiteDownload($0, sourceURL: sourceURL, user: user) }
     }
 

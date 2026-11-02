@@ -39,8 +39,8 @@ public struct AllowlistedProbeResult: Sendable, Equatable {
 
 /// Hard-coded, read-only status CLI allowlist for assess mode.
 ///
-/// Unlike `ProcessRunner` (lab/agent only), this may run in assess - but only for the
-/// exact (executable, arguments) pairs listed below. No arbitrary shell, no PATH lookup.
+/// This may run in assess - but only for the exact (executable, arguments) pairs
+/// listed below. No arbitrary shell, no PATH lookup.
 public enum AllowlistedProbe: Sendable {
     private struct ProcessSetup {
         let process: Process

@@ -130,23 +130,4 @@ enum NetstatParser {
         }
         return owners
     }
-
-    /// Resolve a bundle id from a process path with the `.app/` prefix rule.
-    static func bundleId(forCommand command: String, pathToBundle: [String: String]) -> String? {
-        if let bundleId = pathToBundle[command] { return bundleId }
-        guard let appRange = command.range(of: ".app/") else { return nil }
-        let appPath = String(command[..<appRange.upperBound].dropLast())
-        return pathToBundle[appPath]
-    }
-
-    /// Build the application path lookup used by `bundleId(forCommand:pathToBundle:)`.
-    static func pathToBundleMap(_ applications: [Application]) -> [String: String] {
-        var pathToBundle: [String: String] = [:]
-        for app in applications {
-            pathToBundle[app.path] = app.bundleId
-            let resolvedPath = URL(fileURLWithPath: app.path).resolvingSymlinksInPath().path
-            pathToBundle[resolvedPath] = app.bundleId
-        }
-        return pathToBundle
-    }
 }

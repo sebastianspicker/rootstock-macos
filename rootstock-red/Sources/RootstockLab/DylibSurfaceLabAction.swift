@@ -6,7 +6,7 @@ import RootstockCore
 /// Unlike insert_dylib / load-command rewriting, alpha Rootstock Red never patches
 /// Mach-O binaries. This action only:
 /// - plan: documents a user-writable marker path for technique validation
-/// - install (apply): writes an empty `.marker` file (not a real dylib)
+/// - install (apply): writes a tagged text `.marker` file (not a real dylib)
 /// - status: checks marker presence
 /// - remove: deletes the marker
 ///
@@ -19,7 +19,7 @@ public struct DylibSurfaceLabAction: LabAction {
     public static let techniqueNote = """
     Technique documentation (alpha - no binary mutation): real dylib hijack would involve \
     DYLD_* env, rpath abuse, or load-command injection (e.g. insert_dylib). Rootstock Red Lab \
-    only plants a reversible empty marker under a user-controlled lab root so purple-team \
+    only plants a reversible text marker under a user-controlled lab root so purple-team \
     detection can observe file create/delete without patching any application binary.
     """
 
@@ -64,7 +64,7 @@ public struct DylibSurfaceLabAction: LabAction {
     ) -> ActionResult {
         let steps = [
             "Identify writable user lab root: \(labRoot.path)",
-            "Marker path (empty placeholder, NOT a Mach-O dylib): \(markerURL.path)",
+            "Marker path (text placeholder, NOT a Mach-O dylib): \(markerURL.path)",
             "App slug for detection scenarios: \(app)",
             "Alpha: never patch binaries; never write real hijack dylibs",
             Self.techniqueNote,
@@ -95,7 +95,7 @@ public struct DylibSurfaceLabAction: LabAction {
     ) throws -> ActionResult {
         let steps = [
             "Create lab root if needed: \(labRoot.path)",
-            "Write empty marker file (not a dylib): \(markerURL.path)",
+            "Write text marker file (not a dylib): \(markerURL.path)",
             "Do not touch application bundles or Mach-O load commands",
         ]
         let cleanup = [
@@ -108,7 +108,7 @@ public struct DylibSurfaceLabAction: LabAction {
                 actionId: Self.id,
                 success: true,
                 message: """
-                Dry-run: would write empty hijack-marker for app=\(app) at \(markerURL.path) \
+                Dry-run: would write text hijack-marker for app=\(app) at \(markerURL.path) \
                 (NOT a real malicious dylib; no insert_dylib / no binary patch).
                 """,
                 dryRun: true,
@@ -118,15 +118,15 @@ public struct DylibSurfaceLabAction: LabAction {
             )
         }
 
-        // Empty marker - not a dylib, not executable content.
-        try LabMarkerLifecycle.writeMarker(at: markerURL, body: "")
+        // Text marker - not a dylib, not executable content.
+        try LabMarkerLifecycle.writeMarker(at: markerURL, body: "# rootstock-red-lab dylib-surface placeholder (not a dylib)\n")
 
         return ActionResult(
             actionId: Self.id,
             success: true,
             message: """
             Applied dylib-surface lab marker for app=\(app) at \(markerURL.path) \
-            (empty placeholder only). Technique remains documented-only for real hijack; \
+            (text placeholder only). Technique remains documented-only for real hijack; \
             binary patching is out of scope for alpha.
             """,
             dryRun: false,
@@ -154,7 +154,7 @@ public struct DylibSurfaceLabAction: LabAction {
     }
 
     private func remove(markerURL: URL, app: String, dryRun: Bool) throws -> ActionResult {
-        let exists = LabMarkerLifecycle.markerExists(at: markerURL)
+        let exists = try LabMarkerLifecycle.markerExistsChecked(at: markerURL)
         let steps = [
             "Delete marker if present: \(markerURL.path)",
             "Leave application binaries untouched",
@@ -200,13 +200,10 @@ public struct DylibSurfaceLabAction: LabAction {
     }
 
     public static func markerURL(labRoot: URL, app: String) -> URL {
-        let safeApp = sanitizePathComponent(app)
+        let safeApp = LabPaths.sanitizePathComponent(app)
         return labRoot
             .appendingPathComponent("hijack-markers", isDirectory: true)
             .appendingPathComponent("\(safeApp).marker", isDirectory: false)
     }
 
-    private static func sanitizePathComponent(_ raw: String) -> String {
-        LabPaths.sanitizePathComponent(raw)
-    }
 }

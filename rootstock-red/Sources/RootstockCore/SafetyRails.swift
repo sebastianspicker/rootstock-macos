@@ -25,13 +25,6 @@ public enum SafetyRails: Sendable {
         }
     }
 
-    /// Assess mode must not open network unless explicitly allowed.
-    public static func ensureNetworkAllowed(context: EvaluationContext) throws {
-        if context.mode == .assess && !context.allowNetwork {
-            throw RootstockError.networkNotAllowed
-        }
-    }
-
     /// Lab consent gate.
     public static func ensureLabConsent(
         context: EvaluationContext,

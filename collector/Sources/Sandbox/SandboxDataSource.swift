@@ -140,14 +140,6 @@ public struct SandboxDataSource {
         )
     }
 
-    /// Enrich an array of applications with sandbox profile data in place.
-    /// Returns the count of profiles added.
-    public func enrich(applications: inout [Application]) -> Int {
-        let (enriched, count) = enriched(applications: applications)
-        applications = enriched
-        return count
-    }
-
     /// Return a new array of applications enriched with sandbox profile data.
     /// Uses copy-on-return pattern for safe use with structured concurrency.
     /// Returns the enriched array and the count of profiles added.

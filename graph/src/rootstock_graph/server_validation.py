@@ -35,10 +35,6 @@ def matches_api_token(auth_header: str, token: str | None) -> bool:
     )
 
 
-def validate_adhoc_cypher(cypher: str) -> str | None:
-    return validate_api_cypher(cypher)
-
-
 def validate_api_cypher(cypher: str) -> str | None:
     """Apply the viewer API's stricter no-procedure read-only policy."""
     if has_multiple_cypher_statements(cypher):

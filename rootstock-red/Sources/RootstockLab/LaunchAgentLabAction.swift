@@ -175,7 +175,7 @@ public struct LaunchAgentLabAction: LabAction {
             "Document BTM residual risk for operator cleanup",
         ]
         let cleanup = [Self.btmCleanupNote]
-        let exists = LabMarkerLifecycle.markerExists(at: plistURL)
+        let exists = try LabMarkerLifecycle.markerExistsChecked(at: plistURL)
 
         if dryRun {
             return ActionResult(
@@ -238,7 +238,7 @@ public struct LaunchAgentLabAction: LabAction {
     /// Refuses to overwrite or remove an existing plist that is not a lab marker
     /// (Label under the lab prefix and the lab marker argument in ProgramArguments).
     static func assertLabOwnedIfPresent(plistURL: URL) throws {
-        guard LabMarkerLifecycle.markerExists(at: plistURL) else { return }
+        guard try LabMarkerLifecycle.markerExistsChecked(at: plistURL) else { return }
         guard let data = FileManager.default.contents(atPath: plistURL.path),
               let dict = (try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)) as? [String: Any],
               let label = dict["Label"] as? String,

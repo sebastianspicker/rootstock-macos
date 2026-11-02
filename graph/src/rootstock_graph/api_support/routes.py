@@ -24,7 +24,6 @@ from ..reporting.opengraph_export import build_opengraph
 from ..reporting.query_runner import discover_queries, find_query
 from ..reporting.viewer import render_viewer_html
 from ..cypher import first_cypher_statement, run_query
-from ..server_validation import validate_adhoc_cypher as _validate_adhoc_cypher
 from ..server_validation import validate_api_cypher as _validate_api_cypher
 from .dependencies import (
     ADHOC_CYPHER_TIMEOUT_SECONDS,
@@ -195,7 +194,7 @@ def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
     """Execute a bounded, read-only ad-hoc Cypher query."""
     if len(body.cypher) > MAX_ADHOC_CYPHER_LENGTH:
         raise HTTPException(status_code=413, detail="Cypher query exceeds 10000 characters")
-    error = _validate_adhoc_cypher(body.cypher)
+    error = _validate_api_cypher(body.cypher)
     if error:
         raise HTTPException(status_code=403, detail=error)
     try:

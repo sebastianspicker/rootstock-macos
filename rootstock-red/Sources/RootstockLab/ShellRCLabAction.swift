@@ -26,7 +26,8 @@ public struct ShellRCLabAction: LabAction {
         try SafetyRails.ensureLabConsent(context: context, policy: Self.consent)
 
         let rcURL = try Self.resolveRCFile(params: request.parameters)
-        let marker = request.parameters["marker"] ?? Self.defaultMarker
+        // Always the fixed marker: a caller-chosen line could hold newlines or shell code.
+        let marker = Self.defaultMarker
 
         switch request.operation {
         case .plan:

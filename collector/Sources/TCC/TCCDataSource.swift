@@ -125,7 +125,7 @@ public struct TCCDataSource: DataSource {
 
         return TCCGrant(
             service: service,
-            displayName: TCCServiceRegistry.displayName(for: service),
+            displayName: TCCServiceCatalog.displayName(for: service),
             client: client,
             clientType: clientType,
             authValue: authValue,

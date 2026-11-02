@@ -28,13 +28,7 @@ public struct ProcessSnapshotDataSource: DataSource {
 
     /// Parse `ps axo pid,ppid,user,comm` output (`comm` may contain spaces).
     internal static func parsePsOutput(_ output: String, knownApps: [Application]) -> [RunningProcess] {
-        // Build path → bundleId lookup (only full .app paths - no short names to avoid collisions)
-        var pathToBundle: [String: String] = [:]
-        for app in knownApps {
-            pathToBundle[app.path] = app.bundleId
-            let resolvedPath = URL(fileURLWithPath: app.path).resolvingSymlinksInPath().path
-            pathToBundle[resolvedPath] = app.bundleId
-        }
+        let pathToBundle = BundlePaths.bundleIdMap(knownApps)
 
         var processes: [RunningProcess] = []
 
@@ -48,13 +42,7 @@ public struct ProcessSnapshotDataSource: DataSource {
             let user = String(parts[2])
             let command = parts[3].trimmingCharacters(in: .whitespaces)
 
-            // Resolve bundle ID: direct path match or .app/ prefix extraction
-            var bundleId = pathToBundle[command]
-
-            if bundleId == nil, let appRange = command.range(of: ".app/") {
-                let appPath = String(command[..<appRange.upperBound].dropLast())
-                bundleId = pathToBundle[appPath]
-            }
+            let bundleId = BundlePaths.bundleId(forCommand: command, in: pathToBundle)
 
             processes.append(RunningProcess(
                 pid: pid,

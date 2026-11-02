@@ -14,14 +14,4 @@ public enum TimelineMerger {
             return lhs.id.uuidString < rhs.id.uuidString
         }
     }
-
-    /// Deduplicate by id while preserving entity refs and chronological order.
-    public static func mergeUnique(_ events: [EventEnvelope]) -> [EventEnvelope] {
-        var seen = Set<UUID>()
-        var unique: [EventEnvelope] = []
-        for e in merge(events) where seen.insert(e.id).inserted {
-                unique.append(e)
-        }
-        return unique
-    }
 }

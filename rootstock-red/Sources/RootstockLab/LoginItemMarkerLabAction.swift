@@ -137,7 +137,7 @@ public struct LoginItemMarkerLabAction: LabAction {
     }
 
     private func remove(markerURL: URL, label: String, dryRun: Bool) throws -> ActionResult {
-        let exists = LabMarkerLifecycle.markerExists(at: markerURL)
+        let exists = try LabMarkerLifecycle.markerExistsChecked(at: markerURL)
         let steps = ["Delete marker if present: \(markerURL.path)"]
 
         if dryRun {

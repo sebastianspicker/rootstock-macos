@@ -56,10 +56,13 @@ public struct AuthorizationDBDataSource: DataSource {
             return (nil, "Cannot parse plist for right: \(rightName)")
         }
 
-        let rule = plist["rule"] as? String
-            ?? (plist["rule"] as? [String])?.first
+        let ruleNames = (plist["rule"] as? [String]) ?? (plist["rule"] as? String).map { [$0] } ?? []
+        let rule = ruleNames.first
         let allowRoot = plist["allow-root"] as? Bool ?? false
-        let requireAuth = plist["authenticate-user"] as? Bool ?? true
+        // `security authorizationdb write <right> allow` stores rule = (allow) with no
+        // authenticate-user key: that right is open to everyone.
+        let opensToAll = ruleNames.contains("allow") || plist["class"] as? String == "allow"
+        let requireAuth = opensToAll ? false : (plist["authenticate-user"] as? Bool ?? true)
 
         return (AuthorizationRight(
             name: rightName,

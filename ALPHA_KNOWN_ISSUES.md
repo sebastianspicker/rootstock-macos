@@ -22,8 +22,8 @@ graph, and the Red and Blue tools.
 These cause missed findings (false negatives), not false alarms:
 
 - Agents in the macOS system launch-agent folder are not scanned.
-- A sudoers rule written as `NOPASSWD:/bin/ls` (with no space after the colon)
-  is not recognised as password-less.
+- Keychain items are listed, but the apps trusted to read them are not recorded,
+  so the keychain-access queries return no rows for collector scans.
 - Cron files with Windows line endings, SSH server settings written as
   `Keyword=value`, extra `Port` lines, and unreadable SSH `Include` files are
   not fully handled.
@@ -64,8 +64,6 @@ recommended way to review a scan in this alpha. Known rough edges:
   create it once before starting the API.
 - `rootstock-graph-query --param` turns every value that looks like a number
   into a number, so a text value such as a numeric user name does not match.
-- `rootstock-graph-diff-scans` matches applications by bundle identifier only,
-  so two copies of one app, or a copy that moved, are not told apart.
 - The executive summary adds up CVE matches per app, so a CVE shared by two apps
   is counted twice.
 - If some NVD lookups fail, the cache is still marked fresh. Those lookups are
@@ -92,15 +90,17 @@ recommended way to review a scan in this alpha. Known rough edges:
   reports an "unfinished case write journal", and no other `rootstock-blue`
   process is using the case, create a new case and repeat the imports from your
   original evidence. Blue never changes the evidence you import from.
-- Detection rules with misspelled match keys are accepted, and the misspelled
-  condition is ignored, which makes the rule broader. An empty rules folder gives
-  zero findings without a warning.
+- **`collect` does not copy configuration profiles or managed preferences.**
+  They can hold passwords and enrollment tokens. To review profiles, put an
+  export you made yourself in an artifact tree and run `rootstock-blue parse` on it.
 
 ## Rootstock Red
 
 - The shell-profile lab action only changes files it created or already marked:
   the target must be missing, empty, or already contain the lab marker line.
   Use a dedicated lab file rather than your real shell profile.
+- Lab `remove` deletes only files that carry the `rootstock-red-lab` tag. An
+  empty dylib-surface marker left by an earlier build is refused; delete it by hand.
 
 ## Reporting a bug
 

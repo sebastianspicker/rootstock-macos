@@ -1,5 +1,48 @@
 # Changelog
 
+## Unreleased — repository audit fixes
+
+- Collector: authorization rights opened with `allow` (rule or class) are recorded
+  as not requiring authentication. The scan is written to a volume without ACL
+  support only if that volume enforces owner-only permissions. Sudoers rules with run-as lists, user lists, or
+  a tag directly followed by the command (`NOPASSWD:/bin/ls`) are parsed correctly.
+- cve-scan:
+  - CVE List v5 records parse again.
+  - Withdrawn and rejected advisories are dropped.
+  - NVD version bounds are applied.
+  - `9.8p1` and other post-release suffixes sort after the release, while
+    pre-release words sort before it, and deb/rpm epochs are compared.
+  - Banner words and manifest ranges are no longer treated as installed versions;
+    ranges are kept as `version_specifier`.
+  - A certificate that fails verification is kept as evidence, so verification,
+    hostname and expiry findings are reported.
+  - A banner product matched to an NVD entry from a vendor the banner cannot
+    confirm (for example `someiot:openssh`), or to an npm, PyPI or distribution
+    package of the same name, has LOW confidence, and the reason says why.
+  - The feed parser version is now `feed-parser-v4`, so cached indexes rebuild.
+- Graph: Tier 1 treats LaunchDaemons without `UserName` as root.
+  `rootstock-graph-diff-scans` compares launch items by type, path, label and
+  program, and applications by bundle id and path. SharpHound import ignores large
+  unread entries and null fields.
+- Blue:
+  - `collect` walks artifact folders without following links and expands
+    `Users/*` paths (hidden accounts included). Credential stores (SSH private
+    keys, password-hash user records, browser login and cookie databases) are
+    withheld. Files that change during collection, unreadable folders and
+    oversized files are skipped with a custody note instead of stopping the run.
+    A pack is copied as one batch with one integrity check.
+  - KnowledgeC and Firefox history keep the newest rows and note truncation.
+  - Unknown `match:` keys and empty rule folders are errors.
+  - `configprofiles` no longer copies `Library/ConfigurationProfiles` or
+    `Library/Managed Preferences`: profile payloads and managed preferences can
+    hold passwords, certificates and enrollment tokens. The CONFIGPROFILES parser
+    still reads them from evidence you supply.
+  - The unused `RootstockBlueAcquire` library is removed.
+- Red: launch-constraint sampling no longer overwrites injectability results, the
+  launchd override finding counts only disabled entries, and lab marker removal
+  refuses links, anything that is not a regular file, and files without the
+  `rootstock-red-lab` tag. The dylib-surface marker now carries the tag.
+
 ## Unreleased — investigation workflow
 
 - Offline `rootstock-graph-investigate` command with searchable HTML, JSON/text,

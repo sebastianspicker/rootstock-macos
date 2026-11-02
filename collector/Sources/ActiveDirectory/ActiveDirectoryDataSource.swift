@@ -35,13 +35,7 @@ public struct ActiveDirectoryDataSource: DataSource {
     ]
 
     public func collect() async -> DataSourceResult {
-        collectWithBinding().result
-    }
-
-    /// Collect AD data and binding info in a single pass (avoids running dsconfigad twice).
-    public func collectWithBinding() -> (result: DataSourceResult, binding: ADBinding) {
-        let outcome = collectWithBindingOutcome()
-        return (outcome.result, outcome.binding ?? ADBinding(isBound: false))
+        collectWithBindingOutcome().result
     }
 
     /// Collect AD data while preserving unknown binding status after a command failure.
@@ -70,18 +64,6 @@ public struct ActiveDirectoryDataSource: DataSource {
         }
 
         return (DataSourceResult(nodes: nodes, errors: errors), binding)
-    }
-
-    /// The parsed AD binding result for the orchestrator to read directly.
-    /// Prefer `collectWithBinding()` to avoid running dsconfigad twice.
-    public func collectBinding() -> ADBinding {
-        collectBindingOutcome() ?? ADBinding(isBound: false)
-    }
-
-    /// Reads AD binding status while preserving an unknown result after command failure.
-    public func collectBindingOutcome() -> ADBinding? {
-        var errors: [CollectionError] = []
-        return parseBinding(errors: &errors)
     }
 
     // MARK: - Internal parsing (visible for testing)

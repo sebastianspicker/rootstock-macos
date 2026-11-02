@@ -34,11 +34,4 @@ public struct DetectionEngine: Sendable {
         let rules = try RuleLoader.loadDirectory(rulesDirectory)
         return evaluate(rules: rules, events: events)
     }
-
-    public func validateRuleHasFixture(rule: DetectionRule, fixturesDirectory: URL) throws {
-        let fixtureURL = fixturesDirectory.appendingPathComponent(rule.fixture)
-        guard FileManager.default.fileExists(atPath: fixtureURL.path) else {
-            throw RootstockBlueError.fixtureMissing(rule.fixture)
-        }
-    }
 }

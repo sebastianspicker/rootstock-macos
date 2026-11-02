@@ -24,6 +24,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, ValidationError
 
 from .bounded_json import read_bounded_json
+from .cve_scan_neo4j import group_by_endpoint_labels, label_pattern
 
 SUPPORTED_SCHEMA_VERSION = 1
 FAMILY_EXPORT_SCHEMA_ID = "https://rootstock.dev/contracts/family-open-export/v1/schema.json"
@@ -174,19 +175,21 @@ def import_family_export(session, export: FamilyExport) -> dict[str, int]:
         session.run(cypher, batch=records)
         node_counts[label] = len(records)
 
+    labels = {str(node["id"]): str(node["type"]) for node in export.nodes}
     edge_count = 0
     for rel_type, records in build_edge_records(export).items():
         if not _IDENTIFIER_RE.match(rel_type):
             raise FamilyExportError(f"unsafe relationship type: {rel_type}")
-        cypher = (
-            f"UNWIND $batch AS row "
-            f"MATCH (a {{id: row.source_id}}) "
-            f"MATCH (b {{id: row.target_id}}) "
-            f"MERGE (a)-[r:`{rel_type}`]->(b) "
-            f"SET r.source = $source, r.family_export = true"
-        )
-        session.run(cypher, batch=records, source=export.source)
-        edge_count += len(records)
+        for (source_label, target_label), group in group_by_endpoint_labels(records, labels):
+            cypher = (
+                f"UNWIND $batch AS row "
+                f"MATCH (a{label_pattern(source_label)} {{id: row.source_id}}) "
+                f"MATCH (b{label_pattern(target_label)} {{id: row.target_id}}) "
+                f"MERGE (a)-[r:`{rel_type}`]->(b) "
+                f"SET r.source = $source, r.family_export = true"
+            )
+            session.run(cypher, batch=group, source=export.source)
+            edge_count += len(group)
 
     return {"nodes": sum(node_counts.values()), "edges": edge_count, **node_counts}
 

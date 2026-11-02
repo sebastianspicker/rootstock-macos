@@ -136,6 +136,8 @@ public struct PersistenceDataSource: DataSource {
     /// Ownership and signing identity of a configuration file and the program it starts.
     func ownership(plistPath: String, program: String?) -> LaunchItem.Ownership {
         let plistOwnership = fileOwnership(at: plistPath)
+        // A relative program would be probed against the collector's working directory.
+        let program = program.flatMap { $0.hasPrefix("/") ? $0 : nil }
         let programOwnership = program.map { fileOwnership(at: $0) }
         // Apple's own launchd jobs under /System carry no team identifier and never
         // belong to a third-party app, so only other plists are worth a signature read.

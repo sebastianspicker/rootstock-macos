@@ -12,6 +12,8 @@ public struct KnowledgeCParser: ArtifactParser {
 
     public init() {}
 
+    static let rowCap = 5000
+
     public func parse(source: ImageSource) throws -> [EventEnvelope] {
         let root = ArtifactRoot(source: source)
         var dbs = root.enumerate(matching: {
@@ -59,9 +61,11 @@ public struct KnowledgeCParser: ArtifactParser {
                   COALESCE(ZVALUESTRING, '') AS value_string,
                   COALESCE(CAST(ZSTREAMNAME AS TEXT), '/unknown') AS stream
                 FROM ZOBJECT
-                LIMIT 5000;
+                ORDER BY ZSTARTDATE DESC
+                LIMIT \(Self.rowCap);
                 """
             )
+            ArtifactIO.noteTruncation(reader, url: url, rows: rows.count, cap: Self.rowCap, countSQL: "SELECT count(*) AS n FROM ZOBJECT;")
             return rows.map { mapObjectRow($0, dbPath: url) }
         }
 

@@ -12,7 +12,6 @@
     "modules/cve-scan/src/cve_scan/mac_inventory.py": 507,
     "modules/cve-scan/src/cve_scan/models.py": 549,
     "modules/cve-scan/src/cve_scan/scan.py": 506,
-    "modules/cve-scan/src/cve_scan/supply_chain_python.py": 517,
-    "rootstock-blue/Sources/RootstockBlueAcquire/LogicalAcquire.swift": 530
+    "modules/cve-scan/src/cve_scan/supply_chain_python.py": 517
   }
 }

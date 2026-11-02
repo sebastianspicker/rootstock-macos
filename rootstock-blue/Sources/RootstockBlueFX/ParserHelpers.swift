@@ -146,6 +146,13 @@ public enum ArtifactIO {
         }
     }
 
+    /// Notes when a row cap was hit; `countSQL` must return one `n` column with the full row count.
+    public static func noteTruncation(_ reader: SQLiteReader, url: URL, rows: Int, cap: Int, countSQL: String) {
+        guard rows >= cap else { return }
+        let total = (try? reader.query(countSQL).first?["n"]) ?? nil
+        failures.record("\(url.path): newest \(rows) of \(total ?? "unknown") rows kept")
+    }
+
     public static func jsonObject(from data: Data) -> Any? {
         try? JSONSerialization.jsonObject(with: data)
     }
@@ -201,37 +208,11 @@ public enum ArtifactIO {
         plistObject(contentsOf: url) as? [[String: Any]]
     }
 
-    /// Dictionary entries from a plist root (array of dicts, or nested under keys).
-    public static func plistDictionaryEntries(
-        contentsOf url: URL,
-        nestedKeys: [String] = [],
-        identityKeys: [String] = []
-    ) -> [[String: Any]] {
-        guard let obj = plistObject(contentsOf: url) else { return [] }
-        return dictionaryEntries(from: obj, nestedKeys: nestedKeys, identityKeys: identityKeys)
-    }
-
-    public static func plistDictionaryEntries(
-        from data: Data,
-        nestedKeys: [String] = [],
-        identityKeys: [String] = []
-    ) -> [[String: Any]] {
-        guard let obj = plistObject(from: data) else { return [] }
-        return dictionaryEntries(from: obj, nestedKeys: nestedKeys, identityKeys: identityKeys)
-    }
-
     /// Prefer binary/XML plist; fall back to JSON object-as-dict.
     public static func jsonOrPlistDict(contentsOf url: URL) -> [String: Any]? {
         guard let data = data(contentsOf: url) else { return nil }
         if let dict = plistDict(from: data) { return dict }
         return jsonDict(from: data)
-    }
-
-    /// Prefer JSON dict; fall back to plist.
-    public static func jsonOrPlistDictPreferJSON(contentsOf url: URL) -> [String: Any]? {
-        guard let data = data(contentsOf: url) else { return nil }
-        if let dict = jsonDict(from: data) { return dict }
-        return plistDict(from: data)
     }
 
     /// Load a JSON file that is either a top-level array of dicts or a dict

@@ -4,6 +4,8 @@
 // Severity: High
 // Parameters: none
 // Prerequisites: rootstock-graph-import-scan must have run
+// Data gap: the bundled collector does not record keychain ACL trusted apps yet, so
+// CAN_READ_KEYCHAIN edges exist only when imported data carries them; no rows is not a result.
 // Forensic: Prioritize keychain items by sensitivity tier - SSH keys and certificates are higher value than saved passwords
 // CVE: CVE-2024-44204
 // ATT&CK: T1555.001

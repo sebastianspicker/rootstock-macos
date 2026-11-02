@@ -194,7 +194,7 @@ lane and fails if the service or any required tool is absent. See
   as partial results.
 - Inferred paths model observed preconditions and do not prove exploitation.
 - cve-scan uses the targets and permissions in your scope file. Review it
-  before running: credential entries can execute commands.
+  before running: credential entries name commands (this build does not run them).
 - Red Lab requires an authorization acknowledgement and non-dry-run selection
   before making changes. You must obtain written authorization separately.
 - Blue supports offline cases and synthetic event injection. It includes no

@@ -7,6 +7,8 @@
 // CVE: CVE-2024-44204
 // ATT&CK: T1555.001
 // Prerequisites: rootstock-graph-import-scan + rootstock-graph-infer must have run
+// Data gap: the bundled collector does not record keychain ACL trusted apps yet, so
+// CAN_READ_KEYCHAIN edges exist only when imported data carries them; no rows is not a result.
 
 MATCH (:Application {bundle_id: 'attacker.payload'})-[inj:CAN_INJECT_INTO]->(a:Application)
 MATCH (a)-[skg:SHARES_KEYCHAIN_GROUP]-(b:Application)

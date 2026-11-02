@@ -199,7 +199,6 @@ struct RootstockBlueCLI {
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: args[1]))
         let out = URL(fileURLWithPath: args[2])
-        try pkg.verifyIntegrity()
         // Optionally attach detections from samples against case timeline
         var contentRoot = repoContentRoot()
         if let idx = args.firstIndex(of: "--content-root"), args.count > idx + 1 {

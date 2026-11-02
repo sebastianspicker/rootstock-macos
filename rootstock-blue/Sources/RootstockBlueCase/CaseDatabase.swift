@@ -112,10 +112,6 @@ public final class CaseDatabase {
         )
     }
 
-    public func timelineEventIDs() throws -> [String] {
-        try queryRows("SELECT id FROM timeline_events ORDER BY id;").compactMap { $0["id"] }
-    }
-
     /// Checks candidate membership with one reusable prepared statement rather
     /// than materializing all historical IDs.
     func requireTimelineEventIDsAbsent(_ eventIDs: [String]) throws {

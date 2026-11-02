@@ -75,15 +75,6 @@ def import_enrichment_inventory(session, scan) -> None:
     print(f"  File ACLs:     {n_file_acls}")
 
 
-def computer_context(scan, grants_linked: int, grants_skipped: int, import_status: str):
-    return computer_import_context(
-        scan,
-        grants_linked=grants_linked,
-        grants_skipped=grants_skipped,
-        import_status=import_status,
-    )
-
-
 def import_computer_inventory(
     session, scan, grants_linked: int, grants_skipped: int, import_status: str
 ) -> None:
@@ -100,7 +91,12 @@ def import_computer_inventory(
     import_computer(
         session,
         computer,
-        computer_context(scan, grants_linked, grants_skipped, import_status),
+        computer_import_context(
+            scan,
+            grants_linked=grants_linked,
+            grants_skipped=grants_skipped,
+            import_status=import_status,
+        ),
     )
     n_installed = import_installed_on(session, scan.hostname, scan.scan_id)
     print(f"  Computer:      1 node, {n_installed} INSTALLED_ON edges")

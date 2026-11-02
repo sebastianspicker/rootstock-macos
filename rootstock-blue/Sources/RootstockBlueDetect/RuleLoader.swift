@@ -59,10 +59,13 @@ public enum RuleLoader {
         } catch {
             throw RootstockBlueError.detectionRuleInvalid("cannot read rules directory \(dir.path): \(error.localizedDescription)")
         }
-        return try items
+        let files = items
             .filter { $0.pathExtension == "yaml" || $0.pathExtension == "yml" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-            .map { try load(from: $0) }
+        guard !files.isEmpty else {
+            throw RootstockBlueError.detectionRuleInvalid("rules directory contains no rule files: \(dir.path)")
+        }
+        return try files.map { try load(from: $0) }
     }
 
     private static func parseSimpleYAML(_ text: String, fileName: String) throws -> DetectionRule {
@@ -103,7 +106,7 @@ public enum RuleLoader {
             if indent == 0 {
                 consumeRoot(key: key, value: value)
             } else {
-                consumeNested(key: key, value: value, indent: indent)
+                try consumeNested(key: key, value: value, indent: indent, location: "\(fileName):\(lineNumber)")
             }
         }
 
@@ -139,10 +142,10 @@ public enum RuleLoader {
             }
         }
 
-        private mutating func consumeNested(key: String, value: String, indent: Int) {
+        private mutating func consumeNested(key: String, value: String, indent: Int, location: String) throws {
             guard section.acceptsMatchContent else { return }
             if indent == 2 {
-                setMatchSection(key: key, value: value)
+                try setMatchSection(key: key, value: value, location: location)
             } else if indent >= 4 {
                 setMatchField(key: key, value: value)
             }
@@ -161,12 +164,12 @@ public enum RuleLoader {
             return true
         }
 
-        private mutating func setMatchSection(key: String, value: String) {
+        private mutating func setMatchSection(key: String, value: String, location: String) throws {
             switch key {
             case "event_type": eventType = value; section = .match
             case "field_equals": section = .fieldEquals
             case "field_contains": section = .fieldContains
-            default: break
+            default: throw RootstockBlueError.detectionRuleInvalid("unknown match key '\(key)' at \(location)")
             }
         }
 

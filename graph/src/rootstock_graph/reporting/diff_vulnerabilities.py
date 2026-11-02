@@ -31,11 +31,11 @@ def diff_vulnerabilities(before: ScanResult, after: ScanResult) -> Vulnerability
         _injection_cve_ids(registry),
     )
     return VulnerabilityDiff(
-        new_cve_associations=new_associations[:50],
+        new_cve_associations=new_associations,
         resolved_cve_associations=_resolved_injection_cve_associations(
             sorted(before_injectable - after_injectable),
             before_names,
-        )[:50],
+        ),
         new_kev_entries=_new_kev_entries(
             enriched,
             {a.bundle_id for a in after.applications},

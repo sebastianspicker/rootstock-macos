@@ -9,11 +9,6 @@ public struct ActionRegistry: Sendable {
         self.actions = actions
     }
 
-    /// Minimal registry containing only the no-op action.
-    public static func scaffold() -> ActionRegistry {
-        ActionRegistry(actions: [NoopLabAction()])
-    }
-
     /// Complete lab registry with consent checks and dry-run defaults.
     public static func production() -> ActionRegistry {
         ActionRegistry(actions: foundationalActions + waveFiveToNineActions + waveElevenToSixteenActions)

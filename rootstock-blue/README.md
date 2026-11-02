@@ -61,11 +61,11 @@ The debug CLI is `.build/debug/rootstock-blue`.
 
 ## Case workflow
 
-The bundled synthetic artifact tree is a safe way to try the complete workflow:
+Run the complete workflow against an exported artifact tree:
 
 ```bash
 BIN=.build/debug/rootstock-blue
-FIX=Fixtures/artifacts/macos_sample
+FIX=/path/to/evidence-tree   # an exported artifact tree you are authorized to analyze
 CASE=/tmp/rootstock-blue-demo.rsbcase
 
 $BIN case create "$CASE" --name synthetic-demo
@@ -128,8 +128,7 @@ Neo4j or the core collector schema. See the
 - Parser support is selective and does not replace a complete forensic suite.
 - For proprietary or unstable formats, a parser may report only the metadata it
   can handle safely.
-- The acquisition package does not unlock FileVault or acquire physical memory
-  from Apple silicon.
+- Blue does not unlock FileVault or acquire physical memory from Apple silicon.
 - Synthetic event injection is profile-driven and offline-only; it does not
   implement Endpoint Security.
 - Rootstock Blue is not an EDR, SIEM, MDM, disk imager, or password-recovery

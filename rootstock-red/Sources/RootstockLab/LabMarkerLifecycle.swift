@@ -9,8 +9,20 @@ import RootstockCore
 public enum LabMarkerLifecycle: Sendable {
     // MARK: - Filesystem primitives
 
+    /// Every lab marker body carries one of these; removal deletes only files that do.
+    static let markerTags = ["rootstock-red-lab", "com.rootstock.red.lab"]
+    /// Markers are a few hundred bytes; anything larger is not ours.
+    static let maxMarkerBytes = 64 * 1024
+
+    static func carriesMarkerTag(_ data: Data) -> Bool {
+        markerTags.contains { data.range(of: Data($0.utf8)) != nil }
+    }
+
     /// Create parent directories and write `body` atomically to `markerURL`.
     public static func writeMarker(at markerURL: URL, body: String) throws {
+        guard carriesMarkerTag(Data(body.utf8)) else {
+            throw RootstockError.invalidArgument("lab marker body lacks the rootstock-red-lab tag")
+        }
         try assertNoUnsafeSymlinks(to: markerURL)
         try FileManager.default.createDirectory(
             at: markerURL.deletingLastPathComponent(),
@@ -25,15 +37,37 @@ public enum LabMarkerLifecycle: Sendable {
         return FileManager.default.fileExists(atPath: markerURL.path)
     }
 
+    /// Throwing existence check for remove/install decisions: unsafe paths throw instead of reading as absent.
+    public static func markerExistsChecked(at markerURL: URL) throws -> Bool {
+        try assertNoUnsafeSymlinks(to: markerURL)
+        return FileManager.default.fileExists(atPath: markerURL.path)
+    }
+
     /// Delete the marker if present. Returns whether it was present before removal.
+    /// Only a small regular file carrying a marker tag is ever deleted; anything else throws.
     @discardableResult
     public static func removeMarker(at markerURL: URL) throws -> Bool {
         try assertNoUnsafeSymlinks(to: markerURL)
-        let exists = markerExists(at: markerURL)
-        if exists {
-            try FileManager.default.removeItem(at: markerURL)
+        var info = stat()
+        if lstat(markerURL.path, &info) != 0 {
+            if errno == ENOENT { return false }
+            throw RootstockError.invalidArgument("cannot inspect lab marker: \(markerURL.path)")
         }
-        return exists
+        guard (info.st_mode & S_IFMT) == S_IFREG else {
+            throw RootstockError.invalidArgument("lab marker is not a regular file: \(markerURL.path)")
+        }
+        guard info.st_size <= maxMarkerBytes,
+              let data = FileManager.default.contents(atPath: markerURL.path),
+              carriesMarkerTag(data)
+        else {
+            throw RootstockError.invalidArgument(
+                "refusing to delete \(markerURL.path): not a rootstock-red-lab marker; remove it by hand if intended"
+            )
+        }
+        guard unlink(markerURL.path) == 0 else {
+            throw RootstockError.invalidArgument("cannot remove lab marker: \(markerURL.path)")
+        }
+        return true
     }
 
     /// Reject attacker-controlled links in any existing path component. macOS's
@@ -134,7 +168,7 @@ public enum LabMarkerLifecycle: Sendable {
         input: FileMarkerRemoveInput,
         copy: FileMarkerRemoveCopy
     ) throws -> ActionResult {
-        let exists = markerExists(at: input.markerURL)
+        let exists = try markerExistsChecked(at: input.markerURL)
         let steps = copy.steps ?? ["Delete \(input.markerURL.path)"]
         if input.dryRun {
             return ActionResult(

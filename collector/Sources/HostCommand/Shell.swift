@@ -304,15 +304,6 @@ public enum Shell {
         }
     }
 
-    /// Run a command and return stderr as a trimmed String, or nil on failure / non-zero exit.
-    /// Useful for tools like `codesign -d` that write informational output to stderr.
-    public static func runStderr(_ path: String, _ arguments: [String]) -> String? {
-        guard case .success(let result) = execute(path, arguments) else {
-            return nil
-        }
-        return result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
     /// Parse Data as a plist dictionary. Returns nil if parsing fails.
     public static func parsePlistDict(from data: Data) -> [String: Any]? {
         var format = PropertyListSerialization.PropertyListFormat.xml
@@ -321,11 +312,4 @@ public enum Shell {
         ) as? [String: Any]
     }
 
-    /// Returns true if the command exits with status 0 (stdout/stderr discarded).
-    public static func succeeds(_ path: String, _ arguments: [String]) -> Bool {
-        if case .success = execute(path, arguments) {
-            return true
-        }
-        return false
-    }
 }

@@ -50,7 +50,7 @@ let package = Package(
         ),
         .testTarget(
             name: "MacEnumKitTests",
-            dependencies: ["MacEnumKit"],
+            dependencies: ["MacEnumKit", "MacVulnKit"],
             path: "Tests/MacEnumKitTests"
         ),
         .target(

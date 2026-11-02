@@ -43,8 +43,7 @@ public struct FileVaultEscrowCollector: Collector {
             notes.append("fdesetup not observed at \(fdesetupPath)")
         }
 
-        // Optional non-mutating status probe via allowlisted ProcessRunner if available,
-        // prefer path heuristics to stay deny-safe and key-free. Mirror protections when present.
+        // Path heuristics only, to stay deny-safe and key-free. Mirror protections when present.
         let fileVaultOn: Bool? = nil
         // Read-only: check for APFS encryption-related support paths as weak signal only.
         let cryptoSupport = [

@@ -14,13 +14,12 @@ public enum Epochs {
         if value <= 0 { return Date(timeIntervalSince1970: 0) }
         // Heuristic: values > 1e12 are ms; ~1e9 unix; smaller Mac absolute
         if value > 1_000_000_000_000 {
-            return Date(timeIntervalSince1970: value / 1000.0)
+            return unixDate(value / 1000.0)
         }
         if value > 1_000_000_000 {
-            return Date(timeIntervalSince1970: value)
+            return unixDate(value)
         }
-        let macEpoch = Date(timeIntervalSince1970: 978_307_200)
-        return macEpoch.addingTimeInterval(value)
+        return unixDate(978_307_200 + value)
     }
 
     /// Chrome/WebKit: microseconds since 1601-01-01 00:00:00 UTC.
@@ -34,8 +33,7 @@ public enum Epochs {
     public static func dateFromChromeMicroseconds(_ value: Double) -> Date {
         // Seconds between 1601-01-01 and 1970-01-01
         let windowsToUnixSeconds: Double = 11_644_473_600
-        let seconds = (value / 1_000_000.0) - windowsToUnixSeconds
-        return Date(timeIntervalSince1970: seconds)
+        return unixDate((value / 1_000_000.0) - windowsToUnixSeconds)
     }
 
     /// Firefox / Gecko PRTime: microseconds since Unix epoch (1970-01-01 UTC).
@@ -47,11 +45,20 @@ public enum Epochs {
     public static func dateFromFirefoxMicroseconds(_ value: Double) -> Date {
         // Values are typically > 1e14 for modern dates when stored as µs
         if value > 1_000_000_000_000 {
-            return Date(timeIntervalSince1970: value / 1_000_000.0)
+            return unixDate(value / 1_000_000.0)
         }
         if value > 1_000_000_000 {
-            return Date(timeIntervalSince1970: value)
+            return unixDate(value)
         }
-        return Date(timeIntervalSince1970: value / 1_000_000.0)
+        return unixDate(value / 1_000_000.0)
+    }
+
+    /// A crafted value (NaN, infinity, year 290000) must not reach the case, whose
+    /// ISO 8601 round trip cannot represent it; such values get the 1970 fallback.
+    static func unixDate(_ seconds: Double) -> Date {
+        guard seconds.isFinite, seconds >= 0, seconds < 4_102_444_800 else {  // before 2100-01-01
+            return Date(timeIntervalSince1970: 0)
+        }
+        return Date(timeIntervalSince1970: seconds)
     }
 }

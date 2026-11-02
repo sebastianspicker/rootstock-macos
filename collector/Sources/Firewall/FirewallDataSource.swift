@@ -238,11 +238,6 @@ public struct FirewallDataSource: DataSource {
 
     // MARK: - ALF plist (fallback)
 
-    /// Parses the ALF plist dictionary into a FirewallStatus.
-    func parseALFPlist(_ plist: [String: Any]) -> FirewallStatus {
-        parseALFPlistWithDiagnostics(plist).status
-    }
-
     /// Parses the ALF plist dictionary and reports missing fields as unknown.
     func parseALFPlistWithDiagnostics(_ plist: [String: Any]) -> ALFParseResult {
         var errors: [CollectionError] = []

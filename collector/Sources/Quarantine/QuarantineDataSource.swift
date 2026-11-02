@@ -37,14 +37,6 @@ public struct QuarantineDataSource {
 
     // MARK: - Public API
 
-    /// Enrich an array of applications with quarantine attribute data in place.
-    /// Returns the count of applications that have quarantine data.
-    public func enrich(applications: inout [Application]) -> Int {
-        let (enrichedApps, count) = enriched(applications: applications)
-        applications = enrichedApps
-        return count
-    }
-
     /// Return a new array of applications enriched with quarantine attribute data.
     /// Uses copy-on-return pattern for safe use with structured concurrency.
     /// Returns the enriched array and the count of quarantined applications.
@@ -150,12 +142,6 @@ public struct QuarantineDataSource {
     }
 
     // MARK: - Quarantine attribute reading
-
-    /// Read and parse the quarantine xattr for the given path.
-    /// Returns a QuarantineInfo even if the attribute is absent (hasQuarantineFlag = false).
-    public func readQuarantine(at path: String) -> QuarantineInfo {
-        readQuarantineResult(at: path).info ?? QuarantineInfo(hasQuarantineFlag: false)
-    }
 
     /// Distinguishes an absent attribute (`info.hasQuarantineFlag == false`) from a
     /// read failure (`info == nil`, `error` set).

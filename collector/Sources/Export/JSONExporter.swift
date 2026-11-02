@@ -222,11 +222,17 @@ public struct JSONExporter {
         guard fchmod(fd, mode) == 0 else {
             throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
         }
+        // FAT and exFAT accept fchmod but ignore it: such a volume cannot keep the scan private.
+        var info = stat()
+        guard fstat(fd, &info) == 0, info.st_mode & 0o777 == mode else {
+            throw JSONExporterError.writeFailed(path, "the output volume does not enforce owner-only permissions")
+        }
         guard let emptyACL = acl_init(0) else {
             throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
         }
         defer { _ = acl_free(UnsafeMutableRawPointer(emptyACL)) }
-        guard acl_set_fd_np(fd, emptyACL, ACL_TYPE_EXTENDED) == 0 else {
+        // A volume that enforces modes but has no ACL support has no inherited ACL to strip.
+        guard acl_set_fd_np(fd, emptyACL, ACL_TYPE_EXTENDED) == 0 || errno == ENOTSUP || errno == EOPNOTSUPP else {
             throw JSONExporterError.writeFailed(path, String(cString: strerror(errno)))
         }
     }

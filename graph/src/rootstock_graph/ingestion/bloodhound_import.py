@@ -70,6 +70,7 @@ def _parse_sharphound_archive(zf: zipfile.ZipFile, zip_path: str) -> dict:
     users: list[dict] = []
     groups: list[dict] = []
     files_present: list[str] = []
+    dropped: dict[str, int] = {}
 
     for info in zf.infolist():
         _validate_zip_entry(info)
@@ -83,11 +84,11 @@ def _parse_sharphound_archive(zf: zipfile.ZipFile, zip_path: str) -> dict:
         )
 
     if users_file:
-        users = _read_sharphound_data(zf, users_file)
+        users, dropped["users_not_objects"] = _read_sharphound_data(zf, users_file)
         files_present.append("users.json")
 
     if groups_file:
-        groups = _read_sharphound_data(zf, groups_file)
+        groups, dropped["groups_not_objects"] = _read_sharphound_data(zf, groups_file)
         files_present.append("groups.json")
 
     files_missing = [
@@ -100,20 +101,18 @@ def _parse_sharphound_archive(zf: zipfile.ZipFile, zip_path: str) -> dict:
             "files_present": files_present,
             "files_missing": files_missing,
             "parsed": {"users": len(users), "groups": len(groups)},
+            "non_object_records": dropped,
         },
     }
 
 
 def _validate_zip_entry(info: zipfile.ZipInfo) -> None:
-    if info.file_size > MAX_SHARPHOUND_JSON_SIZE:
-        raise ValueError(
-            f"Entry {info.filename} decompressed size ({info.file_size} bytes) exceeds limit"
-        )
+    # Size is bounded when an entry is read; unread entries (computers.json) may be large.
     if os.path.isabs(info.filename) or ".." in info.filename.split("/"):
         raise ValueError(f"Unsafe path in ZIP: {info.filename}")
 
 
-def _read_sharphound_data(zf: zipfile.ZipFile, name: str) -> list[dict]:
+def _read_sharphound_data(zf: zipfile.ZipFile, name: str) -> tuple[list[dict], int]:
     with zf.open(name) as entry:
         content = entry.read(MAX_SHARPHOUND_JSON_SIZE + 1)
     if len(content) > MAX_SHARPHOUND_JSON_SIZE:
@@ -124,7 +123,20 @@ def _read_sharphound_data(zf: zipfile.ZipFile, name: str) -> list[dict]:
     data = raw.get("data", [])
     if not isinstance(data, list):
         raise ValueError(f"{name}: 'data' must be a list")
-    return data
+    records = [item for item in data if isinstance(item, dict)]
+    return records, len(data) - len(records)
+
+
+def _properties(item: dict) -> dict:
+    value = item.get("Properties")
+    return value if isinstance(value, dict) else {}
+
+
+def _members(group: dict) -> list[dict]:
+    value = group.get("Members")
+    return (
+        [member for member in value if isinstance(member, dict)] if isinstance(value, list) else []
+    )
 
 
 # ── ADUser node import ───────────────────────────────────────────────────────
@@ -190,7 +202,7 @@ def _ad_user_batch(users_data: list[dict]) -> list[dict]:
 
 
 def _ad_user_row(user: dict) -> dict | None:
-    props = user.get("Properties", {})
+    props = _properties(user)
     object_id = props.get("objectid", "")
     if not object_id:
         return None
@@ -247,7 +259,7 @@ def import_ad_groups(session, groups_data: list[dict]) -> int:
     """
     batch = []
     for group in groups_data:
-        props = group.get("Properties", {})
+        props = _properties(group)
         object_id = props.get("objectid", "")
         name = props.get("name", "")
         domain = props.get("domain", "")
@@ -294,9 +306,9 @@ def import_ad_member_of_edges(session, groups_data: list[dict]) -> int:
     """
     batch = []
     for group in groups_data:
-        props = group.get("Properties", {})
+        props = _properties(group)
         group_object_id = props.get("objectid", "")
-        members = group.get("Members", [])
+        members = _members(group)
 
         if not group_object_id:
             continue
@@ -380,6 +392,7 @@ def import_all(session, zip_path: str) -> dict:
 def _import_diagnostics(data: dict, *, imported: dict[str, int]) -> dict:
     diagnostics = dict(data.get("diagnostics", {}))
     skipped = _skipped_record_counts(data["users"], data["groups"])
+    skipped.update(diagnostics.get("non_object_records", {}))
     diagnostics["imported"] = imported
     diagnostics["skipped"] = skipped
     diagnostics["status"] = (
@@ -410,18 +423,18 @@ def _empty_skipped_record_counts() -> dict[str, int]:
 
 
 def _count_users_missing_objectid(users_data: list[dict]) -> int:
-    return sum(1 for user in users_data if not user.get("Properties", {}).get("objectid"))
+    return sum(1 for user in users_data if not _properties(user).get("objectid"))
 
 
 def _count_groups_missing_property(groups_data: list[dict], property_name: str) -> int:
-    return sum(1 for group in groups_data if not group.get("Properties", {}).get(property_name))
+    return sum(1 for group in groups_data if not _properties(group).get(property_name))
 
 
 def _count_user_members_missing_objectid(groups_data: list[dict]) -> int:
     return sum(
         1
         for group in groups_data
-        for member in group.get("Members", [])
+        for member in _members(group)
         if member.get("ObjectType") == "User" and not member.get("ObjectIdentifier")
     )
 

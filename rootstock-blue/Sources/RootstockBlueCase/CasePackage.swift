@@ -187,6 +187,21 @@ public struct CasePackage: Sendable {
         }
     }
 
+    /// One artifact in a batch. `openSource` runs just before that file is copied and must
+    /// return a descriptor opened with non-following traversal (the batch closes it), or nil
+    /// to skip a source that changed or vanished; a skip happens before any case mutation.
+    public struct ArtifactCopy {
+        public let relativeName: String
+        public let sourceDescription: String
+        public let openSource: () throws -> Int32?
+
+        public init(relativeName: String, sourceDescription: String, openSource: @escaping () throws -> Int32?) {
+            self.relativeName = relativeName
+            self.sourceDescription = sourceDescription
+            self.openSource = openSource
+        }
+    }
+
     public func copyArtifact(from source: URL, relativeName: String) throws -> URL {
         try copyArtifact(from: source, relativeName: relativeName, afterStagedCopy: nil)
     }
@@ -196,75 +211,126 @@ public struct CasePackage: Sendable {
         relativeName: String,
         afterStagedCopy: (() throws -> Void)?
     ) throws -> URL {
-        let descriptor = try CaseFilesystem.openRegularFileNoFollow(at: source, label: "artifact source")
-        defer { _ = close(descriptor) }
-        return try copyArtifact(
-            fromFileDescriptor: descriptor,
-            sourceDescription: source.path,
-            relativeName: relativeName,
-            afterStagedCopy: afterStagedCopy
-        )
+        let item = ArtifactCopy(relativeName: relativeName, sourceDescription: source.path) {
+            try CaseFilesystem.openRegularFileNoFollow(at: source, label: "artifact source")
+        }
+        return try copiedSingle(copyArtifacts([item], afterStagedCopy: afterStagedCopy), item)
     }
 
     /// Copies from a descriptor already opened by a caller using non-following
     /// traversal. The source pathname is deliberately never reopened here.
     public func copyArtifact(fromFileDescriptor descriptor: Int32, relativeName: String) throws -> URL {
-        try copyArtifact(
-            fromFileDescriptor: descriptor,
-            sourceDescription: "descriptor:\(descriptor)",
-            relativeName: relativeName,
-            afterStagedCopy: nil
-        )
+        let item = ArtifactCopy(relativeName: relativeName, sourceDescription: "descriptor:\(descriptor)") {
+            let copy = dup(descriptor)
+            guard copy >= 0 else { throw RootstockBlueError.invalidCasePackage("cannot duplicate artifact descriptor") }
+            return copy
+        }
+        return try copiedSingle(copyArtifacts([item]), item)
     }
 
-    private func copyArtifact(
-        fromFileDescriptor descriptor: Int32,
-        sourceDescription: String,
-        relativeName: String,
-        afterStagedCopy: (() throws -> Void)?
-    ) throws -> URL {
-        let fm = FileManager.default
-        let requestedDestination = try artifactDestination(relativeName: relativeName)
-        // Re-check containment on the resolved path immediately before any file operation.
-        let resolvedRoot = artifactsURL.standardizedFileURL.resolvingSymlinksInPath().path
-        let destination = requestedDestination.standardizedFileURL.resolvingSymlinksInPath()
-        guard destination.path.hasPrefix(resolvedRoot + "/") else {
-            throw RootstockBlueError.invalidCasePackage("artifact path escapes case package")
+    private func copiedSingle(_ results: [URL?], _ item: ArtifactCopy) throws -> URL {
+        guard let url = results.first ?? nil else {
+            throw RootstockBlueError.invalidCasePackage("artifact source is not available: \(item.sourceDescription)")
         }
+        return url
+    }
+
+    /// Copies many artifacts under one write journal: one integrity check before and one
+    /// hash manifest after, with one custody event per file. A result is nil where the
+    /// source was skipped.
+    public func copyArtifacts(_ items: [ArtifactCopy]) throws -> [URL?] {
+        try copyArtifacts(items, afterStagedCopy: nil)
+    }
+
+    /// Resolves and checks every destination before the journal opens: each must stay inside
+    /// `artifacts/` after resolving links, must not exist, and must be unique in the batch.
+    private func artifactDestinations(for items: [ArtifactCopy]) throws -> [URL] {
+        let resolvedRoot = artifactsURL.standardizedFileURL.resolvingSymlinksInPath().path
+        var seen = Set<String>()
+        return try items.map { item in
+            let destination = try artifactDestination(relativeName: item.relativeName)
+                .standardizedFileURL.resolvingSymlinksInPath()
+            guard destination.path.hasPrefix(resolvedRoot + "/") else {
+                throw RootstockBlueError.invalidCasePackage("artifact path escapes case package")
+            }
+            // Case folding: the case may live on a case-insensitive volume.
+            guard !FileManager.default.fileExists(atPath: destination.path),
+                  seen.insert(destination.path.lowercased()).inserted else {
+                throw RootstockBlueError.invalidCasePackage("artifact already exists: \(item.relativeName)")
+            }
+            return destination
+        }
+    }
+
+    /// Streams one source into a staging file, then moves it into place. Once a staging copy
+    /// exists the case may be half-written, so `mutationStarted` keeps the journal (fail closed).
+    /// Returns false, before touching the case, when the source is skipped.
+    private func placeArtifact(
+        _ item: ArtifactCopy,
+        at destination: URL,
+        mutationStarted: inout Bool,
+        afterStagedCopy: (() throws -> Void)?
+    ) throws -> Bool {
+        let fm = FileManager.default
+        guard let descriptor = try item.openSource() else { return false }
+        defer { _ = close(descriptor) }
+        try prepareArtifactParent(for: item.relativeName)
         guard !fm.fileExists(atPath: destination.path) else {
-            throw RootstockBlueError.invalidCasePackage("artifact already exists: \(relativeName)")
+            throw RootstockBlueError.invalidCasePackage("artifact already exists: \(item.relativeName)")
         }
         try CaseFilesystem.requireRegularFile(descriptor: descriptor, label: "artifact source")
-        try beginWriteJournal(operation: "artifact", target: "artifacts/\(relativeName)", eventID: nil)
         let staging = rootURL.appendingPathComponent(".rsbcase-artifact-stage-\(UUID().uuidString)")
-        var mutationStarted = false
         do {
-            try verifyIntegrity(allowWriteJournal: true)
-            try prepareArtifactParent(for: relativeName)
-            guard !fm.fileExists(atPath: destination.path) else {
-                throw RootstockBlueError.invalidCasePackage("artifact already exists: \(relativeName)")
-            }
-            try CaseFilesystem.requireRegularFile(descriptor: descriptor, label: "artifact source")
             try streamArtifact(fromFileDescriptor: descriptor, to: staging)
-            // From here on the case may be half-written; keep the journal so verification fails closed.
             mutationStarted = true
             try afterStagedCopy?()
             try fm.moveItem(at: staging, to: destination)
-            let hash = try Hashing.sha256File(at: destination)
-            let custody = CustodyEvent(
-                actor: NSUserName(),
-                action: "artifact.copy",
-                detail: "source=\(sourceDescription) destination=artifacts/\(relativeName) sha256=\(hash)"
-            )
-            try CustodyLog.append(url: custodyURL, event: custody)
+        } catch {
+            if !mutationStarted { try? fm.removeItem(at: staging) }
+            throw error
+        }
+        return true
+    }
+
+    func copyArtifacts(
+        _ items: [ArtifactCopy],
+        afterStagedCopy: (() throws -> Void)?,
+        afterIntegrityCheck: (() throws -> Void)? = nil,
+        afterHashManifestWrite: (() throws -> Void)? = nil
+    ) throws -> [URL?] {
+        guard !items.isEmpty else { return [] }
+        let destinations = try artifactDestinations(for: items)
+        let target = items.count == 1 ? "artifacts/\(items[0].relativeName)" : "artifacts (\(items.count) files)"
+        try beginWriteJournal(operation: "artifact", target: target, eventID: nil)
+        var mutationStarted = false
+        do {
+            try verifyIntegrity(allowWriteJournal: true)
+            try afterIntegrityCheck?()
             let database = try CaseDatabase(url: databaseURL)
-            try database.insertCustody(custody)
+            var copied: [URL?] = []
+            for (item, destination) in zip(items, destinations) {
+                guard try placeArtifact(
+                    item, at: destination, mutationStarted: &mutationStarted, afterStagedCopy: afterStagedCopy
+                ) else {
+                    copied.append(nil)
+                    continue
+                }
+                copied.append(destination)
+                let hash = try Hashing.sha256File(at: destination)
+                let custody = CustodyEvent(
+                    actor: NSUserName(),
+                    action: "artifact.copy",
+                    detail: "source=\(item.sourceDescription) destination=artifacts/\(item.relativeName) sha256=\(hash)"
+                )
+                try CustodyLog.append(url: custodyURL, event: custody)
+                try database.insertCustody(custody)
+            }
             try writeHashManifest(allowWriteJournal: true)
+            try afterHashManifestWrite?()
             try clearWriteJournal()
-            return destination
+            return copied
         } catch {
             if !mutationStarted {
-                try? fm.removeItem(at: staging)
                 try? clearWriteJournal()
             }
             throw error

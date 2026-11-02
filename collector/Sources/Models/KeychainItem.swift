@@ -18,6 +18,8 @@ public struct KeychainItem: GraphNode {
 
     /// Bundle IDs (or executable paths where no bundle exists) of applications
     /// explicitly listed in this item's ACL as trusted to read it without prompting.
+    /// Not collected yet: the ACL APIs are deprecated, so the collector always writes `[]`
+    /// and keychain-access edges appear only in imported data that carries them.
     public let trustedApps: [String]
 
     public enum Kind: Codable, RawRepresentable, Sendable {

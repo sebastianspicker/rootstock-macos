@@ -43,7 +43,14 @@ public struct LabPipeline: Sendable {
             let policy = type(of: lab).consent
             try SafetyRails.ensureLabConsent(context: planContext, policy: policy)
             let request = LabActionRequest(actionId: id, operation: .plan)
-            results.append(try await lab.run(request: request, context: planContext))
+            do {
+                results.append(try await lab.run(request: request, context: planContext))
+            } catch {
+                // One action refusing its target (e.g. a non-lab file in the way) must not hide the rest.
+                results.append(ActionResult(
+                    actionId: id, success: false, message: "plan failed: \(error.localizedDescription)", dryRun: true
+                ))
+            }
         }
         return results
     }

@@ -54,7 +54,7 @@ public struct NetworkListenersDataSource: DataSource {
         let listeners = Self.makeListeners(
             sockets: sockets,
             owners: owners,
-            pathToBundle: NetstatParser.pathToBundleMap(knownApps)
+            pathToBundle: BundlePaths.bundleIdMap(knownApps)
         )
         return DataSourceResult(nodes: listeners, errors: errors)
     }
@@ -92,7 +92,7 @@ public struct NetworkListenersDataSource: DataSource {
         let owner = socket.pid.flatMap { owners[$0] }
         let processName = owner?.command ?? socket.processName
         let bundleId = owner.flatMap {
-            NetstatParser.bundleId(forCommand: $0.command, pathToBundle: pathToBundle)
+            BundlePaths.bundleId(forCommand: $0.command, in: pathToBundle)
         }
         return NetworkListener(
             networkProtocol: socket.networkProtocol,

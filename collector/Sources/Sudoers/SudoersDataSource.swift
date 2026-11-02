@@ -91,20 +91,24 @@ public struct SudoersDataSource: DataSource {
             let lhs = trimmed[..<eqRange.lowerBound].trimmingCharacters(in: .whitespaces)
             let rhs = trimmed[eqRange.upperBound...].trimmingCharacters(in: .whitespaces)
 
-            // Extract user and host from LHS
-            let lhsParts = lhs.split(maxSplits: 1, omittingEmptySubsequences: true, whereSeparator: Self.isWhitespace)
-            guard let user = lhsParts.first else { continue }
+            // Extract the user list and host from LHS: "alice, bob ALL" -> [alice, bob], ALL
+            let compactLHS = lhs.replacingOccurrences(of: #",[ \t]+"#, with: ",", options: .regularExpression)
+            let lhsParts = compactLHS.split(maxSplits: 1, omittingEmptySubsequences: true, whereSeparator: Self.isWhitespace)
+            guard let users = lhsParts.first else { continue }
             let host = lhsParts.count > 1
                 ? String(lhsParts[1]).trimmingCharacters(in: .whitespaces)
                 : "ALL"
 
-            for spec in Self.commandSpecs(from: rhs) {
-                rules.append(SudoersRule(
-                    user: String(user),
-                    host: host,
-                    command: spec.command,
-                    nopasswd: spec.nopasswd
-                ))
+            let specs = Self.commandSpecs(from: rhs)
+            for user in users.split(separator: ",") {
+                for spec in specs {
+                    rules.append(SudoersRule(
+                        user: String(user),
+                        host: host,
+                        command: spec.command,
+                        nopasswd: spec.nopasswd
+                    ))
+                }
             }
         }
 
@@ -127,7 +131,7 @@ public struct SudoersDataSource: DataSource {
         var specs: [CommandSpec] = []
         var nopasswd = false
 
-        for item in rhs.split(separator: ",") {
+        for item in topLevelItems(rhs) {
             var command = item.trimmingCharacters(in: .whitespaces)
             // Remove (runas) spec
             if command.hasPrefix("("), let parenEnd = command.firstIndex(of: ")") {
@@ -141,20 +145,39 @@ public struct SudoersDataSource: DataSource {
         return specs
     }
 
+    /// Commas inside a `(runas)` list do not separate command specifications.
+    private static func topLevelItems(_ text: String) -> [Substring] {
+        var items: [Substring] = []
+        var depth = 0
+        var start = text.startIndex
+        for index in text.indices {
+            switch text[index] {
+            case "(": depth += 1
+            case ")": depth = max(0, depth - 1)
+            case "," where depth == 0:
+                items.append(text[start..<index])
+                start = text.index(after: index)
+            default: break
+            }
+        }
+        items.append(text[start...])
+        return items
+    }
+
     /// Remove leading `TAG:` tokens (NOPASSWD:, PASSWD:, SETENV:, ...), updating `nopasswd`.
+    /// A tag may be followed directly by the command, as in `NOPASSWD:/bin/ls`.
     private static func stripLeadingTags(_ spec: String, nopasswd: inout Bool) -> String {
-        var rest = spec
-        while let first = rest.split(maxSplits: 1, whereSeparator: isWhitespace).first {
-            let tag = String(first)
-            guard tag.count > 1, tag.hasSuffix(":"),
-                  tag.dropLast().allSatisfy({ $0.isUppercase || $0 == "_" }) else { break }
-            if tag == "NOPASSWD:" {
+        var rest = Substring(spec)
+        while let colon = rest.firstIndex(of: ":") {
+            let tag = rest[..<colon]
+            guard !tag.isEmpty, tag.allSatisfy({ $0.isUppercase || $0 == "_" }) else { break }
+            if tag == "NOPASSWD" {
                 nopasswd = true
-            } else if tag == "PASSWD:" {
+            } else if tag == "PASSWD" {
                 nopasswd = false
             }
-            rest = String(rest.dropFirst(tag.count)).trimmingCharacters(in: .whitespaces)
+            rest = rest[rest.index(after: colon)...].drop(while: isWhitespace)
         }
-        return rest
+        return String(rest)
     }
 }

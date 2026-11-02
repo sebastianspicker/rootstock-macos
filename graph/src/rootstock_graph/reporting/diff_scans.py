@@ -92,6 +92,7 @@ def _changed_tcc_row(before_grant, after_grant) -> dict:
 def _injection_row(bundle_id: str, app, methods, *, reason: str) -> dict:
     return {
         "bundle_id": bundle_id,
+        "path": app.path,
         "name": app.name,
         "methods": list(methods),
         "reason": reason,
@@ -100,17 +101,17 @@ def _injection_row(bundle_id: str, app, methods, *, reason: str) -> dict:
 
 def _new_or_removed_injection_rows(
     app_map: dict,
-    bundle_ids: set[str],
+    keys: set[tuple[str, str]],
     *,
     reason: str,
 ) -> list[dict]:
     rows = []
-    for bundle_id in bundle_ids:
-        app = app_map[bundle_id]
+    for key in keys:
+        app = app_map[key]
         if app.injection_methods:
             rows.append(
                 _injection_row(
-                    bundle_id,
+                    app.bundle_id,
                     app,
                     app.injection_methods,
                     reason=reason,
@@ -120,14 +121,15 @@ def _new_or_removed_injection_rows(
 
 
 def _changed_injection_rows(
-    before_map: dict, after_map: dict, common: set[str]
+    before_map: dict, after_map: dict, common: set[tuple[str, str]]
 ) -> tuple[list[dict], list[dict], list[dict]]:
     new_injectable = []
     no_longer = []
     methods_changed = []
-    for bundle_id in common:
-        before_app = before_map[bundle_id]
-        after_app = after_map[bundle_id]
+    for key in common:
+        before_app = before_map[key]
+        after_app = after_map[key]
+        bundle_id = after_app.bundle_id
         before_methods = set(before_app.injection_methods)
         after_methods = set(after_app.injection_methods)
 
@@ -145,6 +147,7 @@ def _changed_injection_rows(
             methods_changed.append(
                 {
                     "bundle_id": bundle_id,
+                    "path": after_app.path,
                     "name": after_app.name,
                     "before": sorted(before_methods),
                     "after": sorted(after_methods),
@@ -154,15 +157,16 @@ def _changed_injection_rows(
 
 
 def diff_apps(before: ScanResult, after: ScanResult) -> AppDiff:
-    """Compare application inventories."""
-    before_ids = {a.bundle_id for a in before.applications}
-    after_ids = {a.bundle_id for a in after.applications}
-    after_names = {a.bundle_id: a.name for a in after.applications}
-    before_names = {a.bundle_id: a.name for a in before.applications}
+    """Compare application inventories; copies of one app at two paths stay distinct."""
+    before_apps = {(a.bundle_id, a.path): a for a in before.applications}
+    after_apps = {(a.bundle_id, a.path): a for a in after.applications}
+
+    def row(app) -> str:
+        return f"{app.bundle_id} ({app.name}, {app.path})"
 
     return AppDiff(
-        added=[f"{bid} ({after_names.get(bid, '?')})" for bid in sorted(after_ids - before_ids)],
-        removed=[f"{bid} ({before_names.get(bid, '?')})" for bid in sorted(before_ids - after_ids)],
+        added=[row(after_apps[key]) for key in sorted(set(after_apps) - set(before_apps))],
+        removed=[row(before_apps[key]) for key in sorted(set(before_apps) - set(after_apps))],
     )
 
 
@@ -194,8 +198,8 @@ def diff_tcc(before: ScanResult, after: ScanResult) -> TCCDiff:
 
 def diff_injection(before: ScanResult, after: ScanResult) -> InjectionDiff:
     """Compare injection surface changes."""
-    before_map = {a.bundle_id: a for a in before.applications}
-    after_map = {a.bundle_id: a for a in after.applications}
+    before_map = {(a.bundle_id, a.path): a for a in before.applications}
+    after_map = {(a.bundle_id, a.path): a for a in after.applications}
 
     common = set(before_map) & set(after_map)
     new_injectable = _new_or_removed_injection_rows(
@@ -224,14 +228,19 @@ def diff_injection(before: ScanResult, after: ScanResult) -> InjectionDiff:
 
 
 def diff_persistence(before: ScanResult, after: ScanResult) -> PersistenceDiff:
-    """Compare persistence mechanism changes."""
-    before_labels = {i.label for i in before.launch_items}
-    after_labels = {i.label for i in after.launch_items}
+    """Compare persistence; a moved plist or swapped program shows as removed plus added."""
+    before_items = {_launch_item_row(i) for i in before.launch_items}
+    after_items = {_launch_item_row(i) for i in after.launch_items}
 
     return PersistenceDiff(
-        added=sorted(after_labels - before_labels),
-        removed=sorted(before_labels - after_labels),
+        added=sorted(after_items - before_items),
+        removed=sorted(before_items - after_items),
     )
+
+
+def _launch_item_row(item) -> str:
+    program = f" -> {item.program}" if item.program else ""
+    return f"{item.label} ({item.type}: {item.path}{program})"
 
 
 def diff_entitlements(before: ScanResult, after: ScanResult) -> EntitlementDiff:

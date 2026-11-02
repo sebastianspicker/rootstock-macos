@@ -16,7 +16,6 @@ let package = Package(
         .library(name: "RootstockBlueDetect", targets: ["RootstockBlueDetect"]),
         .library(name: "RootstockBlueCollect", targets: ["RootstockBlueCollect"]),
         .library(name: "RootstockBlueInterchange", targets: ["RootstockBlueInterchange"]),
-        .library(name: "RootstockBlueAcquire", targets: ["RootstockBlueAcquire"]),
         .library(name: "RootstockBlueIntegrations", targets: ["RootstockBlueIntegrations"]),
         .executable(name: "rootstock-blue", targets: ["rootstock-blue"]),
     ],
@@ -87,18 +86,10 @@ let package = Package(
                 "RootstockBlueCore",
                 "RootstockBlueDetect",
                 "RootstockBlueCollect",
-                "RootstockBlueAcquire",
                 "RootstockBlueIntegrations",
                 "RootstockBlueSyntheticEvents",
             ],
             exclude: ["Fixtures"],
-            swiftSettings: strictConcurrencySettings
-        ),
-
-        // MARK: - Acquire
-        .target(
-            name: "RootstockBlueAcquire",
-            dependencies: ["RootstockBlueCore", "RootstockBlueCase"],
             swiftSettings: strictConcurrencySettings
         ),
 

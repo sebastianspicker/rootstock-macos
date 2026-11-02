@@ -31,19 +31,6 @@ public struct CodeSigningDataSource {
         self.runCommand = runCommand
     }
 
-    /// Enriches the given Application array in place with code signing metadata.
-    ///
-    /// For each app, runs Security.framework analysis and injection assessment.
-    /// If analysis fails, signing posture stays unknown and an error is recorded.
-    ///
-    /// - Returns: Per-app `CollectionError` entries for any analysis failures.
-    @discardableResult
-    public func enrich(applications: inout [Application]) -> [CollectionError] {
-        let (enrichedApplications, errors) = enriched(applications: applications)
-        applications = enrichedApplications
-        return errors
-    }
-
     /// Return a new array enriched with code signing metadata.
     ///
     /// This mirrors the copy-on-return pattern used by Sandbox and Quarantine
@@ -210,7 +197,7 @@ public struct CodeSigningDataSource {
         }
         let outcome = runCommand("/usr/sbin/spctl", ["-a", "-vv", appPath], 15)
         let status = Self.notarizationStatus(from: outcome, appPath: appPath)
-        let output = outcome.result.map { $0.stderr + "\n" + $0.stdout } ?? ""
+        let output = outcome.result.map { Self.verdictText($0, appPath: appPath) } ?? ""
         return (status.value, Self.assessmentSource(from: output), status.error)
     }
 
@@ -233,13 +220,11 @@ public struct CodeSigningDataSource {
     ) -> (value: Bool?, error: CollectionError?) {
         switch outcome {
         case .success(let result):
-            return acceptedNotarizationStatus(
-                output: result.stderr + "\n" + result.stdout,
-                appPath: appPath
-            )
+            return acceptedNotarizationStatus(output: verdictText(result, appPath: appPath), appPath: appPath)
         case .nonZeroExit(let result):
-            let output = [result.stderr, result.stdout]
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            let output = verdictText(result, appPath: appPath)
+                .split(whereSeparator: \.isNewline)
+                .map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty }
                 .joined(separator: " ")
             let lowered = output.lowercased()
@@ -247,10 +232,7 @@ public struct CodeSigningDataSource {
                 return (false, nil)
             }
             if lowered.contains("accepted") {
-                return acceptedNotarizationStatus(
-                    output: result.stderr + "\n" + result.stdout,
-                    appPath: appPath
-                )
+                return acceptedNotarizationStatus(output: verdictText(result, appPath: appPath), appPath: appPath)
             }
             let detail = output.isEmpty
                 ? "process exited with status \(result.terminationStatus)"
@@ -296,6 +278,12 @@ public struct CodeSigningDataSource {
             return (false, nil)
         }
         return (true, nil)
+    }
+
+    /// spctl echoes the app path; a name such as "Rejected Items.app" or one with a newline
+    /// and "source=" must not decide the verdict or the recorded source, so it is removed first.
+    static func verdictText(_ result: ShellResult, appPath: String) -> String {
+        (result.stderr + "\n" + result.stdout).replacingOccurrences(of: appPath, with: "")
     }
 
     /// Extracts the `source=` value from `spctl -a -vv` output

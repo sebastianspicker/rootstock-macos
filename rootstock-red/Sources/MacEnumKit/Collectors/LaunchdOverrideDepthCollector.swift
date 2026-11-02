@@ -11,10 +11,9 @@ public struct LaunchdOverrideDepthCollector: Collector {
 
     private static let overridePaths: [String] = [
         "/var/db/com.apple.xpc.launchd/disabled.plist",
-        "/var/db/com.apple.xpc.launchd/disabled.501.plist",
+        "/var/db/com.apple.xpc.launchd/disabled.\(getuid()).plist",
         "/var/db/launchd.db/com.apple.launchd/overrides.plist",
-        "/var/db/launchd.db/com.apple.launchd.peruser.501/overrides.plist",
-        NSHomeDirectory() + "/Library/LaunchAgents",
+        "/var/db/launchd.db/com.apple.launchd.peruser.\(getuid())/overrides.plist",
     ]
 
     private static let securityHints: [String] = [
@@ -35,6 +34,20 @@ public struct LaunchdOverrideDepthCollector: Collector {
 
     public init() {}
 
+    /// Labels whose value means "disabled" (`true`; legacy overrides.plist: dict with `Disabled = true`).
+    /// Returns nil when the data is oversized, unparseable, or has no disabled entry (not an override).
+    static func disabledLabels(in data: Data) -> [String]? {
+        guard data.count < 2_000_000,
+              let plist = (try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)) as? [String: Any]
+        else { return nil }
+        let labels = plist.compactMap { key, value -> String? in
+            if let flag = value as? Bool { return flag ? key : nil }
+            if let dict = value as? [String: Any], dict["Disabled"] as? Bool == true { return key }
+            return nil
+        }.sorted()
+        return labels.isEmpty ? nil : labels
+    }
+
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         let fm = FileManager.default
         var notes: [String] = [
@@ -43,15 +56,12 @@ public struct LaunchdOverrideDepthCollector: Collector {
 
         var overrides: [String] = []
         for path in Self.overridePaths where fm.fileExists(atPath: path) {
+            guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+                  let disabled = Self.disabledLabels(in: data) else { continue }
             overrides.append(path)
             notes.append("override_path: \(path)")
-            // Shallow security-label scan when plist is readable (keys only if small)
-            if path.hasSuffix(".plist"), let data = try? Data(contentsOf: URL(fileURLWithPath: path)), data.count < 2_000_000 {
-                if let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) {
-                    for hint in Self.securityHints where text.localizedCaseInsensitiveContains(hint) {
-                        notes.append("security_label_hint_in_override: \(hint) @ \(path)")
-                    }
-                }
+            for hint in Self.securityHints where disabled.contains(where: { $0.localizedCaseInsensitiveContains(hint) }) {
+                notes.append("security_label_hint_in_override: \(hint) @ \(path)")
             }
         }
 
