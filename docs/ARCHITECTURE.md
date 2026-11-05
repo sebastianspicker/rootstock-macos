@@ -4,28 +4,80 @@ Rootstock separates host collection, graph analysis, CVE scanning, assessment,
 and incident cases into independently built tools. They exchange the file
 formats defined in [`contracts/`](../contracts/README.md).
 
-## System context
+If you are new, read this page top to bottom: the first two diagrams show
+what runs where, the journeys show what happens when you run a command or
+click in the viewer, and the code map at the end says where to start reading.
+
+## System overview
+
+What runs where in a Core run, and how the pieces talk:
 
 ```mermaid
 flowchart LR
-    Host[macOS host] --> Collector[Collector]
-    Collector -->|legacy scan.json| Graph[Rootstock Graph]
-    Collector -->|scan.json| Investigation[Offline investigation]
-    Investigation --> LocalOutputs[HTML, JSON, text]
-    Scope[Declared CVE scope] --> CVE[cve-scan]
-    CVE -->|export v7| Graph
-    Red[Rootstock Red] -->|family export v1| Graph
-    Red -->|findings JSONL v1| Blue[Rootstock Blue]
-    Collector -->|scan.json import| Blue
-    Blue -->|family export v1| Graph
-    Graph --> Neo4j[(Neo4j)]
-    Neo4j --> Outputs[queries, reports, API, viewer]
-    Artifacts[Copied artifact tree] --> Blue
+    host[(macOS host)]
+    subgraph swift [Swift: collector/]
+        cli[RootstockCLI]
+    end
+    scan[/scan.json/]
+    subgraph py [Python: graph/]
+        investigate[rootstock-graph-investigate]
+        pipeline[pipeline.sh]
+        api[rootstock-graph-api]
+    end
+    neo4j[(Neo4j)]
+    offline[/investigation.html/]
+    report[/rootstock-report.md/]
+    viewer[Viewer in browser]
+    host -->|read metadata| cli
+    cli -->|JSONExporter| scan
+    scan -->|no database| investigate
+    investigate --> offline
+    scan --> pipeline
+    pipeline -->|Bolt writes| neo4j
+    pipeline --> report
+    viewer -->|"HTTP /api/* + bearer"| api
+    api -->|read-only session| neo4j
+    classDef focus fill:#fde68a,stroke:#b45309,color:#1f2937
+    class scan focus
+```
+
+`scan.json` is the hinge: the collector writes it once, and every later step
+reads it as a file. The offline investigation needs no database; the graph
+path loads the scan into Neo4j, which the API then serves to the viewer on
+loopback only. All Python commands are console scripts of the one `graph`
+package.
+
+Where in the code:
+[collector/Sources/RootstockCLI/RootstockCommand.swift](../collector/Sources/RootstockCLI/RootstockCommand.swift),
+[graph/pipeline.sh](../graph/pipeline.sh),
+[graph/src/rootstock_graph/investigation/cli.py](../graph/src/rootstock_graph/investigation/cli.py),
+[graph/src/rootstock_graph/api.py](../graph/src/rootstock_graph/api.py),
+[graph/docker-compose.yml](../graph/docker-compose.yml),
+[graph/pyproject.toml](../graph/pyproject.toml) (`[project.scripts]`).
+
+## Product family handoffs
+
+Which other tools feed the graph, and through which files:
+
+```mermaid
+flowchart LR
+    collector[Collector]
+    scope[/scope file/] --> cve[cve-scan]
+    cve -->|export v7| rsgraph[Rootstock Graph]
+    red[Rootstock Red] -->|family export v1| rsgraph
+    red -->|findings JSONL v1| blue[Rootstock Blue]
+    artifacts[/copied artifact tree/] --> blue
+    collector -->|scan.json| rsgraph
+    collector -->|scan.json| blue
+    blue -->|family export v1| rsgraph
+    blue -->|owns| case[(.rsbcase)]
 ```
 
 Every arrow between products is an explicit file handoff. A Core graph run
-does not invoke cve-scan, Red, or Blue. Blue keeps its case
-records separately from Neo4j, and each export has its own format.
+does not invoke cve-scan, Red, or Blue; their exports are imported with
+`pipeline.sh --cve-scan-export` or `rootstock-graph-import-family-export`.
+Blue keeps its case records separately from Neo4j, and each export has its own
+format (see [Contracts and compatibility](#contracts-and-compatibility)).
 
 ## Components
 
@@ -44,41 +96,172 @@ only local source-package dependency is `RootstockMacFacts`, consumed by the
 collector, Red, and Blue. Python products communicate through artifacts, not
 imports across project roots.
 
-## Core runtime flow
+## User journeys
+
+### Collect a scan
+
+What happens when you run `RootstockCLI --output scan.json`:
+
+```mermaid
+flowchart LR
+    cmd[RootstockCommand.run] -->|"--modules"| config[ModuleConfig]
+    config --> orch[ScanOrchestrator.run]
+    orch -.->|async let| indep[Independent data sources]
+    orch -.->|async let| posture[Host posture probes]
+    orch -->|await| apps[collectApplications]
+    apps -->|known apps| dep[App-dependent sources]
+    indep --> assemble[makeScanResult]
+    dep --> assemble
+    posture --> assemble
+    assemble -->|ScanResult| export[JSONExporter]
+    export -->|write| scan[/scan.json/]
+```
+
+Independent sources (TCC, XPC, keychain, MDM and the others in
+`independentModules`) and host posture probes start concurrently while
+applications are collected. Sources that need the application list, such as
+`PersistenceDataSource` and `ProcessSnapshotDataSource`, run after it. A
+failing source adds a `CollectionError` instead of aborting, so a scan can be
+partial; only a full run that collects nothing exits non-zero.
+
+Where in the code:
+[RootstockCommand.swift](../collector/Sources/RootstockCLI/RootstockCommand.swift),
+[ScanOrchestrator.swift](../collector/Sources/RootstockCLI/ScanOrchestrator.swift),
+[ScanOrchestratorAppDependent.swift](../collector/Sources/RootstockCLI/ScanOrchestratorAppDependent.swift),
+[ScanOrchestratorAssembly.swift](../collector/Sources/RootstockCLI/ScanOrchestratorAssembly.swift),
+[Export/JSONExporter.swift](../collector/Sources/Export/JSONExporter.swift),
+one target per source under [collector/Sources/](../collector/Sources/).
+
+### Load a scan into the graph
+
+What `bash graph/pipeline.sh scan.json` runs, in order:
+
+```mermaid
+flowchart LR
+    schema[setup-schema] --> enrich[cve-enrichment]
+    enrich -->|"--refresh-cve"| cache[(NVD cache)]
+    enrich --> import[import-scan]
+    import -.->|"--cve-scan-export"| cvescan[import-cve-scan]
+    import --> edges[infer edges]
+    cvescan -.-> edges
+    edges --> vulns[import-vulnerabilities]
+    cache -->|offline read| vulns
+    vulns --> score[infer score]
+    score --> report[report]
+```
+
+Each box is a `rootstock-graph-*` command and every step stops the pipeline
+on failure. The enrichment step only fetches with `--refresh-cve`; it then
+matches installed apps and macOS by exact CPE into
+`~/.rootstock/cache/nvd-installed.json`, which the vulnerability import reads
+without network access. Inference is split in two because the vulnerability
+importer's category heuristics read inferred edges (such as `CAN_INJECT_INTO`),
+while tier classification, risk scores and recommendations read the imported
+CVE links. Imports `MERGE` on unique keys, so re-running is idempotent; by
+default an import replaces earlier scans of the same Mac.
+
+Before import, `rootstock-graph-validate-scan scan.json` checks the packaged
+collector-scan schema mirror, the Pydantic model, and semantic constraints.
+
+Where in the code:
+[graph/pipeline.sh](../graph/pipeline.sh),
+[ingestion/setup_schema.py](../graph/src/rootstock_graph/ingestion/setup_schema.py),
+[vulnerability/cve_enrichment_cli.py](../graph/src/rootstock_graph/vulnerability/cve_enrichment_cli.py),
+[ingestion/import_scan.py](../graph/src/rootstock_graph/ingestion/import_scan.py) (`_run_import`),
+[ingestion/import_vulnerabilities.py](../graph/src/rootstock_graph/ingestion/import_vulnerabilities.py),
+[inference/infer.py](../graph/src/rootstock_graph/inference/infer.py) (`_run_all_inference`),
+[reporting/report.py](../graph/src/rootstock_graph/reporting/report.py).
+
+### Run a query in the live viewer
+
+What happens when an analyst connects the viewer to the API and runs a
+security question:
 
 ```mermaid
 sequenceDiagram
-    participant Operator
-    participant Collector
-    participant Validator
-    participant Graph
-    participant Neo4j
-    participant APIViewer as API and viewer
-
-    Operator->>Collector: select modules and output path
-    Collector-->>Operator: scan.json plus explicit collection errors
-    Operator->>Validator: validate scan.json
-    Validator-->>Operator: schema, model, and semantic result
-    Operator->>Graph: pipeline.sh scan.json
-    Graph->>Neo4j: schema and idempotent imports
-    Graph->>Neo4j: inferred edges, then vulnerabilities, then tiers and risk scores
-    Graph-->>Operator: report or OpenGraph/viewer artifact
-    APIViewer->>Neo4j: authenticated loopback reads and bounded state actions
+    autonumber
+    actor A as Analyst
+    participant ui as Viewer (live.ts)
+    participant mw as api.py middleware
+    participant routes as routes.py
+    participant neo4j as Neo4j
+    A->>ui: Open http://127.0.0.1:8000/
+    A->>ui: Enter API token
+    ui->>mw: POST /api/queries/{id}/run + Bearer
+    mw->>mw: require_loopback_host, require_api_token
+    mw->>routes: run_query_endpoint
+    routes->>routes: discover_queries, validate read-only
+    routes->>neo4j: Cypher via read-only principal
+    neo4j-->>routes: rows (bounded)
+    routes-->>ui: JSON rows
+    ui-->>A: Results table and graph
 ```
 
-The collector runs independent local data sources, retains recoverable
-failures in the result, and serializes one `ScanResult`. Before import,
-`rootstock-graph-validate-scan scan.json` (installed with the graph package)
-checks the packaged collector-scan schema mirror, the Pydantic model, and
-semantic constraints. `graph/pipeline.sh` then sequences
-schema setup, optional CVE refresh, collector import, optional cve-scan import,
-the inference edge stage, vulnerability import, the inference score stage, and
-reporting. The CVE refresh (`--refresh-cve`) also matches the scan's installed
-apps and macOS release against NVD by exact CPE and stores the results in the
-offline cache `~/.rootstock/cache/nvd-installed.json`; the vulnerability import
-reads that cache without network access. The vulnerability importer's category heuristics read inferred
-relationships, and tier classification, risk scoring, and recommendations read
-the CVE links, which is why inference is split around the import.
+The token lives only in viewer memory (step 2) and is sent on every
+`/api/*` call. The middleware (step 4) rejects non-loopback `Host` headers and
+missing tokens before any route runs. Named queries are the `.cypher` files in
+`resources/queries/`; they and ad-hoc `/api/cypher` requests run on a session
+from the separate read-only database account (step 7), with a timeout and row
+cap. Only `/api/mark-owned`, `/api/clear-owned` and `/api/tier-classify` use
+the writer session.
+
+Where in the code:
+[graph/viewer/src/live.ts](../graph/viewer/src/live.ts) (`apiFetch`),
+[graph/viewer/src/controls.ts](../graph/viewer/src/controls.ts) (token form),
+[graph/src/rootstock_graph/api.py](../graph/src/rootstock_graph/api.py),
+[api_support/routes.py](../graph/src/rootstock_graph/api_support/routes.py),
+[api_support/dependencies.py](../graph/src/rootstock_graph/api_support/dependencies.py),
+[reporting/query_runner.py](../graph/src/rootstock_graph/reporting/query_runner.py),
+[resources/queries/](../graph/src/rootstock_graph/resources/queries/).
+
+### Investigate offline
+
+`rootstock-graph-investigate scan.json --format html` loads the scan (and an
+optional `--baseline`) with the same Pydantic model the importer uses, then
+`investigate()` builds evidence, detections, CVE candidates from the local
+cache, and baseline changes, and `render_html` or `render_text` writes an
+owner-only file. No Neo4j, no network. See the
+[offline investigation guide](INVESTIGATION.md).
+
+Where in the code:
+[investigation/cli.py](../graph/src/rootstock_graph/investigation/cli.py),
+[investigation/assemble.py](../graph/src/rootstock_graph/investigation/assemble.py),
+[investigation/evidence.py](../graph/src/rootstock_graph/investigation/evidence.py),
+[investigation/detections.py](../graph/src/rootstock_graph/investigation/detections.py),
+[investigation/render.py](../graph/src/rootstock_graph/investigation/render.py).
+
+## Graph data model
+
+The core of what Neo4j stores after a pipeline run. The schema defines more than 50
+node labels; this shows the central ones:
+
+```mermaid
+erDiagram
+    Computer ||--o{ Application : "INSTALLED_ON (from app)"
+    Application }o--o{ TCC_Permission : HAS_TCC_GRANT
+    Application }o--o{ Entitlement : HAS_ENTITLEMENT
+    Application }o--o{ Application : "CAN_INJECT_INTO (inferred)"
+    Application }o--o{ LaunchItem : PERSISTS_VIA
+    LaunchItem }o--o| User : RUNS_AS
+    Application }o--o{ Vulnerability : AFFECTED_BY
+    Vulnerability }o--o{ AttackTechnique : MAPS_TO_TECHNIQUE
+    Application }o--o{ Recommendation : HAS_RECOMMENDATION
+```
+
+Imported edges record observed facts from the scan; inferred edges such as
+`CAN_INJECT_INTO` are written by `inference/` and modelled exposure, not
+proof. `AFFECTED_BY` is used only for fresh, complete NVD version matches;
+weaker NVD matches use `HAS_CVE_CANDIDATE`. Each label's unique key (for
+example `Application.app_key`, `TCC_Permission.service`,
+`Vulnerability.cve_id`) is defined in `setup_schema.py`.
+
+Where in the code:
+[ingestion/setup_schema.py](../graph/src/rootstock_graph/ingestion/setup_schema.py) (`CONSTRAINTS`),
+[ingestion/import_nodes_permissions.py](../graph/src/rootstock_graph/ingestion/import_nodes_permissions.py),
+[inference/infer_injection.py](../graph/src/rootstock_graph/inference/infer_injection.py),
+[ingestion/import_installed_cves.py](../graph/src/rootstock_graph/ingestion/import_installed_cves.py).
+
+## Python code layering
 
 Python graph code lives in `graph/src/rootstock_graph/`. Foundation modules
 (`category_predicates`, `constants`, `cypher`, `models`, `models_inventory`, `neo4j`, `paths`,
@@ -86,7 +269,7 @@ Python graph code lives in `graph/src/rootstock_graph/`. Foundation modules
 `api_support` (routes, schemas, dependencies), and `api`; `inference` sits on
 the foundation and feeds `api_support`. The independent `investigation` layer
 uses foundation, vulnerability and ingestion helpers to produce offline findings
-and reports without a database. the private `graph/tests/test_architecture.py`
+and reports without a database. The private `graph/tests/test_architecture.py`
 enforces the layering. Root-level graph files are orchestration or frontend
 inputs, not Python command adapters. CLI commands are declared in
 `graph/pyproject.toml`.
@@ -152,6 +335,34 @@ Only the collector has a repository release-archive script
 (`collector/scripts/build-release.sh`); Graph, cve-scan, Red, Blue, and
 RootstockMacFacts remain source packages in the current Core alpha procedure.
 
+### CI
+
+How a change is checked and how the public demo is published:
+
+```mermaid
+flowchart LR
+    pr[PR to main] --> test[test.yml]
+    test -->|"scripts/verify release, quality, web"| static[Static lanes]
+    test -->|"verify swift-core, swift-family"| swift[Swift builds]
+    test -->|"verify graph, cve, shell"| py[Python and shell]
+    test -->|"verify neo4j"| neo[Neo4j pipeline]
+    manual[Manual dispatch] -.-> pages[pages.yml]
+    pages -->|"npm run demo:build"| demo[GitHub Pages demo]
+    manual -.-> rel[release-check.yml]
+    rel -->|build-release.sh| archive[/collector archive/]
+```
+
+The test jobs call the same `scripts/verify <lane>` you run locally, so a
+green local lane predicts the CI job (Swift jobs skip when no Swift file changed). The Pages demo and `release-check.yml` (which
+refuses any ref other than `main`) are started by hand; CodeQL and Scorecard
+run as separate workflows. The demo is built from a fictional dataset and
+scans no host.
+
+Where in the code:
+[.github/workflows/](../.github/workflows/),
+[scripts/verify](../scripts/verify),
+[collector/scripts/build-release.sh](../collector/scripts/build-release.sh).
+
 The repository does not provide a supported remote graph service, fleet agent,
 SIEM, EDR, MDM deployment, live Endpoint Security client, signing, or
 notarization workflow.
@@ -192,3 +403,23 @@ notarization workflow.
 
 The [architecture decisions](design-docs/index.md) explain these choices.
 Component READMEs link to their detailed architecture and extension guides.
+
+## Code map
+
+Where to start reading, in the order a newcomer usually needs it:
+
+| Path | What to read it for |
+| --- | --- |
+| [graph/pipeline.sh](../graph/pipeline.sh) | The whole Core flow in one script |
+| [collector/Sources/RootstockCLI/](../collector/Sources/RootstockCLI/) | Collector entry point and orchestration |
+| [collector/Sources/Models/](../collector/Sources/Models/) | Swift types serialized into `scan.json` |
+| [contracts/collector-scan/](../contracts/collector-scan/) | The `scan.json` schema and fixtures |
+| [graph/src/rootstock_graph/models.py](../graph/src/rootstock_graph/models.py) | Pydantic model of the scan on the Python side |
+| [graph/src/rootstock_graph/ingestion/](../graph/src/rootstock_graph/ingestion/) | Scan, CVE and family imports into Neo4j |
+| [graph/src/rootstock_graph/inference/](../graph/src/rootstock_graph/inference/) | Inferred edges, tiers, risk scores, recommendations |
+| [graph/src/rootstock_graph/resources/queries/](../graph/src/rootstock_graph/resources/queries/) | The security questions as `.cypher` files |
+| [graph/src/rootstock_graph/reporting/](../graph/src/rootstock_graph/reporting/) | Reports, OpenGraph export, static viewer |
+| [graph/src/rootstock_graph/api.py](../graph/src/rootstock_graph/api.py) | Local API and its guards |
+| [graph/viewer/src/](../graph/viewer/src/) | Viewer TypeScript (bundled into `resources/viewer/`) |
+| [graph/src/rootstock_graph/investigation/](../graph/src/rootstock_graph/investigation/) | Offline investigation report |
+| [scripts/verify](../scripts/verify) | Every check lane |
