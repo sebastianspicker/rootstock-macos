@@ -15,6 +15,8 @@ records network listeners, trusted root certificates, browser extensions,
 installer receipts and host security settings, and installed app and macOS
 versions can be matched against NVD CVEs by exact CPE.
 
+> _Claude was used to polish and proof-read the code and documentation of this repository._
+
 <details>
 <summary>Status and limitations</summary>
 
@@ -104,7 +106,8 @@ See [Screenshot capture](docs/screenshots.md) to reproduce these images.
 | `packages/RootstockMacFacts/` | Shared Swift paths, catalogs, and parsers | Library consumed by the Swift products | [RootstockMacFacts](packages/RootstockMacFacts/README.md) |
 | `contracts/` | Interchange schemas and fixtures | Defines supported artifact formats | [Contracts](contracts/README.md) |
 
-See [Architecture](docs/ARCHITECTURE.md) for dependency and runtime flows and
+See [Architecture](docs/ARCHITECTURE.md) for what runs where, what each
+command and viewer action reaches, the graph data model and a code map, and
 [Product family](docs/FAMILY.md) for supported handoffs.
 
 ## Requirements

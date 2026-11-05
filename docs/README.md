@@ -7,8 +7,9 @@ when you need to understand settings, evidence, or how the tools work together.
 
 ## Repository documentation
 
-- [Architecture](ARCHITECTURE.md) describes implemented components,
-  dependencies, runtime flows, state ownership, and extension rules.
+- [Architecture](ARCHITECTURE.md) describes implemented components, user
+  journeys, the graph data model, state ownership, CI, extension rules, and a
+  code map.
 - [Product family](FAMILY.md) lists supported artifact handoffs.
 - [Configuration](CONFIGURATION.md) explains environment variables, input files, and
   local services.
