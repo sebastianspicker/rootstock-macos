@@ -25,7 +25,7 @@ public struct TerminalParser: ArtifactParser {
     }
 
     private func parseHistory(at url: URL) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         let user = inferUser(from: url)
         var events: [EventEnvelope] = []
         var index = 0

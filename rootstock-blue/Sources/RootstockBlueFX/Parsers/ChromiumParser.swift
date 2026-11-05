@@ -16,22 +16,23 @@ public struct ChromiumParser: ArtifactParser {
         var events: [EventEnvelope] = []
         // Chromium profiles store a file named "History" (no extension)
         let histories = root.enumerate(matching: { url in
-            url.lastPathComponent == "History"
-                && (url.path.contains("Chrome")
-                    || url.path.contains("Chromium")
-                    || url.path.contains("Edge")
-                    || url.path.contains("Brave")
-                    || url.path.contains("Google"))
+            let path = root.relativePath(url)
+            return url.lastPathComponent == "History"
+                && (path.contains("Chrome")
+                    || path.contains("Chromium")
+                    || path.contains("Edge")
+                    || path.contains("Brave")
+                    || path.contains("Google"))
         })
         for db in histories {
-            events.append(contentsOf: ArtifactIO.attempt(db) { try parseHistory(db) })
+            events.append(contentsOf: ArtifactIO.attempt(db) { try parseHistory(db, root: root) })
         }
         return events
     }
 
-    private func parseHistory(_ url: URL) throws -> [EventEnvelope] {
+    private func parseHistory(_ url: URL, root: ArtifactRoot) throws -> [EventEnvelope] {
         let reader = try SQLiteReader(url: url)
-        let engine = browserEngine(from: url.path)
+        let engine = browserEngine(from: root.relativePath(url))
         var events: [EventEnvelope] = []
         if try reader.tableExists("visits"), try reader.tableExists("urls") {
             events.append(contentsOf: try visitEvents(reader: reader, url: url, engine: engine))

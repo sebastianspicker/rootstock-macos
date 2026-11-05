@@ -201,7 +201,7 @@ public struct PersistenceDataSource: DataSource {
 
     // MARK: - File ownership
 
-    private struct FileOwnership {
+    struct FileOwnership {
         let owner: String?
         let writableByNonRoot: Bool
     }
@@ -213,15 +213,22 @@ public struct PersistenceDataSource: DataSource {
         guard let attrs = try? fm.attributesOfItem(atPath: path) else {
             return FileOwnership(owner: nil, writableByNonRoot: false)
         }
-        let owner = attrs[.ownerAccountName] as? String
-        let group = attrs[.groupOwnerAccountName] as? String
-        let posix = (attrs[.posixPermissions] as? Int) ?? 0
+        return Self.fileOwnership(
+            owner: attrs[.ownerAccountName] as? String,
+            group: attrs[.groupOwnerAccountName] as? String,
+            posix: (attrs[.posixPermissions] as? Int) ?? 0
+        )
+    }
+
+    static func fileOwnership(owner: String?, group: String?, posix: Int) -> FileOwnership {
         // Other-writable (0o002) is always non-root writable.
         // Group-writable (0o020) only counts if the group is not root-equivalent.
         let otherWritable = (posix & 0o002) != 0
         let groupWritable = (posix & 0o020) != 0
-            && !Self.rootEquivalentGroups.contains(group ?? "wheel")
-        return FileOwnership(owner: owner, writableByNonRoot: otherWritable || groupWritable)
+            && !rootEquivalentGroups.contains(group ?? "wheel")
+        // A non-root owner with the owner write bit can rewrite the file (same rule as FileACLInspector).
+        let ownerWritable = owner != nil && owner != "root" && (posix & 0o200) != 0
+        return FileOwnership(owner: owner, writableByNonRoot: otherWritable || groupWritable || ownerWritable)
     }
 
     // MARK: - Login Items (BTM)

@@ -242,6 +242,11 @@ public struct CasePackage: Sendable {
         try copyArtifacts(items, afterStagedCopy: nil)
     }
 
+    /// Throws the copy's own error when `artifacts/<relativeName>` is invalid or already taken.
+    public func requireFreeArtifactName(_ relativeName: String) throws {
+        _ = try artifactDestinations(for: [ArtifactCopy(relativeName: relativeName, sourceDescription: "") { nil }])
+    }
+
     /// Resolves and checks every destination before the journal opens: each must stay inside
     /// `artifacts/` after resolving links, must not exist, and must be unique in the batch.
     private func artifactDestinations(for items: [ArtifactCopy]) throws -> [URL] {
@@ -264,7 +269,7 @@ public struct CasePackage: Sendable {
 
     /// Streams one source into a staging file, then moves it into place. Once a staging copy
     /// exists the case may be half-written, so `mutationStarted` keeps the journal (fail closed).
-    /// Returns false, before touching the case, when the source is skipped.
+    /// Returns false, before touching the case, when the source is skipped or fails while streaming.
     private func placeArtifact(
         _ item: ArtifactCopy,
         at destination: URL,
@@ -282,6 +287,12 @@ public struct CasePackage: Sendable {
         let staging = rootURL.appendingPathComponent(".rsbcase-artifact-stage-\(UUID().uuidString)")
         do {
             try streamArtifact(fromFileDescriptor: descriptor, to: staging)
+        } catch {
+            // An unreadable source is skipped like a missing one; the case is untouched.
+            try? fm.removeItem(at: staging)
+            return false
+        }
+        do {
             mutationStarted = true
             try afterStagedCopy?()
             try fm.moveItem(at: staging, to: destination)

@@ -178,11 +178,15 @@ public struct ShellRCLabAction: LabAction {
         }
 
         let body = try String(contentsOf: rcURL, encoding: .utf8)
-        let filtered = body
-            .split(separator: "\n", omittingEmptySubsequences: false)
-            .filter { !Self.isMarkerLine($0) }
-            .map(String.init)
-            .joined(separator: "\n")
+        // Same newline rule as hasMarkerLine; non-marker lines keep their own line endings.
+        var filtered = ""
+        var start = body.startIndex
+        while start < body.endIndex {
+            let end = body[start...].firstIndex(where: \.isNewline) ?? body.endIndex
+            let next = end == body.endIndex ? end : body.index(after: end)
+            if !Self.isMarkerLine(body[start..<end]) { filtered += body[start..<next] }
+            start = next
+        }
         try filtered.write(to: rcURL, atomically: true, encoding: .utf8)
 
         return ActionResult(
@@ -239,12 +243,13 @@ public struct ShellRCLabAction: LabAction {
             throw RootstockError.invalidArgument("rcFile must not be empty")
         }
         let protectedNames: Set<String> = [
-            ".zshrc", ".zprofile", ".zshenv", ".zlogin", ".bashrc", ".bash_profile", ".profile",
+            ".zshrc", ".zprofile", ".zshenv", ".zlogin", ".zlogout", ".bashrc", ".bash_profile",
+            ".bash_login", ".bash_logout", ".profile", "config.fish",
         ]
         let fileExists = FileManager.default.fileExists(atPath: path)
         let existing = try? String(contentsOf: url.standardizedFileURL, encoding: .utf8)
         if let existing, hasMarkerLine(existing) { return }
-        if protectedNames.contains(url.lastPathComponent) {
+        if protectedNames.contains(url.lastPathComponent.lowercased()) {
             throw RootstockError.invalidArgument(
                 "rcFile \(path) is a real shell startup file without a lab marker; use a dedicated lab file under ~/Library/RootstockLab"
             )

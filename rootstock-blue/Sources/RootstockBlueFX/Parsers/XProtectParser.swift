@@ -21,7 +21,7 @@ public struct XProtectParser: ArtifactParser {
     }
 
     private func parseLog(_ file: URL) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: file) else { return [] }
         return text.split(whereSeparator: \.isNewline).compactMap { detectionEvent(from: String($0), file: file) }
     }
 

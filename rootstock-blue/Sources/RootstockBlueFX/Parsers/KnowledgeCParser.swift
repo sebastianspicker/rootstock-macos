@@ -18,7 +18,7 @@ public struct KnowledgeCParser: ArtifactParser {
         let root = ArtifactRoot(source: source)
         var dbs = root.enumerate(matching: {
             $0.lastPathComponent == "knowledgeC.db"
-                || ($0.pathExtension == "db" && $0.path.contains("Knowledge"))
+                || ($0.pathExtension == "db" && root.relativePath($0).contains("Knowledge"))
         })
         // Prefer unique paths
         var unique: [URL] = []

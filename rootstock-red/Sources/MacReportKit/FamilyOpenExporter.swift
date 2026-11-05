@@ -9,6 +9,9 @@ public enum FamilyOpenExporter: Sendable {
     public static let schemaVersion = 1
     public static let source = "rootstock-red"
 
+    public static let maxFindings = 200
+    public static let maxLaunchItems = 50
+
     public static let nodeTypes = ["Finding", "Host", "LaunchItem", "Protection"]
     public static let edgeVocabulary = ["HAS_FINDING", "HAS_LAUNCH_ITEM", "HAS_PROTECTION"]
 
@@ -42,7 +45,7 @@ public enum FamilyOpenExporter: Sendable {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
 
-        return [
+        var export: [String: Any] = [
             "schema_version": schemaVersion,
             "source": source,
             "generated_at": formatter.string(from: generatedAt),
@@ -54,6 +57,9 @@ public enum FamilyOpenExporter: Sendable {
             "nodes": nodes,
             "edges": edges,
         ]
+        // The v1 schema allows extra top-level keys; only set when a cap cut items.
+        if findings.count > maxFindings || state.launchAgents.count > maxLaunchItems { export["truncated"] = true }
+        return export
     }
 
     private static func appendProtections(_ state: CollectedState, hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]], seen: inout Set<String>) {
@@ -62,7 +68,7 @@ public enum FamilyOpenExporter: Sendable {
     }
 
     private static func appendLaunchItems(_ state: CollectedState, hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]], seen: inout Set<String>) {
-        for item in state.launchAgents.prefix(50) {
+        for item in state.launchAgents.prefix(maxLaunchItems) {
             let label = nonEmpty(item.label) ?? item.path
             let program = item.programArguments.first ?? ""
             let id = nodeID(type: "LaunchItem", rawKey: [label, item.path, program].joined(separator: "\u{1F}"))
@@ -73,7 +79,7 @@ public enum FamilyOpenExporter: Sendable {
     }
 
     private static func appendFindings(_ findings: [Finding], hostId: String, nodes: inout [[String: Any]], edges: inout [[String: String]], seen: inout Set<String>) {
-        for finding in findings.prefix(200) {
+        for finding in findings.prefix(maxFindings) {
             let id = nodeID(type: "Finding", rawKey: finding.id)
             guard seen.insert(id).inserted else { continue }
             nodes.append(["id": id, "type": "Finding", "name": finding.title, "finding_id": finding.id, "severity": finding.severity.rawValue, "category": finding.category.rawValue, "confidence": finding.confidence.rawValue])
@@ -81,13 +87,15 @@ public enum FamilyOpenExporter: Sendable {
         }
     }
 
+    /// Writes the export and returns the number of Finding nodes written and whether a cap cut items.
+    @discardableResult
     public static func writeJSON(
         findings: [Finding],
         state: CollectedState,
         to url: URL,
         scopeName: String = "rootstock-red-assess",
         scanProfile: String = "standard"
-    ) throws {
+    ) throws -> (findings: Int, truncated: Bool) {
         let dict = build(
             findings: findings,
             state: state,
@@ -96,6 +104,8 @@ public enum FamilyOpenExporter: Sendable {
         )
         let data = try JSONSerialization.data(withJSONObject: dict, options: [.prettyPrinted, .sortedKeys])
         try data.write(to: url, options: .atomic)
+        let written = (dict["nodes"] as? [[String: Any]] ?? []).filter { $0["type"] as? String == "Finding" }.count
+        return (written, dict["truncated"] as? Bool ?? false)
     }
 
     private static func appendProtection(

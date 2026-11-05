@@ -48,7 +48,8 @@ public struct NetworkCollector: Collector {
         // RemoteManagement prefs are a stronger ARD/screen-sharing configuration signal.
         // SSH/SMB enablement requires launchctl/systemsetup - leave nil without shell.
         let remoteLoginSSH: Bool? = nil
-        let screenSharingARD: Bool? = summary.remoteManagementPrefsPresent ? true : nil
+        // The RemoteManagement prefs file outlives ARD being switched off: presence alone is unknown.
+        let screenSharingARD: Bool? = nil
         let fileSharingSMB: Bool? = nil
         summary.notes.append(
             "Likely-enabled: ssh=\(remoteLoginSSH.map(String.init(describing:)) ?? "nil") "

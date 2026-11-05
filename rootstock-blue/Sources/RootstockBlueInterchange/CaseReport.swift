@@ -143,9 +143,11 @@ public enum CaseReport {
         try package.verifyIntegrity()
         let stats = try collectStats(from: package, findings: findings)
         let body = renderMarkdown(stats)
+        // Check the case name before writing, so a rejected report leaves no file outside custody.
+        let destName = "reports/\(url.lastPathComponent)"
+        try package.requireFreeArtifactName(destName)
         try CaseOutputWriter.write(Data(body.utf8), from: package, to: url)
         // Also copy into case artifacts for package integrity
-        let destName = "reports/\(url.lastPathComponent)"
         _ = try package.copyArtifact(from: url, relativeName: destName)
         try package.appendCustody(
             CustodyEvent(

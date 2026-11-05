@@ -17,7 +17,8 @@ public struct QuarantineParser: ArtifactParser {
 
         for url in root.enumerate(matching: {
             $0.lastPathComponent == "com.apple.LaunchServices.QuarantineEventsV2"
-                || $0.lastPathComponent.hasPrefix("com.apple.LaunchServices.QuarantineEvents")
+                || ($0.lastPathComponent.hasPrefix("com.apple.LaunchServices.QuarantineEvents")
+                    && !["-wal", "-shm", "-journal"].contains(where: $0.lastPathComponent.hasSuffix))
         }) {
             ArtifactRoot.appendUnique(&dbs, url)
         }

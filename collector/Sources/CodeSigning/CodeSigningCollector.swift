@@ -67,10 +67,12 @@ struct CodeSigningAnalyzer {
             )
         }
 
-        return codeSigningInfo(from: info)
+        // Resources are skipped: validating every file of a huge bundle would take minutes.
+        let validity = SecStaticCodeCheckValidity(code, SecCSFlags(rawValue: kSecCSDoNotValidateResources), nil)
+        return codeSigningInfo(from: info, signatureValid: validity == errSecSuccess)
     }
 
-    func codeSigningInfo(from info: [String: Any]) -> CodeSigningInfo {
+    func codeSigningInfo(from info: [String: Any], signatureValid: Bool = true) -> CodeSigningInfo {
         let teamId = info[kSecCodeInfoTeamIdentifier as String] as? String
         let signingIdentifier = info[kSecCodeInfoIdentifier as String] as? String
 
@@ -82,7 +84,7 @@ struct CodeSigningAnalyzer {
         let chain = extractCertificateChain(from: info)
 
         return CodeSigningInfo(
-            signed: signingIdentifier != nil,
+            signed: signingIdentifier != nil && signatureValid,
             teamId: teamId,
             signingIdentifier: signingIdentifier,
             hardenedRuntime: (codeFlags & Self.csRuntime) != 0,

@@ -64,7 +64,7 @@ public struct SudoersParser: ArtifactParser {
     }
 
     private func parseSudoersFile(at url: URL) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         let path = ArtifactRoot.pathKey(url)
         return text
             .split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)

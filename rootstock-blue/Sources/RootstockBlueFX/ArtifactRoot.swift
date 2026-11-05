@@ -30,6 +30,14 @@ public struct ArtifactRoot: Sendable {
         return nil
     }
 
+    /// Path below the evidence root with a leading `/`, so name matching never sees the
+    /// analyst's own folder names above the root.
+    public func relativePath(_ url: URL) -> String {
+        let prefix = root.path.hasSuffix("/") ? String(root.path.dropLast()) : root.path
+        let path = url.standardizedFileURL.path
+        return path.hasPrefix(prefix + "/") ? String(path.dropFirst(prefix.count)) : path
+    }
+
     /// Stable path key for de-duplicating URLs that may differ only by relative vs absolute form.
     public static func pathKey(_ url: URL) -> String {
         url.standardizedFileURL.resolvingSymlinksInPath().path

@@ -66,7 +66,7 @@ public struct SSHArtifactsParser: ArtifactParser {
     // MARK: - authorized_keys
 
     private func parseAuthorizedKeys(at url: URL) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         let user = inferUser(from: url)
         return text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated().compactMap {
             authorizedKeyEvent(rawLine: String($0.element), lineNumber: $0.offset + 1, url: url, user: user)
@@ -132,7 +132,7 @@ public struct SSHArtifactsParser: ArtifactParser {
     // MARK: - known_hosts
 
     private func parseKnownHosts(at url: URL) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         let user = inferUser(from: url)
         var events: [EventEnvelope] = []
         var lineNo = 0
@@ -194,7 +194,7 @@ public struct SSHArtifactsParser: ArtifactParser {
     // MARK: - sshd_config
 
     private func parseSSHDConfig(at url: URL) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         var events: [EventEnvelope] = []
         var lineNo = 0
 

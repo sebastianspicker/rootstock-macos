@@ -166,16 +166,6 @@ public struct SecurityProductsCollector: Collector {
 
         // Google / BeyondCorp-ish
         ("Google Santa", "/Applications/Santa.app"),
-
-        // Open-source / lab tools often present on research hosts
-        ("Wireshark", "/Applications/Wireshark.app"),
-        ("Burp Suite", "/Applications/Burp Suite Community Edition.app"),
-        ("Burp Suite", "/Applications/Burp Suite Professional.app"),
-
-        // Apple XProtect / MRT (always-ish present; still useful inventory)
-        ("Apple XProtect", "/Library/Apple/System/Library/CoreServices/XProtect.bundle"),
-        ("Apple MRT", "/Library/Apple/System/Library/CoreServices/MRT.app"),
-        ("Apple Gatekeeper", "/usr/sbin/spctl"),
     ]
 
     public init() {}

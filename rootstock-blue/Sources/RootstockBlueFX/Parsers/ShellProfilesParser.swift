@@ -85,7 +85,7 @@ public struct ShellProfilesParser: ArtifactParser {
     private func profileScope(_ url: URL, user: String) -> String { user == "root" || url.path.contains("/etc/") ? "system" : "user" }
 
     private func parseProfile(at url: URL, scope: String, user: String) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         let pathKey = ArtifactRoot.pathKey(url)
         let context = ProfileContext(url: url, path: pathKey, scope: scope, user: user)
         let events = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated().compactMap {

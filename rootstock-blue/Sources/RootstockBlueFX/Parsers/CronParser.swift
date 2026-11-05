@@ -28,8 +28,8 @@ public struct CronParser: ArtifactParser {
     }
 
     private func discoveredTabs(_ root: ArtifactRoot, seen: inout PathDeduper) -> [EventEnvelope] {
-        root.enumerate(matching: Self.isCronTab).filter { seen.insert($0) }.flatMap { url in
-            let isAt = url.path.contains("/at/tabs/")
+        root.enumerate(matching: { Self.isCronTab($0, root: root) }).filter { seen.insert($0) }.flatMap { url in
+            let isAt = root.relativePath(url).contains("/at/tabs/")
             return parseCrontab(at: url, kind: isAt ? "at" : "cron", defaultUser: isAt ? url.lastPathComponent : cronUser(from: url) ?? "root")
         }
     }
@@ -42,23 +42,23 @@ public struct CronParser: ArtifactParser {
     }
 
     private func periodicScripts(_ root: ArtifactRoot, seen: inout PathDeduper) -> [EventEnvelope] {
-        root.enumerate(matching: Self.isPeriodicScript).compactMap { seen.insert($0) ? parsePeriodic(at: $0) : nil }
+        root.enumerate(matching: { Self.isPeriodicScript($0, root: root) }).compactMap { seen.insert($0) ? parsePeriodic(at: $0) : nil }
     }
 
-    private static func isCronTab(_ url: URL) -> Bool {
-        let path = url.path
+    private static func isCronTab(_ url: URL, root: ArtifactRoot) -> Bool {
+        let path = root.relativePath(url)
         let name = url.lastPathComponent
         return path.contains("/cron.d/") || path.hasSuffix("/cron.d/\(name)") || name == ".cron" || path.hasSuffix("/.cron") || path.contains("/cron/tabs/") || path.contains("/at/tabs/")
     }
 
-    private static func isPeriodicScript(_ url: URL) -> Bool {
-        url.path.contains("/periodic/") && !url.hasDirectoryPath && !url.lastPathComponent.hasPrefix(".")
+    private static func isPeriodicScript(_ url: URL, root: ArtifactRoot) -> Bool {
+        root.relativePath(url).contains("/periodic/") && !url.hasDirectoryPath && !url.lastPathComponent.hasPrefix(".")
     }
 
     // MARK: - crontab / at
 
     private func parseCrontab(at url: URL, kind: String, defaultUser: String) -> [EventEnvelope] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         return text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated().compactMap {
             eventForLine(String($0.element), number: $0.offset + 1, kind: kind, defaultUser: defaultUser, sourceURL: url)
         }
@@ -154,7 +154,7 @@ public struct CronParser: ArtifactParser {
 
         // Prefer shebang / first non-comment line as command summary; fall back to path.
         var command = path
-        if let text = try? String(contentsOf: url, encoding: .utf8) {
+        if let text = ArtifactIO.text(contentsOf: url) {
             for raw in text.split(whereSeparator: \.isNewline) {
                 let line = String(raw).trimmingCharacters(in: .whitespaces)
                 if line.isEmpty || line.hasPrefix("#") { continue }

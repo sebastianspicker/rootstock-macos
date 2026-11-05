@@ -130,7 +130,8 @@ public enum SQLiteSupport {
             case .double(let v):
                 rc = sqlite3_bind_double(stmt, i, v)
             case .text(let v):
-                rc = sqlite3_bind_text(stmt, i, v, -1, SQLITE_TRANSIENT)
+                // Explicit byte length: -1 would stop at an embedded NUL.
+                rc = v.withCString { sqlite3_bind_text(stmt, i, $0, Int32(v.utf8.count), SQLITE_TRANSIENT) }
             case .blob(let data):
                 rc = data.withUnsafeBytes { raw in
                     sqlite3_bind_blob(stmt, i, raw.baseAddress, Int32(data.count), SQLITE_TRANSIENT)
@@ -144,7 +145,7 @@ public enum SQLiteSupport {
 
     private static func columnText(_ stmt: OpaquePointer, _ index: Int32) -> String? {
         guard let c = sqlite3_column_text(stmt, index) else { return nil }
-        return String(cString: c)
+        return String(decoding: UnsafeRawBufferPointer(start: c, count: Int(sqlite3_column_bytes(stmt, index))), as: UTF8.self)
     }
 }
 

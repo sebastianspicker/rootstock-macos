@@ -281,7 +281,10 @@ struct RootstockBlueCLI {
         }
         var limit = 100
         if let idx = args.firstIndex(of: "--limit"), args.count > idx + 1 {
-            limit = Int(args[idx + 1]) ?? 100
+            guard let value = Int(args[idx + 1]), value >= 0 else {
+                throw RootstockBlueError.io("usage: timeline <path.rsbcase> [--limit N]  (N must be a non-negative integer)")
+            }
+            limit = value
         }
         let pkg = try CasePackage.open(at: URL(fileURLWithPath: path))
         let merged = try CaseTimeline.merged(from: pkg)

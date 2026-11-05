@@ -10,8 +10,9 @@
     "modules/cve-scan/src/cve_scan/feed_normalize.py": 513,
     "modules/cve-scan/src/cve_scan/host_inventory.py": 506,
     "modules/cve-scan/src/cve_scan/mac_inventory.py": 507,
-    "modules/cve-scan/src/cve_scan/models.py": 549,
+    "modules/cve-scan/src/cve_scan/models.py": 557,
     "modules/cve-scan/src/cve_scan/scan.py": 506,
-    "modules/cve-scan/src/cve_scan/supply_chain_python.py": 517
+    "modules/cve-scan/src/cve_scan/scope.py": 510,
+    "modules/cve-scan/src/cve_scan/supply_chain_python.py": 514
   }
 }

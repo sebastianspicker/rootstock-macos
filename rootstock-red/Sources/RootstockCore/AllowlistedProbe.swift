@@ -111,7 +111,9 @@ public enum AllowlistedProbe: Sendable {
 
     private static func timeout(_ setup: ProcessSetup, _ executable: String, _ arguments: [String], _ seconds: TimeInterval) -> AllowlistedProbeResult {
         setup.process.terminate(); Thread.sleep(forTimeInterval: 0.05); if setup.process.isRunning { setup.process.interrupt() }
-        _ = try? setup.out.fileHandleForReading.readToEnd(); _ = try? setup.err.fileHandleForReading.readToEnd()
+        if setup.process.isRunning { kill(setup.process.processIdentifier, SIGKILL) }
+        // Output is discarded on timeout; never read the pipes (a stuck child or grandchild could hold them open).
+        try? setup.out.fileHandleForReading.close(); try? setup.err.fileHandleForReading.close()
         return AllowlistedProbeResult(executable: executable, arguments: arguments, timedOut: true, errorDescription: "timed out after \(seconds)s")
     }
 

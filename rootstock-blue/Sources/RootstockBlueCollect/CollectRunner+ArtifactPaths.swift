@@ -34,7 +34,7 @@ extension CollectRunner {
         // Profile payloads and managed preferences can embed Wi-Fi/VPN passwords, identity
         // certificates and MDM enrollment tokens, so this group copies nothing.
         (names: ["configprofiles"], paths: []),
-        (names: ["ssh"], paths: ["Users/*/.ssh/authorized_keys", "Users/*/.ssh/authorized_keys2", "Users/*/.ssh/known_hosts", "Users/*/.ssh/config", "etc/ssh/sshd_config", "etc/ssh/sshd_config.d", "etc/ssh/ssh_config", "etc/ssh/ssh_config.d"]),
+        (names: ["ssh"], paths: ["Users/*/.ssh/authorized_keys", "Users/*/.ssh/authorized_keys2", "Users/*/.ssh/known_hosts", "Users/*/.ssh/config", "etc/ssh/sshd_config", "etc/ssh/sshd_config.d", "etc/ssh/ssh_config", "etc/ssh/ssh_config.d", "private/etc/ssh/sshd_config", "private/etc/ssh/sshd_config.d", "private/etc/ssh/ssh_config", "private/etc/ssh/ssh_config.d"]),
         (names: ["security_posture"], paths: ["Library/Preferences/security_posture.json"]),
         (names: ["alf", "firewall"], paths: ["Library/Preferences/com.apple.alf.plist"]),
         (names: ["dock"], paths: ["Users/*/Library/Preferences/com.apple.dock.plist"]),
@@ -48,7 +48,7 @@ extension CollectRunner {
         (names: ["recentitems", "mru"], paths: ["Users/*/Library/Application Support/com.apple.sharedfilelist"]),
         (names: ["firefox", "cookies"], paths: ["Users/*/Library/Application Support/Firefox"]),
         (names: ["loginitems", "login_items"], paths: ["Users/*/Library/Application Support/com.apple.sharedfilelist"]),
-        (names: ["crons", "cron"], paths: ["etc/crontab", "etc/cron.d", "etc/periodic", "var/at/tabs", "private/var/at/tabs", "Library/Preferences/cron_jobs.json"]),
+        (names: ["crons", "cron"], paths: ["etc/crontab", "etc/cron.d", "etc/periodic", "private/etc/crontab", "private/etc/cron.d", "private/etc/periodic", "var/at/tabs", "private/var/at/tabs", "Library/Preferences/cron_jobs.json"]),
         (names: ["biome", "pol_biome"], paths: ["Users/*/Library/Biome"]),
         (names: ["systemextensions", "sysext"], paths: ["Library/SystemExtensions", "Library/Preferences/system_extensions.json"]),
         (names: ["utmpx", "sessions", "wtmp"], paths: ["private/var/run/utmpx.jsonl", "var/run/utmpx.jsonl", "var/run/utmpx.json", "var/log/wtmp.jsonl", "Library/Logs/utmpx_export.jsonl", "Library/Logs/wtmp_export.jsonl"]),
@@ -58,7 +58,7 @@ extension CollectRunner {
     ]
 
     static let persistenceArtifactPathGroups: [(names: Set<String>, paths: [String])] = [
-        (names: ["shell_profiles", "shellprofiles", "shellrc"], paths: ["Users/*/.zshrc", "Users/*/.zprofile", "Users/*/.bashrc", "Users/*/.bash_profile", "Users/*/.bash_login", "Users/*/.profile", "etc/profile", "etc/zprofile", "etc/zshrc", "etc/bashrc", "private/etc/profile"]),
+        (names: ["shell_profiles", "shellprofiles", "shellrc"], paths: ["Users/*/.zshrc", "Users/*/.zprofile", "Users/*/.bashrc", "Users/*/.bash_profile", "Users/*/.bash_login", "Users/*/.profile", "etc/profile", "etc/zprofile", "etc/zshrc", "etc/bashrc", "private/etc/profile", "private/etc/zprofile", "private/etc/zshrc", "private/etc/bashrc"]),
         (names: ["emond"], paths: ["etc/emond.d", "private/etc/emond.d", "Library/Preferences/emond_rules.json"]),
         (names: ["sudoers"], paths: ["etc/sudoers", "etc/sudoers.d", "private/etc/sudoers", "private/etc/sudoers.d"]),
         (names: ["launchd_overrides", "launchdoverrides", "disabled_plist"], paths: ["var/db/com.apple.xpc.launchd", "private/var/db/com.apple.xpc.launchd", "Library/Preferences/launchd_disabled.json"]),

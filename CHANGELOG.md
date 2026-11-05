@@ -1,5 +1,51 @@
 # Changelog
 
+## Unreleased — second audit pass (2026-11-05)
+
+- cve-scan:
+  - Pre-release builds now count as older than their release, so they are no
+    longer reported as "not affected". This covers npm-style `-canary` and
+    `-next`, Maven milestones (`-m1`, `-cr1`, `-ea`) and Debian `~git`.
+  - Requirements written with spaces (`requests == 2.19.0`) keep their version.
+  - PyPI names are compared in normalised form, so `zope_interface` matches
+    `zope.interface`.
+  - CVE v5 placeholder versions (`unspecified`, `n/a`) mean "range unknown".
+  - An NVD CPE that lists one exact vulnerable version still matches when the same
+    CVE also has a version range.
+  - One package version found at two lockfile locations no longer breaks the
+    Rootstock export.
+  - IP targets are checked against IP-address SANs, which removes a false
+    hostname-mismatch finding.
+  - `exclude_hosts` matches CIDR ranges, bracketed IPv6 and names in any case or
+    with a trailing dot. Excluded hosts are also removed from redirect domains.
+    Duplicate top-level scope keys, bad URL ports and CIDRs with host bits set
+    are rejected.
+  - A truncated feed download is reported as a feed error.
+  - The v7 export allows fractional `effective_limits`.
+  - The feed parser version is now `feed-parser-v5`, so cached indexes rebuild.
+- Collector:
+  - A launch plist or program owned by a non-root user is flagged as writable by
+    that user.
+  - `signed` now also requires a valid static signature; resource files are not
+    checked.
+- Blue:
+  - A NUL character in evidence no longer makes a case fail verification.
+  - `collect` from a real macOS root notes and skips the `/etc` and `/var` links,
+    and reads `private/...` instead.
+  - Text artifacts that are not valid UTF-8 are parsed instead of dropped.
+  - Browser and cron parsers ignore the folder names above the evidence root.
+  - `report markdown` checks the report name before writing the file.
+  - One unreadable file no longer locks a whole collection batch.
+  - `timeline --limit` rejects negative values.
+- Red:
+  - The EDR-gap finding can fire again: the Apple built-ins and developer tools are
+    no longer counted as security products.
+  - Shell-rc lab cleanup handles CRLF files.
+  - The protected startup-file list is case-insensitive and longer.
+  - A leftover ARD preferences file no longer counts as Screen Sharing enabled.
+  - Probe timeouts kill a stuck child.
+  - `export-family` reports when it truncates findings.
+
 ## Unreleased — repository audit fixes
 
 - Collector: authorization rights opened with `allow` (rule or class) are recorded

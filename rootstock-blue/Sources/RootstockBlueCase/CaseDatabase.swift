@@ -290,7 +290,7 @@ private final class SQLitePreparedStatement {
         for index in 0..<sqlite3_column_count(statement) {
             let name = String(cString: sqlite3_column_name(statement, index))
             if let value = sqlite3_column_text(statement, index) {
-                row[name] = String(cString: value)
+                row[name] = String(decoding: UnsafeRawBufferPointer(start: value, count: Int(sqlite3_column_bytes(statement, index))), as: UTF8.self)
             } else {
                 row[name] = ""
             }

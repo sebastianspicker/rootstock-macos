@@ -31,7 +31,7 @@ func boolish(_ value: Any?) -> Bool? {
 
 /// Parse ISO-8601 timestamps (with or without fractional seconds).
 func parseDate(_ any: Any?) -> Date? {
-    if let d = any as? Date { return d }
+    if let d = any as? Date { return Epochs.unixDate(d.timeIntervalSince1970) }
     if let s = any as? String {
         if let d = ISO8601DateFormatter().date(from: s) { return d }
         let f = ISO8601DateFormatter()
@@ -41,8 +41,8 @@ func parseDate(_ any: Any?) -> Date? {
     if let n = any as? NSNumber {
         let v = n.doubleValue
         // Heuristic: ms vs seconds
-        if v > 1e12 { return Date(timeIntervalSince1970: v / 1000.0) }
-        if v > 1e9 { return Date(timeIntervalSince1970: v) }
+        if v > 1e12 { return Epochs.unixDate(v / 1000.0) }
+        if v > 1e9 { return Epochs.unixDate(v) }
     }
     return nil
 }
@@ -133,6 +133,12 @@ public enum ArtifactIO {
             }
             return nil
         }
+    }
+
+    /// Reads a text file; invalid UTF-8 becomes U+FFFD instead of dropping the file.
+    /// A read error is recorded in `failures` and yields nil; a missing file is not a failure.
+    public static func text(contentsOf url: URL) -> String? {
+        data(contentsOf: url).map { String(decoding: $0, as: UTF8.self) }
     }
 
     /// Runs a per-artifact parse; a thrown error is recorded in `failures` and yields no events

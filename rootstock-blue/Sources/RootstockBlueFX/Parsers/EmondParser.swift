@@ -76,7 +76,7 @@ public struct EmondParser: ArtifactParser {
         if url.pathExtension == "plist" || isBinaryOrXMLPlist(url) {
             return parsePlistRule(at: url)
         }
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         return parseTextRule(at: url, text: text)
     }
 

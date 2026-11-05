@@ -341,7 +341,7 @@ struct ExportFamilyCommand: AsyncParsableCommand {
             }
         }
         let outURL = URL(fileURLWithPath: output)
-        try FamilyOpenExporter.writeJSON(
+        let written = try FamilyOpenExporter.writeJSON(
             findings: findings,
             state: state,
             to: outURL,
@@ -349,7 +349,7 @@ struct ExportFamilyCommand: AsyncParsableCommand {
             scanProfile: profile
         )
         FileHandle.standardError.write(
-            Data("Wrote family open-export (\(findings.count) findings) to \(outURL.path)\n".utf8)
+            Data("Wrote family open-export (\(written.findings) of \(findings.count) findings\(written.truncated ? ", truncated at the export caps" : "")) to \(outURL.path)\n".utf8)
         )
     }
 }

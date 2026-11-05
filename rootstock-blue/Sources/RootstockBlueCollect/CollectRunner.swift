@@ -199,6 +199,8 @@ public struct CollectRunner: Sendable {
             if fstatat(usersDescriptor, name, &info, AT_SYMLINK_NOFOLLOW) == 0, (info.st_mode & S_IFMT) == S_IFDIR {
                 return true
             }
+            // Dot files such as `.localized` are not accounts; hidden folders still are.
+            if name.hasPrefix(".") { return false }
             walk.skipped += 1
             walk.notes.append("user entry is not a real folder, not collected: Users/\(name)")
             return false
@@ -260,6 +262,10 @@ public struct CollectRunner: Sendable {
         case .unreadable(let path):
             walk.skipped += 1
             walk.notes.append("folder not readable, not collected: \(path)")
+            return nil
+        case .notFollowed(let path):
+            walk.skipped += 1
+            walk.notes.append("link not followed: \(path)")
             return nil
         case .opened(let descriptor, let url):
             return (descriptor, url)
@@ -344,9 +350,11 @@ public struct CollectRunner: Sendable {
         case missing
         /// Another user's private folder (EACCES/EPERM): skipped, not a reason to stop.
         case unreadable(String)
+        /// A link or non-folder in the path (ELOOP/ENOTDIR): never followed, the real files sit under `private/`.
+        case notFollowed(String)
     }
 
-    /// A link in any parent component still throws: it is never followed.
+    /// A link in any parent component is never followed: it is noted and skipped.
     private static func openArtifactParent(components: [Substring], under root: URL) throws -> ParentLookup {
         var descriptor = try openCollectionRoot(root)
         var candidate = root
@@ -360,6 +368,7 @@ public struct CollectRunner: Sendable {
                 switch failure {
                 case ENOENT: return .missing
                 case EACCES, EPERM: return .unreadable(path)
+                case ELOOP, ENOTDIR: return .notFollowed(path)
                 default: throw RootstockBlueError.io("collection source contains an unsafe path component: \(path)")
                 }
             }

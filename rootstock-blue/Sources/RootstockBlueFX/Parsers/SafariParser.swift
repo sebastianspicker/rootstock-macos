@@ -16,13 +16,13 @@ public struct SafariParser: ArtifactParser {
         var events: [EventEnvelope] = []
 
         for db in root.enumerate(matching: {
-            $0.lastPathComponent == "History.db" && $0.path.contains("Safari")
+            $0.lastPathComponent == "History.db" && root.relativePath($0).contains("Safari")
         }) {
             events.append(contentsOf: ArtifactIO.attempt(db) { try parseHistoryDB(db) })
         }
 
         for plist in root.enumerate(matching: {
-            $0.lastPathComponent == "Downloads.plist" && $0.path.contains("Safari")
+            $0.lastPathComponent == "Downloads.plist" && root.relativePath($0).contains("Safari")
         }) {
             events.append(contentsOf: parseDownloadsPlist(plist))
         }
