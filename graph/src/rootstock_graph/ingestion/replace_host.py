@@ -115,6 +115,8 @@ def replace_host_scans(
     if not scan_ids:
         return 0
 
+    # shortcut: label-less scans touch the whole graph per import; fine for a few
+    # hundred Macs, split the deletes by label once imports slow down.
     # Relationships between global nodes (MEMBER_OF, SUDO_NOPASSWD, ACCESSIBLE_BY)
     # carry the scan_id on the edge, so they are removed first.
     _delete_in_batches(
