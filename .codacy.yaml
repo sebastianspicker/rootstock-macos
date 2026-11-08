@@ -29,3 +29,17 @@ exclude_paths:
   - "scripts/check-*.py"
   - "graph/scripts/check-*.py"
   - "graph/viewer/scripts/viewer-demo-*.mjs"
+
+engines:
+  # Complexity is enforced in CI with the project's own limits (ruff C901 and
+  # SwiftLint cyclomatic_complexity at 8, ESLint complexity 8, SwiftLint
+  # function_body_length 60, scripts/check-source-size.py). Lizard repeats those
+  # checks with a different count and stricter defaults, and reads lockfiles as code.
+  lizard:
+    exclude_paths:
+      - "**"
+  # CSS is linted and formatted by Biome (graph/viewer/biome.json); Stylelint's
+  # defaults conflict with it.
+  stylelint:
+    exclude_paths:
+      - "**/*.css"
