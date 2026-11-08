@@ -45,20 +45,32 @@ struct SSHDConfigParser {
         for line in contents.components(separatedBy: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty, !trimmed.hasPrefix("#") else { continue }
-            let parts = trimmed.split(maxSplits: 1, whereSeparator: \.isWhitespace)
-            let key = parts[0].lowercased()
+            let (key, value) = Self.splitDirective(trimmed)
             if key == "match" {
                 directives["match_blocks"] = "yes"
                 return
             }
-            guard parts.count == 2 else { continue }
-            let value = String(parts[1]).trimmingCharacters(in: .whitespaces)
+            guard !value.isEmpty else { continue }
             if key == "include" {
                 processInclude(value)
             } else if let canonical = Self.canonicalKeys[key], directives[canonical] == nil {
                 directives[canonical] = value
             }
         }
+    }
+
+    /// Lowercased keyword and argument; sshd_config(5) separates them with whitespace and/or one `=`,
+    /// and allows the argument in double quotes.
+    private static func splitDirective(_ line: String) -> (key: String, value: String) {
+        let keyEnd = line.firstIndex { $0.isWhitespace || $0 == "=" } ?? line.endIndex
+        var value = line[keyEnd...].trimmingCharacters(in: .whitespaces)
+        if value.hasPrefix("=") {
+            value = String(value.dropFirst()).trimmingCharacters(in: .whitespaces)
+        }
+        if value.count >= 2, value.hasPrefix("\""), value.hasSuffix("\"") {
+            value = String(value.dropFirst().dropLast())
+        }
+        return (line[..<keyEnd].lowercased(), value)
     }
 
     private mutating func processInclude(_ value: String) {

@@ -15,7 +15,7 @@ public struct UserWritableLaunchAgentsVector: Check {
         guard !agents.isEmpty else { return [] }
 
         let directory = Self.userLaunchAgentsDirectory(from: agents)
-        let writable = FileManager.default.isWritableFile(atPath: directory.path)
+        let writable = FileManager.default.isWritableByNonRoot(atPath: directory.path)
         let likelyWritable = writable
             || directory.path.contains("/Users/")
             || directory.path.hasPrefix(FileManager.default.homeDirectoryForCurrentUser.path)

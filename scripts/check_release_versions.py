@@ -89,7 +89,12 @@ def check_versions(check: ReleaseCheck, version: str) -> None:
         "changelog contains the candidate version",
     )
     check.require(
-        f"version: {version}" in read_text("CITATION.cff"),
+        re.search(
+            rf"^version:\s*['\"]?{re.escape(version)}['\"]?\s*$",
+            read_text("CITATION.cff"),
+            re.MULTILINE,
+        )
+        is not None,
         "citation metadata matches VERSION",
     )
 

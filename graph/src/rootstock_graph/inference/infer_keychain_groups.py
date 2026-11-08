@@ -22,7 +22,7 @@ def infer(session: Session) -> int:
         """
         MATCH (a:Application)-[:CAN_READ_KEYCHAIN]->(k:Keychain_Item)
         WHERE k.access_group IS NOT NULL
-        WITH k.access_group AS grp, collect(DISTINCT a) AS apps
+        WITH a.scan_id AS scan, k.access_group AS grp, collect(DISTINCT a) AS apps
         WHERE size(apps) > 1
         UNWIND apps AS a
         UNWIND apps AS b

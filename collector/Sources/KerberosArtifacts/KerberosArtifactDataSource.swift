@@ -196,10 +196,11 @@ public struct KerberosArtifactDataSource: DataSource {
     ///
     /// **Security note:** krb5.conf is a config file, not a credential store.
     func parseKrb5Conf(path: String) -> Krb5Config {
-        guard let contents = try? String(contentsOfFile: path, encoding: .utf8) else {
+        guard let data = FileManager.default.contents(atPath: path) else {
             return Krb5Config()
         }
-        return parseKrb5ConfContents(contents)
+        // Lossy decode: one stray non-UTF-8 byte must not discard the whole config.
+        return parseKrb5ConfContents(String(decoding: data, as: UTF8.self))
     }
 
     /// Parse krb5.conf contents (extracted for testability).

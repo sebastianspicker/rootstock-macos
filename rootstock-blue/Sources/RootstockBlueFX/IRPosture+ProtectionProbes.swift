@@ -258,6 +258,10 @@ extension HostIRPosture {
         )
     }
 
+    private final class ProbeOutput: @unchecked Sendable {
+        var data = Data()
+    }
+
     static func runProbe(path: String, args: [String]) -> String? {
         guard FileManager.default.isExecutableFile(atPath: path) else { return nil }
         let proc = Process()
@@ -269,7 +273,16 @@ extension HostIRPosture {
         do {
             try proc.run()
         } catch {
+            ArtifactIO.failures.record("\(path): probe failed to start: \(error.localizedDescription)")
             return nil
+        }
+        // Drain while waiting: a child writing more than the pipe buffer would otherwise block forever.
+        let output = ProbeOutput()
+        let drained = DispatchGroup()
+        drained.enter()
+        DispatchQueue.global().async {
+            output.data = pipe.fileHandleForReading.readDataToEndOfFile()
+            drained.leave()
         }
         // Bound wait - do not hang IR path
         let deadline = Date().addingTimeInterval(3)
@@ -278,9 +291,15 @@ extension HostIRPosture {
         }
         if proc.isRunning {
             proc.terminate()
+            ArtifactIO.failures.record("\(path): probe timed out after 3s; posture not reported")
             return nil
         }
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        // A grandchild can keep the pipe open past exit; do not wait on it indefinitely.
+        guard drained.wait(timeout: .now() + 1) == .success else {
+            ArtifactIO.failures.record("\(path): probe output still open after exit; posture not reported")
+            return nil
+        }
+        let data = output.data
         return String(data: data, encoding: .utf8)
     }
 

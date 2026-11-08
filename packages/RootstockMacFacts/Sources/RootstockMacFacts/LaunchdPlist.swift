@@ -37,18 +37,6 @@ public enum LaunchdPlistFacts: Sendable {
         }
     }
 
-    /// Standard live-host launchd directories (product inventory paths).
-    public static var standardDirectories: [String] {
-        [
-            MacSecurityPaths.appleLaunchDaemons,
-            MacSecurityPaths.systemLaunchDaemons,
-            MacSecurityPaths.systemLaunchAgents,
-            MacSecurityPaths.userLaunchAgents(
-                home: FileManager.default.homeDirectoryForCurrentUser
-            ).path,
-        ]
-    }
-
     /// Enumerate `*.plist` files directly under `directory` (non-recursive).
     public static func listPlistPaths(
         in directory: String,
@@ -81,14 +69,6 @@ public enum LaunchdPlistFacts: Sendable {
         var summary = Summary(path: path)
         apply(dict: dict, to: &summary)
         return summary
-    }
-
-    /// Parse all plists under a directory. Missing directory → empty list (no error).
-    public static func summarizeDirectory(
-        at directory: String,
-        fileManager: FileManager = .default
-    ) -> [Summary] {
-        listPlistPaths(in: directory, fileManager: fileManager).map { summarize(plistPath: $0) }
     }
 
     /// Extract program path from Program or first ProgramArguments element.

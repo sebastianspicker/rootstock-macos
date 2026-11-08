@@ -186,6 +186,8 @@ export interface TierResponse {
 
 export interface OwnedItem {
   name: string;
+  labels?: string[];
+  properties?: Record<string, unknown>;
 }
 
 export interface OwnedListResponse {

@@ -55,7 +55,8 @@ public struct ArtifactRoot: Sendable {
         ) else { return [] }
         for case let url as URL in enumerator {
             let standardized = url.standardizedFileURL
-            if eligibleURL(standardized) && predicate(standardized) {
+            // Cheap predicate first; the boundary check still gates every returned URL.
+            if predicate(standardized) && eligibleURL(standardized) {
                 results.append(standardized)
             }
         }

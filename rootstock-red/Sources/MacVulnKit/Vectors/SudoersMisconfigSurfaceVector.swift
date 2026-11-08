@@ -54,7 +54,7 @@ public struct SudoersMisconfigSurfaceVector: Check {
         }
 
         mutating func recordDropInWritability(using fileManager: FileManager) {
-            writablePaths.append(contentsOf: dropins.filter { fileManager.isWritableFile(atPath: $0) })
+            writablePaths.append(contentsOf: dropins.filter { fileManager.isWritableByNonRoot(atPath: $0) })
         }
     }
 
@@ -106,7 +106,7 @@ public struct SudoersMisconfigSurfaceVector: Check {
             let children = (try? fileManager.contentsOfDirectory(atPath: path)) ?? []
             signals.dropins.append(contentsOf: children.prefix(20).map { "\(path)/\($0)" })
         }
-        if fileManager.isWritableFile(atPath: path) {
+        if fileManager.isWritableByNonRoot(atPath: path) {
             signals.writablePaths.append(path)
         }
     }
@@ -115,7 +115,7 @@ public struct SudoersMisconfigSurfaceVector: Check {
         if fileManager.isReadableFile(atPath: path) {
             signals.readableFiles.append(path)
         }
-        if fileManager.isWritableFile(atPath: path) {
+        if fileManager.isWritableByNonRoot(atPath: path) {
             signals.writablePaths.append(path)
         }
     }

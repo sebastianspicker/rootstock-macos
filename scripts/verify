@@ -296,7 +296,7 @@ lane_shell() {
         # shellcheck disable=SC2016 # The nested shell expands its own positional parameters.
         git ls-files -z -- '*.sh' | xargs -0 sh -c '
             for shell_source do
-                [ ! -f "$shell_source" ] || shellcheck "$shell_source"
+                [ ! -f "$shell_source" ] || shellcheck "$shell_source" || exit 1
             done
         ' sh
         shellcheck scripts/verify scripts/swift-test

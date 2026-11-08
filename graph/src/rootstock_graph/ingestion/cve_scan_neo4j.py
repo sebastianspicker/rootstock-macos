@@ -152,26 +152,30 @@ def _import_affected_by_aliases(session, export: CveScanExport) -> int:
     records = build_affected_by_alias_records(export)
     if not records:
         return 0
-    result = session.run(
-        """
-        UNWIND $records AS row
-        MATCH (asset {id: row.source_id})
-        MATCH (vulnerability:Vulnerability {id: row.target_id})
-        MERGE (asset)-[r:AFFECTED_BY]->(vulnerability)
-        SET r.source = $source,
-            r.match_tier = 'cve-scan-export',
-            r.cve_scan_scope_name = $scope_name,
-            r.cve_scan_generated_at = $generated_at,
-            r.cve_scan_profile = $scan_profile
-        RETURN count(r) AS n
-        """,
-        records=records,
-        source=IMPORT_SOURCE,
-        scope_name=export.scope_name,
-        generated_at=export.generated_at,
-        scan_profile=export.scan_profile,
-    )
-    return int(result.single()["n"])
+    labels = {require_node_id(n, "node"): require_node_label(n, "node") for n in export.nodes}
+    count = 0
+    for (source_label, _), group in group_by_endpoint_labels(records, labels):
+        result = session.run(
+            f"""
+            UNWIND $records AS row
+            MATCH (asset{label_pattern(source_label)} {{id: row.source_id}})
+            MATCH (vulnerability:Vulnerability {{id: row.target_id}})
+            MERGE (asset)-[r:AFFECTED_BY]->(vulnerability)
+            SET r.source = $source,
+                r.match_tier = 'cve-scan-export',
+                r.cve_scan_scope_name = $scope_name,
+                r.cve_scan_generated_at = $generated_at,
+                r.cve_scan_profile = $scan_profile
+            RETURN count(r) AS n
+            """,
+            records=group,
+            source=IMPORT_SOURCE,
+            scope_name=export.scope_name,
+            generated_at=export.generated_at,
+            scan_profile=export.scan_profile,
+        )
+        count += int(result.single()["n"])
+    return count
 
 
 def _neo4j_properties(node: dict[str, object], export: CveScanExport) -> dict[str, object]:

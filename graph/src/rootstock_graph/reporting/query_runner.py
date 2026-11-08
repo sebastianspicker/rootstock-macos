@@ -179,33 +179,36 @@ FORMATTERS = {
 
 
 def graph_completeness(session) -> tuple[bool, str]:
-    """Return whether the latest imported scan is complete enough for positive empty results."""
+    """Return whether every imported scan is complete enough for positive empty results."""
     try:
-        row = _latest_import_metadata_row(session)
+        rows = _import_metadata_rows(session)
     except Neo4jError as exc:
         return False, f"metadata unavailable: {exc}"
 
-    if row is None:
+    if not rows:
         return False, "no import metadata"
 
-    metadata = dict(row)
-    if _import_metadata_is_complete(metadata):
-        return True, ""
+    for row in rows:
+        metadata = dict(row)
+        if not _import_metadata_is_complete(metadata):
+            host = metadata.get("hostname") or "unknown host"
+            return False, f"{host}: " + ", ".join(_import_metadata_reasons(metadata))
+    return True, ""
 
-    return False, ", ".join(_import_metadata_reasons(metadata))
 
-
-def _latest_import_metadata_row(session):
-    return session.run(
-        """
-        MATCH (c:Computer)
-        RETURN c.import_status AS import_status,
-               c.collection_error_count AS collection_error_count,
-               c.tcc_grants_skipped AS tcc_grants_skipped
-        ORDER BY c.scanned_at DESC
-        LIMIT 1
-        """
-    ).single()
+def _import_metadata_rows(session) -> list:
+    return list(
+        session.run(
+            """
+            MATCH (c:Computer)
+            RETURN c.hostname AS hostname,
+                   c.import_status AS import_status,
+                   c.collection_error_count AS collection_error_count,
+                   c.tcc_grants_skipped AS tcc_grants_skipped
+            ORDER BY c.scanned_at DESC
+            """
+        )
+    )
 
 
 def _import_metadata_is_complete(metadata: dict) -> bool:

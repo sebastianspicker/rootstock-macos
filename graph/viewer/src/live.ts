@@ -16,7 +16,7 @@ import { HISTORY_STORAGE_NAME, clearApiToken, getApiToken, readLocal, writeLocal
 import { renderQueryResult } from "./live-queries";
 import { markConnected, markConnectionFailed } from "./connection";
 import type { Controller } from "./runtime";
-import type { NodeId, QueryDescriptor, ViewerNode } from "./types";
+import type { NodeId, OwnedItem, QueryDescriptor, ViewerNode } from "./types";
 
 const queryGenerations = new WeakMap<Controller, number>();
 
@@ -353,18 +353,22 @@ export async function liveShowOwned(controller: Controller): Promise<void> {
   }
 }
 
-/** Counts owned entries that matched; every node carrying the name or bundle ID is marked. */
-export function markOwnedNodes(controller: Controller, owned: { name: string }[]): number {
+/** Counts owned entries that matched; a node matches on its kind and the owned node's identifier. */
+export function markOwnedNodes(controller: Controller, owned: OwnedItem[]): number {
   let matched = 0;
   for (const item of owned) {
-    const nodes = controller.state.graph.nodes.filter(
-      (candidate) =>
-        candidate.properties.name === item.name || candidate.properties.bundle_id === item.name,
-    );
+    const nodes = controller.state.graph.nodes.filter((candidate) => isOwnedMatch(candidate, item));
     for (const node of nodes) node.properties.owned = true;
     if (nodes.length > 0) matched += 1;
   }
   return matched;
+}
+
+function isOwnedMatch(candidate: ViewerNode, item: OwnedItem): boolean {
+  if (item.labels && !item.labels.some((label) => candidate.kind === `rs_${label}`)) return false;
+  const bundleId = item.properties?.bundle_id;
+  if (typeof bundleId === "string") return candidate.properties.bundle_id === bundleId;
+  return candidate.properties.name === item.name;
 }
 
 /** The server marks by identifier, so every installation sharing it changes together. */

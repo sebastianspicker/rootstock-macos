@@ -28,9 +28,9 @@ public struct WritablePrivilegedPathsVector: Check {
 
     private static func writableHits(from candidates: [Candidate]) -> [WritablePathHit] {
         candidates.compactMap { candidate in
-            let pathWritable = FileManager.default.isWritableFile(atPath: candidate.path)
+            let pathWritable = FileManager.default.isWritableByNonRoot(atPath: candidate.path)
             let parent = URL(fileURLWithPath: candidate.path).deletingLastPathComponent().path
-            let parentWritable = FileManager.default.isWritableFile(atPath: parent)
+            let parentWritable = FileManager.default.isWritableByNonRoot(atPath: parent)
             guard candidate.forceWritable || pathWritable || parentWritable else { return nil }
             let reason = candidate.forceWritable
                 ? "collector_flagged_writable"

@@ -43,7 +43,7 @@ public struct PrivilegedHelperSygextVector: Check {
 
     private static func scan(paths: [String], type: String) -> (evidence: [Evidence], writableCount: Int) {
         let results = paths.prefix(40).map { path -> (Evidence, Bool) in
-            let writable = FileManager.default.isWritableFile(atPath: path) || parentWritable(path)
+            let writable = FileManager.default.isWritableByNonRoot(atPath: path) || parentWritable(path)
             return (Evidence(type: type, path: path, detail: "writable=\(writable)"), writable)
         }
         return (results.map(\.0), results.filter(\.1).count)
@@ -66,6 +66,6 @@ public struct PrivilegedHelperSygextVector: Check {
 
     private static func parentWritable(_ path: String) -> Bool {
         let parent = URL(fileURLWithPath: path).deletingLastPathComponent().path
-        return FileManager.default.isWritableFile(atPath: parent)
+        return FileManager.default.isWritableByNonRoot(atPath: parent)
     }
 }

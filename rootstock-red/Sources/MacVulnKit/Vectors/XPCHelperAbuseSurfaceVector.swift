@@ -68,9 +68,9 @@ public struct XPCHelperAbuseSurfaceVector: Check {
     }
 
     private func isWritable(_ path: String, using fileManager: FileManager) -> Bool {
-        if fileManager.isWritableFile(atPath: path) { return true }
+        if fileManager.isWritableByNonRoot(atPath: path) { return true }
         let parent = URL(fileURLWithPath: path).deletingLastPathComponent().path
-        return fileManager.isWritableFile(atPath: parent)
+        return fileManager.isWritableByNonRoot(atPath: parent)
     }
 
     private func hasInjectabilityCompound(in state: CollectedState) -> Bool {

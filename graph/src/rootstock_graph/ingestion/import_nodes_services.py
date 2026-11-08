@@ -209,7 +209,7 @@ _PERSISTENCE_LINK_RULES: tuple[tuple[str, str], ...] = (
         """
         WITH r WHERE r.program IS NOT NULL
         MATCH (l:LaunchItem {item_key: r.item_key})
-        MATCH (a:Application)
+        MATCH (a:Application {scan_id: $scan_id})
         WHERE r.program STARTS WITH a.path + '/'
         """,
     ),
@@ -220,7 +220,7 @@ _PERSISTENCE_LINK_RULES: tuple[tuple[str, str], ...] = (
         """
         WITH r WHERE r.program_team_id IS NOT NULL
         MATCH (l:LaunchItem {item_key: r.item_key})
-        MATCH (a:Application {team_id: r.program_team_id})
+        MATCH (a:Application {scan_id: $scan_id, team_id: r.program_team_id})
         WHERE NOT coalesce(a.is_system, false)
         """,
     ),
@@ -233,7 +233,7 @@ _PERSISTENCE_LINK_RULES: tuple[tuple[str, str], ...] = (
         """
         WITH r WHERE NOT r.label STARTS WITH 'com.apple.'
         MATCH (l:LaunchItem {item_key: r.item_key})
-        MATCH (a:Application)
+        MATCH (a:Application {scan_id: $scan_id})
         WHERE NOT coalesce(a.is_system, false)
           AND NOT a.bundle_id STARTS WITH 'com.apple.'
           AND ((r.label STARTS WITH a.bundle_id + '.' AND size(split(a.bundle_id, '.')) >= 3)
@@ -247,7 +247,7 @@ _PERSISTENCE_LINK_RULES: tuple[tuple[str, str], ...] = (
         """
         WITH r WHERE r.bundle_path IS NOT NULL
         MATCH (l:LaunchItem {item_key: r.item_key})
-        MATCH (a:Application)
+        MATCH (a:Application {scan_id: $scan_id})
         WHERE r.bundle_path = a.path OR r.bundle_path STARTS WITH a.path + '/'
         """,
     ),
@@ -260,7 +260,7 @@ _HEURISTIC_LINK_RULES = frozenset({"label"})
 def _link_persistence_edges(
     session: Session,
     records: list[dict[str, object]],
-    scan_id: str | None,
+    scan_id: str,
 ) -> int:
     """Create PERSISTS_VIA with a ``match`` reason; the strongest rule that fires wins.
 
@@ -272,7 +272,6 @@ def _link_persistence_edges(
             f"""
             UNWIND $records AS r
             {match_clause}
-              AND ($scan_id IS NULL OR a.scan_id = $scan_id)
             MERGE (a)-[rel:PERSISTS_VIA]->(l)
             ON CREATE SET rel.match = $reason, rel.confidence = $confidence
             RETURN count(rel) AS n

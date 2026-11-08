@@ -38,6 +38,7 @@ def infer(session: Session) -> int:
         MATCH (target:Application)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission)
         WITH DISTINCT a, target
         WHERE a <> target
+          AND target.scan_id = a.scan_id
           AND target.bundle_id <> $attacker_id
         MERGE (a)-[r:CAN_SEND_APPLE_EVENT]->(target)
         SET r.inferred = true, r.confidence = 'inferred'

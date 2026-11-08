@@ -75,7 +75,7 @@ public struct PeriodicMaintenanceSurfaceVector: Check {
             result.present.append(path)
             if path.hasPrefix("writable:") {
                 result.writable.append(String(path.dropFirst("writable:".count)))
-            } else if FileManager.default.isWritableFile(atPath: path) {
+            } else if FileManager.default.isWritableByNonRoot(atPath: path) {
                 result.writable.append(path)
             }
         }
@@ -86,7 +86,7 @@ public struct PeriodicMaintenanceSurfaceVector: Check {
         return probeDirs.reduce(into: ProbePaths()) { result, path in
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: path, isDirectory: &isDirectory) else { return }
-            let isWritable = fileManager.isWritableFile(atPath: path)
+            let isWritable = fileManager.isWritableByNonRoot(atPath: path)
             result.present.append(path)
             if isWritable { result.writable.append(path) }
             result.evidence.append(Evidence(type: "periodic_dir", path: path, detail: "dir=\(isDirectory.boolValue) writable=\(isWritable)"))

@@ -62,7 +62,7 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int, int]:
         session, scan.tcc_grants, scan.scan_id
     )
     import_nodes_permissions.import_entitlements(session, scan.applications, scan.scan_id)
-    import_nodes_core.import_signed_by_team(session)
+    import_nodes_core.import_signed_by_team(session, scan.scan_id)
     import_nodes_certificates.import_certificate_authorities(
         session, scan.applications, scan.scan_id
     )
@@ -139,17 +139,17 @@ def main() -> int:
     if input_paths is None:
         return 1
 
-    scans = _load_input_scans(input_paths)
-    if scans is None:
+    hostnames = _input_scan_hostnames(input_paths)
+    if hostnames is None:
         return 1
 
-    hostnames = [s.hostname for s in scans]
     if not _validate_unique_hostnames(hostnames):
         return 1
 
     driver = connect_from_args(args)
-    _import_scans(driver, scans, replace_host=replace_host_requested(args))
-    print(f"\nMerged {len(scans)} scans from hosts: {', '.join(hostnames)}")
+    if not _import_scans(driver, input_paths, replace_host=replace_host_requested(args)):
+        return 1
+    print(f"\nMerged {len(input_paths)} scans from hosts: {', '.join(hostnames)}")
     return 0
 
 
@@ -179,8 +179,9 @@ def _input_paths_from_args(args: argparse.Namespace) -> list[str] | None:
     return input_paths
 
 
-def _load_input_scans(input_paths: list[str]) -> list[ScanResult] | None:
-    scans = []
+def _input_scan_hostnames(input_paths: list[str]) -> list[str] | None:
+    """Validate every scan before any import; keep only hostnames so memory stays per-scan."""
+    hostnames = []
     for path_str in input_paths:
         path = Path(path_str)
         if not path.exists():
@@ -189,8 +190,8 @@ def _load_input_scans(input_paths: list[str]) -> list[ScanResult] | None:
         scan = load_scan(path)
         if scan is None:
             return None
-        scans.append(scan)
-    return scans
+        hostnames.append(scan.hostname)
+    return hostnames
 
 
 def _validate_unique_hostnames(hostnames: list[str]) -> bool:
@@ -206,14 +207,20 @@ def _validate_unique_hostnames(hostnames: list[str]) -> bool:
     return True
 
 
-def _import_scans(driver, scans: list[ScanResult], replace_host: bool = True) -> None:
-    print(f"Importing {len(scans)} scan(s)...")
+def _import_scans(driver, input_paths: list[str], replace_host: bool = True) -> bool:
+    """Load and import one scan at a time. Returns False if a file stopped validating."""
+    print(f"Importing {len(input_paths)} scan(s)...")
 
-    with driver.session() as session:
-        for scan in scans:
-            import_scan(session, scan, replace_host=replace_host)
-
-    driver.close()
+    try:
+        with driver.session() as session:
+            for path_str in input_paths:
+                scan = load_scan(Path(path_str))
+                if scan is None:
+                    return False
+                import_scan(session, scan, replace_host=replace_host)
+    finally:
+        driver.close()
+    return True
 
 
 if __name__ == "__main__":

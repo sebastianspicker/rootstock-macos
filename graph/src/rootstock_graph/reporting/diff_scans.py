@@ -246,33 +246,38 @@ def _launch_item_row(item) -> str:
 def diff_entitlements(before: ScanResult, after: ScanResult) -> EntitlementDiff:
     """Compare security-critical entitlement changes."""
 
-    def _critical_ents(scan: ScanResult) -> dict[str, set[str]]:
-        result: dict[str, set[str]] = {}
+    # Keyed by (bundle_id, path) like diff_apps, so two copies of one app stay distinct.
+    def _critical_ents(scan: ScanResult) -> dict[tuple[str, str], set[str]]:
+        result: dict[tuple[str, str], set[str]] = {}
         for app in scan.applications:
             crit = {e.name for e in app.entitlements if e.is_security_critical}
             if crit:
-                result[app.bundle_id] = crit
+                result[(app.bundle_id, app.path)] = crit
         return result
 
     before_ents = _critical_ents(before)
     after_ents = _critical_ents(after)
-    after_names = {a.bundle_id: a.name for a in after.applications}
-    before_names = {a.bundle_id: a.name for a in before.applications}
+    after_names = {(a.bundle_id, a.path): a.name for a in after.applications}
+    before_names = {(a.bundle_id, a.path): a.name for a in before.applications}
 
     gained = []
     lost = []
 
-    all_bids = set(before_ents) | set(after_ents)
-    for bid in sorted(all_bids):
-        be = before_ents.get(bid, set())
-        ae = after_ents.get(bid, set())
-        name = after_names.get(bid, before_names.get(bid, bid))
+    for key in sorted(set(before_ents) | set(after_ents)):
+        bid, path = key
+        be = before_ents.get(key, set())
+        ae = after_ents.get(key, set())
+        name = after_names.get(key, before_names.get(key, bid))
         new_ents = ae - be
         removed_ents = be - ae
         if new_ents:
-            gained.append({"bundle_id": bid, "name": name, "entitlements": sorted(new_ents)})
+            gained.append(
+                {"bundle_id": bid, "path": path, "name": name, "entitlements": sorted(new_ents)}
+            )
         if removed_ents:
-            lost.append({"bundle_id": bid, "name": name, "entitlements": sorted(removed_ents)})
+            lost.append(
+                {"bundle_id": bid, "path": path, "name": name, "entitlements": sorted(removed_ents)}
+            )
 
     return EntitlementDiff(apps_gained_critical=gained, apps_lost_critical=lost)
 

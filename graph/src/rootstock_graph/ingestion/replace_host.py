@@ -7,8 +7,9 @@ of the same Mac is therefore the default; ``--keep-previous-scans`` opts out
 for operators who want history side by side. ``--replace-host`` is accepted for
 compatibility and is a no-op.
 
-An earlier scan belongs to the same Mac when its Computer has the same hostname and
-the same ``hardware_uuid`` (or both scans lack one). Hostnames such as
+An earlier scan belongs to the same Mac when its Computer has the same
+``hardware_uuid`` (the hostname may have changed, e.g. with the network), or the same
+hostname and both scans lack a UUID. Hostnames such as
 ``MacBook-Pro.local`` collide between machines, so an earlier scan with the same
 hostname but a different hardware UUID is kept and a warning names it.
 
@@ -85,13 +86,16 @@ def previous_scan_ids(
     """
     result = session.run(
         """
-        MATCH (c:Computer {hostname: $hostname})
+        MATCH (c:Computer)
         WHERE c.scan_id IS NOT NULL AND c.scan_id <> $scan_id
+          AND (c.hostname = $hostname
+               OR ($hardware_uuid IS NOT NULL AND c.hardware_uuid = $hardware_uuid))
         RETURN c.scan_id AS scan_id, c.hardware_uuid AS hardware_uuid
         ORDER BY scan_id
         """,
         hostname=hostname,
         scan_id=scan_id,
+        hardware_uuid=hardware_uuid,
     )
     same, other = split_previous_scans(result, hardware_uuid)
     for other_scan in other:

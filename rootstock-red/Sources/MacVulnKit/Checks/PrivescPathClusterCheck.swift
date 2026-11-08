@@ -40,8 +40,8 @@ public struct PrivescPathClusterCheck: Check {
         for entry in state.systemLaunchAgents + state.launchDaemons {
             let parent = URL(fileURLWithPath: entry.path).deletingLastPathComponent().path
             let writable =
-                FileManager.default.isWritableFile(atPath: entry.path)
-                || FileManager.default.isWritableFile(atPath: parent)
+                FileManager.default.isWritableByNonRoot(atPath: entry.path)
+                || FileManager.default.isWritableByNonRoot(atPath: parent)
             if writable {
                 hits.append(
                     Evidence(

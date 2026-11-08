@@ -173,6 +173,12 @@ type ValidOwnedListResponse = Record<string, unknown> & OwnedListResponse;
 function isOwnedItem(value: unknown): value is OwnedListResponse["owned"][number] {
   if (!isRecord(value)) return false;
   if (typeof value.name !== "string") return false;
+  if (
+    value.labels !== undefined &&
+    !(Array.isArray(value.labels) && value.labels.every((l) => typeof l === "string"))
+  )
+    return false;
+  if (value.properties !== undefined && !isRecord(value.properties)) return false;
   return true;
 }
 

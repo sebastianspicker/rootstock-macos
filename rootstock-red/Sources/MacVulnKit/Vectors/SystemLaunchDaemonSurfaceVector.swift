@@ -29,7 +29,7 @@ public struct SystemLaunchDaemonSurfaceVector: Check {
     private static func surfaces(_ entries: [LaunchAgentEntry]) -> LaunchSurfaces {
         let writable = entries.filter { entry in
             let parent = URL(fileURLWithPath: entry.path).deletingLastPathComponent().path
-            return FileManager.default.isWritableFile(atPath: entry.path) || FileManager.default.isWritableFile(atPath: parent)
+            return FileManager.default.isWritableByNonRoot(atPath: entry.path) || FileManager.default.isWritableByNonRoot(atPath: parent)
         }
         let unlabeled = entries.filter { $0.label == nil || $0.label?.isEmpty == true }
         return LaunchSurfaces(writable: writable, unlabeled: unlabeled)

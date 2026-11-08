@@ -47,8 +47,9 @@ public struct SudoersParser: ArtifactParser {
     }
 
     private func isSudoersInclude(_ url: URL) -> Bool {
+        // sudo skips include-directory entries containing '.' or ending in '~'.
         let name = url.lastPathComponent
-        return !name.hasSuffix("~") && !name.hasPrefix(".")
+        return !name.contains(".") && !name.hasSuffix("~")
     }
 
     private func parseEnumeratedSudoersFiles(root: ArtifactRoot, seen: inout PathDeduper) -> [EventEnvelope] {
@@ -60,7 +61,7 @@ public struct SudoersParser: ArtifactParser {
     }
 
     private func isSudoersIncludePath(_ url: URL) -> Bool {
-        url.path.contains("/sudoers.d/") && !url.hasDirectoryPath
+        url.path.contains("/sudoers.d/") && !url.hasDirectoryPath && isSudoersInclude(url)
     }
 
     private func parseSudoersFile(at url: URL) -> [EventEnvelope] {

@@ -366,16 +366,16 @@ def _application_quarantine_record(app: ApplicationData) -> dict[str, object]:
     }
 
 
-def import_signed_by_team(session: Session) -> int:
+def import_signed_by_team(session: Session, scan_id: str) -> int:
     """
-    Create SIGNED_BY_SAME_TEAM edges between all Application pairs sharing a team_id.
+    Create SIGNED_BY_SAME_TEAM edges between Application pairs of one scan sharing a team_id.
     Groups by team_id first to avoid an O(N^2) cross-join across all applications.
     Edges go from lexicographically smaller bundle_id to larger to avoid duplicates.
     Returns number of relationships created or merged.
     """
     result = session.run(
         """
-        MATCH (a:Application)
+        MATCH (a:Application {scan_id: $scan_id})
         WHERE a.team_id IS NOT NULL
         WITH a.team_id AS tid, collect(a) AS apps
         WHERE size(apps) > 1
@@ -385,6 +385,7 @@ def import_signed_by_team(session: Session) -> int:
         MERGE (a)-[r:SIGNED_BY_SAME_TEAM]->(b)
         SET r.team_id = a.team_id
         RETURN count(r) AS rels
-        """
+        """,
+        scan_id=scan_id,
     )
     return result.single()["rels"]

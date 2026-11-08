@@ -155,7 +155,6 @@ class ApplicationFacts:
     cve_ids: tuple[str, ...] = ()
     kev_cve_ids: tuple[str, ...] = ()
     gatekeeper_bypass: bool = False
-    electron_inheritance: bool = False
     exposed_listeners: int = 0
     env_injection_items: int = 0
     risky_extensions: int = 0
@@ -383,7 +382,6 @@ _APPLICATION_FACTS_QUERY = (
            cve_ids,
            [c IN kev_cve_ids WHERE c IS NOT NULL] AS kev_cve_ids,
            EXISTS { MATCH ()-[:BYPASSED_GATEKEEPER]->(app) } AS gatekeeper_bypass,
-           EXISTS { MATCH ()-[:CHILD_INHERITS_TCC]->(app) } AS electron_inheritance,
            COUNT { MATCH (app)-[:LISTENS_ON]->(nl:NetworkListener) WHERE nl.exposed = true }
                AS exposed_listeners,
            COUNT {
@@ -420,7 +418,6 @@ def _facts_from_record(record) -> ApplicationFacts:
         cve_ids=tuple(record["cve_ids"] or ()),
         kev_cve_ids=tuple(record["kev_cve_ids"] or ()),
         gatekeeper_bypass=bool(record["gatekeeper_bypass"]),
-        electron_inheritance=bool(record["electron_inheritance"]),
         exposed_listeners=int(record["exposed_listeners"] or 0),
         env_injection_items=int(record["env_injection_items"] or 0),
         risky_extensions=int(record["risky_extensions"] or 0),

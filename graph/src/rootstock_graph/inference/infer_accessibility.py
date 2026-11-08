@@ -35,6 +35,7 @@ def infer(session: Session) -> int:
         WITH DISTINCT attacker, a
         MATCH (target:Application)-[:HAS_TCC_GRANT {allowed: true}]->(:TCC_Permission)
         WHERE a <> target
+          AND target.scan_id = a.scan_id
           AND target.bundle_id <> $attacker_id
         WITH DISTINCT a, target
         MERGE (a)-[r:CAN_CONTROL_VIA_A11Y]->(target)

@@ -214,7 +214,10 @@ def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
 
 def _get_hostname(session) -> str:
     result = session.run(
-        Query("MATCH (c:Computer) RETURN c.hostname AS hostname LIMIT 1", timeout=5.0)
+        Query(
+            "MATCH (c:Computer) RETURN c.hostname AS hostname ORDER BY c.scanned_at DESC LIMIT 1",
+            timeout=5.0,
+        )
     )
     row = result.single()
     if row and row["hostname"]:

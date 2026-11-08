@@ -306,7 +306,7 @@ def _import_core_inventory(session, scan) -> tuple[int, int, str]:
     n_ents, n_ent_rels = import_entitlements(session, scan.applications, scan.scan_id)
     print(f"  Entitlements:  {n_ents} nodes, {n_ent_rels} relationships")
 
-    n_team_rels = import_signed_by_team(session)
+    n_team_rels = import_signed_by_team(session, scan.scan_id)
     print(f"  Team edges:    {n_team_rels}")
 
     n_cas, n_signed_by, n_issued_by = import_certificate_authorities(

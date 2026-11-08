@@ -55,12 +55,15 @@ public struct SudoersDataSource: DataSource {
 
     private func parseSudoersFile(at path: String) -> ([SudoersRule], [String]) {
         do {
-            let content = try String(contentsOfFile: path, encoding: .utf8)
+            // Lossy decode: one stray non-UTF-8 byte (e.g. a Latin-1 comment) must not drop every rule.
+            let content = String(decoding: try Data(contentsOf: URL(fileURLWithPath: path)), as: UTF8.self)
             return (Self.parseSudoersContent(content), [])
         } catch let error as NSError where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoSuchFileError {
             return ([], ["Cannot read sudoers file: \(path)"])
-        } catch {
+        } catch let error as NSError where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoPermissionError {
             return ([], ["Cannot read sudoers file (requires elevation): \(path)"])
+        } catch {
+            return ([], ["Cannot read sudoers file: \(path) (\(error.localizedDescription))"])
         }
     }
 

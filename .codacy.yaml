@@ -20,3 +20,12 @@ exclude_paths:
   - "**/*.egg-info/**"
   - "graph/generated/**"
   - "graph/src/rootstock_graph/resources/viewer/viewer.bundle.js"
+  # Generated from graph/viewer/css by bundle-viewer-css.mjs
+  - "graph/src/rootstock_graph/resources/viewer/viewer.css"
+  # Keep-a-Changelog repeats Added/Changed/Fixed headings per release
+  - "CHANGELOG.md"
+  - "**/CHANGELOG.md"
+  # CI/dev verification scripts and demo fixture generators
+  - "scripts/check-*.py"
+  - "graph/scripts/check-*.py"
+  - "graph/viewer/scripts/viewer-demo-*.mjs"
