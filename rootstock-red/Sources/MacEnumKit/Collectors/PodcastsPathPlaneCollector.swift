@@ -15,11 +15,11 @@ public struct PodcastsPathPlaneCollector: Collector {
                     "/System/Library/PrivateFrameworks/PodcastsFoundation.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Group Containers/243LU875E5.groups.com.apple.podcasts",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.podcasts",
+                    AssessedHome.path + "/Library/Group Containers/243LU875E5.groups.com.apple.podcasts",
+                    AssessedHome.path + "/Library/Containers/com.apple.podcasts",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.podcasts.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.podcasts.plist",
                     "/System/Library/PrivateFrameworks/PodcastsKit.framework",
                 ],
                 initialHonestyNote: "Podcasts path plane: path presence only - never dumps podcast episode files or account tokens"

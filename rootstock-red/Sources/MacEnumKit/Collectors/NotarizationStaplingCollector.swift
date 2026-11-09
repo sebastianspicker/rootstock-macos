@@ -63,7 +63,7 @@ public struct NotarizationStaplingCollector: Collector {
         fileManager: FileManager,
         notes: inout [String]
     ) -> [String] {
-        let roots = [NSHomeDirectory() + "/Downloads", NSHomeDirectory() + "/Desktop"]
+        let roots = [AssessedHome.path + "/Downloads", AssessedHome.path + "/Desktop"]
         let extensions = [".dmg", ".pkg", ".app", ".zip"]
         var hints: [String] = []
 

@@ -15,11 +15,11 @@ public struct ShortcutsIcloudSyncCollector: Collector {
                     "/System/Library/PrivateFrameworks/WorkflowKit.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Shortcuts",
-                    NSHomeDirectory() + "/Library/Group Containers/group.is.workflow.my.app",
+                    AssessedHome.path + "/Library/Shortcuts",
+                    AssessedHome.path + "/Library/Group Containers/group.is.workflow.my.app",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.shortcuts.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.shortcuts.plist",
                     "/System/Library/PrivateFrameworks/VoiceShortcutClient.framework",
                 ],
                 initialHonestyNote: "Shortcuts iCloud sync: path presence only - never executes Shortcuts or dumps iCloud-synced automation databases"

@@ -16,12 +16,12 @@ public struct MusicLibraryPathCollector: Collector {
                     "/System/Library/Frameworks/MediaPlayer.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Music/Music",
-                    NSHomeDirectory() + "/Music/iTunes",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.Music",
+                    AssessedHome.path + "/Music/Music",
+                    AssessedHome.path + "/Music/iTunes",
+                    AssessedHome.path + "/Library/Containers/com.apple.Music",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.Music.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.Music.plist",
                     "/System/Library/PrivateFrameworks/MediaLibrary.framework",
                 ],
                 initialHonestyNote: "Music library path: path presence only - never exports Music library media or DRM material"

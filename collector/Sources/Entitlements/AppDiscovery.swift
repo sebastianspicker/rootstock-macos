@@ -1,6 +1,7 @@
 import Foundation
 import Darwin
 import Models
+import RootstockMacFacts
 
 /// Represents a discovered .app bundle before entitlement extraction.
 struct DiscoveredApp {
@@ -80,7 +81,7 @@ struct AppDiscovery {
     private let limits: AppDiscoveryLimits
 
     private static var defaultDirectories: [URL] {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let home = AssessedUser.homePath
         return [
             URL(fileURLWithPath: "/Applications"),
             URL(fileURLWithPath: home + "/Applications"),

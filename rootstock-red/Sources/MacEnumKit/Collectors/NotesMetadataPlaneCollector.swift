@@ -18,13 +18,13 @@ public struct NotesMetadataPlaneCollector: Collector {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Group Containers/group.com.apple.notes",
-            NSHomeDirectory() + "/Library/Containers/com.apple.Notes"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Group Containers/group.com.apple.notes",
+            AssessedHome.path + "/Library/Containers/com.apple.Notes"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Notes",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.Notes.plist"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Notes",
+            AssessedHome.path + "/Library/Preferences/com.apple.Notes.plist"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

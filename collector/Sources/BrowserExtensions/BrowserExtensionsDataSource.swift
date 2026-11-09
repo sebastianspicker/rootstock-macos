@@ -1,6 +1,7 @@
 import Foundation
 import HostCommand
 import Models
+import RootstockMacFacts
 
 /// Inventories browser extensions in Chromium-family browsers, Firefox and Safari.
 ///
@@ -19,7 +20,7 @@ public struct BrowserExtensionsDataSource: DataSource {
     private let runCommand: ShellCommand
 
     public init() {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let home = AssessedUser.homePath
         self.applicationSupport = "\(home)/Library/Application Support"
         self.access = .live
         self.runCommand = { path, arguments, timeout in

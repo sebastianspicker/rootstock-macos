@@ -9,7 +9,7 @@ public struct CredPathsCollector: Collector {
     public init() {}
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+        let home = AssessedHome.url
         let candidates: [(String, String)] = [
             ("ssh", home.appendingPathComponent(".ssh").path),
             ("aws", home.appendingPathComponent(".aws").path),

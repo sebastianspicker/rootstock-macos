@@ -97,7 +97,7 @@ extension ScanOrchestrator {
     static func detectICloudStatus(
         readFile: (String) -> Data? = { try? BoundedFileReader.read(path: $0) }
     ) -> ICloudProbeResult {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let home = AssessedUser.homePath
         let plistPath = "\(home)/Library/Preferences/MobileMeAccounts.plist"
         guard let data = readFile(plistPath) else {
             return ICloudProbeResult(
@@ -154,6 +154,18 @@ extension ScanOrchestrator {
             driveEnabled: driveEnabled,
             keychainEnabled: keychainEnabled,
             error: nil
+        )
+    }
+
+    /// Under root (sudo), names the home the per-user sources were read from and the launchctl caveat.
+    static func elevatedHomeNote(
+        effectiveUID: uid_t = geteuid(),
+        home: String = AssessedUser.homePath
+    ) -> CollectionError? {
+        guard effectiveUID == 0 else { return nil }
+        return postureError(
+            "Running as root: per-user sources were read from \(home); "
+                + "launchctl list under sudo shows the system domain, not the user's agents"
         )
     }
 

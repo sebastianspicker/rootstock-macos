@@ -76,7 +76,7 @@ public struct VirtualizationContainersCollector: Collector {
         }
 
         // User config dirs (presence only).
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         let userHints = [
             "\(home)/.docker",
             "\(home)/.colima",

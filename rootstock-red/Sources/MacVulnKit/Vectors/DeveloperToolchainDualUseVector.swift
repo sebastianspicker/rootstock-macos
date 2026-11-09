@@ -28,7 +28,6 @@ public struct DeveloperToolchainDualUseVector: Check {
     private func collectorNotePresent(_ state: CollectedState) -> Bool {
         let note = state.collectorNotes["collect.developer_toolchain"]
         return note?.contains("xcode=true") == true || note?.contains("clt=true") == true
-            || state.collectorNotes["dev.toolchain_present"] != nil
     }
 
     private func evidence(for state: CollectedState) -> [Evidence] {

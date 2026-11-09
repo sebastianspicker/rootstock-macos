@@ -34,9 +34,10 @@ def infer(session: Session) -> int:
     """
     result = session.run(
         """
-        MATCH (u:User)-[:MEMBER_OF]->(:LocalGroup {name: '_developer'})
+        MATCH (u:User)-[m:MEMBER_OF]->(:LocalGroup {name: '_developer'})
         MATCH (a:Application)
-        WHERE NOT coalesce(a.is_sip_protected, false)
+        WHERE a.scan_id = m.scan_id
+          AND NOT coalesce(a.is_sip_protected, false)
           AND a.bundle_id <> $attacker_id
           AND (a.hardened_runtime = false
                OR EXISTS {

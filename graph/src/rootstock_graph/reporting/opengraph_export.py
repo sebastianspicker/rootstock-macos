@@ -148,18 +148,22 @@ def export_cross_domain(session, hostname: str) -> dict:
     return build_cross_domain_opengraph(session, hostname)
 
 
-def graph_hostname(session) -> str:
+def graph_hostname(session, timeout: float | None = None) -> str:
     """Hostname of the most recent scanned Computer, or a stable fallback."""
-    row = session.run(
+
+    def single(cypher: str):
+        return session.run(Query(cypher, timeout=timeout) if timeout else cypher).single()
+
+    row = single(
         "MATCH (c:Computer) WHERE c.hostname IS NOT NULL "
         "RETURN c.hostname AS hostname ORDER BY c.scanned_at DESC LIMIT 1"
-    ).single()
+    )
     if row and row["hostname"]:
         return str(row["hostname"])
-    row = session.run(
+    row = single(
         "MATCH (a:Application) WHERE a.scan_id IS NOT NULL RETURN a.scan_id AS scan_id LIMIT 1"
-    ).single()
-    return row["scan_id"][:8] if row else "rootstock"
+    )
+    return row["scan_id"][:8] if row and row["scan_id"] else "rootstock"
 
 
 _SCAN_METADATA_KEYS = frozenset(

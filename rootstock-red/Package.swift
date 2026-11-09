@@ -27,7 +27,9 @@ let package = Package(
         // MARK: - Core
         .target(
             name: "RootstockCore",
-            dependencies: [],
+            dependencies: [
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ],
             path: "Sources/RootstockCore"
         ),
         .testTarget(

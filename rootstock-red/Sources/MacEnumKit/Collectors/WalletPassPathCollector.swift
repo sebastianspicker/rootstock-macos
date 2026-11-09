@@ -16,11 +16,11 @@ public struct WalletPassPathCollector: Collector {
                     "/usr/libexec/passd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Passes",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.Passbook",
+                    AssessedHome.path + "/Library/Passes",
+                    AssessedHome.path + "/Library/Containers/com.apple.Passbook",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.Passbook.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.Passbook.plist",
                     "/System/Library/PrivateFrameworks/PassKitCore.framework",
                 ],
                 initialHonestyNote: "Wallet pass path: path presence only - never dumps pass contents, payment tokens, or card data"

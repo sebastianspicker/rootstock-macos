@@ -13,7 +13,7 @@ public struct SSHAgentKeyPathCollector: Collector {
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         let fm = FileManager.default
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         var notes: [String] = [
             "SSH agent/key path surface: path presence only - never reads private keys or agent material",
         ]

@@ -26,7 +26,6 @@ public struct ExtractorQuarantineCompoundVector: Check {
     private static func hasCompoundGate(_ state: CollectedState) -> Bool {
         state.protections?.gatekeeperEnabled == false
             || state.collectorNotes.keys.contains { $0.contains("quarantine") }
-            || state.collectorNotes["codesign.quarantine_hits"] != nil
             || (state.archiveQuarantineExtractor?.archiveDropHints.count ?? 0) >= 1
     }
 
@@ -43,7 +42,6 @@ public struct ExtractorQuarantineCompoundVector: Check {
         let drops = aq?.archiveDropHints.count ?? 0
         let gkOff = state.protections?.gatekeeperEnabled == false
         let quarantineHits = state.collectorNotes.keys.contains { $0.contains("quarantine") }
-            || state.collectorNotes["codesign.quarantine_hits"] != nil
         let remote = Self.remoteAccess(state)
         var evidence: [Evidence] = [
             Evidence(
@@ -82,7 +80,6 @@ public struct ExtractorQuarantineCompoundVector: Check {
         let third = state.archiveQuarantineExtractor?.thirdPartyExtractorPaths.count ?? 0
         let gkOff = state.protections?.gatekeeperEnabled == false
         let quarantineHits = state.collectorNotes.keys.contains { $0.contains("quarantine") }
-            || state.collectorNotes["codesign.quarantine_hits"] != nil
         let remote = remoteAccess(state)
         let severity: Severity
         if third >= 1 && gkOff && remote {

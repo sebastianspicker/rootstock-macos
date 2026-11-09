@@ -20,14 +20,6 @@ from .report_sections import (
     append_vulnerability_mapping,
     collect_active_categories,
 )
-from .report_campaign_diagrams import (
-    format_family_findings_section,
-    format_multi_plane_campaign_section,
-    format_multi_plane_severity_board,
-    format_purple_engagement_matrix,
-    format_kill_chain_stage_timeline,
-    format_fleet_campaign_dashboard,
-)
 from .report_diagrams import mermaid_attack_paths_block, mermaid_tcc_pie
 from .report_formatters import (
     escape_report_value,
@@ -440,62 +432,4 @@ def assemble_report(
     sections.extend(host_evidence_summary_lines(query_results, metadata))
     _append_report_body(sections, query_results, queries, rows)
 
-    _append_optional_family_sections(sections, metadata)
-
     return "\n".join(sections)
-
-
-def _append_optional_family_sections(sections: list[str], metadata: dict) -> None:
-    family_findings = metadata.get("family_findings") or []
-    if family_findings:
-        sections.append(
-            format_family_findings_section(family_findings, source=metadata.get("family_source"))
-        )
-    _append_optional_sections(
-        sections,
-        metadata,
-        (
-            (
-                "multi_plane_campaign",
-                "multi_plane_campaign_name",
-                "Multi-plane campaign",
-                format_multi_plane_campaign_section,
-                "campaign",
-            ),
-            (
-                "multi_plane_severity_board",
-                "multi_plane_severity_title",
-                "Multi-plane severity board",
-                format_multi_plane_severity_board,
-                "title",
-            ),
-            (
-                "purple_engagement_pairs",
-                "purple_engagement_title",
-                "Purple engagement matrix",
-                format_purple_engagement_matrix,
-                "title",
-            ),
-            (
-                "kill_chain_stages",
-                "kill_chain_title",
-                "Kill-chain stage timeline",
-                format_kill_chain_stage_timeline,
-                "title",
-            ),
-            (
-                "fleet_campaigns",
-                "fleet_campaign_title",
-                "Fleet multi-plane campaign dashboard",
-                format_fleet_campaign_dashboard,
-                "title",
-            ),
-        ),
-    )
-
-
-def _append_optional_sections(sections: list[str], metadata: dict, specifications: tuple) -> None:
-    for data_key, title_key, fallback, formatter, keyword in specifications:
-        rows = metadata.get(data_key) or []
-        if rows:
-            sections.append(formatter(rows, **{keyword: metadata.get(title_key) or fallback}))

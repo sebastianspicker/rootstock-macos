@@ -16,8 +16,8 @@ public struct HandoffClipboardDepthCollector: Collector {
                     "/usr/libexec/sharingd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.coreservices.useractivityd.plist",
-                    NSHomeDirectory() + "/Library/Caches/com.apple.Pasteboard",
+                    AssessedHome.path + "/Library/Preferences/com.apple.coreservices.useractivityd.plist",
+                    AssessedHome.path + "/Library/Caches/com.apple.Pasteboard",
                 ],
                 tertiaryPaths: [
                     "/System/Library/LaunchAgents/com.apple.sharingd.plist",

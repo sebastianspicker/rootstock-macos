@@ -26,7 +26,7 @@ public struct PersistAuditCollector: Collector {
 
     public static func enumerateUserLaunchAgents() -> [LaunchAgentEntry] {
         LaunchPlistSupport.enumeratePlists(
-            in: MacSecurityPaths.userLaunchAgents(home: FileManager.default.homeDirectoryForCurrentUser)
+            in: MacSecurityPaths.userLaunchAgents(home: AssessedHome.url)
         )
     }
 }

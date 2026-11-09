@@ -16,11 +16,11 @@ public struct NotificationCenterDepthCollector: Collector {
                     "/usr/sbin/usernoted",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Application Support/NotificationCenter",
-                    NSHomeDirectory() + "/Library/Group Containers/group.com.apple.usernoted",
+                    AssessedHome.path + "/Library/Application Support/NotificationCenter",
+                    AssessedHome.path + "/Library/Group Containers/group.com.apple.usernoted",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.ncprefs.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.ncprefs.plist",
                     "/System/Library/LaunchAgents/com.apple.usernoted.plist",
                 ],
                 initialHonestyNote: "Notification Center depth: path presence only - never dumps notification body contents or forges notification payloads"

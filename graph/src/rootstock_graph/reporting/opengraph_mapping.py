@@ -353,13 +353,15 @@ def map_edge_for_opengraph(
     type_info = resolve_edge_type_info(rel_type, rel_props)
     if not type_info:
         return None
+    # A denied TCC grant is evidence, not a step an attack path can take.
+    denied_grant = rel_type == "HAS_TCC_GRANT" and rel_props.get("allowed") is False
     return {
         "source": make_node_id(hostname, src_label, node_key(src_label, src_props)),
         "target": make_node_id(hostname, tgt_label, node_key(tgt_label, tgt_props)),
         "kind": type_info["kind"],
         "properties": {
             **serialize_props(rel_props),
-            "_traversable": type_info["traversable"],
+            "_traversable": type_info["traversable"] and not denied_grant,
         },
     }
 
@@ -436,6 +438,7 @@ _COMPOSITE_DISPLAY_NAMES = {
     "CWE": ("cwe_id", "name"),
     "LoginSession": ("username", "terminal"),
     "RemoteAccessService": ("service", "enabled"),
+    "SudoersRule": ("user", "command"),
 }
 
 _SERVICE_DISPLAY = {"ssh": "Remote Login (SSH)", "screen_sharing": "Screen Sharing"}

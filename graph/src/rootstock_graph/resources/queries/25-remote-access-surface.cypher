@@ -8,7 +8,7 @@
 // ATT&CK: T1021.004, T1021.005
 
 MATCH (svc:RemoteAccessService)
-WHERE svc.enabled = true
+WHERE svc.enabled = true OR EXISTS { (svc)-[:ACCESSIBLE_BY]->() }
 OPTIONAL MATCH (svc)-[:ACCESSIBLE_BY]->(u:User)
 WITH svc, collect(DISTINCT u.name) AS remote_users
 // Find injectable apps available to any user on this system

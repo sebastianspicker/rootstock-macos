@@ -16,11 +16,11 @@ public struct MapsLocationPathCollector: Collector {
                     "/usr/libexec/locationd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Caches/com.apple.Maps",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.Maps",
+                    AssessedHome.path + "/Library/Caches/com.apple.Maps",
+                    AssessedHome.path + "/Library/Containers/com.apple.Maps",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.Maps.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.Maps.plist",
                     "/System/Library/LaunchDaemons/com.apple.locationd.plist",
                 ],
                 initialHonestyNote: "Maps location residual: path presence only - never dumps location history or spoofs CoreLocation positions"

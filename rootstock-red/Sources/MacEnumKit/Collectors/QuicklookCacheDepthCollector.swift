@@ -18,14 +18,14 @@ public struct QuicklookCacheDepthCollector: Collector {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Caches/com.apple.QuickLook.thumbnailcache",
-            NSHomeDirectory() + "/Library/QuickLook",
+        for path in [AssessedHome.path + "/Library/Caches/com.apple.QuickLook.thumbnailcache",
+            AssessedHome.path + "/Library/QuickLook",
             "/private/var/folders"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []
         for path in ["/System/Library/QuickLook",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.QuickLookDaemon.plist"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.QuickLookDaemon.plist"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

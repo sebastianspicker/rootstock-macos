@@ -14,13 +14,13 @@ public struct AutomatorWorkflowCollector: Collector {
         var a: [String] = []
         for path in ["/System/Applications/Automator.app",
             "/Applications/Automator.app",
-            NSHomeDirectory() + "/Library/Automator"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Automator"] where fm.fileExists(atPath: path) {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Services",
-            NSHomeDirectory() + "/Library/Workflows",
-            NSHomeDirectory() + "/Downloads"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Services",
+            AssessedHome.path + "/Library/Workflows",
+            AssessedHome.path + "/Downloads"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []

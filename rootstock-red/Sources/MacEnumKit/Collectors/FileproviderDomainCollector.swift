@@ -16,12 +16,12 @@ public struct FileproviderDomainCollector: Collector {
                     "/usr/libexec/fileproviderd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Application Support/FileProvider",
-                    NSHomeDirectory() + "/Library/CloudStorage",
+                    AssessedHome.path + "/Library/Application Support/FileProvider",
+                    AssessedHome.path + "/Library/CloudStorage",
                 ],
                 tertiaryPaths: [
                     "/System/Library/LaunchAgents/com.apple.FileProvider.plist",
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.FileProvider.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.FileProvider.plist",
                 ],
                 initialHonestyNote: "File Provider domain: path presence only - never registers malicious File Provider domains or exfiltrates provider caches"
             )

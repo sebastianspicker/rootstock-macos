@@ -247,37 +247,22 @@ def assess_host(facts: HostFacts) -> PostureAssessment:
 
 _HOST_FACTS_QUERY = """
     MATCH (c:Computer)
-    OPTIONAL MATCH (f:FirewallPolicy)
-    WITH c, collect(f.enabled)[0] AS firewall_enabled
-    OPTIONAL MATCH (ssh:RemoteAccessService {service: 'ssh'})
-    OPTIONAL MATCH (vnc:RemoteAccessService {service: 'screen_sharing'})
-    WITH c, firewall_enabled, collect(ssh.enabled)[0] AS ssh_enabled,
-         collect(vnc.enabled)[0] AS screen_sharing_enabled
-    OPTIONAL MATCH (sr:SudoersRule {nopasswd: true})
-    WITH c, firewall_enabled, ssh_enabled, screen_sharing_enabled, count(DISTINCT sr) AS nopasswd_rules
-    OPTIONAL MATCH (cf:CriticalFile)
-    WHERE cf.category IN ['tcc_database', 'sudoers', 'launch_daemon_dir', 'authorization_db', 'ssh_config']
-      AND cf.is_writable_by_non_root = true
-    WITH c, firewall_enabled, ssh_enabled, screen_sharing_enabled, nopasswd_rules,
-         count(DISTINCT cf) AS writable_privileged_files
     OPTIONAL MATCH (u:UnresolvedTCCGrant {scan_id: c.scan_id})
-    WITH c, firewall_enabled, ssh_enabled, screen_sharing_enabled, nopasswd_rules,
-         writable_privileged_files, count(DISTINCT u) AS unresolved_tcc_grants
+    WITH c, count(DISTINCT u) AS unresolved_tcc_grants
     OPTIONAL MATCH (tc:TrustedCertificate {scan_id: c.scan_id, custom_root: true})
-    WITH c, firewall_enabled, ssh_enabled, screen_sharing_enabled, nopasswd_rules,
-         writable_privileged_files, unresolved_tcc_grants,
+    WITH c, unresolved_tcc_grants,
          count(DISTINCT tc) AS custom_root_cas, collect(DISTINCT tc.subject) AS custom_root_subjects
     RETURN c.computer_key AS computer_key,
            c.sip_enabled AS sip_enabled,
            c.gatekeeper_enabled AS gatekeeper_enabled,
            c.filevault_enabled AS filevault_enabled,
-           firewall_enabled,
+           c.firewall_enabled AS firewall_enabled,
            c.screen_lock_enabled AS screen_lock_enabled,
            c.screen_lock_delay AS screen_lock_delay,
-           ssh_enabled,
-           screen_sharing_enabled,
-           nopasswd_rules,
-           writable_privileged_files,
+           c.ssh_enabled AS ssh_enabled,
+           c.screen_sharing_enabled AS screen_sharing_enabled,
+           c.nopasswd_rule_count AS nopasswd_rules,
+           c.writable_privileged_file_count AS writable_privileged_files,
            c.secure_boot_level AS secure_boot_level,
            c.external_boot_allowed AS external_boot_allowed,
            c.bluetooth_discoverable AS bluetooth_discoverable,

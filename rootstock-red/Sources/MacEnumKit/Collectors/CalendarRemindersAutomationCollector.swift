@@ -19,21 +19,21 @@ public struct CalendarRemindersAutomationCollector: Collector {
         var a: [String] = []
         for path in ["/System/Applications/Calendar.app",
             "/Applications/Calendar.app",
-            NSHomeDirectory() + "/Library/Calendars"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Calendars"] where fm.fileExists(atPath: path) {
             a.append(path)
             notes.append("a: \(path)")
         }
         var b: [String] = []
         for path in ["/System/Applications/Reminders.app",
-            NSHomeDirectory() + "/Library/Reminders",
-            NSHomeDirectory() + "/Library/Containers/com.apple.reminders"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Reminders",
+            AssessedHome.path + "/Library/Containers/com.apple.reminders"] where fm.fileExists(atPath: path) {
             b.append(path)
             notes.append("b: \(path)")
         }
         var c: [String] = []
         for path in ["/System/Library/Frameworks/EventKit.framework",
             "/System/Library/PrivateFrameworks/CalendarFoundation.framework",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.iCal.plist"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.iCal.plist"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

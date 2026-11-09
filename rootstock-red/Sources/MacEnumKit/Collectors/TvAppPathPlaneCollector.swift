@@ -15,11 +15,11 @@ public struct TvAppPathPlaneCollector: Collector {
                     "/System/Library/PrivateFrameworks/TVPlayback.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Containers/com.apple.TV",
-                    NSHomeDirectory() + "/Library/Group Containers/group.com.apple.tv",
+                    AssessedHome.path + "/Library/Containers/com.apple.TV",
+                    AssessedHome.path + "/Library/Group Containers/group.com.apple.tv",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.TV.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.TV.plist",
                     "/System/Library/PrivateFrameworks/VideosUI.framework",
                 ],
                 initialHonestyNote: "TV.app path plane: path presence only - never dumps TV.app media caches or account material"

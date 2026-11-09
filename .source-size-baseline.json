@@ -5,7 +5,6 @@
   "ceilings": {
     "collector/Sources/RootstockCLI/ScanOrchestrator.swift": 514,
     "graph/src/rootstock_graph/ingestion/import_vulnerabilities.py": 535,
-    "graph/src/rootstock_graph/reporting/report_assembly.py": 519,
     "graph/viewer/src/app.ts": 512,
     "modules/cve-scan/src/cve_scan/feed_normalize.py": 513,
     "modules/cve-scan/src/cve_scan/host_inventory.py": 506,

@@ -21,16 +21,15 @@ public struct QuarantineXattrSurfaceVector: Check {
     public init() {}
 
     public func evaluate(state: CollectedState, context: EvaluationContext) async throws -> [Finding] {
-        let inventory = Self.quarantineInventory(state)
-        let forced = state.collectorNotes["codesign.quarantine_hits"] != nil
-        guard !inventory.hits.isEmpty || forced else { return [] }
+        let inventory = Self.quarantineInventory()
+        guard !inventory.hits.isEmpty else { return [] }
         let gkOff = state.protections?.gatekeeperEnabled == false
-        return [Self.finding(state: state, inventory: inventory, forced: forced, gkOff: gkOff)]
+        return [Self.finding(state: state, inventory: inventory, gkOff: gkOff)]
     }
 
-    private static func quarantineInventory(_ state: CollectedState) -> (hits: [String], probed: Int) {
-        var hits = forcedHits(state)
-        let home = FileManager.default.homeDirectoryForCurrentUser
+    private static func quarantineInventory() -> (hits: [String], probed: Int) {
+        var hits: [String] = []
+        let home = AssessedHome.url
         let directories = [home.appendingPathComponent("Downloads").path, home.appendingPathComponent("Desktop").path, NSTemporaryDirectory(), "/tmp"]
         var probed = 0
         for directory in uniquePaths(directories) {
@@ -42,18 +41,13 @@ public struct QuarantineXattrSurfaceVector: Check {
         return (uniquePaths(hits), probed)
     }
 
-    private static func forcedHits(_ state: CollectedState) -> [String] {
-        guard let note = state.collectorNotes["codesign.quarantine_hits"] else { return [] }
-        return note.split(separator: "|").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-    }
-
-    private static func finding(state: CollectedState, inventory: (hits: [String], probed: Int), forced: Bool, gkOff: Bool) -> Finding {
+    private static func finding(state: CollectedState, inventory: (hits: [String], probed: Int), gkOff: Bool) -> Finding {
         let presentation = Self.presentation(hits: inventory.hits, gkOff: gkOff)
-        return Finding(id: Self.id, title: presentation.title, severity: presentation.severity, category: .codesign, resolution: .init(evidence: evidence(state: state, inventory: inventory, forced: forced, gkOff: gkOff), attackTechniques: ["T1553.001", "T1204.002", "T1036"], remediation: ["Keep Gatekeeper enabled; prefer Developer ID + notarized software distribution", "Educate users on unexpected Downloads/Desktop payloads still under quarantine", "Monitor unusual clear-of-quarantine activity via EDR (xattr -d storms)", "OPSEC: Rootstock Red never strips quarantine - assess is metadata-only"], falsePositiveNotes: "Quarantine tags on Downloads are normal after browser saves. Finding ranks download-origin surface and GK compound, not malware presence."), runtime: .init(confidence: inventory.hits.isEmpty ? .low : .medium, dryRunSafe: true, opsecScore: 18, esfExpected: ["OPEN"]))
+        return Finding(id: Self.id, title: presentation.title, severity: presentation.severity, category: .codesign, resolution: .init(evidence: evidence(state: state, inventory: inventory, gkOff: gkOff), attackTechniques: ["T1553.001", "T1204.002", "T1036"], remediation: ["Keep Gatekeeper enabled; prefer Developer ID + notarized software distribution", "Educate users on unexpected Downloads/Desktop payloads still under quarantine", "Monitor unusual clear-of-quarantine activity via EDR (xattr -d storms)", "OPSEC: Rootstock Red never strips quarantine - assess is metadata-only"], falsePositiveNotes: "Quarantine tags on Downloads are normal after browser saves. Finding ranks download-origin surface and GK compound, not malware presence."), runtime: .init(confidence: inventory.hits.isEmpty ? .low : .medium, dryRunSafe: true, opsecScore: 18, esfExpected: ["OPEN"]))
     }
 
-    private static func evidence(state: CollectedState, inventory: (hits: [String], probed: Int), forced: Bool, gkOff: Bool) -> [Evidence] {
-        var evidence = [Evidence(type: "summary", detail: "quarantineHits=\(inventory.hits.count) probedFiles≈\(inventory.probed) gatekeeperEnabled=\((state.protections?.gatekeeperEnabled).rootstockDescribe) forced=\(forced) (xattr metadata only - never strip quarantine)")]
+    private static func evidence(state: CollectedState, inventory: (hits: [String], probed: Int), gkOff: Bool) -> [Evidence] {
+        var evidence = [Evidence(type: "summary", detail: "quarantineHits=\(inventory.hits.count) probedFiles≈\(inventory.probed) gatekeeperEnabled=\((state.protections?.gatekeeperEnabled).rootstockDescribe) forced=false (xattr metadata only - never strip quarantine)")]
         if gkOff { evidence.append(Evidence(type: "gk_compound", detail: "Gatekeeper disabled compounds quarantine-origin download surface (T1553.001 / T1204.002 path-to-impact)")) }
         evidence += inventory.hits.prefix(maxSampleHits).map { Evidence(type: "quarantine_xattr", path: $0, detail: "com.apple.quarantine present (getxattr size≥0; content not parsed)") }
         evidence.append(Evidence(type: "opsec_honesty", detail: "Assess never clears quarantine (`xattr -d` / spctl --add) - metadata inventory only for authorized RT ranking"))

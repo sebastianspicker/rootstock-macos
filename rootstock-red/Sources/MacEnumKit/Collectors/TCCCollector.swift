@@ -39,7 +39,7 @@ public struct TCCCollector: Collector {
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser
+        let home = AssessedHome.url
 
         var notes: [String] = [
             "Non-prompting FDA/TCC heuristics only - no UI, no Keychain, no TCC.db content read",

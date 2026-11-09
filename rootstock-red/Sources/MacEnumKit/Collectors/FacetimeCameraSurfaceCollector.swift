@@ -20,8 +20,8 @@ public struct FacetimeCameraSurfaceCollector: Collector {
                     "/System/Library/PrivateFrameworks/AVConference.framework",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.FaceTime.plist",
-                    NSHomeDirectory() + "/Library/Application Support/FaceTime",
+                    AssessedHome.path + "/Library/Preferences/com.apple.FaceTime.plist",
+                    AssessedHome.path + "/Library/Application Support/FaceTime",
                 ],
                 initialHonestyNote: "FaceTime camera dual-use: path presence only - never activates camera/mic or dumps FaceTime call history contents"
             )

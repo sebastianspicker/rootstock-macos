@@ -16,12 +16,12 @@ public struct ImessagePathPlaneCollector: Collector {
                     "/System/Library/PrivateFrameworks/IMCore.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Messages",
-                    NSHomeDirectory() + "/Library/Messages/chat.db",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.iChat",
+                    AssessedHome.path + "/Library/Messages",
+                    AssessedHome.path + "/Library/Messages/chat.db",
+                    AssessedHome.path + "/Library/Containers/com.apple.iChat",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.iChat.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.iChat.plist",
                     "/System/Library/PrivateFrameworks/IMFoundation.framework",
                 ],
                 initialHonestyNote: "iMessage path plane: path presence only - never reads Messages database contents or exports chat transcripts"

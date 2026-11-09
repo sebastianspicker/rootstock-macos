@@ -26,7 +26,6 @@ public struct DataAccessSurfaceClusterCheck: Check {
             || !(tm?.backupPaths.isEmpty ?? true)
             || !(tm?.localSnapshotHints.isEmpty ?? true)
             || state.collectorNotes["collect.time_machine"] != nil
-            || state.collectorNotes["tm.snapshot_surface"] != nil
         let fda = state.tcc?.fullDiskAccessLikely == true
         guard surface && fda else { return nil }
 
@@ -50,12 +49,11 @@ public struct DataAccessSurfaceClusterCheck: Check {
         let profiles =
             (cfg?.userMobileconfigPaths.count ?? 0)
             + (cfg?.downloadsProfileHints.count ?? 0)
-        let note = state.collectorNotes["profile.sideload"] != nil
-            || state.collectorNotes["collect.config_profile_sideload"] != nil
+        let note = state.collectorNotes["collect.config_profile_sideload"] != nil
         let unmanaged = state.mdm?.enrolled == false || state.mdm?.enrolled == nil
         guard (profiles > 0 || note) && unmanaged else { return nil }
         // Require either real paths or explicit sideload note
-        guard profiles > 0 || state.collectorNotes["profile.sideload"] != nil
+        guard profiles > 0
             || (cfg?.profileInstallDbPresent == true && unmanaged)
         else { return nil }
 

@@ -19,7 +19,7 @@ public struct XpcMachServiceDepthCollector: Collector {
         var b: [String] = []
         for path in ["/Library/LaunchDaemons",
             "/System/Library/LaunchDaemons",
-            NSHomeDirectory() + "/Library/LaunchAgents"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/LaunchAgents"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []

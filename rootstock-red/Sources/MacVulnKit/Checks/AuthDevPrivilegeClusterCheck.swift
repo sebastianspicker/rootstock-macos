@@ -57,7 +57,6 @@ public struct AuthDevPrivilegeClusterCheck: Check {
             || dev?.commandLineToolsPresent == true
             || (dev?.dualUseBinaries.count ?? 0) >= 2
             || state.collectorNotes["collect.developer_toolchain"] != nil
-            || state.collectorNotes["dev.toolchain_present"] != nil
         let highValue =
             state.identity?.adBound == true
             || state.identity?.platformSSO == true
@@ -93,7 +92,6 @@ public struct AuthDevPrivilegeClusterCheck: Check {
         let toolPresent =
             dual >= 1
             || state.developerToolchain?.xcodePresent == true
-            || state.collectorNotes["dev.toolchain_present"] != nil
         let inject = state.injectabilityHits.contains {
             $0.getTaskAllow == true || $0.hardenedRuntime == false || !$0.riskFlags.isEmpty
         }

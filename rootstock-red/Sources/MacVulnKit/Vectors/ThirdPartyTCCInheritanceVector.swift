@@ -39,10 +39,7 @@ public struct ThirdPartyTCCInheritanceVector: Check {
     }
 
     private static func axSignals(_ state: CollectedState) -> Bool {
-        state.tcc?.domainSignals.contains {
-            $0.lowercased().contains("screen") || $0.lowercased().contains("accessib")
-                || $0.lowercased().contains("automation")
-        } ?? false
+        !(state.tcc?.evidencedDomains ?? []).isDisjoint(with: ["ScreenCapture", "Accessibility", "Automation"])
     }
 
     private static func hasInheritanceSignal(_ state: CollectedState) -> Bool {

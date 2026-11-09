@@ -10,10 +10,6 @@ public struct PatchDebtCollector: Collector {
     public static let id = "collect.patch_debt"
     public static let cost: CollectorCost = .low
 
-    /// Conservative "known-current major" for lag heuristics (update as product evolves).
-    /// Lag is informational only - not a vulnerability claim by itself.
-    public static let knownCurrentMajor = 15
-
     private static let susPlistCandidates: [String] = [
         "/Library/Preferences/com.apple.SoftwareUpdate.plist",
         "/Library/Preferences/com.apple.commerce.plist",
@@ -41,7 +37,8 @@ public struct PatchDebtCollector: Collector {
         installHistoryNotes(fm, hints: &lastUpdateHints, notes: &notes)
         let osBuild = systemVersionMetadata(notes: &notes)
 
-        let majorLag = max(0, Self.knownCurrentMajor - os.majorVersion)
+        // Lag is informational only - not a vulnerability claim by itself.
+        let majorLag = MacOSReleases.releasesBehind(major: os.majorVersion)
         lagNote(majorLag, hostMajor: os.majorVersion, notes: &notes)
 
         var state = CollectedState()
@@ -67,5 +64,5 @@ public struct PatchDebtCollector: Collector {
 
     private func installHistoryNotes(_ fm: FileManager, hints: inout [String], notes: inout [String]) { for path in Self.installHistoryCandidates where fm.fileExists(atPath: path) { hints.append("install_history_path:\(path)"); notes.append("Install history / receipts path present: \(path)") } }
     private func systemVersionMetadata(notes: inout [String]) -> String? { let url = URL(fileURLWithPath: "/System/Library/CoreServices/SystemVersion.plist"); guard let data = try? Data(contentsOf: url), let dict = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else { notes.append("SystemVersion.plist unreadable - using ProcessInfo only"); return nil }; let build = dict["ProductBuildVersion"] as? String; if let build { notes.append("ProductBuildVersion=\(build)") }; if let version = dict["ProductUserVisibleVersion"] as? String ?? dict["ProductVersion"] as? String { notes.append("ProductVersion=\(version)") }; return build }
-    private func lagNote(_ lag: Int, hostMajor: Int, notes: inout [String]) { notes.append(lag > 0 ? "majorVersionLag=\(lag) (host major \(hostMajor) vs baseline \(Self.knownCurrentMajor))" : "majorVersionLag=0 (host major \(hostMajor) ≥ baseline \(Self.knownCurrentMajor))") }
+    private func lagNote(_ lag: Int, hostMajor: Int, notes: inout [String]) { notes.append(lag > 0 ? "majorVersionLag=\(lag) (host major \(hostMajor) vs baseline \(MacOSReleases.current))" : "majorVersionLag=0 (host major \(hostMajor) ≥ baseline \(MacOSReleases.current))") }
 }

@@ -11,21 +11,21 @@ public struct ShellPluginManagerCollector: Collector {
         let fm = FileManager.default
         var notes: [String] = ["Shell plugin manager dual-use: path presence only - never installs oh-my-zsh plugins or rewrites shell init for persistence"]
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/.oh-my-zsh",
-            NSHomeDirectory() + "/.oh-my-zsh/oh-my-zsh.sh",
-            NSHomeDirectory() + "/.zprezto"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/.oh-my-zsh",
+            AssessedHome.path + "/.oh-my-zsh/oh-my-zsh.sh",
+            AssessedHome.path + "/.zprezto"] where fm.fileExists(atPath: path) {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/.oh-my-zsh/custom/plugins",
-            NSHomeDirectory() + "/.zsh/plugins",
-            NSHomeDirectory() + "/.config/fish/conf.d"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/.oh-my-zsh/custom/plugins",
+            AssessedHome.path + "/.zsh/plugins",
+            AssessedHome.path + "/.config/fish/conf.d"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/.zshrc",
-            NSHomeDirectory() + "/.zprofile",
-            NSHomeDirectory() + "/.bashrc"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/.zshrc",
+            AssessedHome.path + "/.zprofile",
+            AssessedHome.path + "/.bashrc"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

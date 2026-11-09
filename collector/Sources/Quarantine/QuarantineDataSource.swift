@@ -1,6 +1,7 @@
 import Foundation
 import Models
 import SQLiteSupport
+import RootstockMacFacts
 
 /// Reads `com.apple.quarantine` extended attributes from application bundles.
 ///
@@ -29,7 +30,7 @@ public struct QuarantineDataSource {
     private let eventsDatabasePath: String
 
     public init(
-        eventsDatabasePath: String = FileManager.default.homeDirectoryForCurrentUser.path
+        eventsDatabasePath: String = AssessedUser.homePath
             + "/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2"
     ) {
         self.eventsDatabasePath = eventsDatabasePath

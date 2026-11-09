@@ -10,10 +10,10 @@ public struct TCCESFVisibilityDepthCollector: Collector {
     public static let cost: CollectorCost = .low
 
     private static let tccDbCandidates: [String] = [
-        NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db",
+        AssessedHome.path + "/Library/Application Support/com.apple.TCC/TCC.db",
         "/Library/Application Support/com.apple.TCC/TCC.db",
         "/private/var/db/SystemPolicyConfiguration",
-        NSHomeDirectory() + "/Library/Application Support/com.apple.TCC",
+        AssessedHome.path + "/Library/Application Support/com.apple.TCC",
         "/Library/Application Support/com.apple.TCC",
     ]
 
@@ -29,10 +29,10 @@ public struct TCCESFVisibilityDepthCollector: Collector {
     ]
 
     private static let privacyPrefs: [String] = [
-        NSHomeDirectory() + "/Library/Preferences/com.apple.TCC.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.TCC.plist",
         "/Library/Preferences/com.apple.TCC.plist",
         "/Library/Preferences/com.apple.security.plist",
-        NSHomeDirectory() + "/Library/Preferences/com.apple.Logging.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.Logging.plist",
         "/System/Library/LaunchDaemons/com.apple.syslogd.plist",
         "/etc/asl.conf",
         "/private/etc/asl.conf",

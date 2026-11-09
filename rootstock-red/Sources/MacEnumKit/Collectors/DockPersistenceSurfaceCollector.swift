@@ -18,20 +18,20 @@ public struct DockPersistenceSurfaceCollector: Collector {
         ]
 
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Preferences/com.apple.dock.plist",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.dock.extra.plist"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Preferences/com.apple.dock.plist",
+            AssessedHome.path + "/Library/Preferences/com.apple.dock.extra.plist"] where fm.fileExists(atPath: path) {
             a.append(path)
             notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Application Support/com.apple.sharedfilelist",
-            NSHomeDirectory() + "/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentApplications.sfl2",
-            NSHomeDirectory() + "/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentDocuments.sfl2"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Application Support/com.apple.sharedfilelist",
+            AssessedHome.path + "/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentApplications.sfl2",
+            AssessedHome.path + "/Library/Application Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.RecentDocuments.sfl2"] where fm.fileExists(atPath: path) {
             b.append(path)
             notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Preferences/com.apple.spaces.plist",
+        for path in [AssessedHome.path + "/Library/Preferences/com.apple.spaces.plist",
             "/System/Library/CoreServices/Dock.app"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")

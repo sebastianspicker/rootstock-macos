@@ -24,18 +24,19 @@ public struct TCCPermissionGraphDepthVector: Check {
         let automation: Bool
         let screen: Bool
         let filesFolders: Bool
+        let evidencedCount: Int
         var interestingCount: Int { [fdaLikely, automation, screen, filesFolders].filter { $0 }.count }
         var domains: [String] { [fdaLikely ? "FullDiskAccess" : nil, automation ? "Automation" : nil, screen ? "ScreenCapture" : nil, filesFolders ? "FilesAndFolders" : nil].compactMap { $0 } }
     }
 
     private static func signalProfile(tcc: TCCState) -> SignalProfile {
         let signals = tcc.domainSignals
-        return SignalProfile(signals: signals, fdaLikely: tcc.fullDiskAccessLikely == true || signals.contains { $0.localizedCaseInsensitiveContains("FullDiskAccess=likely") }, automation: signals.contains { $0.localizedCaseInsensitiveContains("Automation=osascript_present") }, screen: signals.contains { $0.localizedCaseInsensitiveContains("ScreenCapture=tool_present") || $0.localizedCaseInsensitiveContains("screen_recording=tool_present") }, filesFolders: signals.contains { $0.contains("FilesAndFolders=") && !$0.contains("none_listable") })
+        return SignalProfile(signals: signals, fdaLikely: tcc.fullDiskAccessLikely == true || signals.contains { $0.localizedCaseInsensitiveContains("FullDiskAccess=likely") }, automation: tcc.evidencedDomains.contains("Automation"), screen: tcc.evidencedDomains.contains("ScreenCapture"), filesFolders: tcc.evidencedDomains.contains("FilesAndFolders"), evidencedCount: tcc.evidencedDomains.count)
     }
 
     private static func shouldEmit(profile: SignalProfile, state: CollectedState) -> Bool {
         let hasInventory = profile.signals.count >= 2 || state.collectorNotes["collect.tcc_permission_graph"] != nil
-        return hasInventory && (profile.interestingCount >= 2 || (profile.fdaLikely && !profile.signals.isEmpty) || profile.signals.count >= 4)
+        return hasInventory && (profile.interestingCount >= 2 || (profile.fdaLikely && !profile.signals.isEmpty) || profile.evidencedCount >= 4)
     }
 
     private static func finding(profile: SignalProfile, tcc: TCCState, state: CollectedState) -> Finding {

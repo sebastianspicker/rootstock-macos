@@ -16,11 +16,11 @@ public struct ContactsPathPlaneCollector: Collector {
                     "/System/Library/PrivateFrameworks/AddressBookCore.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Application Support/AddressBook",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.AddressBook",
+                    AssessedHome.path + "/Library/Application Support/AddressBook",
+                    AssessedHome.path + "/Library/Containers/com.apple.AddressBook",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.AddressBook.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.AddressBook.plist",
                     "/System/Library/PrivateFrameworks/ContactsFoundation.framework",
                 ],
                 initialHonestyNote: "Contacts path plane: path presence only - never exports contact cards or dumps AddressBook database contents"

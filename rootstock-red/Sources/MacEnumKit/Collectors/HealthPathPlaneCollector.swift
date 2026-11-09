@@ -16,11 +16,11 @@ public struct HealthPathPlaneCollector: Collector {
                     "/usr/libexec/healthd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Health",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.Health",
+                    AssessedHome.path + "/Library/Health",
+                    AssessedHome.path + "/Library/Containers/com.apple.Health",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.Health.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.Health.plist",
                     "/System/Library/PrivateFrameworks/HealthDaemon.framework",
                 ],
                 initialHonestyNote: "Health path plane: path presence only - never exports HealthKit samples or medical records"

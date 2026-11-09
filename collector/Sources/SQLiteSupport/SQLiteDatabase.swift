@@ -22,6 +22,11 @@ public final class SQLiteDatabase {
     private var db: OpaquePointer?
 
     public init(path: String) throws {
+        // A FIFO or device at a user-writable path would block the open forever.
+        var info = stat()
+        if stat(path, &info) == 0, (info.st_mode & S_IFMT) != S_IFREG {
+            throw SQLiteError.cannotOpen(path: path, message: "not a regular file")
+        }
         let rc = sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, nil)
         guard rc == SQLITE_OK else {
             let msg = db.flatMap { String(validatingCString: sqlite3_errmsg($0)) } ?? "unknown error"

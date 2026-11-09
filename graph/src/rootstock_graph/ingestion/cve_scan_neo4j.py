@@ -83,6 +83,12 @@ def _import_nodes(session, export: CveScanExport) -> dict[str, int]:
 
 
 def _import_vulnerability_nodes(session, records: list[dict[str, object]]) -> int:
+    # A CVE the registry or NVD import already made keeps its source, so their writers
+    # still recognise it whichever import runs first.
+    records = [
+        {**record, "props": {k: v for k, v in record["props"].items() if k != "source"}}
+        for record in records
+    ]
     cve_records = [record for record in records if record["cve_id"] is not None]
     other_records = [record for record in records if record["cve_id"] is None]
     count = 0
@@ -93,10 +99,12 @@ def _import_vulnerability_nodes(session, records: list[dict[str, object]]) -> in
             f"""
             UNWIND $records AS row
             MERGE (n:Vulnerability {{{key}: row.{key}}})
+            ON CREATE SET n.source = $source
             SET n += row.props
             RETURN count(n) AS n
             """,
             records=matching_records,
+            source=IMPORT_SOURCE,
         )
         count += int(result.single()["n"])
     return count

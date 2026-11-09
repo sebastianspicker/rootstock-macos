@@ -16,12 +16,12 @@ public struct SiriSuggestionsPlaneCollector: Collector {
                     "/System/Library/CoreServices/Siri.app",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Assistant",
-                    NSHomeDirectory() + "/Library/Suggestions",
-                    NSHomeDirectory() + "/Library/DuetExpertCenter",
+                    AssessedHome.path + "/Library/Assistant",
+                    AssessedHome.path + "/Library/Suggestions",
+                    AssessedHome.path + "/Library/DuetExpertCenter",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.assistant.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.assistant.plist",
                     "/System/Library/LaunchAgents/com.apple.assistantd.plist",
                 ],
                 initialHonestyNote: "Siri Suggestions residual: path presence only - never dumps Siri transcripts or Suggestions databases contents"

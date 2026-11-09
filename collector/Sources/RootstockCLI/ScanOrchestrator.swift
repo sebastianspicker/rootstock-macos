@@ -47,7 +47,7 @@ struct ScanOrchestrator: Sendable {
             return await makeScan(config)
         }
 
-        var allErrors: [CollectionError] = []
+        var allErrors: [CollectionError] = Self.elevatedHomeNote().map { [$0] } ?? []
         let scanStart = Date()
 
         // Stage 1: Launch independent modules concurrently.

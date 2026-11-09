@@ -55,6 +55,25 @@ public enum HostPostureProbes: Sendable {
         return parseFileVaultState(lower)
     }
 
+    /// Parse `launchctl print-disabled <domain>` output into label → disabled.
+    /// launchctl prints either `true`/`false` or `disabled`/`enabled`; other values are skipped.
+    public static func parseDisabledServices(output: String) -> [String: Bool] {
+        var services: [String: Bool] = [:]
+        for line in output.components(separatedBy: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("\"") else { continue }
+            let parts = trimmed.components(separatedBy: "=>")
+            guard parts.count == 2 else { continue }
+            let label = parts[0].trimmingCharacters(in: CharacterSet(charactersIn: "\" \t"))
+            switch parts[1].trimmingCharacters(in: CharacterSet(charactersIn: "; \t")) {
+            case "true", "disabled": services[label] = true
+            case "false", "enabled": services[label] = false
+            default: continue
+            }
+        }
+        return services
+    }
+
     private static func parseFileVaultState(_ output: String) -> Bool? {
         guard output.contains("filevault") else { return nil }
         let isOn = output.contains(" on")

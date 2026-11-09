@@ -18,7 +18,7 @@ public struct VpnConfigDualuseCollector: Collector {
         }
         var b: [String] = []
         for path in ["/Library/Preferences/com.apple.networkextension.plist",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.networkextension.plist",
+            AssessedHome.path + "/Library/Preferences/com.apple.networkextension.plist",
             "/Library/Preferences/SystemConfiguration"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }

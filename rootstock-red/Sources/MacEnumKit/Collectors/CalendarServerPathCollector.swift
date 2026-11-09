@@ -16,11 +16,11 @@ public struct CalendarServerPathCollector: Collector {
                     "/usr/libexec/calaccessd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Calendars",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.iCal",
+                    AssessedHome.path + "/Library/Calendars",
+                    AssessedHome.path + "/Library/Containers/com.apple.iCal",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.iCal.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.iCal.plist",
                     "/System/Library/LaunchAgents/com.apple.CalendarAgent.plist",
                 ],
                 initialHonestyNote: "Calendar CalDAV residual: path presence only - never reads calendar event bodies or credentials from CalDAV stores"

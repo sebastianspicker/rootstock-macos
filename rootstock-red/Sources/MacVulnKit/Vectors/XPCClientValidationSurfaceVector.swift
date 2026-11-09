@@ -23,14 +23,13 @@ public struct XPCClientValidationSurfaceVector: Check {
         let extensionCount: Int
         let injectWeak: Bool
         let unsignedish: Bool
-        let riskNote: Bool
         let noEDR: Bool
         let scale: Bool
 
         var hasPaths: Bool { helperCount > 0 || extensionCount > 0 }
 
         var shouldFire: Bool {
-            if injectWeak || unsignedish || riskNote { return true }
+            if injectWeak || unsignedish { return true }
             if helperCount >= 3 { return true }
             return scale && noEDR
         }
@@ -44,7 +43,6 @@ public struct XPCClientValidationSurfaceVector: Check {
             extensionCount: extensionCount,
             injectWeak: hasInjectabilityWeakness(in: state),
             unsignedish: hasWeakCodeSignSample(in: state),
-            riskNote: hasRiskNote(in: state),
             noEDR: !state.securityProducts.contains(where: \.present),
             scale: helperCount + extensionCount >= 2
         )
@@ -61,11 +59,6 @@ public struct XPCClientValidationSurfaceVector: Check {
 
     private func hasWeakCodeSignSample(in state: CollectedState) -> Bool {
         state.codesignSamples.contains { $0.signed == false || $0.hardenedRuntime == false }
-    }
-
-    private func hasRiskNote(in state: CollectedState) -> Bool {
-        state.collectorNotes["privesc.xpc_risk"] != nil
-            || state.collectorNotes["xpc.client_validation"] != nil
     }
 
     private func makeFinding(for state: CollectedState, profile: XPCValidationRiskProfile) -> Finding {

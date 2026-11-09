@@ -47,7 +47,7 @@ public struct XPCHelperAbuseSurfaceVector: Check {
             writablePaths: writableHelperPaths(from: helpers, using: FileManager.default),
             injectCompound: hasInjectabilityCompound(in: state),
             scale: helpers.count + extensions.count >= 2,
-            flaggedNote: isFlagged(note: note, state: state)
+            flaggedNote: isFlagged(note: note)
         )
     }
 
@@ -82,9 +82,8 @@ public struct XPCHelperAbuseSurfaceVector: Check {
         }
     }
 
-    private func isFlagged(note: String?, state: CollectedState) -> Bool {
+    private func isFlagged(note: String?) -> Bool {
         note?.localizedCaseInsensitiveContains("denied") == true
-            || state.collectorNotes["privesc.xpc_risk"] != nil
     }
 
     private func makeFinding(for state: CollectedState, profile: XPCHelperRiskProfile) -> Finding {

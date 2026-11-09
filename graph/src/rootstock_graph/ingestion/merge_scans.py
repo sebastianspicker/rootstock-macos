@@ -72,7 +72,9 @@ def _import_scan_entities(session, scan: ScanResult) -> tuple[int, int, int]:
     # Local groups first: launch-item hijack edges depend on admin membership.
     import_nodes_security.import_local_groups(session, scan.local_groups, scan.scan_id)
     import_nodes_services.import_launch_items(session, scan.launch_items, scan.scan_id)
-    import_nodes_security.import_remote_access_services(session, scan.remote_access_services)
+    import_nodes_security.import_remote_access_services(
+        session, scan.remote_access_services, scan.scan_id
+    )
     import_nodes_security.import_firewall_status(session, scan.firewall_status, scan.scan_id)
     import_nodes_security.import_login_sessions(session, scan.login_sessions, scan.hostname)
     import_nodes_security.import_authorization_rights(session, scan.authorization_rights)

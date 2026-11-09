@@ -21,7 +21,7 @@ public struct TimeMachineSnapshotAccessVector: Check {
         let tm = state.timeMachine
         return tm?.preferencesPresent == true || (tm?.backupPaths.count ?? 0) > 0
             || (tm?.localSnapshotHints.count ?? 0) > 0 || (tm?.volumeMountHints.count ?? 0) > 0
-            || state.collectorNotes["collect.time_machine"] != nil || state.collectorNotes["tm.snapshot_surface"] != nil
+            || state.collectorNotes["collect.time_machine"] != nil
     }
 
     private static func sensitivePaths(_ state: CollectedState) -> Bool {

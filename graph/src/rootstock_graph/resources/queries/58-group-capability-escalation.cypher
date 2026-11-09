@@ -11,7 +11,7 @@ WHERE g.name IN ['_developer', 'com.apple.access_ssh', 'com.apple.access_screens
 OPTIONAL MATCH (u)-[:CAN_DEBUG]->(debuggable:Application)
 WITH u,
      collect(DISTINCT g.name) AS capability_groups,
-     count(debuggable) AS debuggable_apps
+     count(DISTINCT debuggable) AS debuggable_apps
 RETURN u.name                              AS username,
        capability_groups,
        'admin' IN capability_groups        AS is_admin,

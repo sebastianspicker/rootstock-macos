@@ -24,7 +24,7 @@ extension CasePackage {
         }
         var lines: [String] = []
         for url in try canonicalEvidenceFiles() {
-            lines.append("\(try Hashing.sha256File(at: url))  \(relativePath(for: url))")
+            lines.append(CasePackageVerification.manifestLine(hash: try Hashing.sha256File(at: url), path: relativePath(for: url)))
         }
         try (lines.sorted().joined(separator: "\n") + "\n").write(
             to: sha256sumsURL, atomically: true, encoding: .utf8

@@ -11,9 +11,9 @@ public struct LaunchdOverrideDepthCollector: Collector {
 
     private static let overridePaths: [String] = [
         "/var/db/com.apple.xpc.launchd/disabled.plist",
-        "/var/db/com.apple.xpc.launchd/disabled.\(getuid()).plist",
+        "/var/db/com.apple.xpc.launchd/disabled.\(AssessedHome.userID).plist",
         "/var/db/launchd.db/com.apple.launchd/overrides.plist",
-        "/var/db/launchd.db/com.apple.launchd.peruser.\(getuid())/overrides.plist",
+        "/var/db/launchd.db/com.apple.launchd.peruser.\(AssessedHome.userID)/overrides.plist",
     ]
 
     private static let securityHints: [String] = [
@@ -29,7 +29,7 @@ public struct LaunchdOverrideDepthCollector: Collector {
         "/System/Library/LaunchDaemons",
         "/Library/LaunchDaemons",
         "/Library/LaunchAgents",
-        NSHomeDirectory() + "/Library/LaunchAgents",
+        AssessedHome.path + "/Library/LaunchAgents",
     ]
 
     public init() {}

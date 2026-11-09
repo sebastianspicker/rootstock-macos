@@ -17,7 +17,7 @@ public struct AirplayReceiverSurfaceCollector: Collector {
                 ],
                 secondaryPaths: [
                     "/Library/Preferences/com.apple.airplay.plist",
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.airplay.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.airplay.plist",
                 ],
                 tertiaryPaths: [
                     "/System/Library/LaunchDaemons/com.apple.AirPlayXPCHelper.plist",

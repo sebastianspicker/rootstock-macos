@@ -30,7 +30,7 @@ _FIREWALL_POLICY_NAME = "default"
 
 
 def import_local_groups(
-    session: Session, groups: list[LocalGroupData], scan_id: str | None = None
+    session: Session, groups: list[LocalGroupData], scan_id: str
 ) -> tuple[int, int]:
     """
     MERGE LocalGroup nodes and MEMBER_OF relationships from User → LocalGroup.
@@ -67,8 +67,7 @@ def import_local_groups(
         UNWIND r.members AS username
         MATCH (g:LocalGroup {name: r.name})
         MERGE (u:User {name: username})
-        MERGE (u)-[rel:MEMBER_OF]->(g)
-        SET rel.scan_id = $scan_id
+        MERGE (u)-[rel:MEMBER_OF {scan_id: $scan_id}]->(g)
         RETURN count(rel) AS n
         """,
         records=records,
@@ -80,7 +79,7 @@ def import_local_groups(
 
 
 def import_remote_access_services(
-    session: Session, services: list[RemoteAccessServiceData]
+    session: Session, services: list[RemoteAccessServiceData], scan_id: str
 ) -> tuple[int, int]:
     """
     MERGE RemoteAccessService nodes and ACCESSIBLE_BY edges from service to Users
@@ -93,7 +92,8 @@ def import_remote_access_services(
 
     records = _remote_access_service_records(services)
     _merge_remote_access_service_nodes(session, records)
-    total_edges = _link_remote_access_edges(session)
+    enabled = [s.service for s in services if s.enabled]
+    total_edges = _link_remote_access_edges(session, enabled, scan_id)
     return len(services), total_edges
 
 
@@ -129,17 +129,21 @@ def _merge_remote_access_service_nodes(
     )
 
 
-def _link_remote_access_edges(session: Session) -> int:
+def _link_remote_access_edges(session: Session, enabled: list[str], scan_id: str) -> int:
+    # The service node is shared, so "enabled" and membership come from this scan.
     result = session.run(
         """
         UNWIND $mappings AS m
+        WITH m WHERE m.svc_name IN $enabled
         MATCH (s:RemoteAccessService {service: m.svc_name})
-        WHERE s.enabled = true
-        MATCH (u:User)-[:MEMBER_OF]->(:LocalGroup {name: m.group_name})
-        MERGE (s)-[rel:ACCESSIBLE_BY]->(u)
+        MATCH (u:User)-[mo:MEMBER_OF]->(:LocalGroup {name: m.group_name})
+        WHERE mo.scan_id = $scan_id
+        MERGE (s)-[rel:ACCESSIBLE_BY {scan_id: $scan_id}]->(u)
         RETURN count(rel) AS n
         """,
         mappings=_REMOTE_ACCESS_GROUP_MAP,
+        enabled=enabled,
+        scan_id=scan_id,
     )
     return result.single()["n"]
 
@@ -358,7 +362,7 @@ def import_system_extensions(session: Session, extensions: list[SystemExtensionD
 
 
 def import_sudoers_rules(
-    session: Session, rules: list[SudoersRuleData], scan_id: str | None = None
+    session: Session, rules: list[SudoersRuleData], scan_id: str
 ) -> tuple[int, int]:
     """
     MERGE SudoersRule nodes and SUDO_NOPASSWD edges from User → SudoersRule.
@@ -378,7 +382,7 @@ def import_sudoers_rules(
             "host": r.host,
             "command": r.command,
             "nopasswd": r.nopasswd,
-            "key": f"{r.user}:{r.host}:{r.command}",
+            "key": f"{scan_id}:{r.user}:{r.host}:{r.command}",
             "group": r.user[1:] if r.user.startswith("%") else None,
             "is_all": r.user == "ALL",
         }
@@ -392,9 +396,11 @@ def import_sudoers_rules(
         SET sr.user     = r.user,
             sr.host     = r.host,
             sr.command  = r.command,
-            sr.nopasswd = r.nopasswd
+            sr.nopasswd = r.nopasswd,
+            sr.scan_id  = $scan_id
         """,
         records=records,
+        scan_id=scan_id,
     )
 
     # SUDO_NOPASSWD: User → SudoersRule (only for NOPASSWD rules)
@@ -404,10 +410,11 @@ def import_sudoers_rules(
         WITH r WHERE r.nopasswd = true AND r.group IS NULL AND NOT r.is_all
         MATCH (sr:SudoersRule {key: r.key})
         MERGE (u:User {name: r.user})
-        MERGE (u)-[rel:SUDO_NOPASSWD]->(sr)
+        MERGE (u)-[rel:SUDO_NOPASSWD {scan_id: $scan_id}]->(sr)
         RETURN count(rel) AS n
         """,
         records=records,
+        scan_id=scan_id,
     ).single()["n"]
 
     # %group principals: existing members of the LocalGroup, no User node is created
@@ -417,8 +424,8 @@ def import_sudoers_rules(
         WITH r WHERE r.nopasswd = true AND r.group IS NOT NULL
         MATCH (sr:SudoersRule {key: r.key})
         MATCH (u:User)-[m:MEMBER_OF]->(g:LocalGroup {name: r.group})
-        WHERE $scan_id IS NULL OR m.scan_id = $scan_id
-        MERGE (u)-[rel:SUDO_NOPASSWD]->(sr)
+        WHERE m.scan_id = $scan_id
+        MERGE (u)-[rel:SUDO_NOPASSWD {scan_id: $scan_id}]->(sr)
         RETURN count(rel) AS n
         """,
         records=records,

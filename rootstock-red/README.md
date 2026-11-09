@@ -72,6 +72,8 @@ mkdir -p ~/.rootstock-red
 touch ~/.rootstock-red/DISABLE
 ```
 
+Under `sudo`, the file is honoured in the invoking user's home and in root's.
+
 ## Family export
 
 `export-family` converts a Red findings artifact into the optional family

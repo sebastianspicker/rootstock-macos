@@ -117,6 +117,8 @@ private struct TriageRun {
     let findings: [Finding]
 
     init(options: TriageOptions) throws {
+        // Load the rules before the first write: a wrong content root must not leave a half-filled case.
+        let rules = try RuleLoader.loadDirectory(options.contentRoot.appendingPathComponent("detections/samples"))
         let sink = CaseEventSink(package: options.package)
         parsed = try ForensicsEngine().parse(source: options.source, into: sink)
         let posture = try HostIRPosture.enumerateOffline(source: options.source)
@@ -124,10 +126,13 @@ private struct TriageRun {
         hardeningFindings = try HardeningAssessment.assessOffline(source: options.source)
         hardeningCount = try HardeningAssessment.write(hardeningFindings, into: sink, mode: "offline")
         let inventory = try PersistenceInventory.enumerate(source: options.source)
-        persistenceCount = try PersistenceInventory.write(inventory, into: sink)
+        // The parse pass already wrote the same persistence events; writing them again doubles every detection.
+        let missing = PersistenceInventory.eventsMissingAfterParse(inventory)
+        if !missing.isEmpty { try PersistenceInventory.write(missing, into: sink) }
+        persistenceCount = inventory.count
         persistenceSummary = PersistenceInventory.summarize(inventory)
         timeline = try CaseTimeline.merged(from: options.package)
-        findings = try TriageRun.evaluateFindings(timeline: timeline, contentRoot: options.contentRoot)
+        findings = DetectionEngine().evaluate(rules: rules, events: timeline)
     }
 
     func printSummary() {
@@ -138,12 +143,6 @@ private struct TriageRun {
         printWavePluginSummary()
         printHardeningFindings()
         printDetectionFindings()
-    }
-
-    private static func evaluateFindings(timeline: [EventEnvelope], contentRoot: URL) throws -> [Finding] {
-        let rulesDirectory = contentRoot.appendingPathComponent("detections/samples")
-        guard FileManager.default.fileExists(atPath: rulesDirectory.path) else { return [] }
-        return try DetectionEngine().evaluate(rulesDirectory: rulesDirectory, events: timeline)
     }
 
     private func printPersistenceSummary() {

@@ -21,9 +21,7 @@ public struct MobileconfigSideloadRiskVector: Check {
         let userProfiles = cfg?.userMobileconfigPaths.count ?? 0
         let downloads = cfg?.downloadsProfileHints.count ?? 0
         let installDb = cfg?.profileInstallDbPresent
-        let note =
-            state.collectorNotes["collect.config_profile_sideload"] != nil
-            || state.collectorNotes["profile.sideload"] != nil
+        let note = state.collectorNotes["collect.config_profile_sideload"] != nil
 
         let hasUserProfiles = userProfiles > 0 || downloads > 0
         let unmanaged = state.mdm?.enrolled == false || state.mdm?.enrolled == nil
@@ -31,7 +29,7 @@ public struct MobileconfigSideloadRiskVector: Check {
             state.mdm?.profileStoreReadable == false
             || (state.mdm?.profileFileCount ?? 0) == 0
 
-        if hasUserProfiles || state.collectorNotes["profile.sideload"] != nil { return true }
+        if hasUserProfiles { return true }
         return hasDatabaseRisk(installDb: installDb, unmanaged: unmanaged, weakStore: weakStore, note: note)
     }
 

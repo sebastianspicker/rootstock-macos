@@ -52,21 +52,6 @@ public struct PrivescPathClusterCheck: Check {
                 )
             }
         }
-        // Honor synthetic collector notes used by tests / future collectors.
-        if let note = state.collectorNotes["privesc.writable_paths"] {
-            for part in note.split(separator: "|") {
-                let p = String(part).trimmingCharacters(in: .whitespaces)
-                if !p.isEmpty {
-                    hits.append(
-                        Evidence(
-                            type: "writable_launchd",
-                            path: p,
-                            detail: "source=collectorNotes.privesc.writable_paths"
-                        )
-                    )
-                }
-            }
-        }
         guard !hits.isEmpty else { return nil }
 
         return Finding(id: "\(id).system_launchd_writable", title: "Privesc cluster: user-writable system launchd paths (\(hits.count))", severity: .high, category: .misconfig, resolution: .init(evidence: Array(hits.prefix(30)), attackTechniques: ["T1068", "T1543.001", "T1222"], remediation: [

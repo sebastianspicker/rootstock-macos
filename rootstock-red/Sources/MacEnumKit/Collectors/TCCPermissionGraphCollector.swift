@@ -38,7 +38,7 @@ public struct TCCPermissionGraphCollector: Collector {
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser
+        let home = AssessedHome.url
         var notes: [String] = [
             "TCC permission graph: non-prompting domain heuristics only",
         ]

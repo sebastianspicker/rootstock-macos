@@ -10,7 +10,8 @@ Reads the installed-match cache written by ``rootstock-graph-cve-enrichment --fe
     for the macOS release, plus macos_cve_count / macos_kev_cve_count / macos_cpe
   - (:CWE) nodes for CWE ids that the static CWE registry does not know
 
-Static-registry nodes keep ``source = 'registry'`` and their curated properties.
+Static-registry nodes keep ``source = 'registry'`` and their curated properties; a node
+first made by the cve-scan import keeps its source and gains the NVD properties.
 """
 
 from __future__ import annotations
@@ -40,7 +41,7 @@ _MERGE_VULNERABILITIES = """
     MERGE (v:Vulnerability {cve_id: row.cve_id})
     ON CREATE SET v.source = 'nvd'
     WITH v, row
-    WHERE v.source = 'nvd'
+    WHERE coalesce(v.source, '') <> 'registry'
     SET v += row.props
     RETURN count(v) AS n
 """

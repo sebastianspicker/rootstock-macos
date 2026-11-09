@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..models import ComputerData
+from .host_facts import scan_firewall_enabled
 from .import_nodes_core import computer_import_context, import_computer, import_installed_on
 from .import_nodes_enrichment import (
     import_bluetooth_devices,
@@ -47,7 +48,9 @@ def import_security_inventory(session, scan) -> None:
         f"  Launch items:  {n_items} nodes, {n_persists} PERSISTS_VIA, {n_runs} RUNS_AS, {n_hijack} CAN_HIJACK edges"
     )
 
-    n_remote, n_access = import_remote_access_services(session, scan.remote_access_services)
+    n_remote, n_access = import_remote_access_services(
+        session, scan.remote_access_services, scan.scan_id
+    )
     print(f"  Remote access: {n_remote} nodes, {n_access} ACCESSIBLE_BY edges")
 
     n_fw, n_fw_rules = import_firewall_status(session, scan.firewall_status, scan.scan_id)
@@ -122,12 +125,6 @@ def import_device_identity_inventory(session, scan) -> None:
         session, scan.sandbox_profiles, scan.scan_id
     )
     print(f"  Sandbox:       {n_sandbox} profiles, {n_sandbox_edges} HAS_SANDBOX_PROFILE edges")
-
-
-def scan_firewall_enabled(scan) -> bool | None:
-    """The application firewall state recorded by this scan (None when not collected)."""
-    states = [status.enabled for status in scan.firewall_status]
-    return states[0] if states else None
 
 
 def import_host_evidence(session, scan) -> dict[str, tuple[int, ...]]:

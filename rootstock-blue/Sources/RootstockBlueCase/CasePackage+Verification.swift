@@ -106,26 +106,15 @@ enum CasePackageVerification {
 
     static func parseChecksumManifest(sha256sumsURL: URL) throws -> [String: String] {
         let content = try String(contentsOf: sha256sumsURL, encoding: .utf8)
-        var lines = content.split(separator: "\n", omittingEmptySubsequences: false)
+        // Split on the LF scalar, not on Characters: a path ending in CR would otherwise fuse with the LF.
+        var lines = content.unicodeScalars.split(separator: "\n", omittingEmptySubsequences: false)
         if lines.last?.isEmpty == true { lines.removeLast() }
         guard !lines.isEmpty else {
             throw RootstockBlueError.invalidCasePackage("empty checksum manifest")
         }
         var entries: [String: String] = [:]
         for line in lines {
-            let string = String(line)
-            guard string.count > 66 else {
-                throw RootstockBlueError.invalidCasePackage("malformed checksum manifest line")
-            }
-            let hash = String(string.prefix(64))
-            let separatorStart = string.index(string.startIndex, offsetBy: 64)
-            let separatorEnd = string.index(separatorStart, offsetBy: 2)
-            guard string[separatorStart..<separatorEnd] == "  ",
-                  hash.allSatisfy({ $0.isASCII && ($0.isNumber || ("a"..."f").contains($0)) })
-            else {
-                throw RootstockBlueError.invalidCasePackage("malformed checksum manifest line")
-            }
-            let path = String(string[separatorEnd...])
+            let (hash, path) = try parseChecksumLine(line)
             guard isSafeRelativePath(path), path != sha256sumsURL.lastPathComponent,
                   entries[path] == nil
             else {
@@ -134,6 +123,70 @@ enum CasePackageVerification {
             entries[path] = hash
         }
         return entries
+    }
+
+    private static func parseChecksumLine(_ line: Substring.UnicodeScalarView) throws -> (hash: String, path: String) {
+        let escaped = line.first == "\\"
+        let body = escaped ? line.dropFirst() : line
+        guard body.count > 66 else {
+            throw RootstockBlueError.invalidCasePackage("malformed checksum manifest line")
+        }
+        let hashEnd = body.index(body.startIndex, offsetBy: 64)
+        let pathStart = body.index(hashEnd, offsetBy: 2)
+        let hash = String(body[..<hashEnd])
+        guard body[hashEnd..<pathStart].elementsEqual("  ".unicodeScalars),
+              hash.allSatisfy({ $0.isASCII && ($0.isNumber || ("a"..."f").contains($0)) })
+        else {
+            throw RootstockBlueError.invalidCasePackage("malformed checksum manifest line")
+        }
+        guard let path = escaped ? unescapeManifestPath(body[pathStart...]) : String(body[pathStart...]) else {
+            throw RootstockBlueError.invalidCasePackage("invalid checksum manifest path")
+        }
+        return (hash, path)
+    }
+
+    /// `sha256sum` convention: a path holding `\`, LF or CR is written escaped, on a line that starts with `\`.
+    static func manifestLine(hash: String, path: String) -> String {
+        guard path.unicodeScalars.contains(where: { $0 == "\\" || $0 == "\n" || $0 == "\r" }) else {
+            return "\(hash)  \(path)"
+        }
+        var escaped = ""
+        for scalar in path.unicodeScalars {
+            switch scalar {
+            case "\\": escaped += "\\\\"
+            case "\n": escaped += "\\n"
+            case "\r": escaped += "\\r"
+            default: escaped.unicodeScalars.append(scalar)
+            }
+        }
+        return "\\\(hash)  \(escaped)"
+    }
+
+    /// Inverse of the escaping in `manifestLine`; nil for an unknown or dangling escape.
+    static func unescapeManifestPath(_ text: Substring.UnicodeScalarView) -> String? {
+        var result = ""
+        var pending = false
+        for scalar in text {
+            if pending {
+                guard let unescaped = unescapedScalar(scalar) else { return nil }
+                result.unicodeScalars.append(unescaped)
+                pending = false
+            } else if scalar == "\\" {
+                pending = true
+            } else {
+                result.unicodeScalars.append(scalar)
+            }
+        }
+        return pending ? nil : result
+    }
+
+    private static func unescapedScalar(_ scalar: Unicode.Scalar) -> Unicode.Scalar? {
+        switch scalar {
+        case "\\": return "\\"
+        case "n": return "\n"
+        case "r": return "\r"
+        default: return nil
+        }
     }
 
     static func relativePath(for url: URL, rootURL: URL) -> String {

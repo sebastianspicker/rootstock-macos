@@ -29,27 +29,6 @@ public struct DeliveryTrustClusterCheck: Check {
     private static func quarantineHits(state: CollectedState) -> Finding? {
         var evidence: [Evidence] = []
 
-        if let note = state.collectorNotes["codesign.quarantine_hits"], !note.isEmpty {
-            evidence.append(
-                Evidence(
-                    type: "collector_note",
-                    detail: "codesign.quarantine_hits=\(note)"
-                )
-            )
-            for part in note.split(separator: "|") {
-                let p = String(part).trimmingCharacters(in: .whitespaces)
-                if !p.isEmpty {
-                    evidence.append(
-                        Evidence(
-                            type: "quarantine_hit",
-                            path: p,
-                            detail: "source=collectorNotes.codesign.quarantine_hits"
-                        )
-                    )
-                }
-            }
-        }
-
         let protNotes = state.protections?.notes ?? []
         let quarantineNotes = protNotes.filter {
             $0.localizedCaseInsensitiveContains("quarantine")

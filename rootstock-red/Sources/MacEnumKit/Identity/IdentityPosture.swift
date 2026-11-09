@@ -166,7 +166,7 @@ public struct IdentityPostureCollector: Collector {
     private static func kerberosConfiguration(fileManager: FileManager, notes: inout [String]) -> Bool {
         let paths = [
             "/Library/Preferences/edu.mit.Kerberos", "/etc/krb5.conf", "/private/etc/krb5.conf",
-            (NSHomeDirectory() as NSString).appendingPathComponent("Library/Preferences/edu.mit.Kerberos"),
+            (AssessedHome.path as NSString).appendingPathComponent("Library/Preferences/edu.mit.Kerberos"),
         ]
         let hits = paths.filter { fileManager.fileExists(atPath: $0) }
         for path in paths {
@@ -182,7 +182,7 @@ public struct IdentityPostureCollector: Collector {
         fileManager: FileManager,
         notes: inout [String]
     ) -> PlatformSSOSignals {
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         var paths = existingPaths(
             [
                 "/Library/Application Support/com.apple.PlatformSSO",

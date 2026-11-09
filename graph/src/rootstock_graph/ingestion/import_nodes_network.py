@@ -31,6 +31,7 @@ from ..models_inventory import (
     NetworkListenerData,
     ProxySettingData,
 )
+from .host_facts import host_fact_properties
 from .path_classification import command_in_user_writable_location
 from .launch_item_facts import dyld_injection
 
@@ -339,6 +340,7 @@ def import_host_settings(session: Session, scan) -> int:
         **host_settings_properties(scan.host_security_settings),
         **network_configuration_properties(scan.network_configuration),
         **launch_item_summary_properties(scan.launch_items),
+        **host_fact_properties(scan),
     }
     result = session.run(
         """

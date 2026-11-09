@@ -26,7 +26,7 @@ OPTIONAL MATCH (app)-[:CAN_READ_KEYCHAIN]->(kc:Keychain_Item)
 RETURN u.name                                                AS username,
        collect(DISTINCT g.name)                              AS groups,
        collect(DISTINCT s.terminal)                          AS sessions,
-       collect(DISTINCT sr.key)                              AS sudo_rules,
+       collect(DISTINCT sr.user + ':' + sr.host + ':' + sr.command) AS sudo_rules,
        collect(DISTINCT app.bundle_id)                       AS apps_running_as_user,
        collect(DISTINCT perm.display_name)                   AS reachable_tcc,
        collect(DISTINCT kc.label)                            AS reachable_keychain

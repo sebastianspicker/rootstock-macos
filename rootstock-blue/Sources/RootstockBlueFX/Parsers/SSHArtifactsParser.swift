@@ -61,7 +61,11 @@ public struct SSHArtifactsParser: ArtifactParser {
         url.lastPathComponent == "known_hosts" && url.path.contains(".ssh")
     }
 
-    private static func isSSHDConfig(_ url: URL) -> Bool { url.lastPathComponent == "sshd_config" }
+    /// `sshd_config` plus its `sshd_config.d` drop-ins (not `ssh_config.d`, which is client config).
+    private static func isSSHDConfig(_ url: URL) -> Bool {
+        !url.hasDirectoryPath
+            && (url.lastPathComponent == "sshd_config" || url.deletingLastPathComponent().lastPathComponent == "sshd_config.d")
+    }
 
     // MARK: - authorized_keys
 
@@ -193,6 +197,17 @@ public struct SSHArtifactsParser: ArtifactParser {
 
     // MARK: - sshd_config
 
+    /// sshd_config(5) separates keyword and argument with whitespace and/or one `=`.
+    static func splitDirective(_ line: String) -> (directive: String, value: String)? {
+        // sshd splits on space and tab only; other Unicode spaces are part of the token.
+        let blank: (Character) -> Bool = { $0 == " " || $0 == "\t" }
+        let keyEnd = line.firstIndex { blank($0) || $0 == "=" } ?? line.endIndex
+        var rest = line[keyEnd...].drop(while: blank)
+        if rest.hasPrefix("=") { rest = rest.dropFirst() }
+        let value = rest.split(whereSeparator: blank).joined(separator: " ")
+        return value.isEmpty ? nil : (String(line[..<keyEnd]), value)
+    }
+
     private func parseSSHDConfig(at url: URL) -> [EventEnvelope] {
         guard let text = ArtifactIO.text(contentsOf: url) else { return [] }
         var events: [EventEnvelope] = []
@@ -203,14 +218,10 @@ public struct SSHArtifactsParser: ArtifactParser {
             let trimmed = String(rawLine).trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty || trimmed.hasPrefix("#") { continue }
 
-            // directive value…  (whitespace separated)
-            let parts = trimmed.split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init)
-            guard parts.count >= 2 else { continue }
-            let directive = parts[0]
+            guard let (directive, value) = Self.splitDirective(trimmed) else { continue }
             // Match case-insensitively against interesting set.
             let matched = Self.interestingDirectives.first { $0.caseInsensitiveCompare(directive) == .orderedSame }
             guard let canonical = matched else { continue }
-            let value = parts[1...].joined(separator: " ")
 
             events.append(
                 EventEnvelope(

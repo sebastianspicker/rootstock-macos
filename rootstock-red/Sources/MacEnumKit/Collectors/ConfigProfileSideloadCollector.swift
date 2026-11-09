@@ -46,7 +46,7 @@ public struct ConfigProfileSideloadCollector: Collector {
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         let fileManager = FileManager.default
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         var notes: [String] = [
             "Config profile sideload surface: path/count only - no install, no payload parse",
             "Prefs filter excludes SystemProfiler and other non-config-profile names",

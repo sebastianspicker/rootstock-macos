@@ -36,7 +36,7 @@ public struct ContinuityAirDropSurfaceVector: Check {
         let fda = state.tcc?.fullDiskAccessLikely == true
         let sensitive = state.browserMeta.contains(where: \.exists) || state.credPaths.contains(where: \.exists)
         let remote = state.network?.remoteLoginSSH == true || state.network?.screenSharingARD == true
-        let axSignals = state.tcc?.domainSignals.contains { $0.lowercased().contains("screen") || $0.lowercased().contains("accessib") } ?? false
+        let axSignals = !(state.tcc?.evidencedDomains ?? []).isDisjoint(with: ["ScreenCapture", "Accessibility"])
         return fda || sensitive || remote || axSignals || airdrop + continuity >= 2
     }
 

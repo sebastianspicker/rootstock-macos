@@ -20,7 +20,7 @@ from ..inference.mark_owned import (
     mark_by_username,
 )
 from ..inference.tier_classification import classify
-from ..reporting.opengraph_export import build_opengraph
+from ..reporting.opengraph_export import build_opengraph, graph_hostname
 from ..reporting.query_runner import discover_queries, find_query
 from ..reporting.viewer import render_viewer_html
 from ..cypher import first_cypher_statement, run_query
@@ -212,32 +212,10 @@ def run_cypher_endpoint(body: CypherRequest, session=READ_SESSION_DEPENDENCY):
     return {"columns": columns, "rows": rows, "count": len(rows), "truncated": truncated}
 
 
-def _get_hostname(session) -> str:
-    result = session.run(
-        Query(
-            "MATCH (c:Computer) RETURN c.hostname AS hostname ORDER BY c.scanned_at DESC LIMIT 1",
-            timeout=5.0,
-        )
-    )
-    row = result.single()
-    if row and row["hostname"]:
-        return row["hostname"]
-    result = session.run(
-        Query(
-            "MATCH (a:Application) WHERE a.scan_id IS NOT NULL RETURN a.scan_id AS scan_id LIMIT 1",
-            timeout=5.0,
-        )
-    )
-    row = result.single()
-    if row and row["scan_id"]:
-        return row["scan_id"][:8]
-    return "rootstock"
-
-
 def _build_live_graph(session) -> tuple[str, dict[str, Any]]:
     """Build the live graph payload with deterministic fallback coordinates."""
     try:
-        hostname = _get_hostname(session)
+        hostname = graph_hostname(session, timeout=5.0)
         data = build_opengraph(
             session,
             hostname,

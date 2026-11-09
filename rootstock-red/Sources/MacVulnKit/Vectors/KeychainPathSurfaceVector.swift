@@ -15,19 +15,16 @@ public struct KeychainPathSurfaceVector: Check {
     public func evaluate(state: CollectedState, context: EvaluationContext) async throws
         -> [Finding]
     {
-        let paths = Self.keychainPaths(for: state)
-        let forced = state.collectorNotes["auth.keychain_paths"] != nil
-        guard !paths.present.isEmpty || forced else { return [] }
-        return [Self.finding(for: state, paths: paths, forced: forced)]
+        let paths = Self.keychainPaths()
+        guard !paths.isEmpty else { return [] }
+        return [Self.finding(for: state, paths: paths)]
     }
 
     private typealias KeychainPath = (kind: String, path: String)
 
-    private static func keychainPaths(for state: CollectedState) -> (
-        present: [KeychainPath], forced: [String]
-    ) {
+    private static func keychainPaths() -> [KeychainPath] {
         let fm = FileManager.default
-        let home = fm.homeDirectoryForCurrentUser.path
+        let home = AssessedHome.path
         let candidates: [KeychainPath] = [
             ("login_keychain_db", "\(home)/Library/Keychains/login.keychain-db"),
             ("login_keychain_legacy", "\(home)/Library/Keychains/login.keychain"),
@@ -41,30 +38,18 @@ public struct KeychainPathSurfaceVector: Check {
         for item in candidates where fm.fileExists(atPath: item.path) {
             present.append(item)
         }
-        var forcedPaths: [String] = []
-        if let note = state.collectorNotes["auth.keychain_paths"] {
-            for part in note.split(separator: "|") {
-                let p = String(part).trimmingCharacters(in: .whitespaces)
-                guard !p.isEmpty else { continue }
-                forcedPaths.append(p)
-                if !present.contains(where: { $0.path == p }) {
-                    present.append((kind: "collector_note", path: p))
-                }
-            }
-        }
-        return (present, forcedPaths)
+        return present
     }
 
     private static func finding(
         for state: CollectedState,
-        paths: (present: [KeychainPath], forced: [String]),
-        forced: Bool
+        paths: [KeychainPath]
     ) -> Finding {
-        let dbHits = databasePaths(in: paths.present)
+        let dbHits = databasePaths(in: paths)
         let credCompound = state.credPaths.contains(where: \.exists)
         let presentation = Self.presentation(dbHits: dbHits, credCompound: credCompound)
         return Finding(id: Self.id, title: presentation.title, severity: presentation.severity, category: .auth, resolution: .init(evidence: evidence(
-                paths: paths, databasePaths: dbHits, forced: forced, credCompound: credCompound), attackTechniques: ["T1555.001", "T1555", "T1003"], remediation: [
+                paths: paths, databasePaths: dbHits, credCompound: credCompound), attackTechniques: ["T1555.001", "T1555", "T1003"], remediation: [
                 "Protect user sessions; require device unlock for keychain access where policy allows",
                 "Prefer hardware-backed credentials / SSO over long-lived keychain secrets when possible",
                 "Monitor anomalous security(1) dump / find-generic-password process trees via EDR",
@@ -76,34 +61,25 @@ public struct KeychainPathSurfaceVector: Check {
     private static func databasePaths(in paths: [KeychainPath]) -> [KeychainPath] {
         paths.filter {
             $0.path.hasSuffix(".keychain-db") || $0.path.hasSuffix(".keychain")
-                || $0.kind == "collector_note"
         }
     }
 
     private static func evidence(
-        paths: (present: [KeychainPath], forced: [String]),
+        paths: [KeychainPath],
         databasePaths: [KeychainPath],
-        forced: Bool,
         credCompound: Bool
     ) -> [Evidence] {
         var evidence = [
             Evidence(
                 type: "summary",
                 detail:
-                    "keychainPathsPresent=\(paths.present.count) dbLike=\(databasePaths.count) forced=\(forced) "
+                    "keychainPathsPresent=\(paths.count) dbLike=\(databasePaths.count) forced=false "
                     + "(path presence only - no secret material, no dump-keychain)")
         ]
-        evidence += paths.present.prefix(20).map {
+        evidence += paths.prefix(20).map {
             Evidence(
                 type: "keychain_path", path: $0.path,
                 detail: "kind=\($0.kind) exists=true (metadata only)")
-        }
-        if !paths.forced.isEmpty {
-            evidence.append(
-                Evidence(
-                    type: "collector_note",
-                    detail: "auth.keychain_paths=\(paths.forced.prefix(10).joined(separator: "|"))")
-            )
         }
         evidence.append(
             Evidence(

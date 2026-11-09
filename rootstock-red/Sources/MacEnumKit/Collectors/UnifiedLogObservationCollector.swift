@@ -25,17 +25,17 @@ public struct UnifiedLogObservationCollector: Collector {
             notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Logs",
+        for path in [AssessedHome.path + "/Library/Logs",
             "/var/db/diagnostics",
             "/var/db/uuidtext",
-            NSHomeDirectory() + "/Downloads"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Downloads"] where fm.fileExists(atPath: path) {
             b.append(path)
             notes.append("b: \(path)")
         }
         var c: [String] = []
         for path in ["/Library/Preferences/Logging",
             "/System/Library/Preferences/Logging",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.diagnosticd.plist"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.diagnosticd.plist"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

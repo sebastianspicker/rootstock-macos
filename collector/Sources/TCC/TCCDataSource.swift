@@ -30,7 +30,7 @@ public struct TCCDataSource: DataSource {
 
     /// Default initializer - uses the standard macOS TCC database paths.
     public init() {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let home = AssessedUser.homePath
         userDBPath = home + "/" + MacSecurityPaths.userTCCDatabaseRelative
         systemDBPath = MacSecurityPaths.systemTCCDatabase
         macOSVersion = MacOSVersion.detect()

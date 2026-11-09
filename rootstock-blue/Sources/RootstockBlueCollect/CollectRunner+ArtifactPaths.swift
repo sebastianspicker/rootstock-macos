@@ -28,7 +28,7 @@ extension CollectRunner {
     static let coreArtifactPathGroups: [(names: Set<String>, paths: [String])] = [
         (names: ["tcc"], paths: ["Library/Application Support/com.apple.TCC/TCC.db"]),
         (names: ["quarantine"], paths: ["Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2"]),
-        (names: ["autostart", "launchagents"], paths: ["Library/LaunchAgents", "Library/LaunchDaemons"]),
+        (names: ["autostart", "launchagents"], paths: ["Library/LaunchAgents", "Library/LaunchDaemons", "Users/*/Library/LaunchAgents"]),
         (names: ["btm"], paths: ["private/var/db/com.apple.backgroundtaskmanagement", "var/db/com.apple.backgroundtaskmanagement"]),
         (names: ["wifi"], paths: ["Library/Preferences/SystemConfiguration/com.apple.airport.preferences.plist", "Library/Preferences/com.apple.wifi.known-networks.plist", "Library/Preferences/wifi_known_networks.json"]),
         // Profile payloads and managed preferences can embed Wi-Fi/VPN passwords, identity

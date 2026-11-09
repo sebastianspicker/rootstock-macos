@@ -25,7 +25,7 @@ public struct XPCDataSource: DataSource {
         (MacSecurityPaths.appleLaunchDaemons, .daemon),
         (MacSecurityPaths.systemLaunchDaemons, .daemon),
         (MacSecurityPaths.systemLaunchAgents, .agent),
-        (NSHomeDirectory() + "/" + MacSecurityPaths.userLaunchAgentsRelative, .agent),
+        (AssessedUser.homePath + "/" + MacSecurityPaths.userLaunchAgentsRelative, .agent),
     ]
 
     public init() {

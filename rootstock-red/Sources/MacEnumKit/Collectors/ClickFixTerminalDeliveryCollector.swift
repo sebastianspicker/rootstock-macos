@@ -37,7 +37,7 @@ public struct ClickFixTerminalDeliveryCollector: Collector {
     ]
 
     private static let pasteWarningHints: [String] = [
-        NSHomeDirectory() + "/Library/Preferences/com.apple.Terminal.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.Terminal.plist",
         "/Library/Preferences/com.apple.Terminal.plist",
         "/System/Library/PreferencePanes",
         "/System/Applications/Utilities/Terminal.app/Contents/Info.plist",

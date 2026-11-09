@@ -261,13 +261,3 @@ VULNERABILITY_CATEGORY_PREDICATES: dict[str, str] = _category_predicates(
     """,
     }
 )
-
-DIVERGENT_RISK_AND_VULNERABILITY_CATEGORIES = frozenset(
-    {
-        "electron_inheritance",
-        "esf_bypass",
-        "file_acl_escalation",
-        "mdm_risk",
-        "physical_security",
-    }
-)

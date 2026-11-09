@@ -17,7 +17,7 @@ public struct SpotlightImporterDepthCollector: Collector {
                 ],
                 secondaryPaths: [
                     "/Library/Spotlight",
-                    NSHomeDirectory() + "/Library/Spotlight",
+                    AssessedHome.path + "/Library/Spotlight",
                     "/System/Library/Spotlight",
                 ],
                 tertiaryPaths: [

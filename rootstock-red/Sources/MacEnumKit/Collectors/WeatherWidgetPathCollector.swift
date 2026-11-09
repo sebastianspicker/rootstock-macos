@@ -15,11 +15,11 @@ public struct WeatherWidgetPathCollector: Collector {
                     "/System/Library/PrivateFrameworks/WeatherFoundation.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Containers/com.apple.weather",
-                    NSHomeDirectory() + "/Library/Group Containers/group.com.apple.weather",
+                    AssessedHome.path + "/Library/Containers/com.apple.weather",
+                    AssessedHome.path + "/Library/Group Containers/group.com.apple.weather",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.weather.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.weather.plist",
                     "/System/Library/PrivateFrameworks/ChronoServices.framework",
                 ],
                 initialHonestyNote: "Weather widget residual: path presence only - never dumps weather personalization data or widget timeline contents"

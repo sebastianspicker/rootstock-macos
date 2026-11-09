@@ -35,17 +35,16 @@ public struct CVEPatchDebtSuggesterVector: Check {
         let effectiveLag =
             reportedLag > 0
             ? reportedLag
-            : parsedMajor.map { max(0, PatchDebtCollectorKnownCurrent.major - $0) } ?? 0
+            : parsedMajor.map(MacOSReleases.releasesBehind(major:)) ?? 0
         return Assessment(hostVersion: hostVersion, effectiveLag: effectiveLag)
     }
 
     private static func shouldFire(_ assessment: Assessment, state: CollectedState) -> Bool {
-        let forceNote = state.collectorNotes["cve.patch_debt"] != nil
         let hygieneGap =
             state.patchDebt != nil
             && state.patchDebt?.softwareUpdatePlistPresent == false
             && (state.network?.remoteLoginSSH == true || state.identity?.adBound == true)
-        return assessment.effectiveLag >= 1 || forceNote || hygieneGap
+        return assessment.effectiveLag >= 1 || hygieneGap
     }
 
     private static func finding(for state: CollectedState, assessment: Assessment) -> Finding {
@@ -125,9 +124,4 @@ public struct CVEPatchDebtSuggesterVector: Check {
             || state.identity?.platformSSO == true
     }
 
-}
-
-/// Mirrors `PatchDebtCollector.knownCurrentMajor` for evaluate() without importing MacEnumKit cycles.
-enum PatchDebtCollectorKnownCurrent {
-    static let major = 15
 }

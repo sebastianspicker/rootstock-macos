@@ -11,9 +11,9 @@ public struct SandboxContainerDepthCollector: Collector {
         let fm = FileManager.default
         var notes: [String] = ["Sandbox container depth: path presence only - never breaks app sandbox or forges container entitlements"]
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Containers",
+        for path in [AssessedHome.path + "/Library/Containers",
             "/Library/Containers",
-            NSHomeDirectory() + "/Library/Group Containers"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Group Containers"] where fm.fileExists(atPath: path) {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []

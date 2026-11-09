@@ -51,7 +51,7 @@ public struct KillChainCompoundClusterCheck: Check {
     }
 
     private static func tccDepthPresent(_ state: CollectedState) -> Bool {
-        state.tcc?.fullDiskAccessLikely == true || (state.tcc?.domainSignals.count ?? 0) >= 3
+        state.tcc?.fullDiskAccessLikely == true || (state.tcc?.evidencedDomains.count ?? 0) >= 3
     }
 
     private static func injectTrustPresent(_ state: CollectedState) -> Bool {

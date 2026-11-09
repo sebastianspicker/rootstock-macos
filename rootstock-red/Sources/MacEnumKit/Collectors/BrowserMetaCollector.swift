@@ -9,7 +9,7 @@ public struct BrowserMetaCollector: Collector {
     public init() {}
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+        let home = AssessedHome.url
         var entries = fixedEntries(for: home)
         entries.append(contentsOf: firefoxEntries(for: home))
         var state = CollectedState()

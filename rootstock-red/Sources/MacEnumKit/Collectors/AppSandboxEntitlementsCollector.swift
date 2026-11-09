@@ -65,7 +65,7 @@ public struct AppSandboxEntitlementsCollector: Collector {
             notes.append("thick_client_present: \(path)")
         }
 
-        let userApps = NSHomeDirectory() + "/Applications"
+        let userApps = AssessedHome.path + "/Applications"
         if let names = try? fileManager.contentsOfDirectory(atPath: userApps) {
             for name in names.prefix(12) where name.hasSuffix(".app") {
                 let path = (userApps as NSString).appendingPathComponent(name)
@@ -92,7 +92,7 @@ public struct AppSandboxEntitlementsCollector: Collector {
         let dangerousSupport = ["/usr/bin/codesign", "/usr/bin/security", "/usr/bin/csreq"]
             .filter(fileManager.fileExists(atPath:))
             .map { "tool:\($0)" }
-        let containersRoot = NSHomeDirectory() + "/Library/Containers"
+        let containersRoot = AssessedHome.path + "/Library/Containers"
         let sandboxed = sandboxSupport + [containersRoot].filter(fileManager.fileExists(atPath:))
         notes.append(
             fileManager.fileExists(atPath: containersRoot)

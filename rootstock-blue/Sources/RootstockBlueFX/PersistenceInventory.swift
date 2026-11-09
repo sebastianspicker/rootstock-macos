@@ -113,6 +113,12 @@ public enum PersistenceInventory {
         return counts
     }
 
+    /// Inventory events not already in the case after a full parse pass: only the SSH keys re-typed
+    /// to `access.persistence`. Every other inventory event repeats a parse-pass event of the same type.
+    public static func eventsMissingAfterParse(_ events: [EventEnvelope]) -> [EventEnvelope] {
+        events.filter { $0.eventType == "access.persistence" }
+    }
+
     /// Emit inventory events through an application-provided sink.
     @discardableResult
     public static func write(

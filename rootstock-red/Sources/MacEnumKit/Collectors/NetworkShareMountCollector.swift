@@ -26,15 +26,15 @@ public struct NetworkShareMountCollector: Collector {
             notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Preferences/nsmb.conf",
+        for path in [AssessedHome.path + "/Library/Preferences/nsmb.conf",
             "/etc/nsmb.conf",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.NetworkAuthorization.plist"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.NetworkAuthorization.plist"] where fm.fileExists(atPath: path) {
             b.append(path)
             notes.append("b: \(path)")
         }
         var c: [String] = []
         for path in ["/Volumes",
-            NSHomeDirectory() + "/Library/Application Support/AddressBook"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Application Support/AddressBook"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

@@ -10,8 +10,8 @@ public struct URLSchemeHandlerCollector: Collector {
     public static let cost: CollectorCost = .low
 
     private static let launchServicesPaths: [String] = [
-        NSHomeDirectory() + "/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist",
-        NSHomeDirectory() + "/Library/Preferences/com.apple.LaunchServices.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.LaunchServices.plist",
         "/Library/Preferences/com.apple.LaunchServices",
         "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework",
     ]

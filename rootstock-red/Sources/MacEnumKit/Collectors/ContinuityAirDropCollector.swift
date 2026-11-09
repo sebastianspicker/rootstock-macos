@@ -11,11 +11,11 @@ public struct ContinuityAirDropCollector: Collector {
 
     private static let airdropPrefPaths: [String] = [
         "/Library/Preferences/com.apple.sharingd.plist",
-        NSHomeDirectory() + "/Library/Preferences/com.apple.sharingd.plist",
-        NSHomeDirectory() + "/Library/Preferences/com.apple.NetworkBrowser.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.sharingd.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.NetworkBrowser.plist",
         "/Library/Preferences/com.apple.Bluetooth.plist",
-        NSHomeDirectory() + "/Library/Preferences/com.apple.Bluetooth.plist",
-        NSHomeDirectory() + "/Library/Preferences/ByHost",
+        AssessedHome.path + "/Library/Preferences/com.apple.Bluetooth.plist",
+        AssessedHome.path + "/Library/Preferences/ByHost",
     ]
 
     private static let continuityFrameworkPaths: [String] = [

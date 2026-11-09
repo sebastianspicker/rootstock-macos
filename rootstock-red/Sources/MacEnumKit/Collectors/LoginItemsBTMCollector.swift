@@ -35,7 +35,7 @@ public struct LoginItemsBTMCollector: Collector {
     }
 
     private func discoverySnapshot() -> DiscoverySnapshot {
-        let fm = FileManager.default, home = fm.homeDirectoryForCurrentUser
+        let fm = FileManager.default, home = AssessedHome.url
         let systemAgents = LaunchPlistSupport.enumeratePlists(in: URL(fileURLWithPath: "/Library/LaunchAgents", isDirectory: true))
         let daemons = LaunchPlistSupport.enumeratePlists(in: URL(fileURLWithPath: "/Library/LaunchDaemons", isDirectory: true))
         let userAgents = LaunchPlistSupport.enumeratePlists(in: home.appendingPathComponent("Library/LaunchAgents", isDirectory: true))

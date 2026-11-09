@@ -227,17 +227,3 @@ def validate_read_only_cypher(cypher: str) -> str | None:
     if match:
         return f"Write operation not allowed: {match.group(0).strip()}"
     return None
-
-
-def safe_count(result) -> int:
-    """Extract count from a Neo4j result, returning 0 if the result is empty or None.
-
-    Safely handles the common pattern of ``result.single()["n"]`` where
-    ``single()`` may return ``None`` (empty result set) or the value itself
-    may be ``None``.
-    """
-    row = result.single()
-    if row is None:
-        return 0
-    value = row.get("n") if hasattr(row, "get") else row["n"]
-    return int(value) if value is not None else 0

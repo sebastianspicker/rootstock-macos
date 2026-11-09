@@ -15,13 +15,21 @@ public enum SafetyRails: Sendable {
             .appendingPathComponent(".rootstock-red", isDirectory: true)
     }
 
-    /// Throws if kill switch is active.
+    /// Kill switch in the assessed (sudo-invoking) user's home; the same file as `killSwitchURL` without sudo.
+    public static var assessedKillSwitchURL: URL {
+        AssessedHome.url
+            .appendingPathComponent(".rootstock-red", isDirectory: true)
+            .appendingPathComponent("DISABLE", isDirectory: false)
+    }
+
+    /// Throws if the kill switch exists in either the process home or the assessed user's home.
     public static func ensureNotDisabled(
         killSwitchURL: URL = SafetyRails.killSwitchURL,
+        assessedKillSwitchURL: URL = SafetyRails.assessedKillSwitchURL,
         fileManager: FileManager = .default
     ) throws {
-        if fileManager.fileExists(atPath: killSwitchURL.path) {
-            throw RootstockError.killSwitchActive(path: killSwitchURL.path)
+        for url in [killSwitchURL, assessedKillSwitchURL] where fileManager.fileExists(atPath: url.path) {
+            throw RootstockError.killSwitchActive(path: url.path)
         }
     }
 
@@ -30,9 +38,14 @@ public enum SafetyRails: Sendable {
         context: EvaluationContext,
         policy: ConsentPolicy = .labDefault,
         killSwitchURL: URL = SafetyRails.killSwitchURL,
+        assessedKillSwitchURL: URL = SafetyRails.assessedKillSwitchURL,
         fileManager: FileManager = .default
     ) throws {
-        try ensureNotDisabled(killSwitchURL: killSwitchURL, fileManager: fileManager)
+        try ensureNotDisabled(
+            killSwitchURL: killSwitchURL,
+            assessedKillSwitchURL: assessedKillSwitchURL,
+            fileManager: fileManager
+        )
         guard context.mode == .lab || context.mode == .purple else {
             throw RootstockError.unauthorized(reason: "lab/purple mode required")
         }

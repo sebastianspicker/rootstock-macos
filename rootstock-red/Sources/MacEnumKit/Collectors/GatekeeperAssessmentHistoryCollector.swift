@@ -26,7 +26,7 @@ public struct GatekeeperAssessmentHistoryCollector: Collector {
         var b: [String] = []
         for path in ["/var/db/SystemPolicyConfiguration",
             "/Library/Preferences/com.apple.security.plist",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2"] where fm.fileExists(atPath: path) {
             b.append(path)
             notes.append("b: \(path)")
         }

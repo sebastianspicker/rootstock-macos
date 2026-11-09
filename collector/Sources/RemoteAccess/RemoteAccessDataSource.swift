@@ -1,6 +1,7 @@
 import Foundation
 import Models
 import HostCommand
+import RootstockMacFacts
 
 /// Collects SSH and Screen Sharing remote access service status.
 ///
@@ -11,7 +12,7 @@ public struct RemoteAccessDataSource: DataSource {
     public let requiresElevation = false
 
     private let sshdConfigPath: String
-    private let userSSHDirectory = FileManager.default.homeDirectoryForCurrentUser.path + "/.ssh"
+    private let userSSHDirectory = AssessedUser.homePath + "/.ssh"
     private let launchctlRunner: @Sendable ([String]) -> ShellOutcome
 
     public init(sshdConfigPath: String = "/etc/ssh/sshd_config") {
@@ -180,7 +181,7 @@ public struct RemoteAccessDataSource: DataSource {
         }
         let disabledOutput = disabledResult.stdout
 
-        if let disabled = Self.parseDisabledServices(output: disabledOutput)[label] {
+        if let disabled = HostPostureProbes.parseDisabledServices(output: disabledOutput)[label] {
             return !disabled
         }
 
@@ -198,23 +199,5 @@ public struct RemoteAccessDataSource: DataSource {
             recoverable: true
         ))
         return nil
-    }
-
-    static func parseDisabledServices(output: String) -> [String: Bool] {
-        var services: [String: Bool] = [:]
-        for line in output.components(separatedBy: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard trimmed.hasPrefix("\"") else { continue }
-            let parts = trimmed.components(separatedBy: "=>")
-            guard parts.count == 2 else { continue }
-            let label = parts[0].trimmingCharacters(in: CharacterSet(charactersIn: "\" \t"))
-            let value = parts[1].trimmingCharacters(in: CharacterSet(charactersIn: "; \t"))
-            if value == "true" {
-                services[label] = true
-            } else if value == "false" {
-                services[label] = false
-            }
-        }
-        return services
     }
 }

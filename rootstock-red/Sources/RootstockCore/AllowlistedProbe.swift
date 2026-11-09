@@ -52,12 +52,14 @@ public enum AllowlistedProbe: Sendable {
         case csrutilStatus
         case spctlStatus
         case fdesetupStatus
+        case launchctlPrintDisabledSystem
 
         public var executable: String {
             switch self {
             case .csrutilStatus: return "/usr/bin/csrutil"
             case .spctlStatus: return "/usr/sbin/spctl"
             case .fdesetupStatus: return "/usr/bin/fdesetup"
+            case .launchctlPrintDisabledSystem: return "/bin/launchctl"
             }
         }
 
@@ -66,6 +68,7 @@ public enum AllowlistedProbe: Sendable {
             case .csrutilStatus: return ["status"]
             case .spctlStatus: return ["--status"]
             case .fdesetupStatus: return ["status"]
+            case .launchctlPrintDisabledSystem: return ["print-disabled", "system"]
             }
         }
     }

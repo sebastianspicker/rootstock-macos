@@ -79,7 +79,7 @@ public actor ArtifactLedger {
 
     private func recordTCCPaths(_ tcc: TCCState?) {
         guard let tcc else { return }
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let home = AssessedHome.path
         let userDatabase = (home as NSString).appendingPathComponent(
             "Library/Application Support/com.apple.TCC/TCC.db"
         )

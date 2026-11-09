@@ -20,7 +20,7 @@ public struct CronAtJobDepthCollector: Collector {
         var b: [String] = []
         for path in ["/var/at/tabs",
             "/private/var/at/tabs",
-            NSHomeDirectory() + "/Library/LaunchAgents"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/LaunchAgents"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []

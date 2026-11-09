@@ -31,9 +31,9 @@ public struct ScreenCapturePrivacyDualUseCollector: Collector {
             notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/Desktop",
-            NSHomeDirectory() + "/Pictures/Screenshots",
-            NSHomeDirectory() + "/Library/ScreenRecordings"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Desktop",
+            AssessedHome.path + "/Pictures/Screenshots",
+            AssessedHome.path + "/Library/ScreenRecordings"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

@@ -16,7 +16,7 @@ from ..models import (
 logger = logging.getLogger(__name__)
 
 
-def _mode_digit_allows_write(mode: str, index: int) -> bool:
+def mode_digit_allows_write(mode: str, index: int) -> bool:
     """Return whether the octal mode digit at ``index`` grants write access."""
     trimmed = mode.zfill(3)[-3:]  # "%o" drops leading zeros: 0o022 is "22"
     if len(trimmed) != 3 or not trimmed[index].isdigit():
@@ -81,8 +81,8 @@ def import_file_acls(session: Session, file_acls: list[FileACLData]) -> int:
             "acl_entries": f.acl_entries,
             "is_sip_protected": f.is_sip_protected,
             "is_writable_by_non_root": f.is_writable_by_non_root,
-            "is_group_writable": _mode_digit_allows_write(f.mode, 1),
-            "is_world_writable": _mode_digit_allows_write(f.mode, 2),
+            "is_group_writable": mode_digit_allows_write(f.mode, 1),
+            "is_world_writable": mode_digit_allows_write(f.mode, 2),
             "category": f.category,
         }
         for f in file_acls

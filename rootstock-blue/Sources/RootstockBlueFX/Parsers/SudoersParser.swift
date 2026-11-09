@@ -82,7 +82,7 @@ public struct SudoersParser: ArtifactParser {
         sourceURL: URL
     ) -> EventEnvelope? {
         let line = normalizedSudoersLine(rawLine)
-        guard !line.isEmpty, !line.hasPrefix("#") else { return nil }
+        guard !line.isEmpty, !isSudoersComment(line) else { return nil }
 
         let kind = sudoersEntryKind(line)
         let risk = riskTags(for: line)
@@ -104,6 +104,14 @@ public struct SudoersParser: ArtifactParser {
                 confidence: risk.isEmpty ? 0.9 : 0.97
             )
         )
+    }
+
+    /// `#<digits>` (also `#-1`) in user position is a numeric user ID (a live rule), not a comment.
+    private func isSudoersComment(_ line: String) -> Bool {
+        guard line.hasPrefix("#") else { return false }
+        let rest = line.dropFirst()
+        let digits = rest.first == "-" ? rest.dropFirst() : rest
+        return !(digits.first?.isASCII == true && digits.first?.isNumber == true)
     }
 
     private func normalizedSudoersLine(_ rawLine: Substring) -> String {

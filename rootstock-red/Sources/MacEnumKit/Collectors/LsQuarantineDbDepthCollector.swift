@@ -12,8 +12,8 @@ public struct LsQuarantineDbDepthCollector: Collector {
         let fm = FileManager.default
         var notes: [String] = ["LS QuarantineEvents depth: path presence only - never deletes QuarantineEvents rows or clears LS quarantine history"]
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.LaunchServices"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2",
+            AssessedHome.path + "/Library/Preferences/com.apple.LaunchServices"] where fm.fileExists(atPath: path) {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
@@ -24,7 +24,7 @@ public struct LsQuarantineDbDepthCollector: Collector {
         var c: [String] = []
         for path in ["/usr/bin/xattr",
             "/usr/bin/sqlite3",
-            NSHomeDirectory() + "/Downloads"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Downloads"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

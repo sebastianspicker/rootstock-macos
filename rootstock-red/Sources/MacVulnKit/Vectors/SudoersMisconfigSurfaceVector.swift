@@ -20,8 +20,7 @@ public struct SudoersMisconfigSurfaceVector: Check {
     public init() {}
 
     public func evaluate(state: CollectedState, context: EvaluationContext) async throws -> [Finding] {
-        var signals = collectorSignals(in: state)
-        signals.merge(fileSystemSignals(using: FileManager.default))
+        var signals = fileSystemSignals(using: FileManager.default)
         signals.recordDropInWritability(using: FileManager.default)
         guard signals.isPresent else { return [] }
 
@@ -39,50 +38,13 @@ public struct SudoersMisconfigSurfaceVector: Check {
         var readableFiles: [String] = []
         var writablePaths: [String] = []
         var dropins: [String] = []
-        var collectorNotePresent = false
 
         var isPresent: Bool {
-            !readableFiles.isEmpty || !writablePaths.isEmpty || !dropins.isEmpty || collectorNotePresent
-        }
-
-        mutating func merge(_ other: SudoersSignals) {
-            evidence.append(contentsOf: other.evidence)
-            readableFiles.append(contentsOf: other.readableFiles)
-            writablePaths.append(contentsOf: other.writablePaths)
-            dropins.append(contentsOf: other.dropins)
-            collectorNotePresent = collectorNotePresent || other.collectorNotePresent
+            !readableFiles.isEmpty || !writablePaths.isEmpty || !dropins.isEmpty
         }
 
         mutating func recordDropInWritability(using fileManager: FileManager) {
             writablePaths.append(contentsOf: dropins.filter { fileManager.isWritableByNonRoot(atPath: $0) })
-        }
-    }
-
-    private func collectorSignals(in state: CollectedState) -> SudoersSignals {
-        guard let note = state.collectorNotes["privesc.sudoers_signals"] else { return SudoersSignals() }
-        var signals = SudoersSignals(
-            evidence: [Evidence(type: "collector_note", detail: note)],
-            collectorNotePresent: true
-        )
-        for part in note.split(separator: "|") {
-            recordCollectorSignal(String(part).trimmingCharacters(in: .whitespaces), into: &signals)
-        }
-        return signals
-    }
-
-    private func recordCollectorSignal(_ signal: String, into signals: inout SudoersSignals) {
-        if signal.hasPrefix("readable:") {
-            signals.readableFiles.append(String(signal.dropFirst("readable:".count)))
-            return
-        }
-        if signal.hasPrefix("writable:") {
-            signals.writablePaths.append(String(signal.dropFirst("writable:".count)))
-            return
-        }
-        if signal.hasPrefix("nopasswd_hint:") {
-            signals.evidence.append(
-                Evidence(type: "nopasswd_hint", detail: String(signal.dropFirst("nopasswd_hint:".count)))
-            )
         }
     }
 

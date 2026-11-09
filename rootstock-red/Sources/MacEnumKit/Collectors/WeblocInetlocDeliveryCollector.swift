@@ -18,8 +18,8 @@ public struct WeblocInetlocDeliveryCollector: Collector {
         ]
 
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/Downloads",
-            NSHomeDirectory() + "/Desktop",
+        for path in [AssessedHome.path + "/Downloads",
+            AssessedHome.path + "/Desktop",
             "/System/Library/CoreServices/Internet Accounts.app"] where fm.fileExists(atPath: path) {
             a.append(path)
             notes.append("a: \(path)")
@@ -31,9 +31,9 @@ public struct WeblocInetlocDeliveryCollector: Collector {
             notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/Downloads",
-            NSHomeDirectory() + "/Desktop",
-            NSHomeDirectory() + "/Library/Mail Downloads"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Downloads",
+            AssessedHome.path + "/Desktop",
+            AssessedHome.path + "/Library/Mail Downloads"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

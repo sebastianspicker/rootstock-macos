@@ -24,9 +24,9 @@ public struct FontValidationDualuseCollector: Collector {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Fonts",
-            NSHomeDirectory() + "/Library/Fonts Disabled",
-            NSHomeDirectory() + "/Downloads"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Fonts",
+            AssessedHome.path + "/Library/Fonts Disabled",
+            AssessedHome.path + "/Downloads"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

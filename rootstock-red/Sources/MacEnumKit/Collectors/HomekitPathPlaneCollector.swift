@@ -16,11 +16,11 @@ public struct HomekitPathPlaneCollector: Collector {
                     "/usr/libexec/homed",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/HomeKit",
-                    NSHomeDirectory() + "/Library/Group Containers/group.com.apple.home",
+                    AssessedHome.path + "/Library/HomeKit",
+                    AssessedHome.path + "/Library/Group Containers/group.com.apple.home",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.Home.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.Home.plist",
                     "/System/Library/LaunchDaemons/com.apple.homed.plist",
                 ],
                 initialHonestyNote: "HomeKit path plane: path presence only - never enumerates HomeKit accessory secrets or pairs devices"

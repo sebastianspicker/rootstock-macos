@@ -12,7 +12,7 @@ public struct RemoteAppleEventsCollector: Collector {
     private static let remoteAEPrefPaths: [String] = [
         "/Library/Preferences/com.apple.RemoteManagement.plist",
         "/Library/Preferences/com.apple.RemoteDesktop.plist",
-        NSHomeDirectory() + "/Library/Preferences/com.apple.RemoteDesktop.plist",
+        AssessedHome.path + "/Library/Preferences/com.apple.RemoteDesktop.plist",
         "/Library/Preferences/com.apple.AppleFileServer.plist",
         "/private/var/db/dslocal/nodes/Default/config/SharePoints",
         "/System/Library/LaunchDaemons/com.apple.AEServer.plist",

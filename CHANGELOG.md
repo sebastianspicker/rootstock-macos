@@ -1,5 +1,57 @@
 # Changelog
 
+## Unreleased — third audit pass (2026-11-09)
+
+- Graph:
+  - Attack-path queries (02, 41, 42, 44, 45, 47, 57) and the viewer's path
+    search no longer walk through a permission the user switched off. Query 02
+    follows attack relationships only.
+  - With several Macs in one database, group membership, "can debug" and "can
+    hijack" links, sudo rules and host advice now stay on the Mac they came
+    from. Firewall, SSH, Screen Sharing, passwordless-sudo and file-permission
+    facts are stored on each Computer. Import your scans again to get them.
+  - A sudo rule removed since the last scan is removed from the graph on rescan.
+  - CVSS score and the "known exploited" flag are kept when a cve-scan export is
+    imported before the NVD matches.
+- cve-scan:
+  - A redirect inside the scope no longer drops the response or stops the
+    remaining web checks; the redirect response itself is examined.
+  - SBOM packages are matched for Maven, Go, RubyGems, Cargo and Composer, by
+    package URL without version and by each feed's own naming.
+  - pnpm lockfiles: packages with peer dependencies and lockfile v5 entries are
+    read; a package appears once per name and version; unreadable keys warn.
+  - EPSS and KEV data no longer raise a LOW finding to MEDIUM.
+  - Registering a local advisory mirror no longer breaks the next
+    `update-feeds` or `update-feeds --dry-run`.
+- Collector:
+  - Sudoers: numeric user rules (`#501 ...`), rules continued with a backslash
+    and rules with sudo 1.9 options such as `CWD=` are read.
+  - Under `sudo`, per-user sources are read from the invoking user's home, not
+    `/var/root`, and the scan records which home was used.
+  - A named pipe at a per-user database path is refused instead of stalling the
+    scan.
+  - Remote Login and Screen Sharing state is read from both spellings
+    `launchctl print-disabled` uses.
+- Rootstock Red:
+  - Privileged helper tools are checked at their real path. Earlier a finding
+    could depend on the folder Red was started from.
+  - Remote Login, Screen Sharing and file sharing state comes from one more
+    read-only command, `launchctl print-disabled system`.
+  - Permission signals count only when their value shows evidence. The patch
+    baseline knows macOS 26 and 27.
+  - Under `sudo`, the invoking user's home is assessed, and the kill switch
+    file is honoured in that home and in root's.
+  - Launch agent plists and downloaded profiles are read with a size limit and
+    never block on a named pipe.
+- Rootstock Blue:
+  - A collected file whose name contains a line break or backslash no longer
+    makes the case unverifiable.
+  - `sshd_config.d` drop-in files and `Key=value` lines are parsed. Per-user
+    `Library/LaunchAgents` folders are collected.
+  - Numeric user sudo rules are read.
+  - `ir triage` stops with an error when the detection rules are missing, before
+    it writes to the case, and no longer records persistence items twice.
+
 ## Unreleased — second audit pass (2026-11-05)
 
 - cve-scan:

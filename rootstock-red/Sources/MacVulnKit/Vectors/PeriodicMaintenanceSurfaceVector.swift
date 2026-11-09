@@ -22,7 +22,7 @@ public struct PeriodicMaintenanceSurfaceVector: Check {
     public init() {}
 
     public func evaluate(state: CollectedState, context: EvaluationContext) async throws -> [Finding] {
-        let analysis = Self.analyzePaths(in: state)
+        let analysis = Self.analyzePaths()
         guard analysis.shouldEmit else { return [] }
         return [Self.finding(for: analysis, protections: state.protections)]
     }
@@ -31,16 +31,10 @@ public struct PeriodicMaintenanceSurfaceVector: Check {
         let present: [String]
         let writable: [String]
         let evidence: [Evidence]
-        let forced: Bool
 
         var shouldEmit: Bool {
-            !writable.isEmpty || present.contains { $0.contains("/usr/local/etc/periodic") } || forced
+            !writable.isEmpty || present.contains { $0.contains("/usr/local/etc/periodic") }
         }
-    }
-
-    private struct NotePaths {
-        var present: [String] = []
-        var writable: [String] = []
     }
 
     private struct ProbePaths {
@@ -54,31 +48,13 @@ public struct PeriodicMaintenanceSurfaceVector: Check {
         let severity: Severity
     }
 
-    private static func analyzePaths(in state: CollectedState) -> PathAnalysis {
-        let notePaths = pathsFromCollectorNotes(state.collectorNotes)
+    private static func analyzePaths() -> PathAnalysis {
         let probes = probePaths()
-        let present = Array(Set(notePaths.present + probes.present)).sorted()
-        let writable = Array(Set(notePaths.writable + probes.writable)).sorted()
         return PathAnalysis(
-            present: present,
-            writable: writable,
-            evidence: probes.evidence,
-            forced: state.collectorNotes["privesc.periodic_paths"] != nil
+            present: Array(Set(probes.present)).sorted(),
+            writable: Array(Set(probes.writable)).sorted(),
+            evidence: probes.evidence
         )
-    }
-
-    private static func pathsFromCollectorNotes(_ notes: [String: String]) -> NotePaths {
-        guard let note = notes["privesc.periodic_paths"] else { return NotePaths() }
-        return note.split(separator: "|").reduce(into: NotePaths()) { result, part in
-            let path = String(part).trimmingCharacters(in: .whitespaces)
-            guard !path.isEmpty else { return }
-            result.present.append(path)
-            if path.hasPrefix("writable:") {
-                result.writable.append(String(path.dropFirst("writable:".count)))
-            } else if FileManager.default.isWritableByNonRoot(atPath: path) {
-                result.writable.append(path)
-            }
-        }
     }
 
     private static func probePaths() -> ProbePaths {

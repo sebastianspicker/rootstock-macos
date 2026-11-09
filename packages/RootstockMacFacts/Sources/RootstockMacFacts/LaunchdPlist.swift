@@ -100,15 +100,12 @@ public enum LaunchdPlistFacts: Sendable {
 
     // MARK: - Private
 
+    private static let maxPlistBytes = 1024 * 1024
+
     private static func loadDict(at path: String) -> [String: Any]? {
-        if let dict = NSDictionary(contentsOfFile: path) as? [String: Any] {
-            return dict
-        }
-        guard let data = FileManager.default.contents(atPath: path) else { return nil }
-        var format = PropertyListSerialization.PropertyListFormat.xml
-        return try? PropertyListSerialization.propertyList(
-            from: data, options: [], format: &format
-        ) as? [String: Any]
+        // Launch agent folders are user-writable, so the read is bounded and cannot block.
+        guard let data = BoundedFile.read(path: path, limit: maxPlistBytes) else { return nil }
+        return try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any]
     }
 
     private static func apply(dict: [String: Any], to summary: inout Summary) {

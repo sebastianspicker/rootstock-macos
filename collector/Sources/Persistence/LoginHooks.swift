@@ -1,6 +1,7 @@
 import Foundation
 import HostCommand
 import Models
+import RootstockMacFacts
 
 /// Legacy loginwindow `LoginHook` / `LogoutHook` scripts, which run as root at login or logout.
 extension PersistenceDataSource {
@@ -14,7 +15,7 @@ extension PersistenceDataSource {
     static var loginWindowPreferencePaths: [String] {
         [
             "/Library/Preferences/com.apple.loginwindow.plist",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.loginwindow.plist",
+            AssessedUser.homePath + "/Library/Preferences/com.apple.loginwindow.plist",
         ]
     }
 

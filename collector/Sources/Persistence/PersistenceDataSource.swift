@@ -36,7 +36,7 @@ public struct PersistenceDataSource: DataSource {
     private static let agentDirs = [
         MacSecurityPaths.systemLaunchAgents,
         MacSecurityPaths.userLaunchAgents(
-            home: FileManager.default.homeDirectoryForCurrentUser
+            home: AssessedUser.homeDirectory()
         ).path,
     ]
 
@@ -237,7 +237,7 @@ public struct PersistenceDataSource: DataSource {
     static let maximumBTMBytes = 16 * 1024 * 1024
 
     private func collectLoginItems() -> ([LaunchItem], [String]) {
-        let btmPath = NSHomeDirectory() + "/" + MacSecurityPaths.backgroundItemsBTMRelative
+        let btmPath = AssessedUser.homePath + "/" + MacSecurityPaths.backgroundItemsBTMRelative
 
         let fm = FileManager.default
         guard fm.fileExists(atPath: btmPath) else {

@@ -15,11 +15,11 @@ public struct FinderSyncExtensionCollector: Collector {
                     "/System/Library/CoreServices/Finder.app",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Application Scripts",
+                    AssessedHome.path + "/Library/Application Scripts",
                     "/Library/Application Support",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.finder.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.finder.plist",
                     "/System/Library/PrivateFrameworks/FileProvider.framework",
                 ],
                 initialHonestyNote: "Finder Sync dual-use: path presence only - never installs Finder Sync extensions or rewrites Finder preferences for abuse"

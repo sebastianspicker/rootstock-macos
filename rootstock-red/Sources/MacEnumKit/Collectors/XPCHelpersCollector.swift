@@ -1,17 +1,24 @@
 import Foundation
 import RootstockCore
 
-/// Filenames only under `/Library/PrivilegedHelperTools` (no binary analysis).
+/// Absolute paths of the entries under `/Library/PrivilegedHelperTools` (no binary analysis).
 public struct XPCHelpersCollector: Collector {
     public static let id = "collect.xpc_helpers"
     public static let cost: CollectorCost = .medium
 
-    public init() {}
+    private let root: URL
+
+    public init() {
+        self.init(root: URL(fileURLWithPath: "/Library/PrivilegedHelperTools", isDirectory: true))
+    }
+
+    init(root: URL) {
+        self.root = root
+    }
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
-        let root = URL(fileURLWithPath: "/Library/PrivilegedHelperTools", isDirectory: true)
         let fm = FileManager.default
-        var names: [String] = []
+        var paths: [String] = []
         var note: String
 
         var isDir: ObjCBool = false
@@ -22,17 +29,17 @@ public struct XPCHelpersCollector: Collector {
             includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
         ) {
-            names = contents
-                .map(\.lastPathComponent)
-                .filter { !$0.hasPrefix(".") }
+            paths = contents
+                .filter { !$0.lastPathComponent.hasPrefix(".") }
+                .map(\.path)
                 .sorted()
-            note = "filenames only (\(names.count))"
+            note = "paths only (\(paths.count))"
         } else {
             note = "directory present but listing denied"
         }
 
         var state = CollectedState()
-        state.privilegedHelperTools = names
+        state.privilegedHelperTools = paths
         state.collectorNotes[Self.id] = note
         return state
     }

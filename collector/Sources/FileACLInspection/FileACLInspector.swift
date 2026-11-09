@@ -1,6 +1,7 @@
 import Foundation
 import Models
 import HostCommand
+import RootstockMacFacts
 
 /// Reads ownership, POSIX permissions, and extended ACL entries for a single path.
 ///
@@ -70,9 +71,10 @@ public struct FileACLInspector {
         ), reportsACLErrors ? aclResult.error : nil)
     }
 
-    /// Expand ~ to the current user's home directory.
+    /// Expand ~ to the assessed user's home (the sudo-invoking user's when run as root).
     public static func expandTilde(_ path: String) -> String {
-        (path as NSString).expandingTildeInPath
+        guard path == "~" || path.hasPrefix("~/") else { return (path as NSString).expandingTildeInPath }
+        return AssessedUser.homePath + path.dropFirst()
     }
 
     /// Read extended ACL entries using `ls -le`.

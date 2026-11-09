@@ -12,13 +12,13 @@ public struct IcloudDrivePathCollector: Collector {
         let fm = FileManager.default
         var notes: [String] = ["iCloud Drive path plane: path presence only - never enumerates iCloud file contents or exfiltrates Mobile Documents"]
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Mobile Documents",
-            NSHomeDirectory() + "/Library/Mobile Documents/com~apple~CloudDocs"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Mobile Documents",
+            AssessedHome.path + "/Library/Mobile Documents/com~apple~CloudDocs"] where fm.fileExists(atPath: path) {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Application Support/CloudDocs",
-            NSHomeDirectory() + "/Library/Preferences/MobileMeAccounts.plist"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Application Support/CloudDocs",
+            AssessedHome.path + "/Library/Preferences/MobileMeAccounts.plist"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []

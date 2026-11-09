@@ -101,7 +101,7 @@ public struct DeveloperToolchainCollector: Collector {
     }
 
     private func userToolchainHints() -> [String] {
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         return ["\(home)/.swiftpm", "\(home)/Library/Developer/Xcode", "\(home)/Library/Developer/Toolchains"]
     }
 }

@@ -25,7 +25,7 @@ public struct ScreenSharingArdDepthCollector: Collector {
         var c: [String] = []
         for path in ["/Library/Preferences/com.apple.RemoteManagement.plist",
             "/Library/Preferences/com.apple.screensharing.plist",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.screensharing.plist"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.screensharing.plist"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

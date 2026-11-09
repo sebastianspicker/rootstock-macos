@@ -13,7 +13,7 @@ public struct ShortcutsAppIntentsCollector: Collector {
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
         let fm = FileManager.default
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         var notes: [String] = [
             "Shortcuts / App Intents surface: path presence only - never runs shortcuts or forges App Intents",
         ]

@@ -18,7 +18,7 @@ public struct UserWritableLaunchAgentsVector: Check {
         let writable = FileManager.default.isWritableByNonRoot(atPath: directory.path)
         let likelyWritable = writable
             || directory.path.contains("/Users/")
-            || directory.path.hasPrefix(FileManager.default.homeDirectoryForCurrentUser.path)
+            || directory.path.hasPrefix(AssessedHome.path)
         guard likelyWritable else { return [] }
 
         return [Self.finding(agents: agents, directory: directory, writable: writable, state: state)]
@@ -92,7 +92,7 @@ public struct UserWritableLaunchAgentsVector: Check {
         if let first = agents.first {
             return URL(fileURLWithPath: first.path).deletingLastPathComponent()
         }
-        return FileManager.default.homeDirectoryForCurrentUser
+        return AssessedHome.url
             .appendingPathComponent("Library/LaunchAgents", isDirectory: true)
     }
 }

@@ -124,7 +124,7 @@ def import_launch_items(
     _merge_launch_item_nodes(session, records)
     persists_count = _link_persistence_edges(session, records, scan_id)
     runs_count = _link_runs_as_edges(session, records)
-    hijack_count = _link_launch_hijack_edges(session, records)
+    hijack_count = _link_launch_hijack_edges(session, records, scan_id)
 
     return len(items), persists_count, runs_count, hijack_count
 
@@ -303,6 +303,7 @@ def _link_runs_as_edges(session: Session, records: list[dict[str, object]]) -> i
 def _link_launch_hijack_edges(
     session: Session,
     records: list[dict[str, object]],
+    scan_id: str | None,
 ) -> int:
     result = session.run(
         """
@@ -310,12 +311,14 @@ def _link_launch_hijack_edges(
         WITH r WHERE r.type = 'daemon'
           AND r.program_writable_by_non_root = true
         MATCH (l:LaunchItem {item_key: r.item_key})
-        MATCH (u:User)-[:MEMBER_OF]->(:LocalGroup {name: 'admin'})
+        MATCH (u:User)-[m:MEMBER_OF]->(:LocalGroup {name: 'admin'})
+        WHERE $scan_id IS NULL OR m.scan_id = $scan_id
         MERGE (u)-[rel:CAN_HIJACK]->(l)
         SET rel.reason = 'program_writable_by_non_root'
         RETURN count(rel) AS n
         """,
         records=records,
+        scan_id=scan_id,
     )
     return result.single()["n"]
 

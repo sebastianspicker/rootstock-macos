@@ -15,11 +15,11 @@ public struct BooksPathPlaneCollector: Collector {
                     "/System/Library/PrivateFrameworks/BookLibraryCore.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Containers/com.apple.iBooksX",
-                    NSHomeDirectory() + "/Library/Mobile Documents/iCloud~com~apple~iBooks",
+                    AssessedHome.path + "/Library/Containers/com.apple.iBooksX",
+                    AssessedHome.path + "/Library/Mobile Documents/iCloud~com~apple~iBooks",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.iBooksX.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.iBooksX.plist",
                     "/System/Library/PrivateFrameworks/BookKit.framework",
                 ],
                 initialHonestyNote: "Books path plane: path presence only - never extracts EPUB contents or Books annotations as bulk export"

@@ -20,22 +20,22 @@ public struct MailRulesAutomationCollector: Collector {
         var a: [String] = []
         for path in ["/System/Applications/Mail.app",
             "/Applications/Mail.app",
-            NSHomeDirectory() + "/Library/Mail"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Mail"] where fm.fileExists(atPath: path) {
             a.append(path)
             notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Mail/V10/MailData/SyncedRules.plist",
-            NSHomeDirectory() + "/Library/Mail/V9/MailData/SyncedRules.plist",
-            NSHomeDirectory() + "/Library/Mail/V8/MailData/SyncedRules.plist",
-            NSHomeDirectory() + "/Library/Containers/com.apple.mail/Data/Library/Mail"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Mail/V10/MailData/SyncedRules.plist",
+            AssessedHome.path + "/Library/Mail/V9/MailData/SyncedRules.plist",
+            AssessedHome.path + "/Library/Mail/V8/MailData/SyncedRules.plist",
+            AssessedHome.path + "/Library/Containers/com.apple.mail/Data/Library/Mail"] where fm.fileExists(atPath: path) {
             b.append(path)
             notes.append("b: \(path)")
         }
         var c: [String] = []
         for path in ["/usr/bin/osascript",
             "/System/Library/Frameworks/MailKit.framework",
-            NSHomeDirectory() + "/Library/Application Scripts/com.apple.mail"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Application Scripts/com.apple.mail"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

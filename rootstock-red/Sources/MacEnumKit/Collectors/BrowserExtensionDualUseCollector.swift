@@ -12,7 +12,7 @@ public struct BrowserExtensionDualUseCollector: Collector {
     public init() {}
 
     public func collect(context: EvaluationContext) async throws -> CollectedState {
-        let home = NSHomeDirectory()
+        let home = AssessedHome.path
         var notes = ["Browser extension dual-use plane: path presence only - never dumps extension secrets or cookies"]
         let chromium = existingPaths(Self.chromiumRoots(home), notePrefix: "chromium_extensions", notes: &notes)
         let safari = existingPaths(Self.safariRoots(home), notePrefix: "safari_extensions", notes: &notes)

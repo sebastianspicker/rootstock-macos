@@ -31,10 +31,8 @@ public struct WritablePrivilegedPathsVector: Check {
             let pathWritable = FileManager.default.isWritableByNonRoot(atPath: candidate.path)
             let parent = URL(fileURLWithPath: candidate.path).deletingLastPathComponent().path
             let parentWritable = FileManager.default.isWritableByNonRoot(atPath: parent)
-            guard candidate.forceWritable || pathWritable || parentWritable else { return nil }
-            let reason = candidate.forceWritable
-                ? "collector_flagged_writable"
-                : pathWritable ? "path_writable" : "parent_writable"
+            guard pathWritable || parentWritable else { return nil }
+            let reason = pathWritable ? "path_writable" : "parent_writable"
             return WritablePathHit(path: candidate.path, kind: candidate.kind, reason: reason)
         }
     }
@@ -95,38 +93,18 @@ public struct WritablePrivilegedPathsVector: Check {
     struct Candidate {
         var path: String
         var kind: String
-        /// When collector/synthetic state already asserts writability (tests + future collector).
-        var forceWritable: Bool
     }
 
     static func candidatePaths(from state: CollectedState) -> [Candidate] {
-        let candidates = launchCandidates(from: state) + collectorNoteCandidates(from: state.collectorNotes)
+        let candidates = launchCandidates(from: state)
         var seen = Set<String>()
         return candidates.filter { seen.insert($0.path).inserted }
     }
 
     private static func launchCandidates(from state: CollectedState) -> [Candidate] {
-        state.systemLaunchAgents.map { Candidate(path: $0.path, kind: "system_launch_agent", forceWritable: false) }
-            + state.launchDaemons.map { Candidate(path: $0.path, kind: "launch_daemon", forceWritable: false) }
-            + state.privilegedHelperTools.map { Candidate(path: $0, kind: "privileged_helper", forceWritable: false) }
-            + state.systemExtensionPaths.map { Candidate(path: $0, kind: "system_extension", forceWritable: false) }
-    }
-
-    private static func collectorNoteCandidates(from notes: [String: String]) -> [Candidate] {
-        notes.flatMap { (key, value) -> [Candidate] in
-            let lowercasedKey = key.lowercased()
-            guard lowercasedKey.contains("privesc"), lowercasedKey.contains("writable") else { return [] }
-            return candidates(fromCollectorNoteValue: value)
-        }
-    }
-
-    private static func candidates(fromCollectorNoteValue value: String) -> [Candidate] {
-        if value.contains("|") {
-            return value.split(separator: "|").compactMap { part in
-                let path = String(part).trimmingCharacters(in: .whitespaces)
-                return path.isEmpty ? nil : Candidate(path: path, kind: "collector_note_writable", forceWritable: true)
-            }
-        }
-        return value.hasPrefix("/") ? [Candidate(path: value, kind: "collector_note_writable", forceWritable: true)] : []
+        state.systemLaunchAgents.map { Candidate(path: $0.path, kind: "system_launch_agent") }
+            + state.launchDaemons.map { Candidate(path: $0.path, kind: "launch_daemon") }
+            + state.privilegedHelperTools.map { Candidate(path: $0, kind: "privileged_helper") }
+            + state.systemExtensionPaths.map { Candidate(path: $0, kind: "system_extension") }
     }
 }

@@ -11,10 +11,9 @@ WHERE (c.lockdown_mode_enabled IS NULL OR c.lockdown_mode_enabled = false)
        OR c.screen_lock_delay > 5
        OR c.display_sleep_timeout > 15)
 WITH c
-MATCH (svc:RemoteAccessService)
-WHERE svc.enabled = true
-// Scope remote access service to this host via user LOCAL_TO relationship
-MATCH (svc)-[:ACCESSIBLE_BY]->(u:User)-[:LOCAL_TO]->(c)
+// The service node is shared between Macs; the edge exists only where this Mac's scan had it enabled.
+MATCH (svc:RemoteAccessService)-[access:ACCESSIBLE_BY]->(u:User)-[:LOCAL_TO]->(c)
+WHERE access.scan_id = c.scan_id
 WITH c, svc, collect(DISTINCT u.name) AS remote_users
 RETURN c.hostname              AS hostname,
        c.lockdown_mode_enabled AS lockdown_mode,

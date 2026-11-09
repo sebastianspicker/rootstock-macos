@@ -19,14 +19,14 @@ public struct PythonRuntimeDualuseCollector: Collector {
         }
         var b: [String] = []
         for path in ["/Library/Python",
-            NSHomeDirectory() + "/Library/Python",
+            AssessedHome.path + "/Library/Python",
             "/usr/local/lib/python3.9"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []
         for path in ["/System/Library/Frameworks/Python.framework",
             "/Library/Frameworks/Python.framework",
-            NSHomeDirectory() + "/.local/lib"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/.local/lib"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

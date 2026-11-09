@@ -10,7 +10,8 @@
 MATCH (u:User)-[:LOCAL_TO]->(src:Computer)
 MATCH (u)-[:LOCAL_TO]->(dst:Computer)
 WHERE src <> dst
-MATCH (remote_svc:RemoteAccessService {service: 'ssh', enabled: true})-[:ACCESSIBLE_BY]->(remote_u:User)-[:LOCAL_TO]->(dst)
+MATCH (remote_svc:RemoteAccessService {service: 'ssh'})-[access:ACCESSIBLE_BY]->(remote_u:User)-[:LOCAL_TO]->(dst)
+WHERE access.scan_id = dst.scan_id
 MATCH (target:Application)-[:INSTALLED_ON]->(dst)
 MATCH (:Application {bundle_id: 'attacker.payload'})-[:CAN_INJECT_INTO]->(target)
 MATCH (target)-[:HAS_TCC_GRANT {allowed: true}]->(perm:TCC_Permission)

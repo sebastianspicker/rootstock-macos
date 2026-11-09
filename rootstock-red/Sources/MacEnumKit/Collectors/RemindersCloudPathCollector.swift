@@ -15,11 +15,11 @@ public struct RemindersCloudPathCollector: Collector {
                     "/System/Library/PrivateFrameworks/ReminderKit.framework",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Reminders",
-                    NSHomeDirectory() + "/Library/Group Containers/group.com.apple.reminders",
+                    AssessedHome.path + "/Library/Reminders",
+                    AssessedHome.path + "/Library/Group Containers/group.com.apple.reminders",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.reminders.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.reminders.plist",
                     "/System/Library/PrivateFrameworks/RemindersUICore.framework",
                 ],
                 initialHonestyNote: "Reminders cloud path: path presence only - never reads reminder titles/bodies or exports Reminders databases"

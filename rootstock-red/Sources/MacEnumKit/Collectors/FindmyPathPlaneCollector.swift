@@ -16,11 +16,11 @@ public struct FindmyPathPlaneCollector: Collector {
                     "/usr/libexec/fmfd",
                 ],
                 secondaryPaths: [
-                    NSHomeDirectory() + "/Library/Caches/com.apple.findmy",
-                    NSHomeDirectory() + "/Library/Containers/com.apple.findmy",
+                    AssessedHome.path + "/Library/Caches/com.apple.findmy",
+                    AssessedHome.path + "/Library/Containers/com.apple.findmy",
                 ],
                 tertiaryPaths: [
-                    NSHomeDirectory() + "/Library/Preferences/com.apple.FindMy.plist",
+                    AssessedHome.path + "/Library/Preferences/com.apple.FindMy.plist",
                     "/System/Library/LaunchDaemons/com.apple.fmfd.plist",
                 ],
                 initialHonestyNote: "Find My path plane: path presence only - never queries Find My device locations or dumps owner tokens"

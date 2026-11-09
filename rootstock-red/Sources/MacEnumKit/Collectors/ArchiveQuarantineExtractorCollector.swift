@@ -32,8 +32,8 @@ public struct ArchiveQuarantineExtractorCollector: Collector {
     ]
 
     private static let dropHints: [String] = [
-        NSHomeDirectory() + "/Downloads",
-        NSHomeDirectory() + "/Desktop",
+        AssessedHome.path + "/Downloads",
+        AssessedHome.path + "/Desktop",
         "/tmp",
         "/var/tmp",
     ]

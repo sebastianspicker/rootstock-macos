@@ -1,7 +1,9 @@
 import Foundation
 import RootstockCore
+import RootstockMacFacts
 
-/// Sharing / remote-access posture via LaunchDaemon and prefs path heuristics.
+/// Sharing / remote-access posture via LaunchDaemon and prefs path heuristics, plus
+/// one allowlisted `launchctl print-disabled system` probe for live service state.
 ///
 /// No shell storm, no listening-port scan (often needs root). System LaunchDaemon
 /// plists often exist even when the service is disabled - path presence is inventory,
@@ -44,13 +46,13 @@ public struct NetworkCollector: Collector {
         let fm = FileManager.default
         var summary = Self.probe(fileManager: fm)
 
-        // Likely-enabled (conservative): system plists alone are insufficient.
-        // RemoteManagement prefs are a stronger ARD/screen-sharing configuration signal.
-        // SSH/SMB enablement requires launchctl/systemsetup - leave nil without shell.
-        let remoteLoginSSH: Bool? = nil
-        // The RemoteManagement prefs file outlives ARD being switched off: presence alone is unknown.
-        let screenSharingARD: Bool? = nil
-        let fileSharingSMB: Bool? = nil
+        // System plists and the RemoteManagement prefs outlive a switched-off service;
+        // live state comes only from launchd's disabled table.
+        let live = Self.remoteAccessState(from: AllowlistedProbe.run(.launchctlPrintDisabledSystem))
+        let remoteLoginSSH = live.ssh
+        let screenSharingARD = live.screen
+        let fileSharingSMB = live.smb
+        summary.notes.append(live.note)
         summary.notes.append(
             "Likely-enabled: ssh=\(remoteLoginSSH.map(String.init(describing:)) ?? "nil") "
                 + "screen=\(screenSharingARD.map(String.init(describing:)) ?? "nil") "
@@ -62,6 +64,22 @@ public struct NetworkCollector: Collector {
         state.collectorNotes[Self.id] =
             "sharing path heuristics (sshPlist=\(summary.remoteLoginPlistPresent), screenPlist=\(summary.screenSharingPlistPresent), filePlist=\(summary.fileSharingPlistPresent), ardPrefs=\(summary.remoteManagementPrefsPresent))"
         return state
+    }
+
+    /// Listed and not disabled → true, listed and disabled → false, unlisted or failed probe → nil.
+    static func remoteAccessState(
+        from probe: AllowlistedProbeResult
+    ) -> (ssh: Bool?, screen: Bool?, smb: Bool?, note: String) {
+        guard probe.errorDescription == nil, !probe.timedOut, probe.exitCode == 0 else {
+            let reason = probe.errorDescription ?? "exit \(probe.exitCode.map(String.init) ?? "unknown")"
+            return (nil, nil, nil, "launchctl print-disabled system failed (\(reason)): remote access unknown")
+        }
+        let disabled = HostPostureProbes.parseDisabledServices(output: probe.stdout)
+        let enabled = { (label: String) in disabled[label].map { !$0 } }
+        return (
+            enabled("com.openssh.sshd"), enabled("com.apple.screensharing"), enabled("com.apple.smbd"),
+            "Remote access from launchctl print-disabled system (labels not listed stay unknown)"
+        )
     }
 
     private static func probe(fileManager: FileManager) -> ProbeSummary {

@@ -19,7 +19,7 @@ public struct HomebrewPackageDualUseCollector: Collector {
         var a: [String] = []
         for path in ["/opt/homebrew/bin/brew",
             "/usr/local/bin/brew",
-            NSHomeDirectory() + "/.linuxbrew/bin/brew"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/.linuxbrew/bin/brew"] where fm.fileExists(atPath: path) {
             a.append(path)
             notes.append("a: \(path)")
         }
@@ -33,7 +33,7 @@ public struct HomebrewPackageDualUseCollector: Collector {
         var c: [String] = []
         for path in ["/opt/homebrew/Library/Taps",
             "/usr/local/Homebrew/Library/Taps",
-            NSHomeDirectory() + "/Library/Caches/Homebrew"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Caches/Homebrew"] where fm.fileExists(atPath: path) {
             c.append(path)
             notes.append("c: \(path)")
         }

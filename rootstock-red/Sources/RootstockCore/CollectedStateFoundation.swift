@@ -243,6 +243,22 @@ public struct TCCState: Codable, Sendable, Equatable {
         self.probeMethod = probeMethod
         self.domainSignals = domainSignals
     }
+
+    /// Values the permission-graph collector emits when it only saw a tool or path exist, or knows nothing.
+    private static let noEvidenceValues: Set<String> = [
+        "tool_absent", "tool_present", "tool_present_folders_listable", "tcc_support_paths_present",
+        "osascript_present", "osascript_absent", "avfoundation_present", "unknown", "not_indicated", "none_listable",
+    ]
+
+    /// Domains (the key before `=` in `domainSignals`) whose value is real evidence, not mere tool presence.
+    /// The collector always emits every key, so matching on the key alone is always true.
+    public var evidencedDomains: Set<String> {
+        Set(domainSignals.compactMap { signal in
+            let parts = signal.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2, !Self.noEvidenceValues.contains(parts[1]) else { return nil }
+            return parts[0]
+        })
+    }
 }
 
 /// Endpoint Security / system-extension sensor posture (path heuristics only).

@@ -72,14 +72,13 @@ public struct SudoersDataSource: DataSource {
     internal static func parseSudoersContent(_ content: String) -> [SudoersRule] {
         var rules: [SudoersRule] = []
 
-        for line in content.split(separator: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
+        for trimmed in logicalLines(content) {
             // Skip comments (including #include/#includedir directives),
             // Defaults, aliases, and @include directives.
             // Note: #include to non-standard paths is not followed;
             // /etc/sudoers.d/ is enumerated separately by the caller.
             guard !trimmed.isEmpty,
-                  !trimmed.hasPrefix("#"),
+                  !isComment(trimmed),
                   !trimmed.hasPrefix("Defaults"),
                   !trimmed.hasPrefix("@"),
                   !trimmed.hasPrefix("Host_Alias"),
@@ -121,6 +120,32 @@ public struct SudoersDataSource: DataSource {
     private struct CommandSpec {
         let command: String
         let nopasswd: Bool
+    }
+
+    /// Lines with backslash continuations joined. As in sudo, a comment ends at its
+    /// newline even when it ends in a backslash, so it cannot swallow the next rule.
+    private static func logicalLines(_ content: String) -> [String] {
+        var lines: [String] = []
+        var pending = ""
+        for raw in content.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline) {
+            let line = (pending + raw).trimmingCharacters(in: .whitespaces)
+            if line.hasSuffix("\\"), !isComment(line) {
+                pending = String(line.dropLast()) + " "
+            } else {
+                lines.append(line)
+                pending = ""
+            }
+        }
+        if !pending.isEmpty { lines.append(pending.trimmingCharacters(in: .whitespaces)) }
+        return lines
+    }
+
+    /// `#` starts a comment unless a digit follows (`#501`, `#-1`): that is a numeric user ID.
+    private static func isComment(_ line: String) -> Bool {
+        guard line.hasPrefix("#") else { return false }
+        let rest = line.dropFirst()
+        let digits = rest.first == "-" ? rest.dropFirst() : rest
+        return !(digits.first?.isASCII == true && digits.first?.isNumber == true)
     }
 
     private static func isWhitespace(_ character: Character) -> Bool {
@@ -171,7 +196,12 @@ public struct SudoersDataSource: DataSource {
     /// A tag may be followed directly by the command, as in `NOPASSWD:/bin/ls`.
     private static func stripLeadingTags(_ spec: String, nopasswd: inout Bool) -> String {
         var rest = Substring(spec)
-        while let colon = rest.firstIndex(of: ":") {
+        while true {
+            if let afterOption = droppingLeadingOption(rest) {
+                rest = afterOption
+                continue
+            }
+            guard let colon = rest.firstIndex(of: ":") else { break }
             let tag = rest[..<colon]
             guard !tag.isEmpty, tag.allSatisfy({ $0.isUppercase || $0 == "_" }) else { break }
             if tag == "NOPASSWD" {
@@ -182,5 +212,14 @@ public struct SudoersDataSource: DataSource {
             rest = rest[rest.index(after: colon)...].drop(while: isWhitespace)
         }
         return String(rest)
+    }
+
+    /// sudo 1.9 options such as `CWD=*`, `CHROOT=/x` or `TIMEOUT=5m` may precede the tags.
+    private static func droppingLeadingOption(_ rest: Substring) -> Substring? {
+        let token = rest.prefix { !isWhitespace($0) }
+        guard let equals = token.firstIndex(of: "="), equals > token.startIndex,
+              token[..<equals].allSatisfy({ $0.isUppercase || $0 == "_" })
+        else { return nil }
+        return rest[token.endIndex...].drop(while: isWhitespace)
     }
 }

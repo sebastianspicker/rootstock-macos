@@ -17,13 +17,13 @@ public struct PhotosLibraryPathCollector: Collector {
             a.append(path); notes.append("a: \(path)")
         }
         var b: [String] = []
-        for path in [NSHomeDirectory() + "/Pictures/Photos Library.photoslibrary",
-            NSHomeDirectory() + "/Pictures"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Pictures/Photos Library.photoslibrary",
+            AssessedHome.path + "/Pictures"] where fm.fileExists(atPath: path) {
             b.append(path); notes.append("b: \(path)")
         }
         var c: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Containers/com.apple.Photos",
-            NSHomeDirectory() + "/Library/Group Containers/group.com.apple.photos"] where fm.fileExists(atPath: path) {
+        for path in [AssessedHome.path + "/Library/Containers/com.apple.Photos",
+            AssessedHome.path + "/Library/Group Containers/group.com.apple.photos"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

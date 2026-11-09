@@ -70,7 +70,11 @@ let package = Package(
         ),
         .target(
             name: "FileACLInspection",
-            dependencies: ["Models", "HostCommand"]
+            dependencies: [
+                "Models",
+                "HostCommand",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "SQLiteSupport",
@@ -87,7 +91,11 @@ let package = Package(
         ),
         .target(
             name: "Entitlements",
-            dependencies: ["Models", "HostCommand"],
+            dependencies: [
+                "Models",
+                "HostCommand",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ],
             linkerSettings: [.linkedFramework("Security")]
         ),
         .target(
@@ -137,7 +145,11 @@ let package = Package(
         ),
         .target(
             name: "RemoteAccess",
-            dependencies: ["Models", "HostCommand"]
+            dependencies: [
+                "Models",
+                "HostCommand",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "Firewall",
@@ -207,7 +219,11 @@ let package = Package(
         ),
         .target(
             name: "Quarantine",
-            dependencies: ["Models", "SQLiteSupport"]
+            dependencies: [
+                "Models",
+                "SQLiteSupport",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "NetworkListeners",
@@ -220,7 +236,11 @@ let package = Package(
         ),
         .target(
             name: "BrowserExtensions",
-            dependencies: ["Models", "HostCommand"]
+            dependencies: [
+                "Models",
+                "HostCommand",
+                .product(name: "RootstockMacFacts", package: "RootstockMacFacts"),
+            ]
         ),
         .target(
             name: "InstalledPackages",

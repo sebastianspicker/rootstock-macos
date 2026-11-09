@@ -11,8 +11,8 @@ public struct KeychainAclPathCollector: Collector {
         let fm = FileManager.default
         var notes: [String] = ["Keychain ACL path plane: path presence only - never dumps keychain items, passwords, or private keys"]
         var a: [String] = []
-        for path in [NSHomeDirectory() + "/Library/Keychains",
-            NSHomeDirectory() + "/Library/Keychains/login.keychain-db",
+        for path in [AssessedHome.path + "/Library/Keychains",
+            AssessedHome.path + "/Library/Keychains/login.keychain-db",
             "/Library/Keychains"] where fm.fileExists(atPath: path) {
             a.append(path); notes.append("a: \(path)")
         }
@@ -24,7 +24,7 @@ public struct KeychainAclPathCollector: Collector {
         }
         var c: [String] = []
         for path in ["/System/Library/PrivateFrameworks/KeychainAccess.framework",
-            NSHomeDirectory() + "/Library/Preferences/com.apple.security.plist"] where fm.fileExists(atPath: path) {
+            AssessedHome.path + "/Library/Preferences/com.apple.security.plist"] where fm.fileExists(atPath: path) {
             c.append(path); notes.append("c: \(path)")
         }
         a = Array(Set(a)).sorted(); b = Array(Set(b)).sorted(); c = Array(Set(c)).sorted()

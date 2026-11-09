@@ -82,7 +82,7 @@ public struct ProtectionsCollector: Collector {
     private static func gatekeeperFromPrefs(_ notes: inout [String]) -> Bool? {
         let fm = FileManager.default
         let globalPath = "/Library/Preferences/com.apple.security.plist"
-        let userPath = NSHomeDirectory() + "/Library/Preferences/com.apple.security.plist"
+        let userPath = AssessedHome.path + "/Library/Preferences/com.apple.security.plist"
 
         for path in [globalPath, userPath] where fm.fileExists(atPath: path) {
             notes.append("Gatekeeper: found \(path) (presence only; binary plist not fully parsed)")

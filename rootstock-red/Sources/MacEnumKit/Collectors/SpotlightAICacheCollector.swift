@@ -18,8 +18,8 @@ public struct SpotlightAICacheCollector: Collector {
         "/System/Library/LaunchAgents/com.apple.mdworker.shared.plist",
         "/.Spotlight-V100",
         "/System/Volumes/Data/.Spotlight-V100",
-        NSHomeDirectory() + "/Library/Metadata",
-        NSHomeDirectory() + "/.Spotlight-V100",
+        AssessedHome.path + "/Library/Metadata",
+        AssessedHome.path + "/.Spotlight-V100",
     ]
 
     private static let metadataFrameworkPaths: [String] = [
@@ -32,14 +32,14 @@ public struct SpotlightAICacheCollector: Collector {
     ]
 
     private static let aiCachePathHints: [String] = [
-        NSHomeDirectory() + "/Library/Caches",
-        NSHomeDirectory() + "/Library/IntelligencePlatform",
-        NSHomeDirectory() + "/Library/Application Support/AppleIntelligence",
+        AssessedHome.path + "/Library/Caches",
+        AssessedHome.path + "/Library/IntelligencePlatform",
+        AssessedHome.path + "/Library/Application Support/AppleIntelligence",
         "/System/Library/PrivateFrameworks/AppleIntelligence.framework",
         "/System/Library/PrivateFrameworks/GenerativeModels.framework",
         "/System/Library/PrivateFrameworks/ModelCatalog.framework",
         "/System/Library/PrivateFrameworks/SiriAnalytics.framework",
-        NSHomeDirectory() + "/Library/Application Support/Knowledge",
+        AssessedHome.path + "/Library/Application Support/Knowledge",
     ]
 
     public init() {}

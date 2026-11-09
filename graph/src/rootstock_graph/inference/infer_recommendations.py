@@ -302,7 +302,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
         "connections. Turn it on in System Settings › Network › Firewall.",
         "medium",
         (),
-        "EXISTS { MATCH (f:FirewallPolicy) WHERE f.enabled = false }",
+        "c.firewall_enabled = false",
         target="host",
     ),
     RecommendationRule(
@@ -314,7 +314,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
         "root login in /etc/ssh/sshd_config and restrict access to a dedicated group.",
         "medium",
         ("T1021.004",),
-        "EXISTS { MATCH (s:RemoteAccessService {service: 'ssh', enabled: true}) }",
+        "c.ssh_enabled = true",
         target="host",
     ),
     RecommendationRule(
@@ -325,7 +325,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
         "› General › Sharing unless you rely on it, and limit it to specific users if you do.",
         "medium",
         ("T1021.005",),
-        "EXISTS { MATCH (s:RemoteAccessService {service: 'screen_sharing', enabled: true}) }",
+        "c.screen_sharing_enabled = true",
         target="host",
     ),
     RecommendationRule(
@@ -337,7 +337,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
         "/etc/sudoers.d) and remove NOPASSWD.",
         "high",
         ("T1548.003",),
-        "EXISTS { MATCH (:SudoersRule {nopasswd: true}) }",
+        "c.nopasswd_rule_count > 0",
         target="host",
     ),
     RecommendationRule(
@@ -349,8 +349,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
         "root:wheel ownership and remove the write bit or ACL entry.",
         "critical",
         ("T1098",),
-        "EXISTS { MATCH (cf:CriticalFile) WHERE cf.is_writable_by_non_root = true "
-        "AND cf.category IN ['tcc_database', 'sudoers', 'launch_daemon_dir', 'authorization_db', 'ssh_config'] }",
+        "c.writable_privileged_file_count > 0",
         target="host",
     ),
     RecommendationRule(
@@ -362,8 +361,7 @@ _RECOMMENDATIONS: list[RecommendationRule] = [
         "644 and owner-only write.",
         "medium",
         ("T1546.004",),
-        "EXISTS { MATCH (cf:CriticalFile {category: 'shell_hook'}) "
-        "WHERE cf.is_world_writable = true OR cf.is_group_writable = true }",
+        "c.writable_shell_hook_count > 0",
         target="host",
     ),
     RecommendationRule(

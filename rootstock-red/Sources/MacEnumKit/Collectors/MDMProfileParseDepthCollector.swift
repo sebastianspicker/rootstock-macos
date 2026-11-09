@@ -1,5 +1,6 @@
 import Foundation
 import RootstockCore
+import RootstockMacFacts
 
 /// MDM profile shallow parse depth.
 ///
@@ -10,9 +11,9 @@ public struct MDMProfileParseDepthCollector: Collector {
     public static let cost: CollectorCost = .low
 
     private static let searchRoots: [String] = [
-        NSHomeDirectory() + "/Downloads",
-        NSHomeDirectory() + "/Desktop",
-        NSHomeDirectory() + "/Documents",
+        AssessedHome.path + "/Downloads",
+        AssessedHome.path + "/Desktop",
+        AssessedHome.path + "/Documents",
         "/Library/Managed Preferences",
         "/var/db/ConfigurationProfiles",
         "/Library/ConfigurationProfiles",
@@ -92,12 +93,9 @@ public struct MDMProfileParseDepthCollector: Collector {
         fm _: FileManager,
         notes: inout [String]
     ) -> PayloadDetails? {
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedIfSafe]) else {
-            notes.append("unreadable_profile: \(path)")
-            return nil
-        }
-        guard data.count <= 512_000 else {
-            notes.append("skipped_large_profile: \(path) size=\(data.count)")
+        // Downloads/Desktop/Documents are user-writable: bounded, non-blocking read of regular files only.
+        guard let data = BoundedFile.read(path: path, limit: 512_000) else {
+            notes.append("unreadable_or_large_profile: \(path)")
             return nil
         }
         guard let plist = propertyList(from: data) else {
