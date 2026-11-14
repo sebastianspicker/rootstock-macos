@@ -19,7 +19,7 @@
     "demo:screenshots": "node scripts/capture-demo-screenshots.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.6",
     "@types/node": "26.6.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "esbuild": "0.28.2",
